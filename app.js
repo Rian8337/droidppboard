@@ -85,7 +85,12 @@ function convertURIregex(input) {
 function refreshtopPP() {
     console.log("Refreshing top pp list");
     binddb.find({}, { projection: { _id: 0, username: 1, pp: 1}}).toArray(function(err, res) {
-        top_pp_list.forEach(v => v.list.length === 0);
+        top_pp_list = [
+            {
+                modbits: -1,
+                list: []
+            }
+        ];
         res.forEach((val, index) => {
             const ppEntries = val.pp;
             for (const ppEntry of ppEntries) {
@@ -201,7 +206,7 @@ clientdb.connect(function(err, db) {
 
     app.get('/toppp', (req, res) => {
         const mods = req.url.split("?mods=")[1] || "";
-        const modbits = mods === "NM" ? 0 : osudroid.mods.modbitsFromString(mods) || -1;
+        const modbits = mods.toLowerCase() === "nm" ? 0 : osudroid.mods.modbitsFromString(mods) || -1;
         const modList = top_pp_list.find(v => v.modbits === modbits) || {list: []};
         res.render('toppp', {
             pplist: modList.list,
