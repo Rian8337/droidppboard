@@ -4,14 +4,21 @@
   "description": "idk",
   "main": "app.js",
   "dependencies": {
+    "body-parser": "^1.19.0",
     "dotenv": "^6.2.0",
     "express": "^4.16.4",
+    "express-fileupload": "^1.2.0",
     "mongodb": "^3.1.13",
+    "osu-droid": "file:modules/osu-droid",
     "pug": "^2.0.3"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "@types/node": "^14.14.2",
+    "typescript": "^4.0.3"
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "heroku-postbuild": "cd ./modules/osu-droid && tsc --build tsconfig.json"
   },
   "keywords": [
     "no"
