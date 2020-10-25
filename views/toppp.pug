@@ -17,8 +17,16 @@ h3
             a(href='/whitelist?page=1',class='nav')= "Whitelist"
         li(class='nav')
             a(href='/toppp',class='nav', class='active')= "Top PP"
+        li(class="nav")
+            a(href='/calculate', class="nav")= "Calculate Beatmap PP"
         li(class='nav')
             a(href='/about',class='nav')= "About / Donation"
+
+    div(class="queryall")
+        h5(class="queryshow")= "Current mod filter: " + mods
+        form
+            input(type="text", name="mods", id="rcorners", hint="Mods")
+            input(type="submit", id="rcorners2", value="Apply Filter")
 
 hr
 
@@ -43,4 +51,4 @@ table(width="100%")
 
 hr
 
-p= "Top pp will be updated once each 30 minutes"
+p= "Top pp will be updated every 30 minutes. If you do not see any play, please reload the page after 5-10 minutes"

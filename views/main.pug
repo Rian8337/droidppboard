@@ -1,4 +1,4 @@
-title PP Board
+title PP Board - Home
 link(rel="icon" href="icon.png")
 style
     include table.css
@@ -17,8 +17,16 @@ h3
             a(href='/whitelist?page=1',class='nav')= "Whitelist"
         li(class='nav')
             a(href='/toppp',class='nav')= "Top PP"
+        li(class="nav")
+            a(href='/calculate', class="nav")= "Calculate Beatmap PP"
         li(class='nav')
             a(href='/about',class='nav')= "About / Donation"
+    
+    div(class="queryall")
+        h5(class="queryshow")= "Current query: " + query
+        form
+            input(type="text", name="query", id='rcorners', hint="Search")
+            input(type="submit", id='rcorners2', value="Search")
 
 hr
 
@@ -44,8 +52,8 @@ hr
 div
     ul(class="pagerow")
         li(class="nav")
-            a(href='/?page=' + (page-1) , class="pagenav")= "<<< Prev Page"
+            a(href='/?page=' + (page-1) + (query ? '?query='+query : ''), class="pagenav")= "<<< Prev Page"
         li(class="nav")
             a(class="pagecount")= " Page: " + page
         li(class="nav")
-            a(href='/?page=' + (page+1) , class="pagenav")= "Next Page >>>"
+            a(href='/?page=' + (page+1) + (query ? '?query='+query : ''), class="pagenav")= "Next Page >>>"
