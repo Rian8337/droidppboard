@@ -1,31 +1,66 @@
-var express = require('express');
-var mongodb = require('mongodb');
-var pug = require('pug');
-var https = require('https');
-var osu = require ('./ojsama')
+const express = require('express');
+const mongodb = require('mongodb');
+const https = require('https');
+const osudroid = require('osu-droid');
+const fileupload = require('express-fileupload');
+const bodyParser = require('body-parser');
 require("dotenv").config();
-var dbkey = process.env.DB_KEY
+const dbkey = process.env.DB_KEY;
 
-var app = express();
+const app = express();
 
 app.set('view engine', 'pug');
+app.use(fileupload({
+    limits: {
+      fileSize: 1000000 //1 MB
+    },
+    abortOnLimit: true
+  }));
+app.use(bodyParser.urlencoded({
+    extended: false
+}));
+app.use(bodyParser.json());
 
-let uri = 'mongodb://' + dbkey + '@elainadb-shard-00-00-r6qx3.mongodb.net:27017,elainadb-shard-00-01-r6qx3.mongodb.net:27017,elainadb-shard-00-02-r6qx3.mongodb.net:27017/test?ssl=true&replicaSet=ElainaDB-shard-0&authSource=admin&retryWrites=true';
-let maindb = '';
-let clientdb = new mongodb.MongoClient(uri, {useNewUrlParser: true})
+const uri = 'mongodb://' + dbkey + '@elainadb-shard-00-00-r6qx3.mongodb.net:27017,elainadb-shard-00-01-r6qx3.mongodb.net:27017,elainadb-shard-00-02-r6qx3.mongodb.net:27017/test?ssl=true&replicaSet=ElainaDB-shard-0&authSource=admin&retryWrites=true';
+
+/**
+ * @type {mongodb.Collection}
+ */
+let maindb;
+/**
+ * @type {mongodb.Collection}
+ */
+let binddb;
+/**
+ * @type {mongodb.Collection}
+ */
+let whitelistdb;
+
+const top_pp_list = [
+    {
+        modbits: -1,
+        list: []
+    }
+];
+const mapCache = new Map();
+const clientdb = new mongodb.MongoClient(uri, {useNewUrlParser: true});
 
 function convertURI(input) {
     input = decodeURIComponent(input);
-    var arr = input.split("");
-    for (i in arr) if (i != arr.length-1 && arr[i] == '+' && arr[parseInt(i)+1] != '+') {arr[i] = ' ';}  
+    const arr = input.split("");
+    for (const i in arr)
+        if (i !== arr.length-1 && arr[i] === '+' && arr[parseInt(i)+1] !== '+') {
+            arr[i] = ' ';
+        }
+    
     input = arr.join("");
     return input;
 }
 
 function convertURIregex(input) {
     input = decodeURIComponent(input);
-    var arr = input.split("");
-    for (i in arr) {
+    const arr = input.split("");
+    for (const i in arr) {
         if (arr[i] == '*') {arr[i] = '[*]';}
         if (arr[i] == '?') {arr[i] = '[?]';}
         if (arr[i] == '$') {arr[i] = '[$]';}
@@ -36,97 +71,128 @@ function convertURIregex(input) {
         if (arr[i] == '"') {arr[i] = '["]';}
         if (arr[i] == "'") {arr[i] = "[']";}
         if (arr[i] == ":") {arr[i] = "[:]";}
-        if (i != arr.length-1 && arr[i] == '+' && arr[parseInt(i)+1] != '+') {arr[i] = ' ';}
-        if (arr[i] == "+") {arr[i] = "[+]";}
+        if (i != arr.length-1 && arr[i] == '+' && arr[parseInt(i)+1] != '+') {
+            arr[i] = ' ';
+        }
+        if (arr[i] == "+") {
+            arr[i] = "[+]";
+        }
     }
     input = arr.join("");
     return input;
 }
 
-top_pp_list = [];
+function refreshtopPP() {
+    console.log("Refreshing top pp list");
+    binddb.find({}, { projection: { _id: 0, username: 1, pp: 1}}).toArray(function(err, res) {
+        top_pp_list.forEach(v => v.list.length === 0);
+        res.forEach((val, index) => {
+            const ppEntries = val.pp;
+            for (const ppEntry of ppEntries) {
+                const entry = {
+                    username: val.username,
+                    map: ppEntry.title + (ppEntry.mods ? " +" + ppEntry.mods : ""),
+                    rawpp: ppEntry.pp,
+                    combo: ppEntry.combo,
+                    acc_percent: ppEntry.accuracy,
+                    miss_c: ppEntry.miss
+                };
+                top_pp_list[0].list.push(entry);
 
-clientdb.connect( function(err, db) {
+                const modbits = osudroid.mods.modbitsFromString(ppEntry.mods);
+                const index = top_pp_list.findIndex(v => v.modbits === modbits);
+                if (index !== -1) {
+                    top_pp_list[index].list.push(entry);
+                } else {
+                    top_pp_list.push({
+                        modbits: modbits,
+                        list: [entry]
+                    });
+                }
+            }
+            top_pp_list.forEach(v => {
+                v.list.sort((a, b) => {return b.rawpp - a.rawpp;});
+                if (v.list.length >= 100) {
+                    v.list.splice(100);
+                }
+            });
+
+            if (index == res.length - 1) {
+                console.log("Done");
+            }
+        });
+    });
+}
+
+function downloadBeatmap(beatmapID) {
+    return new Promise(resolve => {
+        let data = "";
+        https.get(`https://osu.ppy.sh/osu/${beatmapID}`, res => {
+            res.setEncoding("utf-8");
+            res.on("data", chunk => {
+                data += chunk;
+            });
+            res.on("end", () => {
+                resolve(data);
+            });
+        });
+    });
+}
+
+clientdb.connect(function(err, db) {
     if (err) throw err;
-    //if (db) 
     maindb = db.db('ElainaDB');
     console.log("DB connection established");
     binddb = maindb.collection('userbind');
     whitelistdb = maindb.collection('mapwhitelist');
-    refreshtopPP(binddb)
-    setInterval(() => {
-        refreshtopPP(binddb)
-    }, 1800000)
-    makeBoard();
-});
-
-function refreshtopPP(binddb) {
-    top_pp_list = []
-    binddb.find({}, { projection: { _id: 0, username: 1, pp: 1}}).toArray(function(err, res) {
-        top_pp_list = [];
-        res.forEach((val, index) => {
-            for (i in val.pp) {
-                var top_pp_entry = {
-                    username: val.username,
-                    map: val.pp[i].title + (val.pp[i].mods ? " +" + val.pp[i].mods : ""),
-                    rawpp: val.pp[i].pp,
-                    combo: val.pp[i].combo,
-                    acc_percent: val.pp[i].accuracy,
-                    miss_c: val.pp[i].miss
-                }
-                top_pp_list.push(top_pp_entry)
-            }
-            top_pp_list.sort(function(a, b) {return b.rawpp - a.rawpp;})
-            if (top_pp_list.length >= 100) top_pp_list.splice(100);
-            if (index == res.length - 1) {console.log("done")}
-        })
-    })
-}
-
-function makeBoard() {
+    // refreshtopPP();
+    // setInterval(refreshtopPP, 1800000);
+    
     app.get('/', (req, res) => {
-        var page = parseInt(req.url.split('?page=')[1]);
-        if (!page) {page = 1;}
-        var ppsort = { pptotal: -1 };
-        binddb.find({}, { projection: { _id: 0, discordid: 1, uid: 1, pptotal: 1 , playc: 1, username: 1}}).sort(ppsort).skip((page-1)*50).limit(50).toArray(function(err, resarr) {
+        const page = parseInt(req.url.split('?page=')[1]) || 1;
+        const searchQuery = req.url.split('?query=')[1] || "";
+        const query = {};
+        if (searchQuery) {
+            const regexQuery = new RegExp(convertURIregex(searchQuery), "i");
+            query.$or = [{uid: regexQuery}, {username: regexQuery}];
+        }
+        binddb.find(query, { projection: { _id: 0, discordid: 1, uid: 1, pptotal: 1 , playc: 1, username: 1}}).sort({ pptotal: -1 }).skip((page-1)*50).limit(50).toArray(function(err, resarr) {
             if (err) throw err;
-            //console.log(res);
-            var entries = [];
-            for (i in resarr) {
-                if (resarr[i].pptotal) { entries.push(resarr[i]); }
+            const entries = [];
+            for (const i in resarr) {
+                if (resarr[i].pptotal) {
+                    resarr[i].pptotal = resarr[i].pptotal.toFixed(2);
+                    entries.push(resarr[i]);
+                }
             }
-            for (i in entries) {
-                entries[i].pptotal = entries[i].pptotal.toFixed(2);
-            }
-            var title = 'PP Board'
             res.render('main', {
-                title: title,
+                title: 'PP Leaderboard',
                 list: entries,
-                page: page
+                page: page,
+                query: convertURI(searchQuery)
             });        
         });
     });
 
     app.get('/whitelist', (req, res) => {
-        var page = parseInt(req.url.split('?page=')[1]);
-        var query = req.url.split('?query=')[1]
-        var mapquery;
-        if (!page) {page = 1;}
-        if (!query) {mapquery = {}; query = '';}
-        else {
-            var regexquery = new RegExp(convertURIregex(query), 'i'); 
+        let page = parseInt(req.url.split('?page=')[1]);
+        let query = req.url.split('?query=')[1] || "";
+        let mapquery = {};
+        if (!page) {
+            page = 1;
+        }
+        if (query) {
+            const regexquery = new RegExp(convertURIregex(query), 'i'); 
             mapquery = {mapname: regexquery};
         }
-        var mapsort = { mapname: 1 };
-        whitelistdb.find(mapquery, {projection: {_id: 0}}).sort(mapsort).skip((page-1)*30).limit(30).toArray(function(err, resarr) {
-            //console.log(resarr);
-            var title = 'Map Whitelisting Board'
+        whitelistdb.find(mapquery, {projection: {_id: 0}}).sort({ mapname: 1 }).skip((page-1)*30).limit(30).toArray(function(err, resarr) {
             res.render('whitelist', {
-                title: title,
+                title: 'Whitelisted Beatmaps List',
                 list: resarr,
                 page: page,
                 query: convertURI(query)
-            })
-        })
+            });
+        });
     });
 
     app.get('/about', (req, res) => {
@@ -134,78 +200,173 @@ function makeBoard() {
     });
 
     app.get('/toppp', (req, res) => {
+        const modbits = osudroid.mods.modbitsFromString(req.url.split("?mods=")[1] || "") || -1;
+        const modList = top_pp_list.find(v => v.modbits === modbits) || {list: []};
         res.render('toppp', {
-            pplist: top_pp_list
+            pplist: modList.list,
+            mods: convertURI(req.url.split("?mods=")[1] || ""),
         });
     });
 
     app.get('/profile', (req, res) => {
-        var uid = req.url.split('uid=')[1]
-        if (!uid) {res.send("404 Page Not Found"); return;}
-        else if (isNaN(uid)) {res.send("404 Page Not Found"); return;}
-        else {
+        const uid = req.url.split('uid=')[1];
+        if (isNaN(uid)) {
+            return res.send("404 Page Not Found");
+        }
         binddb.findOne({uid: uid}, function(err, findres){
             if (err) throw err;
-            var title = "Player Profile";
-            var username = findres.username;
-            var pptotal = findres.pptotal.toFixed(2);
-            var ppentries = findres.pp;
             res.render('profile', {
-                title: title,
-                username: username,
-                pptotal: pptotal,
-                entries: ppentries
-            })
-        })}
-    })
+                title: "Player Profile",
+                username: findres.username,
+                pptotal: findres.pptotal.toFixed(2),
+                entries: findres.pp
+            });
+        });
+    });
 
-    app.get('/beatmapsr', (req, res) => {
-        console.log(req.url);
-        var input = req.url.split('?b=')[1];
-        var lineslit = input.split('+')
-        var b = lineslit[0];
-        var m = lineslit[1];
-        if (!b) {
-            console.log('error: no map input'); 
-            res.send('error: no map input')
-            return;
+    app.get('/calculate', async (req, res) => {
+        res.render('calculate');
+    });
+
+    app.post('/calculate', async (req, res) => {
+        let osuFile = "";
+
+        if (req.files) {
+            const file = req.files.BeatmapFile;
+            if (!file || !file.name.endsWith(".osu")) {
+                return res.render('calculate', {
+                    err: "Invalid file uploaded"
+                });
+            }
+            osuFile = file.data.toString("utf-8");
         }
-        if (m) var mods = osu.modbits.from_string(m.slice(0) || "")
-        else var mods = 0;
-        console.log(mods);
-        https.get('https://osu.ppy.sh/osu/' + b, (mres) => {
-            var data = '';
-            mres.on('data', (chunk) => {data += chunk;})
-            mres.on('end', () => {
-                if (!data) {
-                    console.log('error: map not found'); 
-                    res.send('error: map not found')
-                    return;
-                }
-                var parser = new osu.parser();
-                parser.feed(data);
-                map = parser.map;
-                if (map.ncircles == 0 && map.nsliders == 0) {
-                    console.log('error: no object found'); 
-                    res.send('error: no object found')
-                    return;
-                }
-                var stars = new osu.diff().calc({map: map, mods: mods});
-                res.send(stars.toString());
-                parser.reset();
-            }) 
-        })
-    })
 
-    // app.get('/', (req, res) => {
-    //     res.send(resArr);
-    // });
+        if (req.body.MapID && !osuFile) {
+            const a = req.body.MapID.split("/");
+            const beatmapID = parseInt(a[a.length - 1]);
+            if (beatmapID <= 0 || isNaN(beatmapID)) {
+                return res.render('calculate', {
+                    err: "Invalid beatmap ID"
+                });
+            }
+
+            const cache = mapCache.get(beatmapID);
+            if (cache) {
+                osuFile = cache;
+            } else {
+                osuFile = await downloadBeatmap(beatmapID);
+                if (!osuFile) {
+                    return res.render('calculate', {
+                        err: "Beatmap with specified beatmap ID is not available"
+                    });
+                }
+                mapCache.set(beatmapID, osuFile);
+            }
+        }
+
+        if (!osuFile) {
+            return res.render('calculate', {
+                err: "Beatmap ID not specified and no .osu file is uploaded"
+            });
+        }
+        
+        const mods = req.body.Mod || "";
+        const acc = Math.max(0, Math.min(parseFloat(req.body.Accuracy), 100)) || 100;
+        const combo = Math.max(0, parseInt(req.body.Combo)) || 0;
+        const miss = Math.max(0, parseInt(req.body.Miss)) || 0;
+
+        const stats = new osudroid.MapStats();
+        if (req.body.SpeedMul) {
+            stats.speedMultiplier = Math.max(0.5, Math.min(parseFloat(req.body.SpeedMul), 2));
+        }
+        if (req.body.ForceAR) {
+            stats.isForceAR = true;
+            stats.ar = Math.max(0, Math.min(parseFloat(req.body.ForceAR), 12.5));
+        }
+
+        const star = new osudroid.MapStars().calculate({file: osuFile, mods: mods, stats: stats});
+        if (star.pcStars.total === 0) {
+            return res.render('calculate', {
+                err: "Invalid file uploaded"
+            });
+        }
+
+        const dpp = new osudroid.PerformanceCalculator().calculate({
+            stars: star.droidStars,
+            combo: combo,
+            accPercent: acc,
+            miss: miss,
+            mode: osudroid.modes.droid,
+            stats: stats
+        });
+
+        const pp = new osudroid.PerformanceCalculator().calculate({
+            stars: star.pcStars,
+            combo: combo,
+            accPercent: acc,
+            miss: miss,
+            mode: osudroid.modes.osu,
+            stats: stats
+        });
+
+        const map = star.pcStars.map;
+        const statsForString = new osudroid.MapStats({
+            cs: map.cs,
+            ar: stats.isForceAR ? stats.ar : map.ar,
+            od: map.od,
+            hp: map.hp,
+            mods: mods,
+            speedMultiplier: stats.speedMultiplier,
+            isForceAR: stats.isForceAR
+        }).calculate({mode: osudroid.modes.osu});
+
+        let mapString = `${map.artist} - ${map.title} (${map.creator}) [${map.version}]${mods ? ` +${mods}` : ""}`;
+        if (stats.speedMultiplier !== 1 || stats.isForceAR) {
+            mapString += " (";
+            if (stats.isForceAR) {
+                mapString += `AR${stats.ar}`;
+            }
+            if (stats.speedMultiplier !== 1) {
+                if (stats.isForceAR) {
+                    mapString += ", ";
+                }
+                mapString += `${stats.speedMultiplier}x`;
+            }
+            mapString += ")";
+        }
+
+        res.render('calculate', {
+            maptitle: mapString,
+            objectstat: `Circles: ${map.circles} - Sliders: ${map.sliders} - Spinners: ${map.spinners}`,
+            mapstat: `CS: ${map.cs}${statsForString.cs === map.cs ? "": ` (${statsForString.cs.toFixed(2)})`} - AR: ${map.ar}${statsForString.ar === map.ar ? "": ` (${statsForString.ar.toFixed(2)})`} - OD: ${map.od}${statsForString.od === map.od ? "" : ` (${statsForString.od.toFixed(2)})`} - HP: ${map.hp}${statsForString.hp === map.hp ? "": ` (${statsForString.hp.toFixed(2)})`}`,
+            ppentry: [
+                {
+                    type: "Droid",
+                    sr: star.droidStars.total.toFixed(2),
+                    aimsr: star.droidStars.aim.toFixed(2),
+                    speedsr: star.droidStars.speed.toFixed(2),
+                    pp: dpp.total.toFixed(2),
+                    aimpp: dpp.aim.toFixed(2),
+                    speedpp: dpp.speed.toFixed(2),
+                    accpp: dpp.accuracy.toFixed(2)
+                },
+                {
+                    type: "PC",
+                    sr: star.pcStars.total.toFixed(2),
+                    aimsr: star.pcStars.aim.toFixed(2),
+                    speedsr: star.pcStars.speed.toFixed(2),
+                    pp: pp.total.toFixed(2),
+                    aimpp: pp.aim.toFixed(2),
+                    speedpp: pp.speed.toFixed(2),
+                    accpp: pp.accuracy.toFixed(2)
+                }
+            ]
+        });
+    });
     
     const port = process.env.PORT || 5000;
     
     app.listen(port, () => {
         console.log(`Express running → PORT ${port}`);
     });
-}
-
-
+});
