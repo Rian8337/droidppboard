@@ -36,7 +36,7 @@ let binddb;
  */
 let whitelistdb;
 
-const top_pp_list = [
+let top_pp_list = [
     {
         modbits: -1,
         list: []
