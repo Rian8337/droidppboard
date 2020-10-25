@@ -372,11 +372,13 @@ clientdb.connect((err, db) => {
             }
             mapString += ")";
         }
+        const maxCombo = map.maxCombo();
 
         res.render('calculate', {
             maptitle: mapString,
             objectstat: `Circles: ${map.circles} - Sliders: ${map.sliders} - Spinners: ${map.spinners}`,
             mapstat: `CS: ${map.cs}${statsForString.cs === map.cs ? "": ` (${(statsForString.cs as number).toFixed(2)})`} - AR: ${map.ar}${statsForString.ar === map.ar ? "": ` (${(statsForString.ar as number).toFixed(2)})`} - OD: ${map.od}${statsForString.od === map.od ? "" : ` (${(statsForString.od as number).toFixed(2)})`} - HP: ${map.hp}${statsForString.hp === map.hp ? "": ` (${(statsForString.hp as number).toFixed(2)})`}`,
+            playstat: `Combo: ${Math.min(combo, maxCombo)}x/${maxCombo}x - Accuracy: ${acc.toFixed(2)}% - ${miss} ${miss === 1 ? "miss" : "misses"}`,
             ppentry: [
                 {
                     type: "Droid",
