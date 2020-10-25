@@ -56,7 +56,7 @@ coverage
 build/Release
 
 # osu!droid module distributed folder
-/modules/osu-droid/dist
+dist
 
 # Dependency directories
 node_modules
