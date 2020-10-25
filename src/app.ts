@@ -310,7 +310,6 @@ clientdb.connect((err, db) => {
 
         const mod: string = req.body.Mod || "";
         const acc: number = Math.max(0, Math.min(parseFloat(req.body.Accuracy), 100)) || 100;
-        const combo: number = Math.max(0, parseInt(req.body.Combo)) || 0;
         const miss: number = Math.max(0, parseInt(req.body.Miss)) || 0;
 
         const stats: MapStats = new MapStats();
@@ -328,6 +327,10 @@ clientdb.connect((err, db) => {
                 err: "Invalid file uploaded"
             });
         }
+
+        const map: Beatmap = star.pcStars.map;
+        const maxCombo = map.maxCombo();
+        const combo: number = Math.max(0, Math.min(parseInt(req.body.Combo), maxCombo)) || maxCombo;
 
         const dpp: PerformanceCalculator = new PerformanceCalculator().calculate({
             stars: star.droidStars,
@@ -347,7 +350,6 @@ clientdb.connect((err, db) => {
             stats: stats
         });
 
-        const map: Beatmap = star.pcStars.map;
         const statsForString = new MapStats({
             cs: map.cs,
             ar: stats.isForceAR ? stats.ar : map.ar,
@@ -372,7 +374,6 @@ clientdb.connect((err, db) => {
             }
             mapString += ")";
         }
-        const maxCombo = map.maxCombo();
 
         res.render('calculate', {
             maptitle: mapString,
