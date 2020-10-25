@@ -264,7 +264,7 @@ clientdb.connect((err, db) => {
         res.render('calculate');
     });
 
-    app.post('./calculate', async (req, res) => {
+    app.post('/calculate', async (req, res) => {
         let osuFile: string = "";
 
         if (req.files) {
