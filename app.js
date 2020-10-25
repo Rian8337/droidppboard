@@ -145,8 +145,8 @@ clientdb.connect(function(err, db) {
     console.log("DB connection established");
     binddb = maindb.collection('userbind');
     whitelistdb = maindb.collection('mapwhitelist');
-    // refreshtopPP();
-    // setInterval(refreshtopPP, 1800000);
+    refreshtopPP();
+    setInterval(refreshtopPP, 1800000);
     
     app.get('/', (req, res) => {
         const page = parseInt(req.url.split('?page=')[1]) || 1;
