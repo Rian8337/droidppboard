@@ -240,7 +240,7 @@ clientdb.connect((err, db) => {
         const modList = top_pp_list.find(v => v.modbits === modbits) || {list: []};
         res.render('toppp', {
             pplist: modList.list,
-            mods: convertURI(req.url.split("?mods=")[1] || ""),
+            mods: convertURI(mod).toUpperCase(),
         });
     });
 
