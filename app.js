@@ -200,7 +200,8 @@ clientdb.connect(function(err, db) {
     });
 
     app.get('/toppp', (req, res) => {
-        const modbits = osudroid.mods.modbitsFromString(req.url.split("?mods=")[1] || "") || -1;
+        const mods = req.url.split("?mods=")[1] || "";
+        const modbits = mods === "NM" ? 0 : osudroid.mods.modbitsFromString(mods) || -1;
         const modList = top_pp_list.find(v => v.modbits === modbits) || {list: []};
         res.render('toppp', {
             pplist: modList.list,
