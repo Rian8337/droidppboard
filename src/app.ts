@@ -189,10 +189,10 @@ clientdb.connect((err, db) => {
     app.get('/', (req, res) => {
         const page = parseInt(req.url.split('?page=')[1]) || 1;
         const searchQuery = req.url.split('?query=')[1] || "";
-        const query = {};
+        let query = {};
         if (searchQuery) {
             const regexQuery = new RegExp(convertURIregex(searchQuery), "i");
-            Object.defineProperty(query, '$or', [{uid: regexQuery}, {username: regexQuery}]);
+            query = {$or: [{uid: regexQuery}, {username: regexQuery}]};
         }
         binddb.find(query, { projection: { _id: 0, discordid: 1, uid: 1, pptotal: 1 , playc: 1, username: 1}}).sort({ pptotal: -1 }).skip((page-1)*50).limit(50).toArray(function(err, resarr: BindDatabaseResponse[]) {
             if (err) throw err;
@@ -215,10 +215,10 @@ clientdb.connect((err, db) => {
     app.get('/whitelist', (req, res) => {
         let page: number = parseInt(req.url.split('?page=')[1]) || 1;
         let query: string = req.url.split('?query=')[1] || "";
-        const mapquery = {};
+        let mapquery = {};
         if (query) {
             const regexquery = new RegExp(convertURIregex(query), 'i'); 
-            Object.defineProperty(mapquery, 'mapname', regexquery);
+            mapquery = {mapname: regexquery};
         }
         whitelistdb.find(mapquery, {projection: {_id: 0}}).sort({ mapname: 1 }).skip((page-1)*30).limit(30).toArray(function(err, resarr: WhitelistDatabaseResponse[]) {
             res.render('whitelist', {
