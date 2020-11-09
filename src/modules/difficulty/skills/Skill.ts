@@ -12,19 +12,9 @@ export interface DifficultyValue {
  */
 export abstract class Skill {
     /**
-     * The mode to calculate.
-     */
-    protected readonly mode: modes;
-
-    /**
      * The previous hitobjects during a section.
      */
     protected readonly previous: DifficultyHitObject[] = [];
-
-    /**
-     * The speed multiplier of this calculation.
-     */
-    protected readonly speedMultiplier: number;
 
     /**
      * The strain of currently calculated hitobject.
@@ -55,14 +45,6 @@ export abstract class Skill {
      * Angle threshold to start giving bonus.
      */
     protected abstract readonly angleBonusBegin: number;
-
-    constructor(values: {
-        speedMultiplier: number,
-        mode?: modes
-    }) {
-        this.mode = values.mode || modes.osu;
-        this.speedMultiplier = values.speedMultiplier;
-    }
 
     /**
      * Saves the current strain peak.

@@ -127,14 +127,8 @@ export class StarRating {
             speedMultiplier: stats.speedMultiplier
         });
 
-        const aimSkill: Aim = new Aim({
-            mode: mode,
-            speedMultiplier: stats.speedMultiplier
-        });
-        const speedSkill: Speed = new Speed({
-            mode: mode,
-            speedMultiplier: stats.speedMultiplier
-        });
+        const aimSkill: Aim = new Aim();
+        const speedSkill: Speed = new Speed();
 
         const sectionLength: number = this.sectionLength * stats.speedMultiplier;
         let currentSectionEnd: number = Math.ceil(map.objects[0].startTime / sectionLength) * sectionLength;
