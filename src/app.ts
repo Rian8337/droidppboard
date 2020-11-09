@@ -155,7 +155,7 @@ function refreshtopPP(): void {
                 }
             });
 
-            if (index == res.length - 1) {
+            if (index === res.length - 1) {
                 console.log("Done");
             }
         });
@@ -187,8 +187,8 @@ clientdb.connect((err, db) => {
     setInterval(refreshtopPP, 1800000);
 
     app.get('/', (req, res) => {
-        const page = parseInt(req.url.split('?page=')[1]) || 1;
-        const searchQuery = req.url.split('?query=')[1] || "";
+        const page: number = parseInt(req.url.split('?page=')[1]) || 1;
+        const searchQuery: string = req.url.split('?query=')[1] || "";
         let query = {};
         if (searchQuery) {
             const regexQuery = new RegExp(convertURIregex(searchQuery), "i");
@@ -235,8 +235,8 @@ clientdb.connect((err, db) => {
     });
 
     app.get('/toppp', (req, res) => {
-        const mod = req.url.split("?mods=")[1] || "";
-        const modbits = mod.toLowerCase() === "nm" ? 0 : mods.modbitsFromString(mod) || -1;
+        const mod: string = req.url.split("?mods=")[1] || "";
+        const modbits: number = mod.toLowerCase() === "nm" ? 0 : mods.modbitsFromString(mod) || -1;
         const modList = top_pp_list.find(v => v.modbits === modbits) || {list: []};
         res.render('toppp', {
             pplist: modList.list,
@@ -249,7 +249,7 @@ clientdb.connect((err, db) => {
         if (!uid) {
             return res.send("404 Page Not Found");
         }
-        binddb.findOne({uid: uid}, function(err, findres: BindDatabaseResponse){
+        binddb.findOne({uid: uid}, function(err, findres: BindDatabaseResponse) {
             if (err) throw err;
             res.render('profile', {
                 title: "Player Profile",
@@ -260,7 +260,7 @@ clientdb.connect((err, db) => {
         });
     });
 
-    app.get('/calculate', async (req, res) => {
+    app.get('/calculate', (req, res) => {
         res.render('calculate');
     });
 
@@ -350,7 +350,7 @@ clientdb.connect((err, db) => {
             stats: stats
         });
 
-        const statsForString = new MapStats({
+        const statsForString: MapStats = new MapStats({
             cs: map.cs,
             ar: stats.isForceAR ? stats.ar : map.ar,
             od: map.od,
