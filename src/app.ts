@@ -19,6 +19,7 @@ interface DatabasePPEntry {
     combo: number;
     miss: number;
     accuracy: number;
+    scoreID?: number;
 }
 
 interface PPEntry {
@@ -48,7 +49,9 @@ interface WhitelistDatabaseResponse {
     mapname: string;
 }
 
-const dbkey: string = process.env.DB_KEY as string;
+const elainadbkey: string = process.env.ELAINA_DB_KEY as string;
+const alicedbkey: string = process.env.ALICE_DB_KEY as string;
+
 const app: express.Express = express();
 
 app.set('view engine', 'pug');
@@ -63,10 +66,12 @@ app.use(bodyParser.urlencoded({
 }));
 app.use(bodyParser.json());
 
-const uri: string = 'mongodb://' + dbkey + '@elainadb-shard-00-00-r6qx3.mongodb.net:27017,elainadb-shard-00-01-r6qx3.mongodb.net:27017,elainadb-shard-00-02-r6qx3.mongodb.net:27017/test?ssl=true&replicaSet=ElainaDB-shard-0&authSource=admin&retryWrites=true';
+const mainURI: string = 'mongodb://' + elainadbkey + '@elainaDb-shard-00-00-r6qx3.mongodb.net:27017,elainaDb-shard-00-01-r6qx3.mongodb.net:27017,elainaDb-shard-00-02-r6qx3.mongodb.net:27017/test?ssl=true&replicaSet=ElainaDB-shard-0&authSource=admin&retryWrites=true';
+const aliceURI: string = 'mongodb+srv://' + alicedbkey + '@aliceDb-hoexz.gcp.mongodb.net/test?retryWrites=true&w=majority';
 
 let binddb: mongodb.Collection;
 let whitelistdb: mongodb.Collection;
+let keydb: mongodb.Collection;
 
 let top_pp_list: PPList[] = [
     {
@@ -75,11 +80,12 @@ let top_pp_list: PPList[] = [
     }
 ];
 const mapCache: Map<number, string> = new Map();
-const clientdb: mongodb.MongoClient = new mongodb.MongoClient(uri, {useNewUrlParser: true, useUnifiedTopology: true});
+const elainaDb: mongodb.MongoClient = new mongodb.MongoClient(mainURI, {useNewUrlParser: true, useUnifiedTopology: true});
+const aliceDb: mongodb.MongoClient = new mongodb.MongoClient(aliceURI, {useNewUrlParser: true, useUnifiedTopology: true});
 
 function convertURI(input: string): string {
     input = decodeURIComponent(input);
-    const arr = input.split("");
+    const arr: string[] = input.split("");
     for (let i = 0; i < arr.length; ++i) {
         if (i != arr.length-1 && arr[i] === '+' && arr[i+1] !== '+') {
             arr[i] = ' ';
@@ -92,7 +98,7 @@ function convertURI(input: string): string {
 
 function convertURIregex(input: string): string {
     input = decodeURIComponent(input);
-    const arr = input.split("");
+    const arr: string[] = input.split("");
     for (let i = 0; i < arr.length; ++i) {
         if (arr[i] == '*') {arr[i] = '[*]';}
         if (arr[i] == '?') {arr[i] = '[?]';}
@@ -149,7 +155,9 @@ function refreshtopPP(): void {
                 }
             }
             top_pp_list.forEach(v => {
-                v.list.sort((a, b) => {return b.rawpp - a.rawpp;});
+                v.list.sort((a, b) => {
+                    return b.rawpp - a.rawpp;
+                });
                 if (v.list.length >= 100) {
                     v.list.splice(100);
                 }
@@ -177,12 +185,30 @@ function downloadBeatmap(beatmapID: number): Promise<string> {
     });
 }
 
-clientdb.connect((err, db) => {
+elainaDb.connect((err, db) => {
     if (err) throw err;
     const maindb: mongodb.Db = db.db('ElainaDB');
-    console.log("DB connection established");
+    console.log("Elaina DB connection established");
     binddb = maindb.collection('userbind');
     whitelistdb = maindb.collection('mapwhitelist');
+    
+    if (binddb && whitelistdb && keydb) {
+        initializeSite();
+    }
+});
+
+aliceDb.connect((err, db) => {
+    if (err) throw err;
+    const maindb = db.db("AliceDB");
+    console.log("Alice DB connection established");
+    keydb = maindb.collection("ppapikey");
+
+    if (binddb && whitelistdb && keydb) {
+        initializeSite();
+    }
+});
+
+function initializeSite(): void {
     refreshtopPP();
     setInterval(refreshtopPP, 1800000);
 
@@ -405,9 +431,58 @@ clientdb.connect((err, db) => {
         });
     });
 
+    app.get('/api/getplayertop', (req, res) => {
+        const requestParams: string[] = req.url.split("?")[1]?.split("&") || [];
+        if (requestParams.length !== 2) {
+            return res.send(`{"code": 400, "error": "Please provide exactly 2 request parameters (uid and API key)."}`);
+        }
+
+        const key: string = requestParams.find(param => param.startsWith("key="))?.split("key=")[1] || "";
+        if (!key) {
+            return res.send(`{"code": 400, "error": "Please provide an API key."}`);
+        }
+
+        const uid: number = parseInt(requestParams.find(param => param.startsWith("uid="))?.split("uid=")[1] || "0");
+        if (!uid) {
+            return res.send(`{"code": 400, "error": "Please provide a valid uid."}`);
+        }
+
+        keydb.findOne({key: key}, (err, keyInfo) => {
+            if (err) throw err;
+            if (!keyInfo) {
+                return res.send(`{"code": 400, "error": "Please provide a valid API key."}`);
+            }
+
+            binddb.findOne({uid: uid.toString()}, (err, playerInfo: BindDatabaseResponse) => {
+                if (err) throw err;
+                const responseObject = {
+                    code: 200,
+                    data: {}
+                };
+                if (!playerInfo) {
+                    return res.send(JSON.stringify(responseObject));
+                }
+
+                const ppList: DatabasePPEntry[] = playerInfo.pp;
+                ppList.forEach(v => delete v.scoreID);
+
+                responseObject.data = {
+                    uid: parseInt(playerInfo.uid),
+                    username: playerInfo.username,
+                    pp: {
+                        total: playerInfo.pptotal,
+                        list: ppList
+                    }
+                };
+
+                res.send(JSON.stringify(responseObject));
+            });
+        });
+    });
+
     const port = process.env.PORT || 5000;
 
     app.listen(port, () => {
         console.log(`Express running → PORT ${port}`);
     });
-});
+}
