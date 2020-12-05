@@ -11,12 +11,12 @@ export class MapStars {
     /**
      * The osu!droid star rating of the beatmap.
      */
-    public readonly droidStars: StarRating = new StarRating();
+    readonly droidStars: StarRating = new StarRating();
 
     /**
      * The osu!standard star rating of the beatmap.
      */
-    public readonly pcStars: StarRating = new StarRating();
+    readonly pcStars: StarRating = new StarRating();
 
     /**
      * Calculates the star rating of a beatmap.

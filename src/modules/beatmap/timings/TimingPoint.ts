@@ -5,22 +5,22 @@ export class TimingPoint {
     /**
      * The time of which the timing is applied in milliseconds.
      */
-    public readonly time: number;
+    readonly time: number;
 
     /**
      * The amount of milliseconds passed for each beat.
      */
-    public readonly msPerBeat: number;
+    readonly msPerBeat: number;
 
     /**
      * The slider speed multiplier of the timing point.
      */
-    public readonly speedMultiplier: number;
+    readonly speedMultiplier: number;
 
     /** 
      * Whether or not the timing point does not inherit from the previous timing point.
      */
-    public readonly change: boolean;
+    readonly change: boolean;
 
     constructor(values: {
         time: number,

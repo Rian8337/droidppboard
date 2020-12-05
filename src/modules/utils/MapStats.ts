@@ -9,57 +9,57 @@ export class MapStats {
     /**
      * The circle size of the beatmap.
      */
-    public cs?: number;
+    cs?: number;
 
     /**
      * The approach rate of the beatmap.
      */
-    public ar?: number;
+    ar?: number;
 
     /**
      * The overall difficulty of the beatmap.
      */
-    public od?: number;
+    od?: number;
 
     /**
      * The health drain rate of the beatmap.
      */
-    public hp?: number;
+    hp?: number;
 
     /**
      * The enabled modifications in osu!standard string.
      */
-    public mods: string;
+    mods: string;
 
     /**
      * The bitwise enum of enabled modifications for osu!droid.
      */
-    public droidMods: number;
+    droidMods: number;
 
     /**
      * The bitwise enum of enabled modifications for osu!standard.
      */
-    public pcMods: number;
+    pcMods: number;
 
     /**
      * The speed multiplier applied from all modifications.
      */
-    public speedMultiplier: number;
+    speedMultiplier: number;
 
     /**
      * Whether or not this map statistics uses forced AR.
      */
-    public isForceAR: boolean;
+    isForceAR: boolean;
 
-    public static readonly OD0_MS: number = 80;
-    public static readonly OD10_MS: number = 20;
-    public static readonly AR0_MS: number = 1800;
-    public static readonly AR5_MS: number = 1200;
-    public static readonly AR10_MS: number = 450;
+    static readonly OD0_MS: number = 80;
+    static readonly OD10_MS: number = 20;
+    static readonly AR0_MS: number = 1800;
+    static readonly AR5_MS: number = 1200;
+    static readonly AR10_MS: number = 450;
 
-    public static readonly OD_MS_STEP: number = (MapStats.OD0_MS - MapStats.OD10_MS) / 10;
-    public static readonly AR_MS_STEP1: number = (MapStats.AR0_MS - MapStats.AR5_MS) / 5;
-    public static readonly AR_MS_STEP2: number = (MapStats.AR5_MS - MapStats.AR10_MS) / 5;
+    static readonly OD_MS_STEP: number = (MapStats.OD0_MS - MapStats.OD10_MS) / 10;
+    static readonly AR_MS_STEP1: number = (MapStats.AR0_MS - MapStats.AR5_MS) / 5;
+    static readonly AR_MS_STEP2: number = (MapStats.AR5_MS - MapStats.AR10_MS) / 5;
 
     constructor(values: {
         cs?: number,

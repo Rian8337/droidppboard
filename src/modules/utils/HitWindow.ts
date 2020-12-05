@@ -27,7 +27,7 @@ interface HitWindow {
  * Represents the hit window of osu!droid.
  */
 export class DroidHitWindow implements HitWindow {
-    public readonly overallDifficulty: number;
+    readonly overallDifficulty: number;
 
     constructor(overallDifficulty: number) {
         this.overallDifficulty = overallDifficulty;
@@ -62,7 +62,7 @@ export class DroidHitWindow implements HitWindow {
  * Represents the hit window of osu!standard.
  */
 export class OsuHitWindow implements HitWindow {
-    public readonly overallDifficulty: number;
+    readonly overallDifficulty: number;
 
     constructor(overallDifficulty: number) {
         this.overallDifficulty = overallDifficulty;

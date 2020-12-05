@@ -8,12 +8,12 @@ export class RepeatPoint extends HitObject {
     /**
      * The index of the repeat point.
      */
-    public readonly repeatIndex: number;
+    readonly repeatIndex: number;
 
     /**
      * The duration of the repeat point.
      */
-    public readonly spanDuration: number;
+    readonly spanDuration: number;
 
     constructor(values: {
         position: Vector2,

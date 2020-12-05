@@ -13,62 +13,62 @@ export class Slider extends HitObject {
     /**
      * The repetition amount of the slider. Note that 1 repetition means no repeats (1 loop).
      */
-    public readonly repetitions: number;
+    readonly repetitions: number;
 
     /**
      * The nested hitobjects of the slider. Consists of headcircle (sliderhead), slider ticks, repeat points, and tailcircle (sliderend).
      */
-    public readonly nestedHitObjects: HitObject[];
+    readonly nestedHitObjects: HitObject[];
 
     /**
      * The slider's path.
      */
-    public readonly path: SliderPath;
+    readonly path: SliderPath;
 
     /**
      * The slider's end position.
      */
-    public readonly endPosition: Vector2;
+    readonly endPosition: Vector2;
 
     /**
      * The slider's velocity.
      */
-    public readonly velocity: number;
+    readonly velocity: number;
 
     /**
      * The tick distance of the slider.
      */
-    public readonly tickDistance: number;
+    readonly tickDistance: number;
 
     /**
      * The lazy end position of the slider.
      */
-    public lazyEndPosition?: Vector2;
+    lazyEndPosition?: Vector2;
 
     /**
      * The lazy travel distance of the slider.
      */
-    public lazyTravelDistance?: number;
+    lazyTravelDistance?: number;
 
     /**
      * The span duration (repeat duration) of the slider.
      */
-    public readonly spanDuration: number;
+    readonly spanDuration: number;
 
     /**
      * The slider's head (sliderhead).
      */
-    public readonly headCircle: HeadCircle;
+    readonly headCircle: HeadCircle;
 
     /**
      * The slider's tail (sliderend).
      */
-    public readonly tailCircle: TailCircle;
+    readonly tailCircle: TailCircle;
 
     /**
      * The duration of the slider.
      */
-    public readonly duration: number;
+    readonly duration: number;
 
     private readonly legacyLastTickOffset: number = 36;
     

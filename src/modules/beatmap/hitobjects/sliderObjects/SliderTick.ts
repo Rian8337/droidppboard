@@ -8,12 +8,12 @@ export class SliderTick extends HitObject {
     /**
      * The index of the slider tick.
      */
-    public readonly spanIndex: number;
+    readonly spanIndex: number;
 
     /**
      * The start time of the slider tick.
      */
-    public readonly spanStartTime: number;
+    readonly spanStartTime: number;
 
     constructor(values: {
         position: Vector2,

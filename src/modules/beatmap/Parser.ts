@@ -18,7 +18,7 @@ export class Parser {
     /**
      * The parsed beatmap.
      */
-    public map: Beatmap = new Beatmap();
+    map: Beatmap = new Beatmap();
 
     /**
      * The amount of lines of `.osu` file.

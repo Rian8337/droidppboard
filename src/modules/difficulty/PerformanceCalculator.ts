@@ -11,32 +11,32 @@ export class PerformanceCalculator {
     /**
      * The aim performance value.
      */
-    public aim: number = 0;
+    aim: number = 0;
 
     /**
      * The speed performance value.
      */
-    public speed: number = 0;
+    speed: number = 0;
     
     /**
      * The accuracy performance value.
      */
-    public accuracy: number = 0;
+    accuracy: number = 0;
 
     /**
      * The overall performance value.
      */
-    public total: number = 0;
+    total: number = 0;
 
     /**
      * The calculated accuracy.
      */
-    public computedAccuracy?: Accuracy;
+    computedAccuracy?: Accuracy;
 
     /**
      * The mode this calculator is calculating for.
      */
-    public mode: modes = modes.osu;
+    mode: modes = modes.osu;
 
     /**
      * The speed penalty for osu!droid based on replay analyzer.

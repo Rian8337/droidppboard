@@ -4,7 +4,7 @@ import { Vector2 } from '../mathutil/Vector2';
  * Precision utilities.
  */
 export abstract class Precision {
-    public static readonly FLOAT_EPSILON: number = 1e-3;
+    static readonly FLOAT_EPSILON: number = 1e-3;
 
     /**
      * Checks if two numbers are equal with a given tolerance.

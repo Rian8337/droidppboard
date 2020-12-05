@@ -5,22 +5,22 @@ export class Accuracy {
     /**
      * The amount of misses achieved.
      */
-    public readonly nmiss: number;
+    readonly nmiss: number;
 
     /**
      * The amount of 300s achieved.
      */
-    public readonly n300: number;
+    readonly n300: number;
 
     /**
      * The amount of 100s achieved.
      */
-    public readonly n100: number;
+    readonly n100: number;
     
     /**
      * The amount of 50s achieved.
      */
-    public readonly n50: number;
+    readonly n50: number;
     
     /**
      * Calculates accuracy based on given parameters.

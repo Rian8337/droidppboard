@@ -5,12 +5,12 @@ export class Vector2 {
     /**
      * The x position of the vector.
      */
-    public x: number;
+    x: number;
     
     /**
      * The y position of the vector.
      */
-    public y: number;
+    y: number;
 
     constructor(values: {
         x: number,

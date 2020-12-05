@@ -10,102 +10,102 @@ export class Beatmap {
     /**
      * The format version of the beatmap.
      */
-    public formatVersion: number = 1;
+    formatVersion: number = 1;
 
     /**
      * The title of the song of the beatmap.
      */
-    public title: string = "";
+    title: string = "";
 
     /**
      * The unicode title of the song of the beatmap.
      */
-    public titleUnicode: string = "";
+    titleUnicode: string = "";
 
     /**
      * The artist of the song of the beatmap.
      */
-    public artist: string = "";
+    artist: string = "";
 
     /**
      * The unicode artist of the song of the beatmap.
      */
-    public artistUnicode: string = "";
+    artistUnicode: string = "";
 
     /**
      * The creator of the beatmap.
      */
-    public creator: string = "";
+    creator: string = "";
 
     /**
      * The difficulty name of the beatmap.
      */
-    public version: string = "";
+    version: string = "";
 
     /**
      * The approach rate of the beatmap.
      */
-    public ar?: number = undefined;
+    ar?: number = undefined;
 
     /**
      * The circle size of the beatmap.
      */
-    public cs: number = 5;
+    cs: number = 5;
 
     /**
      * The overall difficulty of the beatmap.
      */
-    public od: number = 5;
+    od: number = 5;
 
     /**
      * The health drain rate of the beatmap.
      */
-    public hp: number = 5;
+    hp: number = 5;
 
     /**
      * The slider velocity of the beatmap.
      */
-    public sv: number = 1;
+    sv: number = 1;
 
     /**
      * The slider tick rate of the beatmap.
      */
-    public tickRate: number = 1;
+    tickRate: number = 1;
 
     /**
      * The amount of circles in the beatmap.
      */
-    public circles: number = 0;
+    circles: number = 0;
 
     /**
      * The amount of sliders in the beatmap.
      */
-    public sliders: number = 0;
+    sliders: number = 0;
 
     /**
      * The amount of spinners in the beatmap.
      */
-    public spinners: number = 0;
+    spinners: number = 0;
 
     /**
      * The objects of the beatmap.
      */
-    public objects: Array<HitObject> = [];
+    objects: Array<HitObject> = [];
 
     /**
      * The timing points of the beatmap.
      */
-    public timingPoints: Array<TimingPoint> = [];
+    timingPoints: Array<TimingPoint> = [];
 
     /**
      * The break points of the beatmap.
      */
-    public breakPoints: Array<BreakPoint> = [];
+    breakPoints: Array<BreakPoint> = [];
 
     /**
      * The stack leniency of the beatmap.
      */
-    public stackLeniency: number = 0.7;
+    stackLeniency: number = 0.7;
 
     /**
      * Calculates the maximum combo of the beatmap.

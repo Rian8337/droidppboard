@@ -8,37 +8,37 @@ export abstract class HitObject {
     /**
      * The start time of the object in milliseconds.
      */
-    public startTime: number;
+    startTime: number;
 
     /**
      * The bitwise type of the hitobject (circle/slider/spinner).
      */
-    public readonly type: objectTypes;
+    readonly type: objectTypes;
 
     /**
      * The position of the hitobject in osu!pixels.
      */
-    public readonly position: Vector2;
+    readonly position: Vector2;
 
     /**
      * The end time of the hitobject.
      */
-    public endTime: number;
+    endTime: number;
 
     /**
      * The stacked position of the hitobject.
      */
-    public stackedPosition: Vector2;
+    stackedPosition: Vector2;
 
     /**
      * Whether or not this hitobject represents a new combo in the beatmap.
      */
-    public readonly isNewCombo: boolean;
+    readonly isNewCombo: boolean;
 
     /**
      * The stack height of the object.
      */
-    public stackHeight: number;
+    stackHeight: number;
 
     constructor(values: {
         startTime: number,

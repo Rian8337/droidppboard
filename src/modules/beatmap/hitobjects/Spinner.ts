@@ -11,7 +11,7 @@ export class Spinner extends HitObject {
     /**
      * The duration of the spinner.
      */
-    public readonly duration: number;
+    readonly duration: number;
 
     constructor(values: {
         startTime: number,

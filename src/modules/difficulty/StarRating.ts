@@ -13,67 +13,67 @@ export class StarRating {
     /**
      * The calculated beatmap.
      */
-    public map: Beatmap = new Beatmap();
+    map: Beatmap = new Beatmap();
 
     /**
      * The difficulty objects of the beatmap.
      */
-    public objects: DifficultyHitObject[] = [];
+    objects: DifficultyHitObject[] = [];
 
     /**
      * The modifications applied.
      */
-    public mods: string = "";
+    mods: string = "";
 
     /**
      * The aim star rating of the beatmap.
      */
-    public aim: number = 0;
+    aim: number = 0;
 
     /**
      * The speed star rating of the beatmap.
      */
-    public speed: number = 0;
+    speed: number = 0;
 
     /**
      * The total star rating of the beatmap.
      */
-    public total: number = 0;
+    total: number = 0;
 
     /**
      * The aim difficulty of the beatmap.
      */
-    public aimDifficulty: number = 0;
+    aimDifficulty: number = 0;
 
     /**
      * The speed difficulty of the beatmap.
      */
-    public speedDifficulty: number = 0;
+    speedDifficulty: number = 0;
     
     /**
      * Length bonus given by aim difficulty.
      */
-    public aimLengthBonus: number = 0;
+    aimLengthBonus: number = 0;
 
     /**
      * Length bonus given by speed difficulty.
      */
-    public speedLengthBonus: number = 0;
+    speedLengthBonus: number = 0;
 
     /**
      * Interval threshold for singletaps in milliseconds.
      */
-    public singletapThreshold: number = 125;
+    singletapThreshold: number = 125;
 
     /**
      * Number of notes that are seen as singletaps by the difficulty calculator.
      */
-    public singles: number = 0;
+    singles: number = 0;
 
     /**
      * Number of notes that are faster than the interval given in `calculate()`. These singletap statistics are not required in star rating, but they are a free byproduct of the calculation which could be useful.
      */
-    public singlesThreshold: number = 0;
+    singlesThreshold: number = 0;
 
     private readonly sectionLength: number = 400;
     private readonly difficultyMultiplier: number = 0.0675;

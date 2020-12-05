@@ -10,37 +10,37 @@ export class SliderPath {
     /**
      * The path type of the slider.
      */
-    public readonly pathType: PathType;
+    readonly pathType: PathType;
 
     /**
      * The control points of the slider.
      */
-    public controlPoints: Vector2[];
+    controlPoints: Vector2[];
 
     /**
      * Distance that is expected when calculating slider path.
      */
-    public readonly expectedDistance: number;
+    readonly expectedDistance: number;
 
     /**
      * Whether or not the instance has been initialized.
      */
-    public isInitialized: boolean = false;
+    isInitialized: boolean = false;
 
     /**
      * The calculated path of the slider.
      */
-    public calculatedPath: Vector2[] = [];
+    calculatedPath: Vector2[] = [];
 
     /**
      * The cumulative length of the slider.
      */
-    public cumulativeLength: number[] = [];
+    cumulativeLength: number[] = [];
 
     /**
      * The path approximator of the slider.
      */
-    public readonly pathApproximator: PathApproximator = new PathApproximator();
+    readonly pathApproximator: PathApproximator = new PathApproximator();
 
     constructor(values: {
         pathType: PathType,
