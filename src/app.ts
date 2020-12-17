@@ -466,7 +466,7 @@ function initializeSite(): void {
                     }
                 };
 
-                res.send(JSON.stringify(responseObject));
+                res.send(JSON.stringify(responseObject).replace(/[<>]/g, ""));
             });
         });
     });
