@@ -79,7 +79,6 @@ let top_pp_list: PPList[] = [
         list: []
     }
 ];
-const mapCache: Map<number, string> = new Map();
 const elainaDb: mongodb.MongoClient = new mongodb.MongoClient(mainURI, {useNewUrlParser: true, useUnifiedTopology: true});
 const aliceDb: mongodb.MongoClient = new mongodb.MongoClient(aliceURI, {useNewUrlParser: true, useUnifiedTopology: true});
 
@@ -312,19 +311,11 @@ function initializeSite(): void {
                 });
             }
 
-            const cache = mapCache.get(beatmapID);
-            if (cache) {
-                osuFile = cache;
-            } else {
-                // add beatmap to cache so that we don't have
-                // to download it again except after restarting
-                osuFile = await downloadBeatmap(beatmapID);
-                if (!osuFile) {
-                    return res.render('calculate', {
-                        err: "Beatmap with specified beatmap ID is not available"
-                    });
-                }
-                mapCache.set(beatmapID, osuFile);
+            osuFile = await downloadBeatmap(beatmapID);
+            if (!osuFile) {
+                return res.render('calculate', {
+                    err: "Beatmap with specified beatmap ID is not available"
+                });
             }
         }
 
