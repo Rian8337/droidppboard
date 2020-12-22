@@ -74,7 +74,7 @@ export class MapStats {
         this.ar = values.ar;
         this.od = values.od;
         this.hp = values.hp;
-        this.mods = values.mods !== undefined ? values.mods.toUpperCase() : "";
+        this.mods = values.mods?.toUpperCase() || "";
 
         this.droidMods = this.mods ? mods.modbitsFromString(this.mods) : 0;
         this.pcMods = this.droidMods;
@@ -110,23 +110,22 @@ export class MapStats {
             }
         }
         const mode: modes = params?.mode || modes.osu;
-        const stats: MapStats = new MapStats(this);
 
         let statisticsMultiplier: number = 1;
         
-        if (stats.pcMods & mods.osuMods.dt) {
-            stats.speedMultiplier *= 1.5;
+        if (this.pcMods & mods.osuMods.dt) {
+            this.speedMultiplier *= 1.5;
         }
-        if (stats.pcMods & mods.osuMods.ht) {
-            stats.speedMultiplier *= 0.75;
+        if (this.pcMods & mods.osuMods.ht) {
+            this.speedMultiplier *= 0.75;
         }
-        if (stats.mods.includes("SU")) {
-            stats.speedMultiplier *= 1.25;
+        if (this.mods.includes("SU")) {
+            this.speedMultiplier *= 1.25;
         }
-        if (stats.pcMods & mods.osuMods.hr) {
+        if (this.pcMods & mods.osuMods.hr) {
             statisticsMultiplier *= 1.4;
         }
-        if (stats.pcMods & mods.osuMods.ez) {
+        if (this.pcMods & mods.osuMods.ez) {
             statisticsMultiplier *= 0.5;
         }
 
@@ -134,20 +133,20 @@ export class MapStats {
             case modes.droid: {
                 // In droid pre-1.6.8, NC speed multiplier is assumed bugged (1.39)
                 // TODO: remember to change this back after 1.6.8!
-                if (stats.droidMods & mods.droidMods.c) {
-                    stats.speedMultiplier *= 1.39;
+                if (this.droidMods & mods.droidMods.c) {
+                    this.speedMultiplier *= 1.39;
                 }
 
                 // CS and OD work differently in droid, therefore it
                 // needs to be computed regardless of map-changing mods
                 // and statistics multiplier
-                if (stats.od !== undefined) {
+                if (this.od !== undefined) {
                     // apply EZ or HR to OD
-                    stats.od = Math.min(stats.od * statisticsMultiplier, 10);
+                    this.od = Math.min(this.od * statisticsMultiplier, 10);
 
                     // convert original OD to droid OD
-                    const droidToMS: number = new DroidHitWindow(stats.od).hitWindowFor300(stats.mods.includes("PR")) / stats.speedMultiplier;
-                    stats.od = 5 - (droidToMS - 50) / 6;
+                    const droidToMS: number = new DroidHitWindow(this.od).hitWindowFor300(this.mods.includes("PR")) / this.speedMultiplier;
+                    this.od = 5 - (droidToMS - 50) / 6;
                 }
 
                 // HR and EZ works differently in droid in terms of
@@ -157,71 +156,79 @@ export class MapStats {
                 // if present mods are found, they need to be removed
                 // from the bitwise enum of mods to prevent double
                 // calculation
-                if (stats.cs !== undefined) {
-                    if (stats.droidMods & mods.droidMods.r) {
-                        stats.droidMods -= mods.droidMods.r;
-                        ++stats.cs;
+                if (this.cs !== undefined) {
+                    let scale: number = ((720 / 480)
+                        * (54.42 - this.cs * 4.48)
+                        * 2 / 128)
+                        + 0.5 * (11 - 5.2450170716245195) / 5;
+                    if (this.droidMods & mods.osuMods.hr) {
+                        this.droidMods -= mods.osuMods.hr;
+                        scale -= 0.125;
                     }
-                    if (stats.droidMods & mods.droidMods.e) {
-                        stats.droidMods -= mods.droidMods.e;
-                        --stats.cs;
+                    if (this.droidMods & mods.osuMods.ez) {
+                        this.droidMods -= mods.osuMods.ez;
+                        scale += 0.125;
                     }
-                    if (!stats.mods.includes("SC")) {
-                        stats.cs -= 4;
+                    if (this.mods.includes("SC")) {
+                        scale -= ((720 / 480)
+                        * (54.42 - 4 * 4.48)
+                        * 2 / 128);
                     }
+                    // circle radius = 64 * scale
+                    this.cs = Math.min(5 + (5 - 10 * scale) / 0.7, 10);
                 }
 
-                if (stats.hp !== undefined) {
-                    stats.hp = Math.min(stats.hp * statisticsMultiplier, 10);
+                if (this.hp !== undefined) {
+                    this.hp = Math.min(this.hp * statisticsMultiplier, 10);
                 }
 
-                if (stats.ar !== undefined && !stats.isForceAR) {
-                    stats.ar *= statisticsMultiplier;
-                    if (stats.mods.includes("RE")) {
-                        if (stats.droidMods & mods.droidMods.e) {
-                            stats.ar *= 2;
-                            stats.ar -= 0.5;
+                if (this.ar !== undefined && !this.isForceAR) {
+                    this.ar *= statisticsMultiplier;
+                    if (this.mods.includes("RE")) {
+                        if (this.droidMods & mods.droidMods.e) {
+                            this.ar *= 2;
+                            this.ar -= 0.5;
                         }
-                        stats.ar -= 0.5;
-                        stats.ar -= stats.speedMultiplier - 1;
+                        this.ar -= 0.5;
+                        this.ar -= this.speedMultiplier - 1;
                     }
-                    stats.ar = MapStats.modifyAR(stats.ar, stats.speedMultiplier, 1);
+                    this.ar = MapStats.modifyAR(this.ar, this.speedMultiplier, 1);
                 }
                 break;
             }
             case modes.osu: {
-                if (!(stats.pcMods & mods.osuMods.map_changing) && stats.speedMultiplier === 1) {
+                if (!(this.pcMods & mods.osuMods.map_changing) && this.speedMultiplier === 1) {
                     break;
                 }
-                if (stats.pcMods & mods.osuMods.nc) {
-                    stats.speedMultiplier *= 1.5;
+                if (this.pcMods & mods.osuMods.nc) {
+                    this.speedMultiplier *= 1.5;
                 }
 
-                if (stats.cs !== undefined) {
-                    if (stats.pcMods & mods.osuMods.hr) {
-                        stats.cs *= 1.3;
+                if (this.cs !== undefined) {
+                    if (this.pcMods & mods.osuMods.hr) {
+                        this.cs *= 1.3;
                     }
-                    if (stats.pcMods & mods.osuMods.ez) {
-                        stats.cs *= 0.5;
+                    if (this.pcMods & mods.osuMods.ez) {
+                        this.cs *= 0.5;
                     }
                 }
 
-                if (stats.hp !== undefined) {
-                    stats.hp = Math.min(stats.hp * statisticsMultiplier, 10);
+                if (this.hp !== undefined) {
+                    this.hp = Math.min(this.hp * statisticsMultiplier, 10);
                 }
 
-                if (stats.ar !== undefined && !stats.isForceAR) {
-                    stats.ar = MapStats.modifyAR(stats.ar, stats.speedMultiplier, statisticsMultiplier);
+                if (this.ar !== undefined && !this.isForceAR) {
+                    this.ar = MapStats.modifyAR(this.ar, this.speedMultiplier, statisticsMultiplier);
                 }
                 
-                if (stats.od !== undefined) {
-                    stats.od = MapStats.modifyOD(stats.od, stats.speedMultiplier, statisticsMultiplier);
+                if (this.od !== undefined) {
+                    this.od = MapStats.modifyOD(this.od, this.speedMultiplier, statisticsMultiplier);
                 }
                 break;
             }
             default: throw new TypeError("Mode not supported");
         }
-        return stats;
+        return this;
     }
 
     /**
@@ -232,7 +239,7 @@ export class MapStats {
     }
 
     /**
-     * Utility function to apply speed and flat multipliers to stats where speed changes apply for AR.
+     * Utility function to apply speed and flat multipliers to this where speed changes apply for AR.
      */
     static modifyAR(baseAR: number, speedMultiplier: number, statisticsMultiplier: number): number {
         let ar: number = baseAR;
@@ -253,7 +260,7 @@ export class MapStats {
     }
 
     /**
-     * Utility function to apply speed and flat multipliers to stats where speed changes apply for OD.
+     * Utility function to apply speed and flat multipliers to this where speed changes apply for OD.
      */
     static modifyOD(baseOD: number, speedMultiplier: number, statisticsMultiplier: number): number {
         let od: number = baseOD;

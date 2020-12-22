@@ -217,7 +217,7 @@ export class PerformanceCalculator {
         this.calculateAccuracyValue();
 
         // slight buff to final value for droid
-        let finalMultiplier: number = this.mode === modes.droid ? 1.15 : 1.12;
+        let finalMultiplier: number = this.mode === modes.droid ? 1.44 : 1.12;
         if (this.convertedMods & mods.osuMods.nf) {
             finalMultiplier *= Math.max(0.9, 1 - 0.02 * miss);
         }
