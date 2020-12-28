@@ -133,7 +133,7 @@ export class MapStats {
             case modes.droid: {
                 // In droid pre-1.6.8, NC speed multiplier is assumed bugged (1.39)
                 // TODO: remember to change this back after 1.6.8!
-                if (this.droidMods & mods.droidMods.c) {
+                if (this.droidMods & mods.osuMods.nc) {
                     this.speedMultiplier *= 1.39;
                 }
 
@@ -185,7 +185,7 @@ export class MapStats {
                 if (this.ar !== undefined && !this.isForceAR) {
                     this.ar *= statisticsMultiplier;
                     if (this.mods.includes("RE")) {
-                        if (this.droidMods & mods.droidMods.e) {
+                        if (this.droidMods & mods.osuMods.ez) {
                             this.ar *= 2;
                             this.ar -= 0.5;
                         }

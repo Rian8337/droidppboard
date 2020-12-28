@@ -6,56 +6,24 @@ export namespace mods {
      * Mods in osu!droid.
      */
     export enum droidMods {
-        "-" = 0,
-        /**
-         * No Fail.
-         */
-        n = 1 << 0,
-
-        /**
-         * Easy.
-         */
-        e = 1 << 1,
-
-        /**
-         * Hidden.
-         */
-        h = 1 << 3,
-
-        /**
-         * Hard Rock.
-         */
-        r = 1 << 4,
-
-        /**
-         * Sudden Death.
-         */
-        u = 1 << 5,
-
-        /**
-         * Double Time.
-         */
-        d = 1 << 6,
-
-        /**
-         * Half Time.
-         */
-        t = 1 << 8,
-
-        /**
-         * Nightcore.
-         */
-        c = 1 << 9,
-
-        /**
-         * Perfect.
-         */
-        f = 1 << 14,
-
-        /**
-         * ScoreV2.
-         */
-        v = 1 << 29
+        at = "a",
+        rx = "x",
+        ap = "p",
+        ez = "e",
+        nf = "n",
+        hr = "r",
+        hd = "h",
+        fl = "i",
+        dt = "d",
+        nc = "c",
+        ht = "t",
+        pr = "s",
+        sc = "m",
+        su = "b",
+        re = "l",
+        pf = "f",
+        sd = "u",
+        v2 = "v"
     }
 
     /**
@@ -84,41 +52,19 @@ export namespace mods {
     }
 
     /**
-     * Converts droid mod string to modbits.
-     */
-    export function droidToModbits(mod: string = ""): number {
-        let modbits: number = 4;
-        if (!mod || mod === "-") {
-            return modbits;
-        }
-
-        mod = mod.toLowerCase();
-        while (mod) {
-            for (const modEntry in droidMods) {
-                const entry = modEntry as keyof typeof droidMods;
-                if (mod.startsWith(entry)) {
-                    modbits |= droidMods[entry];
-                    break;
-                }
-            }
-            mod = mod.substr(1);
-        }
-        return modbits;
-    }
-
-    /**
      * Converts droid mod string to PC mod string.
      * 
-     * You can choose to return a detailed string by specifying `detailed = true`.
+     * @param mod The string to convert.
+     * @param detailed Whether or not to return a detailed string. Defaults to `false`.
      */
     export function droidToPC(mod: string = "", detailed: boolean = false): string {
         if (!mod) {
             return "";
         }
         mod = mod.toLowerCase();
+        let res: string = '';
         
         if (detailed) {
-            let res: string = '';
             let count: number = 0;
             if (mod.includes("-")) {
                 res += 'None ';
@@ -187,35 +133,63 @@ export namespace mods {
             }
         }
 
-        let modbits = 0;
+        mod = mod.toLowerCase();
+        let tempMod: string = mod;
+        while (tempMod) {
+            for (const modEntry in droidMods) {
+                const entry = modEntry as keyof typeof droidMods;
+                if (tempMod.startsWith(droidMods[entry])) {
+                    res += entry.toUpperCase();
+                }
+            }
+            tempMod = tempMod.slice(1);
+        }
+
+        // format mod string properly
+        res = modbitsToString(modbitsFromString(res));
         while (mod) {
             for (const modEntry in droidMods) {
                 const entry = modEntry as keyof typeof droidMods;
+                if (res.toLowerCase().includes(entry)) {
+                    continue;
+                }
+                if (mod.startsWith(droidMods[entry])) {
+                    res += entry.toUpperCase();
+                }
+            }
+            mod = mod.slice(1);
+        }
+
+        return res;
+    }
+    
+    /**
+     * Converts PC mod string to droid mod string.
+     * 
+     * @param mod The string to convert.
+     */
+    export function pcToDroid(mod: string = ""): string {
+        let res: string = "";
+        mod = mod.toLowerCase();
+        while (mod) {
+            let nchars: number = 1;
+            for (const modEntry in droidMods) {
+                const entry = modEntry as keyof typeof droidMods;
                 if (mod.startsWith(entry)) {
-                    modbits |= droidMods[entry];
+                    nchars = 2;
+                    res += droidMods[entry];
                     break;
                 }
             }
-            mod = mod.substr(1);
+            mod = mod.slice(nchars);
         }
-        let modstring: string = modbitsToString(modbits);
-        if (mod.includes("s")) {
-            modstring += "PR";
-        }
-        if (mod.includes("b")) {
-            modstring += "SU";
-        }
-        if (mod.includes("l")) {
-            modstring += "RE";
-        }
-        if (mod.includes("m")) {
-            modstring += "SC";
-        }
-        return modstring;
+        return [...res].sort((a, b) => a.localeCompare(b)).join("");
     }
 
     /**
      * Converts PC mods to a detailed string.
+     * 
+     * @param mod The string to convert.
      */
     export function pcToDetail(mod: string = ""): string {
         let res = '';
@@ -275,6 +249,8 @@ export namespace mods {
 
     /**
      * Converts an osu!standard mod string into modbits.
+     * 
+     * @param str The string to convert.
      */
     export function modbitsFromString(str: string = ""): number {
         let mask: number = 0;
@@ -299,6 +275,8 @@ export namespace mods {
 
     /**
      * Converts mods bitwise into a string, such as "HDHR".
+     * 
+     * @param mod The modbits to convert.
      */
     export function modbitsToString(mod: number = 0): string {
         let res: string = "";
