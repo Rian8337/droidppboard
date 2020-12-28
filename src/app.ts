@@ -32,7 +32,7 @@ interface PPEntry {
 }
 
 interface PPList {
-    modbits: number;
+    mods: string;
     list: PPEntry[];
 }
 
@@ -73,12 +73,7 @@ let binddb: mongodb.Collection;
 let whitelistdb: mongodb.Collection;
 let keydb: mongodb.Collection;
 
-let top_pp_list: PPList[] = [
-    {
-        modbits: -1,
-        list: []
-    }
-];
+let top_pp_list: PPList[] = [];
 const elainaDb: mongodb.MongoClient = new mongodb.MongoClient(mainURI, {useNewUrlParser: true, useUnifiedTopology: true});
 const aliceDb: mongodb.MongoClient = new mongodb.MongoClient(aliceURI, {useNewUrlParser: true, useUnifiedTopology: true});
 
@@ -125,12 +120,12 @@ function refreshtopPP(): void {
     binddb.find({}, { projection: { _id: 0, username: 1, pp: 1}}).toArray(function(err, res: BindDatabaseResponse[]) {
         top_pp_list = [
             {
-                modbits: -1,
+                mods: "",
                 list: []
             }
         ];
         res.forEach((val, index) => {
-            const ppEntries = val.pp;
+            const ppEntries: DatabasePPEntry[] = val.pp;
             for (const ppEntry of ppEntries) {
                 const entry: PPEntry = {
                     username: val.username,
@@ -142,13 +137,13 @@ function refreshtopPP(): void {
                 };
                 top_pp_list[0].list.push(entry);
 
-                const modbits = mods.modbitsFromString(ppEntry.mods);
-                const index = top_pp_list.findIndex(v => v.modbits === modbits);
+                const droidMods: string = mods.pcToDroid(ppEntry.mods);
+                const index: number = top_pp_list.findIndex(v => v.mods === droidMods);
                 if (index !== -1) {
                     top_pp_list[index].list.push(entry);
                 } else {
                     top_pp_list.push({
-                        modbits: modbits,
+                        mods: droidMods,
                         list: [entry]
                     });
                 }
@@ -261,8 +256,8 @@ function initializeSite(): void {
 
     app.get('/toppp', (req, res) => {
         const mod: string = req.url.split("?mods=")[1] || "";
-        const modbits: number = mod.toLowerCase() === "nm" ? 0 : mods.modbitsFromString(mod) || -1;
-        const modList = top_pp_list.find(v => v.modbits === modbits) || {list: []};
+        const droidMod: string = mods.pcToDroid(mod) || "";
+        const modList = top_pp_list.find(v => v.mods === droidMod) || {list: []};
         res.render('toppp', {
             pplist: modList.list,
             mods: convertURI(mod).toUpperCase(),
