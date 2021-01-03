@@ -122,6 +122,10 @@ function refreshtopPP(): void {
             {
                 mods: "",
                 list: []
+            },
+            {
+                mods: "-",
+                list: []
             }
         ];
         res.forEach((val, index) => {
@@ -137,7 +141,7 @@ function refreshtopPP(): void {
                 };
                 top_pp_list[0].list.push(entry);
 
-                const droidMods: string = mods.pcToDroid(ppEntry.mods);
+                const droidMods: string = mods.pcToDroid(ppEntry.mods) || "-";
                 const index: number = top_pp_list.findIndex(v => v.mods === droidMods);
                 if (index !== -1) {
                     top_pp_list[index].list.push(entry);
@@ -256,7 +260,7 @@ function initializeSite(): void {
 
     app.get('/toppp', (req, res) => {
         const mod: string = req.url.split("?mods=")[1] || "";
-        const droidMod: string = mods.pcToDroid(mod) || "";
+        const droidMod: string = mod.toLowerCase() !== "nm" ? mods.pcToDroid(mod) || "" : "-";
         const modList = top_pp_list.find(v => v.mods === droidMod) || {list: []};
         res.render('toppp', {
             pplist: modList.list,
