@@ -1,8 +1,8 @@
 import * as express from 'express';
 import * as mongodb from 'mongodb';
-import * as https from 'https';
 import * as fileupload from 'express-fileupload';
 import * as bodyParser from 'body-parser';
+import * as request from 'request';
 import { config } from 'dotenv';
 import { mods } from './modules/utils/mods';
 import { MapStats } from './modules/utils/MapStats';
@@ -171,15 +171,13 @@ function refreshtopPP(): void {
 function downloadBeatmap(beatmapID: number): Promise<string> {
     return new Promise(resolve => {
         let data: string = "";
-        https.get(`https://osu.ppy.sh/osu/${beatmapID}`, res => {
-            res.setEncoding("utf-8");
-            res.on("data", chunk => {
+        request(`https://osu.ppy.sh/osu/${beatmapID}`, {encoding: "utf-8"})
+            .on("data", chunk => {
                 data += chunk;
-            });
-            res.on("end", () => {
+            })
+            .on("complete", () => {
                 resolve(data);
             });
-        });
     });
 }
 
