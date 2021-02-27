@@ -82,7 +82,6 @@ export class PerformanceCalculator {
      * Bonus for specific AR values.
      */
     private osuARBonus: number = 0;
-    
 
     /**
      * Bonus that is given if Hidden mod is applied.
@@ -122,6 +121,10 @@ export class PerformanceCalculator {
          * The speed penalty to apply for penalized scores.
          */
         speedPenalty?: number,
+
+        /**
+         * Custom map statistics to apply custom speed multiplier and force AR values as well as old statistics.
+         */
         stats?: MapStats
     }): PerformanceCalculator {
         this.mode = params.mode || modes.osu;
@@ -129,10 +132,8 @@ export class PerformanceCalculator {
         if (!(this.stars instanceof StarRating)) {
             throw new Error("params.stars must be in StarRating instance");
         }
-
-        const miss: number = params.miss || 0;
+        
         const maxCombo: number = this.stars.map.maxCombo();
-        const combo: number = params.combo || maxCombo - miss;
         const mod: string = this.stars.mods;
         this.convertedMods = mods.modbitsFromString(mod);
         const baseAR: number = this.stars.map.ar as number;
@@ -145,9 +146,11 @@ export class PerformanceCalculator {
             this.computedAccuracy = new Accuracy({
                 percent: params.accPercent,
                 nobjects: this.stars.objects.length,
-                nmiss: miss
+                nmiss: params.miss || 0
             });
         }
+        const miss: number = this.computedAccuracy.nmiss;
+        const combo: number = params.combo || maxCombo - miss;
 
         this.mapStatistics = new MapStats({
             ar: baseAR,
@@ -166,7 +169,6 @@ export class PerformanceCalculator {
         // Penalize misses by assessing # of misses relative to the total # of objects. Default a 3% reduction for any # of misses.
         this.aimMissPenalty = 0.97 * Math.pow(1 - Math.pow(miss / objectCount, 0.775), miss);
         this.speedMissPenalty = 0.97 * Math.pow(1 - Math.pow(miss / objectCount, 0.775), Math.pow(miss, 0.875));
-
         this.comboPenalty = Math.min(Math.pow(combo / maxCombo, 0.8), 1);
         
         let arBonus: number = 0;
@@ -174,17 +176,18 @@ export class PerformanceCalculator {
         if (calculatedAR > 10.33) {
             arBonus += 0.4 * (calculatedAR - 10.33);
         } else if (calculatedAR < 8) {
-            arBonus += 0.1 * (8 - calculatedAR);
+            arBonus += 0.01 * (8 - calculatedAR);
         }
-        this.droidARBonus = 1 + Math.min(arBonus, arBonus * objectCount / 1500);
+        // Change droid AR bonus to keep consistency with length-related values.
+        this.droidARBonus = 1 + Math.min(arBonus, arBonus * objectCount / 1250);
         this.osuARBonus = 1 + Math.min(arBonus, arBonus * objectCount / 1000);
 
         let hiddenBonus: number = 1;
         if (this.convertedMods & mods.osuMods.hd) {
             switch (this.mode) {
                 case modes.droid:
-                    // The buff starts decreasing twice as fast
-                    // beyond AR10 and reaches 1 at AR11
+                    // The bonus starts decreasing twice as fast
+                    // beyond AR10 and reaches 1 at AR11.
                     if (calculatedAR > 10) {
                         hiddenBonus += Math.max(0, 0.08 * (11 - calculatedAR));
                     } else {
@@ -216,8 +219,9 @@ export class PerformanceCalculator {
         this.calculateSpeedValue();
         this.calculateAccuracyValue();
 
-        // slight buff to final value for droid
-        let finalMultiplier: number = this.mode === modes.droid ? 1.44 : 1.12;
+        // Custom multiplier for SO and NF.
+        // This is being adjusted to keep the final pp value scaled around what it used to be when changing things.
+        let finalMultiplier: number = this.mode === modes.droid ? 1.25 : 1.12;
         if (this.convertedMods & mods.osuMods.nf) {
             finalMultiplier *= Math.max(0.9, 1 - 0.02 * miss);
         }
@@ -229,7 +233,7 @@ export class PerformanceCalculator {
             // Extreme penalty
             // =======================================================
             // added to penalize map with little aim but ridiculously
-            // high speed value (which is easily abusable by using more than 2 fingers)
+            // high speed value (which is easily abusable by using more than 2 fingers).
             let extremePenalty = Math.pow(
                 1 - Math.abs(this.speed - Math.pow(this.aim, 1.15)) /
                 Math.max(this.speed, Math.pow(this.aim, 1.15)),
@@ -242,7 +246,7 @@ export class PerformanceCalculator {
             finalMultiplier *= extremePenalty;
         }
 
-        // apply speed penalty for droid plays
+        // Apply speed penalty for droid plays.
         if (this.mode === modes.droid) {
             this.speed /= (params.speedPenalty ?? 1);
         }
@@ -286,9 +290,9 @@ export class PerformanceCalculator {
                 break;
         }
 
+        const objectCount: number = this.stars.objects.length;
         if (this.convertedMods & mods.osuMods.fl) {
-            // Apply object-based bonus for flashlight
-            const objectCount: number = this.stars.objects.length;
+            // Apply object-based bonus for flashlight.
             let flBonus: number = 1 + 0.35 * Math.min(1, objectCount / 200);
             if (objectCount > 200) {
                 flBonus += 0.3 * Math.min(1, (objectCount - 200) / 300);
@@ -299,10 +303,10 @@ export class PerformanceCalculator {
             aimValue *= flBonus;
         }
 
-        // Scale the aim value with accuracy slightly
-        aimValue *= 0.5 + this.computedAccuracy.value() / 2;
+        // Scale the aim value with accuracy slightly.
+        aimValue *= 0.5 + this.computedAccuracy.value(objectCount) / 2;
 
-        // It is also important to also consider accuracy difficulty when doing that
+        // It is also important to consider accuracy difficulty when doing that.
         const odScaling: number = Math.pow(this.mapStatistics.od as number, 2) / 2500;
         aimValue *= 0.98 + (this.mapStatistics.od as number >= 0 ? odScaling : -odScaling);
 
@@ -314,7 +318,7 @@ export class PerformanceCalculator {
      */
     private calculateSpeedValue(): void {
         let speedValue: number = this.baseValue(this.stars.speed);
-        speedValue *= this.lengthBonus * this.speedMissPenalty * this.comboPenalty * this.hiddenBonus;
+        speedValue *= this.lengthBonus * this.comboPenalty * this.hiddenBonus;
 
         if (this.computedAccuracy.nmiss > 0) {
             speedValue *= this.speedMissPenalty;
@@ -331,18 +335,18 @@ export class PerformanceCalculator {
             }
         }
 
-        // Scale the speed value with accuracy and OD
+        // Scale the speed value with accuracy and OD.
         const odScaling: number = Math.pow(this.mapStatistics.od as number, 2) / 750;
+        const objectCount: number = this.stars.objects.length;
         speedValue *=
             (0.95 + (this.mapStatistics.od as number > 0 ? odScaling : -odScaling)) *
             Math.pow(
-                this.computedAccuracy.value(),
+                this.computedAccuracy.value(objectCount),
                 ((this.mode === modes.droid ? 12 : 14.5) - Math.max(this.mapStatistics.od as number, this.mode === modes.droid ? 2.5 : 8)) / 2 // Change minimum threshold for droid to OD7 droid
             );
 
-        // Scale the speed value with # of 50s to punish doubletapping
+        // Scale the speed value with # of 50s to punish doubletapping.
         const n50: number = this.computedAccuracy.n50;
-        const objectCount: number = this.stars.objects.length;
         speedValue *= Math.pow(0.98, Math.max(0, n50 - objectCount / 500));
 
         this.speed = speedValue;
@@ -356,10 +360,10 @@ export class PerformanceCalculator {
         const n100: number = this.computedAccuracy.n100;
         const n50: number = this.computedAccuracy.n50;
 
-        const nobjects: number = n300 + n100 + n50 + this.computedAccuracy.nmiss;
+        const nobjects: number = this.stars.objects.length;
         const ncircles: number = this.stars.map.circles;
 
-        let realAccuracy: number = Math.max(
+        const realAccuracy: number = Math.max(
             ncircles > 0 ?
             ((n300 - (nobjects - ncircles)) * 6 + n100 * 2 + n50) / (ncircles * 6) :
             0,
@@ -367,7 +371,8 @@ export class PerformanceCalculator {
         );
 
         let accuracyValue: number = this.mode === modes.droid ?
-            // Drastically change acc calculation to fit droid meta
+            // Drastically change acc calculation to fit droid meta.
+            // It is harder to get good accuracy with touchscreen, especially in small hit window.
             Math.pow(1.4, this.mapStatistics.od as number) *
             Math.pow(Math.max(1, this.mapStatistics.ar as number / 10), 3) *
             Math.pow(realAccuracy, 12) * 10
@@ -388,7 +393,7 @@ export class PerformanceCalculator {
     }
 
     /**
-     * Calculates the base performance value for stars.
+     * Calculates the base performance value for of a star rating.
      */
     private baseValue(stars: number): number {
         return Math.pow(5 * Math.max(1, stars / 0.0675) - 4, 3) / 100000;

@@ -24,23 +24,37 @@ export class MapStars {
      * The beatmap will be automatically parsed using parser utilities.
      */
     calculate(params: {
+        /**
+         * The .osu file of the beatmap.
+         */
         file: string,
+
+        /**
+         * Applied modifications in osu!standard format.
+         */
         mods?: string,
+
+        /**
+         * Custom map statistics to apply speed multiplier and force AR values as well as old statistics.
+         */
         stats?: MapStats
     }): MapStars {
         if (!params.file) {
             throw new Error("Please enter an osu file!");
         }
-        const droidParser: Parser = new Parser();
-        const pcParser: Parser = new Parser();
+        
+        const parser: Parser = new Parser();
         try {
-            droidParser.parse(params.file);
-            pcParser.parse(params.file);
+            parser.parse(params.file, params.mods);
         } catch (e) {
+            console.log("Invalid osu file");
             return this;
         }
-        const droidMap: Beatmap = droidParser.map;
-        const pcMap: Beatmap = pcParser.map;
+
+        // Copy original parser without having to parse a new beatmap, this way
+        // droidMap and pcMap will not reference to the same parser instance
+        const droidMap: Beatmap = Object.create(parser).map;
+        const pcMap: Beatmap = Object.create(parser).map;
 
         const mod: string = params.mods || "";
 
@@ -49,8 +63,8 @@ export class MapStars {
             isForceAR: params.stats?.isForceAR || false
         });
 
-        this.droidStars.calculate({mode: modes.droid, map: droidMap, mods: mod, stats: stats});
-        this.pcStars.calculate({mode: modes.osu, map: pcMap, mods: mod, stats: stats});
+        this.droidStars.calculate({mode: modes.droid, map: droidMap, mods: mod, stats});
+        this.pcStars.calculate({mode: modes.osu, map: pcMap, mods: mod, stats});
 
         return this;
     }

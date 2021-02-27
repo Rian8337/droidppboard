@@ -18,7 +18,7 @@ export class StarRating {
     /**
      * The difficulty objects of the beatmap.
      */
-    objects: DifficultyHitObject[] = [];
+    readonly objects: DifficultyHitObject[] = [];
 
     /**
      * The modifications applied.
@@ -81,7 +81,7 @@ export class StarRating {
     /**
      * Calculates the star rating of the specified beatmap.
      * 
-     * The map is analyzed in chunks of `sectionLength` duration.
+     * The beatmap is analyzed in chunks of `sectionLength` duration.
      * For each chunk the highest hitobject strains are added to
      * a list which is then collapsed into a weighted sum, much
      * like scores are weighted on a user's profile.
@@ -97,13 +97,32 @@ export class StarRating {
      * section which would otherwise be ignored.
      */
     calculate(params: {
+        /**
+         * The beatmap to calculate.
+         */
         map: Beatmap,
+
+        /**
+         * The gamemode to calculate.
+         */
         mode?: modes,
+
+        /**
+         * Applied modifications in osu!standard format.
+         */
         mods?: string,
+
+        /**
+         * Interval threshold for singletaps in milliseconds.
+         */
         singletapThreshold?: number,
+
+        /**
+         * Custom map statistics to apply custom speed multiplier as well as old statistics.
+         */
         stats?: MapStats
     }): StarRating {
-        const map: Beatmap = this.map = params.map || this.map;
+        const map: Beatmap = this.map = params.map;
         if (!map) {
             throw new Error("A map must be defined");
         }
@@ -121,11 +140,11 @@ export class StarRating {
             speedMultiplier: params.stats?.speedMultiplier || 1
         }).calculate({mode: mode});
 
-        this.objects = new DifficultyHitObjectCreator().generateDifficultyObjects({
+        this.objects.push(...new DifficultyHitObjectCreator().generateDifficultyObjects({
             objects: map.objects,
             circleSize: stats.cs as number,
             speedMultiplier: stats.speedMultiplier
-        });
+        }));
 
         const aimSkill: Aim = new Aim();
         const speedSkill: Speed = new Speed();
@@ -192,7 +211,7 @@ export class StarRating {
 
             const interval: number = (obj.object.startTime - prev.object.startTime) / stats.speedMultiplier;
             if (interval >= singletapThreshold) {
-                this.singlesThreshold;
+                ++this.singlesThreshold;
             }
         }
 

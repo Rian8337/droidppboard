@@ -9,19 +9,19 @@ import { Slider } from "../../beatmap/hitobjects/Slider";
  */
 export class DifficultyHitObjectCreator {
     /**
-     * The hitobject to be generated to difficulty hitobject.
+     * The hitobjects to be generated to difficulty hitobjects.
      */
     private objects: HitObject[] = [];
-
-    /**
-     * The default playfield size.
-     */
-    private readonly PLAYFIELD_SIZE: Vector2 = new Vector2({x: 512, y: 384});
 
     /**
      * The threshold for small circle buff.
      */
     private readonly CIRCLESIZE_BUFF_THRESHOLD: number = 30;
+
+    /**
+     * The radius of hitobjects.
+     */
+    private hitObjectRadius: number = 0;
 
     /**
      * Generates difficulty hitobjects for difficulty calculation.
@@ -34,61 +34,57 @@ export class DifficultyHitObjectCreator {
         this.objects = params.objects;
         const circleSize: number = params.circleSize;
 
-        const radius: number = (this.PLAYFIELD_SIZE.x / 16) * (1 - 0.7 * (circleSize - 5) / 5);
-        let scalingFactor: number = 52 / radius;
+        this.hitObjectRadius = 32 * (1 - 0.7 * (circleSize - 5) / 5);
 
-        // apply stacked position
-        this.objects.forEach(hitObject => {
-            hitObject.calculateStackedPosition((1 - 0.7 * (circleSize - 5) / 5) / 2);
-        });
+        // We will scale distances by this factor, so we can assume a uniform CircleSize among beatmaps.
+        let scalingFactor: number = 52 / this.hitObjectRadius;
 
         // high circle size (small CS) bonus
-        if (radius < this.CIRCLESIZE_BUFF_THRESHOLD) {
+        if (this.hitObjectRadius < this.CIRCLESIZE_BUFF_THRESHOLD) {
             scalingFactor *= 1 +
-                Math.min(this.CIRCLESIZE_BUFF_THRESHOLD - radius, 5) / 50;
+                Math.min(this.CIRCLESIZE_BUFF_THRESHOLD - this.hitObjectRadius, 5) / 50;
         }
-
-        const scalingVector: Vector2 = new Vector2({x: scalingFactor, y: scalingFactor});
 
         const difficultyObjects: DifficultyHitObject[] = [];
 
         for (let i = 0; i < this.objects.length; ++i) {
             const difficultyObject: DifficultyHitObject = new DifficultyHitObject(this.objects[i]);
-            difficultyObject.radius = radius;
-
-            if (i >= 1) {
-                const lastObject: DifficultyHitObject = difficultyObjects[i - 1];
-                if (lastObject instanceof Slider) {
-                    this.calculateSliderCursorPosition(circleSize, lastObject);
-                    difficultyObject.travelDistance = lastObject.lazyTravelDistance as number * scalingFactor;
-                }
-            }
-
-            const lastCursorPosition: Vector2 = i >= 1 ? this.getEndCursorPosition(circleSize, this.objects[i - 1]) : new Vector2({x: 0, y: 0});
-            if (i > 0 && !(difficultyObject.object.type & objectTypes.spinner)) {
-                difficultyObject.jumpDistance = difficultyObject.object.stackedPosition.multiply(scalingVector)
-                    .subtract(lastCursorPosition.multiply(scalingVector))
-                    .getLength();
-            }
+            difficultyObject.radius = this.hitObjectRadius;
 
             if (i > 0) {
+                const lastObject: DifficultyHitObject = difficultyObjects[i - 1];
+                if (lastObject.object instanceof Slider) {
+                    this.calculateSliderCursorPosition(lastObject.object);
+                    difficultyObject.travelDistance = lastObject.object.lazyTravelDistance as number * scalingFactor;
+                }
+    
+                const lastCursorPosition: Vector2 = this.getEndCursorPosition(this.objects[i - 1]);
+
+                // Don't need to jump to reach spinners
+                if (!(difficultyObject.object.type & objectTypes.spinner)) {
+                    difficultyObject.jumpDistance = difficultyObject.object.stackedPosition.scale(scalingFactor)
+                        .subtract(lastCursorPosition.scale(scalingFactor))
+                        .getLength();
+                }
+    
                 difficultyObject.deltaTime = (difficultyObject.object.startTime - difficultyObjects[i - 1].object.startTime) / params.speedMultiplier;
+                // Every strain interval is hard capped at the equivalent of 375 BPM streaming speed as a safety measure
                 difficultyObject.strainTime = Math.max(50, difficultyObject.deltaTime);
-            }
+    
+                if (i >= 2) {
+                    const prev1: DifficultyHitObject = difficultyObjects[i - 1];
+                    const prev2: DifficultyHitObject = difficultyObjects[i - 2];
 
-            if (i >= 2) {
-                const prev1: DifficultyHitObject = difficultyObjects[i - 1];
-                const prev2: DifficultyHitObject = difficultyObjects[i - 2];
+                    const prev2CursorPosition: Vector2 = this.getEndCursorPosition(prev2.object);
 
-                const prev2CursorPosition: Vector2 = this.getEndCursorPosition(circleSize, prev2.object);
-
-                const v1: Vector2 = prev2CursorPosition.subtract(prev1.object.stackedPosition);
-                const v2: Vector2 = difficultyObject.object.stackedPosition.subtract(lastCursorPosition);
-                const dot: number = v1.dot(v2);
-                const det: number = v1.x * v2.y - v1.y * v2.x;
-                difficultyObject.angle = Math.abs(Math.atan2(det, dot));
-            } else {
-                difficultyObject.angle = null;
+                    const v1: Vector2 = prev2CursorPosition.subtract(prev1.object.stackedPosition);
+                    const v2: Vector2 = difficultyObject.object.stackedPosition.subtract(lastCursorPosition);
+                    const dot: number = v1.dot(v2);
+                    const det: number = v1.x * v2.y - v1.y * v2.x;
+                    difficultyObject.angle = Math.abs(Math.atan2(det, dot));
+                } else {
+                    difficultyObject.angle = null;
+                }
             }
             difficultyObjects.push(difficultyObject);
         }
@@ -99,32 +95,34 @@ export class DifficultyHitObjectCreator {
     /**
      * Calculates a slider's cursor position.
      */
-    private calculateSliderCursorPosition(circleSize: number, slider: Slider): void {
+    private calculateSliderCursorPosition(slider: Slider): void {
         if (slider.lazyEndPosition !== null && slider.lazyEndPosition !== undefined) {
             return;
         }
         slider.lazyEndPosition = slider.stackedPosition;
         slider.lazyTravelDistance = 0;
 
-        const approxFollowCircleRadius: number = (this.PLAYFIELD_SIZE.x / 16) * (1 - 0.7 * (circleSize - 5) / 5) * 3;
+        const approxFollowCircleRadius: number = this.hitObjectRadius * 3;
 
+        // Skip the head circle
         const scoringTimes: number[] = slider.nestedHitObjects.slice(1, slider.nestedHitObjects.length).map(t => {return t.startTime;});
         scoringTimes.forEach(time => {
             let progress: number = (time - slider.startTime) / slider.spanDuration;
             if (progress % 2 >= 1) {
                 progress = 1 - progress % 1;
             } else {
-                progress = progress % 1;
+                progress %= 1;
             }
 
             const diff: Vector2 = slider.stackedPosition.add(slider.path.positionAt(progress)).subtract(slider.lazyEndPosition as Vector2);
             let dist: number = diff.getLength();
 
             if (dist > approxFollowCircleRadius) {
+                // The cursor would be outside the follow circle, we need to move it
                 diff.normalize();
                 dist -= approxFollowCircleRadius;
                 slider.lazyEndPosition = (slider.lazyEndPosition as Vector2).add(diff.scale(dist));
-                slider.lazyTravelDistance = slider.lazyTravelDistance === undefined ? dist : slider.lazyTravelDistance += dist;
+                (slider.lazyTravelDistance as number) += dist;
             }
         });
     }
@@ -132,12 +130,12 @@ export class DifficultyHitObjectCreator {
     /**
      * Returns the end cursor position of a hitobject.
      */
-    private getEndCursorPosition(circleSize: number, object: HitObject): Vector2 {
+    private getEndCursorPosition(object: HitObject): Vector2 {
         let pos: Vector2 = object.stackedPosition;
 
         if (object instanceof Slider) {
-            this.calculateSliderCursorPosition(circleSize, object);
-            pos = object.lazyEndPosition !== null && object.lazyEndPosition !== undefined ? object.lazyEndPosition : pos;
+            this.calculateSliderCursorPosition(object);
+            pos = object.lazyEndPosition ?? pos;
         }
 
         return pos;

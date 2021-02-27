@@ -119,6 +119,9 @@ export class MapStats {
         if (this.pcMods & mods.osuMods.ht) {
             this.speedMultiplier *= 0.75;
         }
+        if (this.pcMods & mods.osuMods.nc) {
+            this.speedMultiplier *= 1.5;
+        }
         if (this.mods.includes("SU")) {
             this.speedMultiplier *= 1.25;
         }
@@ -131,12 +134,6 @@ export class MapStats {
 
         switch (mode) {
             case modes.droid: {
-                // In droid pre-1.6.8, NC speed multiplier is assumed bugged (1.39)
-                // TODO: remember to change this back after 1.6.8!
-                if (this.droidMods & mods.osuMods.nc) {
-                    this.speedMultiplier *= 1.39;
-                }
-
                 // CS and OD work differently in droid, therefore it
                 // needs to be computed regardless of map-changing mods
                 // and statistics multiplier
@@ -171,7 +168,7 @@ export class MapStats {
                     }
                     if (this.mods.includes("SC")) {
                         scale -= ((720 / 480)
-                        * (54.42 - 4 * 4.48)
+                        * (4 * 4.48)
                         * 2 / 128);
                     }
                     // circle radius = 64 * scale
@@ -199,9 +196,6 @@ export class MapStats {
             case modes.osu: {
                 if (!(this.pcMods & mods.osuMods.map_changing) && this.speedMultiplier === 1) {
                     break;
-                }
-                if (this.pcMods & mods.osuMods.nc) {
-                    this.speedMultiplier *= 1.5;
                 }
 
                 if (this.cs !== undefined) {
