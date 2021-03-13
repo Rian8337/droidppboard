@@ -2,7 +2,6 @@ import * as express from 'express';
 import * as mongodb from 'mongodb';
 import * as fileupload from 'express-fileupload';
 import * as bodyParser from 'body-parser';
-import * as request from 'request';
 import { config } from 'dotenv';
 import { mods } from './modules/utils/mods';
 import { MapStats } from './modules/utils/MapStats';
@@ -10,44 +9,12 @@ import { MapStars } from './modules/tools/MapStars';
 import { PerformanceCalculator } from './modules/difficulty/PerformanceCalculator';
 import { modes } from './modules/constants/modes';
 import { Beatmap } from './modules/beatmap/Beatmap';
+import { BindDatabaseResponse } from './interfaces/BindDatabaseResponse';
+import { DatabasePPEntry } from './interfaces/DatabasePPEntry';
+import { PPList } from './interfaces/PPList';
+import { WhitelistDatabaseResponse } from './interfaces/WhitelistDatabaseResponse';
+import { convertURIregex, convertURI, Comparison, getComparisonText, getComparisonObject, downloadBeatmap, refreshtopPP } from './util';
 config();
-
-interface DatabasePPEntry {
-    title: string;
-    pp: number;
-    mods: string;
-    combo: number;
-    miss: number;
-    accuracy: number;
-    scoreID?: number;
-}
-
-interface PPEntry {
-    username: string;
-    map: string;
-    rawpp: number;
-    combo: number;
-    acc_percent: number;
-    miss_c: number;
-}
-
-interface PPList {
-    mods: string;
-    list: PPEntry[];
-}
-
-interface BindDatabaseResponse {
-    discordid: string;
-    username: string;
-    uid: string;
-    pp: DatabasePPEntry[];
-    pptotal: number;
-}
-
-interface WhitelistDatabaseResponse {
-    mapid: number;
-    mapname: string;
-}
 
 const elainadbkey: string = process.env.ELAINA_DB_KEY as string;
 const alicedbkey: string = process.env.ALICE_DB_KEY as string;
@@ -73,113 +40,9 @@ let binddb: mongodb.Collection;
 let whitelistdb: mongodb.Collection;
 let keydb: mongodb.Collection;
 
-let top_pp_list: PPList[] = [];
+const top_pp_list: PPList[] = [];
 const elainaDb: mongodb.MongoClient = new mongodb.MongoClient(mainURI, {useNewUrlParser: true, useUnifiedTopology: true});
 const aliceDb: mongodb.MongoClient = new mongodb.MongoClient(aliceURI, {useNewUrlParser: true, useUnifiedTopology: true});
-
-function convertURI(input: string): string {
-    input = decodeURIComponent(input);
-    const arr: string[] = input.split("");
-    for (let i = 0; i < arr.length; ++i) {
-        if (i != arr.length-1 && arr[i] === '+' && arr[i+1] !== '+') {
-            arr[i] = ' ';
-        }
-    }
-
-    input = arr.join("");
-    return input;
-}
-
-function convertURIregex(input: string): string {
-    input = decodeURIComponent(input);
-    const arr: string[] = input.split("");
-    for (let i = 0; i < arr.length; ++i) {
-        if (arr[i] == '*') {arr[i] = '[*]';}
-        if (arr[i] == '?') {arr[i] = '[?]';}
-        if (arr[i] == '$') {arr[i] = '[$]';}
-        if (arr[i] == '(') {arr[i] = '[(]';}
-        if (arr[i] == ')') {arr[i] = '[)]';}
-        if (arr[i] == '[') {arr[i] = '[[]';}
-        if (arr[i] == ']') {arr[i] = '[]]';}
-        if (arr[i] == '"') {arr[i] = '["]';}
-        if (arr[i] == "'") {arr[i] = "[']";}
-        if (arr[i] == ":") {arr[i] = "[:]";}
-        if (i != arr.length-1 && arr[i] == '+' && arr[i+1] != '+') {
-            arr[i] = ' ';
-        }
-        if (arr[i] == "+") {
-            arr[i] = "[+]";
-        }
-    }
-    input = arr.join("");
-    return input;
-}
-
-function refreshtopPP(): void {
-    console.log("Refreshing top pp list");
-    binddb.find({}, { projection: { _id: 0, username: 1, pp: 1}}).toArray(function(err, res: BindDatabaseResponse[]) {
-        top_pp_list = [
-            {
-                mods: "",
-                list: []
-            },
-            {
-                mods: "-",
-                list: []
-            }
-        ];
-        res.forEach((val, index) => {
-            const ppEntries: DatabasePPEntry[] = val.pp;
-            for (const ppEntry of ppEntries) {
-                const entry: PPEntry = {
-                    username: val.username,
-                    map: ppEntry.title + (ppEntry.mods ? " +" + ppEntry.mods : ""),
-                    rawpp: ppEntry.pp,
-                    combo: ppEntry.combo,
-                    acc_percent: ppEntry.accuracy,
-                    miss_c: ppEntry.miss
-                };
-                top_pp_list[0].list.push(entry);
-
-                const droidMods: string = mods.pcToDroid(ppEntry.mods) || "-";
-                const index: number = top_pp_list.findIndex(v => v.mods === droidMods);
-                if (index !== -1) {
-                    top_pp_list[index].list.push(entry);
-                } else {
-                    top_pp_list.push({
-                        mods: droidMods,
-                        list: [entry]
-                    });
-                }
-            }
-            top_pp_list.forEach(v => {
-                v.list.sort((a, b) => {
-                    return b.rawpp - a.rawpp;
-                });
-                if (v.list.length >= 100) {
-                    v.list.splice(100);
-                }
-            });
-
-            if (index === res.length - 1) {
-                console.log("Done");
-            }
-        });
-    });
-}
-
-function downloadBeatmap(beatmapID: number): Promise<string> {
-    return new Promise(resolve => {
-        let data: string = "";
-        request(`https://osu.ppy.sh/osu/${beatmapID}`, {encoding: "utf-8"})
-            .on("data", chunk => {
-                data += chunk;
-            })
-            .on("complete", () => {
-                resolve(data);
-            });
-    });
-}
 
 elainaDb.connect((err, db) => {
     if (err) throw err;
@@ -205,8 +68,7 @@ aliceDb.connect((err, db) => {
 });
 
 function initializeSite(): void {
-    refreshtopPP();
-    setInterval(refreshtopPP, 1800000);
+    refreshtopPP(binddb, top_pp_list);
 
     app.get('/', (req, res) => {
         const page: number = parseInt(req.url.split('?page=')[1]) || 1;
@@ -235,14 +97,84 @@ function initializeSite(): void {
     });
 
     app.get('/whitelist', (req, res) => {
-        let page: number = parseInt(req.url.split('?page=')[1]) || 1;
-        let query: string = req.url.split('?query=')[1] || "";
-        let mapquery = {};
+        const page: number = parseInt(req.url.split('?page=')[1]) || 1;
+        const query: string = convertURI(req.url.split('?query=')[1] || "").toLowerCase();
+        const mapquery: object = {};
+        const sort: object = { mapname: 1 };
         if (query) {
-            const regexquery = new RegExp(convertURIregex(query), 'i'); 
-            mapquery = {mapname: regexquery};
+            let mapNameQuery: string = "";
+            const comparisonRegex: RegExp = /[<=>]{1,2}/;
+            const finalQueries = query.split(/\s+/g);
+            for (const finalQuery of finalQueries) {
+                let [key, value]: string[] = finalQuery.split(comparisonRegex, 2);
+                const comparison: Comparison = (comparisonRegex.exec(finalQuery) ?? ["="])[0] as Comparison;
+                switch (key) {
+                    case "cs":
+                    case "ar":
+                    case "od":
+                    case "hp":
+                    case "sr":
+                        const propertyName: string = `diffstat.${key}`;
+                        if (mapquery.hasOwnProperty(propertyName)) {
+                            Object.defineProperty(mapquery[propertyName as keyof typeof mapquery], getComparisonText(comparison), {value: parseFloat(value), writable: true, configurable: true, enumerable: true});
+                        } else {
+                            Object.defineProperty(mapquery, `diffstat.${key}`, {value: getComparisonObject(comparison, parseFloat(value)), writable: true, configurable: true, enumerable: true});
+                        }
+                        break;
+                    case "star":
+                    case "stars":
+                        if (mapquery.hasOwnProperty("diffstat.sr")) {
+                            Object.defineProperty(mapquery["diffstat.sr" as keyof typeof mapquery], getComparisonText(comparison), {value: parseFloat(value), writable: true, configurable: true, enumerable: true});
+                        } else {
+                            Object.defineProperty(mapquery, "diffstat.sr", {value: getComparisonObject(comparison, parseFloat(value)), writable: true, configurable: true, enumerable: true});
+                        }
+                        break;
+                    case "sort":
+                        const isDescendSort: boolean = value.startsWith("-");
+                        if (isDescendSort) {
+                            value = value.substring(1);
+                        }
+                        switch (value) {
+                            case "beatmapid":
+                            case "mapid":
+                            case "id":
+                                Object.defineProperty(sort, "mapid", {value: isDescendSort ? -1 : 1, writable: true, configurable: true, enumerable: true});
+                                break;
+                            case "beatmapname":
+                            case "mapname":
+                            case "name":
+                                Object.defineProperty(sort, "mapname", {value: isDescendSort ? -1 : 1, writable: true, configurable: true, enumerable: true});
+                                break;
+                            case "cs":
+                            case "ar":
+                            case "od":
+                            case "hp":
+                                Object.defineProperty(sort, `diffstat.${value}`, {value: isDescendSort ? -1 : 1, writable: true, configurable: true, enumerable: true});
+                                break;
+                            case "sr":
+                            case "star":
+                            case "stars":
+                                Object.defineProperty(sort, "diffstat.sr", {value: isDescendSort ? -1 : 1, writable: true, configurable: true, enumerable: true});
+                                break;
+                            default:
+                                mapNameQuery += finalQuery + " ";
+                        }
+                        break;
+                    default:
+                        mapNameQuery += finalQuery + " ";
+                }
+            }
+            if (mapNameQuery) {
+                const regexQuery: RegExp[] = mapNameQuery.trim().split(/\s+/g).map(v => {return new RegExp(v, "i");});
+                Object.defineProperty(mapquery, "$and", {value: regexQuery.map(v => {return {mapname: v};}), writable: false, configurable: true, enumerable: true});
+            }
         }
-        whitelistdb.find(mapquery, {projection: {_id: 0}}).sort({ mapname: 1 }).skip((page-1)*30).limit(30).toArray(function(err, resarr: WhitelistDatabaseResponse[]) {
+        // Allow star rating sort to override beatmap title sort
+        if (sort.hasOwnProperty("diffstat.sr")) {
+            delete sort["mapname" as keyof typeof sort];
+        }
+        whitelistdb.find(mapquery, {projection: {_id: 0, mapid: 1, mapname: 1, diffstat: 1}}).sort(sort).skip((page-1)*30).limit(30).toArray(function(err, resarr: WhitelistDatabaseResponse[]) {
+            resarr.map(v => v.diffstat.sr = parseFloat((v.diffstat.sr).toFixed(2)));
             res.render('whitelist', {
                 title: 'Whitelisted Beatmaps List',
                 list: resarr,
