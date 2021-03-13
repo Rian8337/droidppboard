@@ -3,6 +3,7 @@ import { HitObject } from "../../beatmap/hitobjects/HitObject";
 import { Vector2 } from "../../mathutil/Vector2";
 import { DifficultyHitObject } from "../../beatmap/hitobjects/DifficultyHitObject";
 import { Slider } from "../../beatmap/hitobjects/Slider";
+import { Precision } from "../../utils/Precision";
 
 /**
  * A converter used to convert normal hitobjects into difficulty hitobjects.
@@ -101,6 +102,16 @@ export class DifficultyHitObjectCreator {
         }
         slider.lazyEndPosition = slider.stackedPosition;
         slider.lazyTravelDistance = 0;
+
+        // Stop here if the slider has too short duration due to float number limitation.
+        // Incredibly close start and end time fluctuates travel distance and lazy
+        // end position heavily, which we do not want to happen.
+        //
+        // In the real game, this shouldn't happen--perhaps need to reinvestigate this
+        // in the future.
+        if (Precision.almostEqualsNumber(slider.startTime, slider.endTime)) {
+            return;
+        }
 
         const approxFollowCircleRadius: number = this.hitObjectRadius * 3;
 
