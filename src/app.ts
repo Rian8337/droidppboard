@@ -165,6 +165,10 @@ function initializeSite(): void {
                 }
             }
             if (mapNameQuery) {
+                const regexSpecialCharacters: string[] = ["." , "+", '*', "?", "^", "$", "(", ")", "[", "]", "{", "}", "|", "\\"];
+                regexSpecialCharacters.forEach(r => {
+                    mapNameQuery = mapNameQuery.replace(new RegExp(r, "g"), `\\${r}`);
+                });
                 const regexQuery: RegExp[] = mapNameQuery.trim().split(/\s+/g).map(v => {return new RegExp(v, "i");});
                 Object.defineProperty(mapquery, "$and", {value: regexQuery.map(v => {return {mapname: v};}), writable: false, configurable: true, enumerable: true});
             }
