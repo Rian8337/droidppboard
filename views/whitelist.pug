@@ -76,44 +76,46 @@ div
 
 hr
 
-h2 Search Query Guide 
-strong Available filter option
-| : CS, AR, OD, HP, SR/star/stars
-br
-strong Available sorting option
-| : CS, AR, OD, HP, SR/star/stars, beatmapid/mapid/id, beatmapname/mapname/name (for CS, AR,
-|  OD, HP, and SR/star/stars, you can put "-" in front to use descend sort instead of ascend)
-br
-br
-strong Inequality symbols for filter option
-| :
-ul 
-    li <= (less than or equal to)
-    li < (less than)
-    li = (equal to)
-    li > (more than)
-    li >= (more than or equal to)
-| All filter and sort options are case insensitive, with each of them separated by space.
-br
-br
-| By default, there is no filter, and the sort option is set to beatmap name.
-br
-br
-| Anything that doesn't fall into any of the filter or sort option will be treated as searching beatmap name.
-br
-br
-strong Examples
-| :
-ul 
-    li
-        strong: i cs>=4.2 cs<=5 sort=cs
-        |  will search for beatmaps with CS between 4.2 (inclusive) and 5 (inclusive) and sort them based on CS ascendingly
-    li
-        strong: i od>=5 od<9 ar>7 ar<=9.7 sort=-ar
-        |  will search for beatmaps with AR between 7 (exclusive) and 9.7 (inclusive) and OD between 5 (inclusive) and 9 (exclusive), and then
-        |  sorting the search result by AR descendingly
-    li
-        strong: i cs>=4.2 ar>9.3 od>=8 hp>=5 sort=-sr logic boi is the best
-        |  will search for beatmaps with CS above 4.2 (inclusive), AR above 9.3 (exclusive), OD above 8 (inclusive),
-        |  HP above 5 (inclusive), and matches the keyword "logic boi is the best" (much like osu! search function),
-        |  and then sorting the search result by star rating descendingly
+div
+    h3 Search Query Guide 
+    h7
+        strong Available filter option:
+        |  CS, AR, OD, HP, SR
+        br
+        strong Available sorting option:
+        |  CS, AR, OD, HP, SR, mapid, mapname (you can put "-" in front to use descend sort instead of ascend)
+        br
+        br
+        strong Inequality symbols for filter option:
+        |
+        ul 
+            li <= (less than or equal to)
+            li < (less than)
+            li = (equal to)
+            li > (more than)
+            li >= (more than or equal to)
+        | All filter and sort options are case insensitive, with each of them separated by space.
+        br
+        br
+        | By default, there is no filter, and the sort option is set to beatmap name.
+        br
+        br
+        | Anything that doesn't fall into any of the filter or sort option will be treated as searching beatmap name.
+        br
+        br
+        strong Examples:
+        ul 
+            li
+                strong: i cs>=4.2 cs<=5 sort=cs
+                |  will search for beatmaps with CS between 4.2 (inclusive) and 5 (inclusive) and sort them based on CS ascendingly
+            li
+                strong: i od>=5 od<9 ar>7 ar<=9.7 sort=-ar
+                |  will search for beatmaps with AR between 7 (exclusive) and 9.7 (inclusive) and OD between 5 (inclusive) and 9 (exclusive), and then
+                |  sorting the search result by AR descendingly
+            li
+                strong: i cs>=4.2 ar>9.3 od>=8 hp>=5 sort=-sr logic boi is the best
+                |  will search for beatmaps with CS above 4.2 (inclusive), AR above 9.3 (exclusive), OD above 8 (inclusive),
+                |  HP above 5 (inclusive), and matches the keyword "logic boi is the best" (much like osu! search function),
+                |  and then sorting the search result by star rating descendingly
+
+hr
