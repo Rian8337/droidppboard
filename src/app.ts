@@ -100,7 +100,7 @@ function initializeSite(): void {
         const page: number = parseInt(req.url.split('?page=')[1]) || 1;
         const query: string = convertURI(req.url.split('?query=')[1] || "").toLowerCase();
         const mapquery: object = {};
-        const sort: object = { mapname: 1 };
+        const sort: object = {};
         if (query) {
             let mapNameQuery: string = "";
             const comparisonRegex: RegExp = /[<=>]{1,2}/;
@@ -114,6 +114,7 @@ function initializeSite(): void {
                     case "od":
                     case "hp":
                     case "sr":
+                    case "bpm":
                         const propertyName: string = `diffstat.${key}`;
                         if (mapquery.hasOwnProperty(propertyName)) {
                             Object.defineProperty(mapquery[propertyName as keyof typeof mapquery], getComparisonText(comparison), {value: parseFloat(value), writable: true, configurable: true, enumerable: true});
@@ -149,6 +150,7 @@ function initializeSite(): void {
                             case "ar":
                             case "od":
                             case "hp":
+                            case "bpm":
                                 Object.defineProperty(sort, `diffstat.${value}`, {value: isDescendSort ? -1 : 1, writable: true, configurable: true, enumerable: true});
                                 break;
                             case "sr":
@@ -169,12 +171,16 @@ function initializeSite(): void {
                 Object.defineProperty(mapquery, "$and", {value: regexQuery.map(v => {return {mapname: v};}), writable: false, configurable: true, enumerable: true});
             }
         }
-        // Allow star rating sort to override beatmap title sort
-        if (sort.hasOwnProperty("diffstat.sr")) {
+        if (!sort.hasOwnProperty("mapname")) {
+            Object.defineProperty(sort, "mapname", {value: 1, writable: true, configurable: true, enumerable: true});
+        }
+        // Allow SR and BPM sort to override beatmap title sort
+        if (sort.hasOwnProperty("diffstat.sr") || sort.hasOwnProperty("diffstat.bpm")) {
             delete sort["mapname" as keyof typeof sort];
         }
+        console.log(mapquery);
+        console.log(sort);
         whitelistdb.find(mapquery, {projection: {_id: 0, mapid: 1, mapname: 1, diffstat: 1}}).sort(sort).skip((page-1)*30).limit(30).toArray(function(err, resarr: WhitelistDatabaseResponse[]) {
-            resarr.map(v => v.diffstat.sr = parseFloat((v.diffstat.sr).toFixed(2)));
             res.render('whitelist', {
                 title: 'Whitelisted Beatmaps List',
                 list: resarr,
