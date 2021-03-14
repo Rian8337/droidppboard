@@ -165,12 +165,7 @@ function initializeSite(): void {
                 }
             }
             if (mapNameQuery) {
-                const regexSpecialCharacters: string[] = ["." , "+", '*', "?", "^", "$", "(", ")", "[", "]", "{", "}", "|", "\\"];
-                regexSpecialCharacters.forEach(r => {
-                    // Can't use a regular expression here since it will throw an error :'(
-                    mapNameQuery = mapNameQuery.split(r).join(`\\${r}`);
-                });
-                const regexQuery: RegExp[] = mapNameQuery.trim().split(/\s+/g).map(v => {return new RegExp(v, "i");});
+                const regexQuery: RegExp[] = mapNameQuery.trim().split(/\s+/g).map(v => {return new RegExp(convertURIregex(v), "i");});
                 Object.defineProperty(mapquery, "$and", {value: regexQuery.map(v => {return {mapname: v};}), writable: false, configurable: true, enumerable: true});
             }
         }
