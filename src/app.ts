@@ -178,8 +178,6 @@ function initializeSite(): void {
         if (sort.hasOwnProperty("diffstat.sr") || sort.hasOwnProperty("diffstat.bpm")) {
             delete sort["mapname" as keyof typeof sort];
         }
-        console.log(mapquery);
-        console.log(sort);
         whitelistdb.find(mapquery, {projection: {_id: 0, mapid: 1, mapname: 1, diffstat: 1}}).sort(sort).skip((page-1)*30).limit(30).toArray(function(err, resarr: WhitelistDatabaseResponse[]) {
             res.render('whitelist', {
                 title: 'Whitelisted Beatmaps List',
