@@ -15,6 +15,8 @@ import { PPList } from './interfaces/PPList';
 import { WhitelistDatabaseResponse } from './interfaces/WhitelistDatabaseResponse';
 import { convertURIregex, convertURI, Comparison, getComparisonText, getComparisonObject, downloadBeatmap, refreshtopPP } from './util';
 config();
+// @ts-ignore
+process.env.UV_THREADPOOL_SIZE = 128;
 
 const elainadbkey: string = process.env.ELAINA_DB_KEY as string;
 const alicedbkey: string = process.env.ALICE_DB_KEY as string;
