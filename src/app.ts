@@ -211,6 +211,9 @@ function initializeSite(): void {
         }
         binddb.findOne({uid: uid}, function(err, findres: BindDatabaseResponse) {
             if (err) throw err;
+            if (!findres) {
+                return res.send("404 Page Not Found");
+            }
             res.render('profile', {
                 title: "Player Profile",
                 username: findres.username,
