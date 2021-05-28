@@ -275,6 +275,7 @@ function initializeSite(): void {
                     username: prototype.username,
                     prevpptotal: findres.pptotal.toFixed(2),
                     pptotal: prototype.pptotal.toFixed(2),
+                    difference: (prototype.pptotal - findres.pptotal).toFixed(2),
                     entries: prototype.pp,
                     lastUpdate: new Date(prototype.lastUpdate).toUTCString()
                 });
