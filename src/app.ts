@@ -14,6 +14,7 @@ import { DatabasePPEntry } from './interfaces/DatabasePPEntry';
 import { PPList } from './interfaces/PPList';
 import { WhitelistDatabaseResponse } from './interfaces/WhitelistDatabaseResponse';
 import { convertURIregex, convertURI, Comparison, getComparisonText, getComparisonObject, downloadBeatmap, refreshtopPP } from './util';
+import { PrototypePPEntry } from './interfaces/PrototypePPEntry';
 config();
 // @ts-ignore
 process.env.UV_THREADPOOL_SIZE = 128;
@@ -41,6 +42,7 @@ const aliceURI: string = 'mongodb+srv://' + alicedbkey + '@aliceDb-hoexz.gcp.mon
 let binddb: mongodb.Collection;
 let whitelistdb: mongodb.Collection;
 let keydb: mongodb.Collection;
+let prototypedb: mongodb.Collection;
 
 const top_pp_list: PPList[] = [];
 const elainaDb: mongodb.MongoClient = new mongodb.MongoClient(mainURI, {useNewUrlParser: true, useUnifiedTopology: true});
@@ -53,18 +55,19 @@ elainaDb.connect((err, db) => {
     binddb = maindb.collection('userbind');
     whitelistdb = maindb.collection('mapwhitelist');
     
-    if (binddb && whitelistdb && keydb) {
+    if (binddb && whitelistdb && keydb && prototypedb) {
         initializeSite();
     }
 });
 
 aliceDb.connect((err, db) => {
     if (err) throw err;
-    const maindb = db.db("AliceDB");
+    const maindb: mongodb.Db = db.db("AliceDB");
     console.log("Alice DB connection established");
     keydb = maindb.collection("ppapikey");
+    prototypedb = maindb.collection("prototypepp");
 
-    if (binddb && whitelistdb && keydb) {
+    if (binddb && whitelistdb && keydb && prototypedb) {
         initializeSite();
     }
 });
@@ -95,6 +98,34 @@ function initializeSite(): void {
                 page: page,
                 query: convertURI(searchQuery)
             });        
+        });
+    });
+
+    app.get("/prototype", (req, res) => {
+        const page: number = parseInt(req.url.split('?page=')[1]) || 1;
+        const searchQuery: string = req.url.split('?query=')[1] || "";
+        let query = {};
+        if (searchQuery) {
+            const regexQuery = new RegExp(convertURIregex(searchQuery), "i");
+            query = {$or: [{uid: regexQuery}, {username: regexQuery}]};
+        }
+
+        prototypedb.find(query, { projection: { _id: 0, uid: 1, pptotal: 1, username: 1 } }).sort({ pptotal: -1 }).skip((page-1)*50).limit(50).toArray(function(err, resarr) {
+            if (err) throw err;
+
+            const entries = [];
+            for (let i = 0; i < resarr.length; ++i) {
+                if (resarr[i].pptotal) {
+                    entries.push(resarr[i]);
+                }
+            }
+
+            res.render("prototype", {
+                title: 'Prototype PP',
+                list: entries,
+                page: page,
+                query: convertURI(searchQuery)
+            });
         });
     });
 
@@ -219,6 +250,26 @@ function initializeSite(): void {
                 username: findres.username,
                 pptotal: findres.pptotal.toFixed(2),
                 entries: findres.pp
+            });
+        });
+    });
+
+    app.get("/prototype/profile", (req, res) => {
+        const uid = req.url.split('uid=')[1];
+        if (!uid) {
+            return res.send("404 Page Not Found");
+        }
+        prototypedb.findOne({uid: uid}, function(err, findres) {
+            if (err) throw err;
+            if (!findres) {
+                return res.send("404 Page Not Found");
+            }
+            res.render('prototypeProfile', {
+                title: "Player Profile",
+                username: findres.username,
+                pptotal: findres.pptotal.toFixed(2),
+                entries: findres.pp,
+                lastUpdate: new Date(findres.lastUpdate).toUTCString()
             });
         });
     });
