@@ -272,10 +272,10 @@ function initializeSite(): void {
                 }
                 res.render('prototypeProfile', {
                     title: "Player Profile",
-                    username: findres.username,
+                    username: prototype.username,
                     prevpptotal: findres.pptotal.toFixed(2),
                     pptotal: prototype.pptotal.toFixed(2),
-                    entries: findres.pp,
+                    entries: prototype.pp,
                     lastUpdate: new Date(prototype.lastUpdate).toUTCString()
                 });
             });
