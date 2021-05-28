@@ -259,19 +259,27 @@ function initializeSite(): void {
         if (!uid) {
             return res.send("404 Page Not Found");
         }
-        prototypedb.findOne({uid: uid}, function(err, findres) {
+        binddb.findOne({uid: uid}, { projection: { pptotal: 1 } }, function(err, findres: BindDatabaseResponse) {
             if (err) throw err;
             if (!findres) {
                 return res.send("404 Page Not Found");
             }
-            res.render('prototypeProfile', {
-                title: "Player Profile",
-                username: findres.username,
-                pptotal: findres.pptotal.toFixed(2),
-                entries: findres.pp,
-                lastUpdate: new Date(findres.lastUpdate).toUTCString()
+            prototypedb.findOne({uid: uid}, function(err, prototype) {
+                if (err) throw err;
+                if (!prototype) {
+                    return res.send("404 Page Not Found");
+                }
+                res.render('prototypeProfile', {
+                    title: "Player Profile",
+                    username: findres.username,
+                    prevpptotal: findres.pptotal.toFixed(2),
+                    pptotal: prototype.pptotal.toFixed(2),
+                    entries: findres.pp,
+                    lastUpdate: new Date(prototype.lastUpdate).toUTCString()
+                });
             });
         });
+        
     });
 
     app.get('/calculate', (req, res) => {
