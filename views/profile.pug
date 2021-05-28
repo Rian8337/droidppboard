@@ -20,6 +20,8 @@ h3
         li(class="nav")
             a(href='/calculate', class="nav")= "Calculate Beatmap PP"
         li(class='nav')
+            a(href='/prototype?page=1', class='nav')= "Prototype"
+        li(class='nav')
             a(href='/about',class='nav')= "About / Donation"
 
 hr
@@ -36,6 +38,6 @@ ul(type="None", class='ppentry')
                 if val.mods
                   = " +" + val.mods
                   
-        li(class='ppentry2nd')= "-> Raw PP: " 
-            b= val.pp
+        li(class='ppentry2nd')= val.combo + "x | " + val.accuracy + "% | " + val.miss + "❌ | " 
+            b= val.pp + "pp"
                 small= " (Net pp: " + (val.pp*(Math.pow(0.95,index))).toFixed(2) + ")"
