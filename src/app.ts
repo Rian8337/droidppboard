@@ -116,6 +116,7 @@ function initializeSite(): void {
             const entries = [];
             for (let i = 0; i < resarr.length; ++i) {
                 if (resarr[i].pptotal) {
+                    resarr[i].pptotal = parseFloat(resarr[i].pptotal.toFixed(2));
                     entries.push(resarr[i]);
                 }
             }
