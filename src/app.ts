@@ -78,11 +78,10 @@ function initializeSite(): void {
     app.get('/', (req, res) => {
         const page: number = parseInt(req.url.split('?page=')[1]) || 1;
         const searchQuery: string = req.url.split('?query=')[1] || "";
-        let query = {};
-        if (searchQuery) {
-            const regexQuery = new RegExp(convertURIregex(searchQuery), "i");
-            query = {$or: [{uid: regexQuery}, {username: regexQuery}]};
-        }
+        const query = searchQuery ?
+            {$or: [{uid: parseInt(searchQuery)}, {username: new RegExp(convertURIregex(searchQuery), "i")}]} :
+            {};
+
         binddb.find(query, { projection: { _id: 0, discordid: 1, uid: 1, pptotal: 1 , playc: 1, username: 1}}).sort({ pptotal: -1 }).skip((page-1)*50).limit(50).toArray(function(err, resarr: BindDatabaseResponse[]) {
             if (err) throw err;
             const entries: BindDatabaseResponse[] = [];
@@ -104,11 +103,9 @@ function initializeSite(): void {
     app.get("/prototype", (req, res) => {
         const page: number = parseInt(req.url.split('?page=')[1]) || 1;
         const searchQuery: string = req.url.split('?query=')[1] || "";
-        let query = {};
-        if (searchQuery) {
-            const regexQuery = new RegExp(convertURIregex(searchQuery), "i");
-            query = {$or: [{uid: regexQuery}, {username: regexQuery}]};
-        }
+        const query = searchQuery ?
+            {$or: [{uid: parseInt(searchQuery)}, {username: new RegExp(convertURIregex(searchQuery), "i")}]} :
+            {};
 
         prototypedb.find(query, { projection: { _id: 0, uid: 1, pptotal: 1, username: 1 } }).sort({ pptotal: -1 }).skip((page-1)*50).limit(50).toArray(function(err, resarr) {
             if (err) throw err;
@@ -237,8 +234,8 @@ function initializeSite(): void {
     });
 
     app.get('/profile', (req, res) => {
-        const uid = req.url.split('uid=')[1];
-        if (!uid) {
+        const uid: number = parseInt(req.url.split('uid=')[1]);
+        if (isNaN(uid)) {
             return res.send("404 Page Not Found");
         }
         binddb.findOne({uid: uid}, function(err, findres: BindDatabaseResponse) {
@@ -256,8 +253,8 @@ function initializeSite(): void {
     });
 
     app.get("/prototype/profile", (req, res) => {
-        const uid = req.url.split('uid=')[1];
-        if (!uid) {
+        const uid: number = parseInt(req.url.split('uid=')[1]);
+        if (isNaN(uid)) {
             return res.send("404 Page Not Found");
         }
         binddb.findOne({uid: uid}, { projection: { pptotal: 1 } }, function(err, findres: BindDatabaseResponse) {
