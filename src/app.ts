@@ -238,7 +238,7 @@ function initializeSite(): void {
         if (isNaN(uid)) {
             return res.send("404 Page Not Found");
         }
-        binddb.findOne({uid: uid}, function(err, findres: BindDatabaseResponse) {
+        binddb.findOne({previous_bind: {$all: [uid]}}, function(err, findres: BindDatabaseResponse) {
             if (err) throw err;
             if (!findres) {
                 return res.send("404 Page Not Found");
@@ -257,7 +257,7 @@ function initializeSite(): void {
         if (isNaN(uid)) {
             return res.send("404 Page Not Found");
         }
-        binddb.findOne({uid: uid}, { projection: { pptotal: 1 } }, function(err, findres: BindDatabaseResponse) {
+        binddb.findOne({previous_bind: {$all: [uid]}}, { projection: { pptotal: 1 } }, function(err, findres: BindDatabaseResponse) {
             if (err) throw err;
             if (!findres) {
                 return res.send("404 Page Not Found");
@@ -278,7 +278,6 @@ function initializeSite(): void {
                 });
             });
         });
-        
     });
 
     app.get('/calculate', (req, res) => {
