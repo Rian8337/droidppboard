@@ -5,6 +5,10 @@ import { DatabasePPEntry } from './interfaces/DatabasePPEntry';
 import { PPEntry } from './interfaces/PPEntry';
 import { PPList } from './interfaces/PPList';
 import { mods } from './modules/utils/mods';
+import { PrototypePPList } from './interfaces/PrototypePPList';
+import { PrototypePPEntry } from './interfaces/PrototypePPEntry';
+import { PrototypeDatabaseResponse } from './interfaces/PrototypeDatabaseResponse';
+import { PrototypeDatabasePPEntry } from './interfaces/PrototypeDatabasePPEntry';
 
 export type Comparison = "<=" | "<" | "=" | ">" | ">=";
 
@@ -111,6 +115,53 @@ export function refreshtopPP(binddb: mongodb.Collection, top_pp_list: PPList[]):
                 }
             }
             top_pp_list.forEach(v => {
+                v.list.sort((a, b) => {
+                    return b.rawpp - a.rawpp;
+                });
+                if (v.list.length >= 100) {
+                    v.list.splice(100);
+                }
+            });
+
+            if (index === res.length - 1) {
+                console.log("Done");
+            }
+        });
+    });
+}
+
+export function refreshPrototypeTopPP(prototypedb: mongodb.Collection, topList: PrototypePPList[]): void {
+    console.log("Refreshing prototype top pp list");
+    setTimeout(() => refreshtopPP(prototypedb, topList), 1800000);
+    prototypedb.find({}, { projection: { _id: 0, username: 1, pp: 1}}).toArray(function(err, res: PrototypeDatabaseResponse[]) {
+        topList.length = 0;
+        topList.push({mods: "", list: []}, {mods: "-", list: []});
+        res.forEach((val, index) => {
+            const ppEntries: PrototypeDatabasePPEntry[] = val.pp;
+            for (const ppEntry of ppEntries) {
+                const entry: PrototypePPEntry = {
+                    username: val.username,
+                    map: ppEntry.title + (ppEntry.mods ? " +" + ppEntry.mods : ""),
+                    rawpp: ppEntry.pp,
+                    prevpp: ppEntry.prevPP,
+                    combo: ppEntry.combo,
+                    acc_percent: ppEntry.accuracy,
+                    miss_c: ppEntry.miss
+                };
+                topList[0].list.push(entry);
+
+                const droidMods: string = mods.pcToDroid(ppEntry.mods) || "-";
+                const index: number = topList.findIndex(v => v.mods === droidMods);
+                if (index !== -1) {
+                    topList[index].list.push(entry);
+                } else {
+                    topList.push({
+                        mods: droidMods,
+                        list: [entry]
+                    });
+                }
+            }
+            topList.forEach(v => {
                 v.list.sort((a, b) => {
                     return b.rawpp - a.rawpp;
                 });

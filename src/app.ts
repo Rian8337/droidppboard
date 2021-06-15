@@ -13,8 +13,9 @@ import { BindDatabaseResponse } from './interfaces/BindDatabaseResponse';
 import { DatabasePPEntry } from './interfaces/DatabasePPEntry';
 import { PPList } from './interfaces/PPList';
 import { WhitelistDatabaseResponse } from './interfaces/WhitelistDatabaseResponse';
-import { convertURIregex, convertURI, Comparison, getComparisonText, getComparisonObject, downloadBeatmap, refreshtopPP } from './util';
-import { PrototypePPEntry } from './interfaces/PrototypePPEntry';
+import { convertURIregex, convertURI, Comparison, getComparisonText, getComparisonObject, downloadBeatmap, refreshtopPP, refreshPrototypeTopPP } from './util';
+import { PrototypePPList } from './interfaces/PrototypePPList';
+import { PrototypeDatabaseResponse } from './interfaces/PrototypeDatabaseResponse';
 config();
 // @ts-ignore
 process.env.UV_THREADPOOL_SIZE = 128;
@@ -45,6 +46,7 @@ let keydb: mongodb.Collection;
 let prototypedb: mongodb.Collection;
 
 const top_pp_list: PPList[] = [];
+const prototype_pp_list: PrototypePPList[] = [];
 const elainaDb: mongodb.MongoClient = new mongodb.MongoClient(mainURI, {useNewUrlParser: true, useUnifiedTopology: true});
 const aliceDb: mongodb.MongoClient = new mongodb.MongoClient(aliceURI, {useNewUrlParser: true, useUnifiedTopology: true});
 
@@ -74,6 +76,7 @@ aliceDb.connect((err, db) => {
 
 function initializeSite(): void {
     refreshtopPP(binddb, top_pp_list);
+    refreshPrototypeTopPP(prototypedb, prototype_pp_list);
 
     app.get('/', (req, res) => {
         const page: number = parseInt(req.url.split('?page=')[1]) || 1;
@@ -107,7 +110,7 @@ function initializeSite(): void {
             {$or: [{uid: parseInt(searchQuery)}, {username: new RegExp(convertURIregex(searchQuery), "i")}]} :
             {};
 
-        prototypedb.find(query, { projection: { _id: 0, uid: 1, pptotal: 1, username: 1 } }).sort({ pptotal: -1 }).skip((page-1)*50).limit(50).toArray(function(err, resarr) {
+        prototypedb.find(query, { projection: { _id: 0, uid: 1, pptotal: 1, username: 1 } }).sort({ pptotal: -1 }).skip((page-1)*50).limit(50).toArray(function(err, resarr: PrototypeDatabaseResponse[]) {
             if (err) throw err;
 
             const entries = [];
@@ -233,6 +236,16 @@ function initializeSite(): void {
         });
     });
 
+    app.get('/prototypetoppp', (req, res) => {
+        const mod: string = req.url.split("?mods=")[1] || "";
+        const droidMod: string = mod.toLowerCase() !== "nm" ? mods.pcToDroid(mod) || "" : "-";
+        const modList = prototype_pp_list.find(v => v.mods === droidMod) || {list: []};
+        res.render('prototypetoppp', {
+            pplist: modList.list,
+            mods: convertURI(mod).toUpperCase(),
+        });
+    });
+
     app.get('/profile', (req, res) => {
         const uid: number = parseInt(req.url.split('uid=')[1]);
         if (isNaN(uid)) {
@@ -262,7 +275,7 @@ function initializeSite(): void {
             if (!findres) {
                 return res.send("404 Page Not Found");
             }
-            prototypedb.findOne({uid: uid}, function(err, prototype) {
+            prototypedb.findOne({uid: uid}, function(err, prototype: PrototypeDatabaseResponse) {
                 if (err) throw err;
                 if (!prototype) {
                     return res.send("404 Page Not Found");
