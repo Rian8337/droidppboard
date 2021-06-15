@@ -54,8 +54,8 @@ hr
 div
     ul(class="pagerow")
         li(class="nav")
-            a(href='/?page=' + (page-1) + (query ? '?query='+query : ''), class="pagenav")= "<<< Prev Page"
+            a(href='/prototype?page=' + (page-1) + (query ? '?query='+query : ''), class="pagenav")= "<<< Prev Page"
         li(class="nav")
             a(class="pagecount")= " Page: " + page
         li(class="nav")
-            a(href='/?page=' + (page+1) + (query ? '?query='+query : ''), class="pagenav")= "Next Page >>>"
+            a(href='/prototype?page=' + (page+1) + (query ? '?query='+query : ''), class="pagenav")= "Next Page >>>"
