@@ -436,7 +436,7 @@ function initializeSite(): void {
     });
 
     app.get('/prototypecalculate', (req, res) => {
-        res.render('prototypecalculate');
+        res.render('prototypeCalculate');
     });
 
     app.post('/prototypecalculate', async (req, res) => {
@@ -545,7 +545,7 @@ function initializeSite(): void {
             mapString += ")";
         }
 
-        res.render('prototypecalculate', {
+        res.render('prototypeCalculate', {
             maptitle: mapString,
             objectstat: `Circles: ${map.circles} - Sliders: ${map.sliders} - Spinners: ${map.spinners}`,
             mapstat: `CS: ${map.cs}${statsForString.cs === map.cs ? "": ` (${(statsForString.cs as number).toFixed(2)})`} - AR: ${map.ar}${statsForString.ar === map.ar ? "": ` (${(statsForString.ar as number).toFixed(2)})`} - OD: ${map.od}${statsForString.od === map.od ? "" : ` (${(statsForString.od as number).toFixed(2)})`} - HP: ${map.hp}${statsForString.hp === map.hp ? "": ` (${(statsForString.hp as number).toFixed(2)})`}`,
