@@ -1,21 +1,25 @@
-import { Skill } from './Skill';
+import { OsuSkill } from './OsuSkill';
 import { DifficultyHitObject } from '../preprocessing/DifficultyHitObject';
+import { Spinner } from '../../beatmap/hitobjects/Spinner';
 
 /**
  * Represents the skill required to correctly aim at every object in the map with a uniform CircleSize and normalized distances.
  */
-export class Aim extends Skill {
+export class OsuAim extends OsuSkill {
     /**
      * Minimum timing threshold.
      */
     private readonly timingThreshold: number = 107;
 
-    protected readonly angleBonusBegin: number = Math.PI / 3;
+    private readonly angleBonusBegin: number = Math.PI / 3;
     protected readonly skillMultiplier: number = 26.25;
     protected readonly strainDecayBase: number = 0.15;
 
+    /**
+     * @param currentObject The hitobject to calculate.
+     */
     strainValueOf(currentObject: DifficultyHitObject): number {
-        if (!currentObject.strainTime) {
+        if (currentObject.object instanceof Spinner) {
             return 0;
         }
 
@@ -48,6 +52,9 @@ export class Aim extends Skill {
         );
     }
 
+    /**
+     * @param currentObject The hitobject to save to.
+     */
     saveToHitObject(currentObject: DifficultyHitObject): void {
         currentObject.aimStrain = this.currentStrain;
     }

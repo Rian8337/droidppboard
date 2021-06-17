@@ -1,16 +1,17 @@
-import { Skill } from './Skill';
+import { OsuSkill } from './OsuSkill';
 import { DifficultyHitObject } from '../preprocessing/DifficultyHitObject';
+import { Spinner } from '../../beatmap/hitobjects/Spinner';
 
 /**
  * Represents the skill required to press keys or tap with regards to keeping up with the speed at which objects need to be hit.
  */
-export class Speed extends Skill {
+export class OsuSpeed extends OsuSkill {
     /**
      * Spacing threshold for a single hitobject spacing.
      */
     private readonly SINGLE_SPACING_THRESHOLD: number = 125;
 
-    protected readonly angleBonusBegin: number = 5 * Math.PI / 6;
+    private readonly angleBonusBegin: number = 5 * Math.PI / 6;
     protected readonly skillMultiplier: number = 1400;
     protected readonly strainDecayBase: number = 0.3;
 
@@ -22,8 +23,11 @@ export class Speed extends Skill {
 
     private readonly angleBonusScale: number = 90;
 
+    /**
+     * @param currentObject The hitobject to calculate.
+     */
     strainValueOf(currentObject: DifficultyHitObject): number {
-        if (!currentObject.strainTime) {
+        if (!currentObject.strainTime || currentObject.object instanceof Spinner) {
             return 0;
         }
 
@@ -54,15 +58,14 @@ export class Speed extends Skill {
             }
         }
 
-        let speedValue: number = (1 + (speedBonus - 1) * 0.75) * angleBonus *
+        return (1 + (speedBonus - 1) * 0.75) * angleBonus *
             (0.95 + speedBonus * Math.pow(distance / this.SINGLE_SPACING_THRESHOLD, 3.5))
             / currentObject.strainTime;
-
-        
-
-        return speedValue;
     }
 
+    /**
+     * @param currentObject The hitobject to save to.
+     */
     saveToHitObject(currentObject: DifficultyHitObject): void {
         currentObject.speedStrain = this.currentStrain;
     }

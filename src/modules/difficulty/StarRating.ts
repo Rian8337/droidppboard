@@ -3,7 +3,7 @@ import { Beatmap } from '../beatmap/Beatmap';
 import { modes } from '../constants/modes';
 import { MapStats } from '../utils/MapStats';
 import { mods } from '../utils/mods';
-import { DifficultyHitObject } from '../beatmap/hitobjects/DifficultyHitObject';
+import { DifficultyHitObject } from './preprocessing/DifficultyHitObject';
 import { DifficultyHitObjectCreator } from '../difficulty/preprocessing/DifficultyHitObjectCreator';
 import { Aim } from './skills/Aim';
 import { Speed } from './skills/Speed';

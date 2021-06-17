@@ -1,22 +1,22 @@
-import { StarRating } from '../difficulty/StarRating';
 import { Beatmap } from '../beatmap/Beatmap';
 import { MapStats } from '../utils/MapStats';
-import { modes } from '../constants/modes';
 import { Parser } from '../beatmap/Parser';
+import { DroidStarRating } from '../rebalDifficulty/DroidStarRating';
+import { OsuStarRating } from '../rebalDifficulty/OsuStarRating';
 
 /**
  * A star rating calculator that configures which mode to calculate difficulty for and what mods are applied.
  */
-export class MapStars {
+export class RebalanceMapStars {
     /**
      * The osu!droid star rating of the beatmap.
      */
-    readonly droidStars: StarRating = new StarRating();
+    readonly droidStars: DroidStarRating = new DroidStarRating();
 
     /**
      * The osu!standard star rating of the beatmap.
      */
-    readonly pcStars: StarRating = new StarRating();
+    readonly pcStars: OsuStarRating = new OsuStarRating();
 
     /**
      * Calculates the star rating of a beatmap.
@@ -38,11 +38,12 @@ export class MapStars {
          * Custom map statistics to apply speed multiplier and force AR values as well as old statistics.
          */
         stats?: MapStats
-    }): MapStars {
+    }): RebalanceMapStars {
         if (!params.file) {
             throw new Error("Please enter an osu file!");
         }
-        
+
+        // Wish JavaScript has an actual clone method...
         const droidParser: Parser = new Parser();
         const pcParser: Parser = new Parser();
         try {
@@ -53,6 +54,8 @@ export class MapStars {
             return this;
         }
 
+        // Copy original parser without having to parse a new beatmap, this way
+        // droidMap and pcMap will not reference to the same parser instance
         const droidMap: Beatmap = droidParser.map;
         const pcMap: Beatmap = pcParser.map;
 
@@ -63,8 +66,8 @@ export class MapStars {
             isForceAR: params.stats?.isForceAR || false
         });
 
-        this.droidStars.calculate({mode: modes.droid, map: droidMap, mods: mod, stats});
-        this.pcStars.calculate({mode: modes.osu, map: pcMap, mods: mod, stats});
+        this.droidStars.calculate({map: droidMap, mods: mod, stats});
+        this.pcStars.calculate({map: pcMap, mods: mod, stats});
 
         return this;
     }

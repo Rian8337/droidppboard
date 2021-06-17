@@ -1,5 +1,7 @@
 import { Beatmap } from './Beatmap';
 import { TimingPoint } from './timings/TimingPoint';
+import { TimingControlPoint } from './timings/TimingControlPoint';
+import { DifficultyControlPoint } from './timings/DifficultyControlPoint';
 import { BreakPoint } from './timings/BreakPoint';
 import { Circle } from './hitobjects/Circle';
 import { Slider } from './hitobjects/Slider';
@@ -11,6 +13,8 @@ import { Vector2 } from '../mathutil/Vector2';
 import { SliderPath } from '../utils/SliderPath';
 import { HitObject } from './hitobjects/HitObject';
 import { MapStats } from '../utils/MapStats';
+import { MathUtils } from '../mathutil/MathUtils';
+import { ParserConstants } from '../constants/ParserConstants';
 
 /**
  * A beatmap parser with just enough data for pp calculation.
@@ -56,13 +60,18 @@ export class Parser {
             this.processLine(lines[i]);
         }
 
+        // Objects may be out of order *only* if a user has manually edited an .osu file.
+        // Unfortunately there are "ranked" maps in this state (example: https://osu.ppy.sh/s/594828).
+        // Sort is used to guarantee that the parsing order of hitobjects with equal start times is maintained (stably-sorted).
+        this.map.objects.sort((a, b) => {return a.startTime - b.startTime;});
+
         if (this.map.formatVersion >= 6) {
             this.applyStacking(0, this.map.objects.length - 1);
         } else {
             this.applyStackingOld();
         }
 
-        const circleSize: number = new MapStats({cs: this.map.cs, mods}).calculate().cs as number;
+        const circleSize: number = <number> new MapStats({cs: this.map.cs, mods}).calculate().cs;
         const scale: number = (1 - 0.7 * (circleSize - 5) / 5) / 2;
         this.map.objects.forEach(h => {
             h.calculateStackedPosition(scale);
@@ -72,9 +81,9 @@ export class Parser {
     }
 
     /**
-     * Returns a string representative of the class.
+     * Logs the line at which an exception occurs.
      */
-    toString(): string {
+    private logError(): string {
         return (
             "at line " + this.line + "\n" +
             this.currentLine + "\n" +
@@ -149,7 +158,7 @@ export class Parser {
      */
     private warn(message: string): void {
         console.warn(message);
-        console.warn(this.toString());
+        console.warn(this.logError());
     }
 
     /**
@@ -248,13 +257,27 @@ export class Parser {
         } else if (s.length < 2) {
             return this.warn("Ignoring malformed timing point");
         }
+        // BeatmapVersion 4 and lower had an incorrect offset (stable has this set as 24ms off)
+        const time: number = parseFloat(this.setPosition(s[0])) + (this.map.formatVersion < 5 ? 24 : 0);
+        if (!this.isNumberValid(time)) {
+            return this.warn("Ignoring malformed timing point: Value is too low or high");
+        }
+        
         const msPerBeat: number = parseFloat(this.setPosition(s[1]));
-        // TODO: handle incredibly small (i.e. 1e-298) ms per beat
+        if (!this.isNumberValid(msPerBeat)) {
+            return this.warn("Ignoring malformed timing point: Value is too low or high");
+        }
         const speedMultiplier = msPerBeat < 0 ? 100 / -msPerBeat : 1;
-        this.map.timingPoints.push(new TimingPoint({
-            time: parseFloat(this.setPosition(s[0])) + (this.map.formatVersion < 5 ? 24 : 0),
-            msPerBeat: msPerBeat,
-            change: msPerBeat >= 0,
+
+        if (msPerBeat >= 0) {
+            this.map.timingPoints.push(new TimingControlPoint({
+                time: time,
+                msPerBeat: msPerBeat
+            }));
+        }
+        
+        this.map.difficultyTimingPoints.push(new DifficultyControlPoint({
+            time: time,
             speedMultiplier: speedMultiplier
         }));
     }
@@ -271,61 +294,57 @@ export class Parser {
         }
         const time: number = parseFloat(this.setPosition(s[2]));
         const type: number = parseInt(this.setPosition(s[3]));
-        if (isNaN(time) || isNaN(type)) {
-            return this.warn("Ignoring malformed hitobject");
+        if (!this.isNumberValid(time) || isNaN(type)) {
+            return this.warn("Ignoring malformed hitobject: Value is too low or high");
         }
         
         const position: Vector2 = new Vector2({
             x: parseFloat(this.setPosition(s[0])),
             y: parseFloat(this.setPosition(s[1]))
         });
+        if (!this.isVectorValid(position)) {
+            return this.warn("Ignoring malformed hitobject: Value is too low or high");
+        }
 
         if (type & objectTypes.circle) {
-            ++this.map.circles;
             const object = new Circle({
                 startTime: time,
                 type: type,
                 position: position
             });
-            if (isNaN(object.position.x) || isNaN(object.position.y)) {
-                return this.warn("Ignoring malformed circle");
-            }
+            ++this.map.circles;
             this.map.objects.push(object);
         }
         else if (type & objectTypes.slider) {
             if (s.length < 8) {
                 return this.warn("Ignoring malformed slider");
             }
-            ++this.map.sliders;
+            const repetitions: number = Math.max(parseInt(this.setPosition(s[6])), ParserConstants.MIN_REPETITIONS_VALUE);
+            
+            if (!this.isNumberValid(repetitions, 0, ParserConstants.MAX_REPETITIONS_VALUE)) {
+                return this.warn("Ignoring malformed slider: Value is too low or high");
+            }
 
-            let pathType: PathType = 0;
+            // In lazer, this is checked if the value exceeds `ParserConstants.MAX_COORDINATE_VALUE`.
+            // If lazer is final, this should be revisited.
+            const distance: number = Math.max(0, parseFloat(this.setPosition(s[7])));
+
+            const speedMultiplierTimingPoint: DifficultyControlPoint = this.getTimingPoint(time, this.map.difficultyTimingPoints);
+            const msPerBeatTimingPoint: TimingControlPoint = this.getTimingPoint(time, this.map.timingPoints);
 
             const points: Vector2[] = [new Vector2({x: 0, y: 0})];
             const pointSplit: string[] = this.setPosition(s[5]).split("|");
+            let pathType: PathType = this.convertPathType(<string> pointSplit.shift());
 
-            pointSplit.forEach(point => {
-                if (point.length === 1) {
-                    switch (point) {
-                        case "B":
-                            pathType = PathType.Bezier;
-                            break;
-                        case "L":
-                            pathType = PathType.Linear;
-                            break;
-                        case "P":
-                            pathType = PathType.PerfectCurve;
-                            break;
-                        case "C":
-                        default:
-                            pathType = PathType.Catmull;
-                    }
-
-                    return;
+            for (const point of pointSplit) {
+                const temp: string[] = point.split(":");
+                const vec: Vector2 = new Vector2({x: +temp[0], y: +temp[1]});
+                if (!this.isVectorValid(vec)) {
+                    return this.warn("Ignoring malformed slider: Value is too low or high");
                 }
 
-                const temp: string[] = point.split(":");
-                points.push(new Vector2({x: +temp[0], y: +temp[1]}).subtract(position));
-            });
+                points.push(vec.subtract(position));
+            }
 
             function isLinear(p: Vector2[]): boolean {
                 return Precision.almostEqualsNumber(0, (p[1].y - p[0].y) * (p[2].x - p[0].x) - (p[1].x - p[0].x) * (p[2].y - p[0].y));
@@ -335,74 +354,101 @@ export class Parser {
                 pathType = PathType.Linear;
             }
 
-            const distance: number = parseFloat(this.setPosition(s[7]));
-            if (isNaN(distance)) {
-                return this.warn("Ignoring malformed slider");
-            }
             const path: SliderPath = new SliderPath({
                 pathType: pathType,
                 controlPoints: points,
-                expectedDistance: Math.max(0, distance)
+                expectedDistance: distance
             });
 
-            const speedMultiplierTimingPoint: TimingPoint = this.getTimingPointIndex(time, this.map.timingPoints);
-            const msPerBeatTimingPoint: TimingPoint = this.getTimingPointIndex(time, this.map.timingPoints.filter(v => v.change));
-
-            const object = new Slider({
+            const object: Slider = new Slider({
                 position: position,
                 startTime: time,
                 type: type,
-                repetitions: parseInt(this.setPosition(s[6])),
+                repetitions: repetitions,
                 path: path,
-                speedMultiplier: speedMultiplierTimingPoint.speedMultiplier,
+                speedMultiplier: MathUtils.clamp(
+                    speedMultiplierTimingPoint.speedMultiplier,
+                    ParserConstants.MIN_SPEEDMULTIPLIER_VALUE,
+                    ParserConstants.MAX_SPEEDMULTIPLIER_VALUE
+                ),
                 msPerBeat: msPerBeatTimingPoint.msPerBeat,
                 mapSliderVelocity: this.map.sv,
-                mapTickRate: this.map.tickRate
+                mapTickRate: this.map.tickRate,
+                // Prior to v8, speed multipliers don't adjust for how many ticks are generated over the same distance.
+                // This results in more (or less) ticks being generated in <v8 maps for the same time duration.
+                //
+                // This additional check is used in case BPM goes very low or very high.
+                // When lazer is final, this should be revisited.
+                tickDistanceMultiplier: this.isNumberValid(msPerBeatTimingPoint.msPerBeat, ParserConstants.MIN_MSPERBEAT_VALUE, ParserConstants.MAX_MSPERBEAT_VALUE) ?
+                    (this.map.formatVersion < 8 ? 1 / speedMultiplierTimingPoint.speedMultiplier : 1) :
+                    0
             });
-            if (isNaN(object.position.x) || isNaN(object.position.y) || isNaN(object.repetitions)) {
-                return this.warn("Ignoring malformed slider");
-            }
+            ++this.map.sliders;
             this.map.objects.push(object);
         }
         else if (type & objectTypes.spinner) {
-            ++this.map.spinners;
             const object = new Spinner({
                 startTime: time,
                 type: type,
-                duration: parseFloat(s[5]) - parseFloat(s[2])
+                duration: parseInt(this.setPosition(s[5])) - time
             });
-            this.setPosition(s[5]);
-            if (isNaN(object.duration)) {
-                return this.warn("Ignoring malformed spinner");
+            if (!this.isNumberValid(object.duration)) {
+                return this.warn("Ignoring malformed spinner: Value is too low or high");
             }
+            ++this.map.spinners;
             this.map.objects.push(object);
         }
     }
 
+    private convertPathType(input: string): PathType {
+        switch (input) { 
+            case "B":
+                return PathType.Bezier;
+            case "L":
+                return PathType.Linear;
+            case "P":
+                return PathType.PerfectCurve;
+            default:
+                return PathType.Catmull;
+        }
+    }
+
     /**
-     * Gets the index of the time at given timing points.
+     * Gets the timing point that applies at given time.
      * 
      * @param time The time to search.
-     * @param timingPoints The timing points to search in.
+     * @param list The timing points to search in.
      */
-    private getTimingPointIndex(time: number, timingPoints: TimingPoint[]): TimingPoint {
-        let currentTimingPoint: number|undefined = undefined;
+    private getTimingPoint<T extends TimingPoint>(time: number, list: T[]): T {
+        if (list.length === 0) {
+            throw new Error("No timing points have been loaded");
+        }
 
-        for (let i = 0; i < timingPoints.length; i++) {
-            if (timingPoints[i].time > time) {
-                currentTimingPoint = i - 1;
-                break;
+        if (time < list[0].time) {
+            return list[0];
+        }
+
+        if (time >= list[list.length - 1].time) {
+            return list[list.length - 1];
+        }
+
+        let l: number = 0;
+        let r: number = list.length - 2;
+
+        while (l <= r) {
+            const pivot: number = l + ((r - l) >> 1);
+
+            if (list[pivot].time < time) {
+                l = pivot + 1;
+            } else if (list[pivot].time > time) {
+                r = pivot - 1;
+            } else {
+                return list[pivot];
             }
         }
 
-        if (currentTimingPoint === undefined)
-            currentTimingPoint = timingPoints.length - 1;
-
-        if (currentTimingPoint < 0) {
-            currentTimingPoint = 0;
-        }
-        
-        return timingPoints[currentTimingPoint];
+        // l will be the first control point with time > list[l].time, but we want the one before it
+        return list[l - 1];
     }
 
     /**
@@ -412,10 +458,11 @@ export class Parser {
         const stackDistance: number = 3;
 
         let timePreempt: number = 600;
-        if (this.map.ar as number > 5) {
-            timePreempt = 1200 + (450 - 1200) * (this.map.ar as number - 5) / 5;
-        } else if (this.map.ar as number < 5) {
-            timePreempt = 1200 - (1200 - 1800) * (5 - (this.map.ar as number)) / 5;
+        const ar: number = <number> this.map.ar;
+        if (ar > 5) {
+            timePreempt = 1200 + (450 - 1200) * (ar - 5) / 5;
+        } else if (ar < 5) {
+            timePreempt = 1200 - (1200 - 1800) * (5 - ar) / 5;
         } else {
             timePreempt = 1200;
         }
@@ -428,12 +475,12 @@ export class Parser {
                 let stackBaseIndex: number = i;
                 for (let n: number = stackBaseIndex + 1; n < this.map.objects.length; ++n) {
                     const stackBaseObject: HitObject = this.map.objects[stackBaseIndex];
-                    if (stackBaseObject.type & objectTypes.spinner) {
+                    if (stackBaseObject instanceof Spinner) {
                         break;
                     }
 
                     const objectN: HitObject = this.map.objects[n];
-                    if (objectN.type & objectTypes.spinner) {
+                    if (objectN instanceof Spinner) {
                         break;
                     }
 
@@ -444,8 +491,8 @@ export class Parser {
                     }
 
                     const endPositionDistanceCheck: boolean =
-                        stackBaseObject.type & objectTypes.slider ?
-                        (stackBaseObject as Slider).endPosition.getDistance(objectN.position) < stackDistance
+                        stackBaseObject instanceof Slider ?
+                        stackBaseObject.endPosition.getDistance(objectN.position) < stackDistance
                         :
                         false;
 
@@ -476,7 +523,7 @@ export class Parser {
             if (objectI.type & objectTypes.circle) {
                 while (--n >= 0) {
                     const objectN: HitObject = this.map.objects[n];
-                    if (objectN.type & objectTypes.spinner) {
+                    if (objectN instanceof Spinner) {
                         continue;
                     }
 
@@ -493,7 +540,7 @@ export class Parser {
 
                     const endPositionDistanceCheck: boolean = 
                         objectN.type & objectTypes.slider ?
-                        (objectN as Slider).endPosition.getDistance(objectI.position) < stackDistance
+                        (<Slider> objectN).endPosition.getDistance(objectI.position) < stackDistance
                         :
                         false;
 
@@ -501,7 +548,7 @@ export class Parser {
                         const offset: number = objectI.stackHeight - objectN.stackHeight + 1;
                         for (let j = n + 1; j <= i; ++j) {
                             const objectJ: HitObject = this.map.objects[j];
-                            if ((objectN as Slider).endPosition.getDistance(objectJ.position) < stackDistance) {
+                            if ((<Slider> objectN).endPosition.getDistance(objectJ.position) < stackDistance) {
                                 objectJ.stackHeight -= offset;
                             }
                         }
@@ -513,10 +560,10 @@ export class Parser {
                         objectI = objectN;
                     }
                 }
-            } else if (objectI.type & objectTypes.slider) {
+            } else if (objectI instanceof Slider) {
                 while (--n >= startIndex) {
                     const objectN: HitObject = this.map.objects[n];
-                    if (objectN.type & objectTypes.spinner) {
+                    if (objectN instanceof Spinner) {
                         continue;
                     }
 
@@ -524,7 +571,7 @@ export class Parser {
                         break;
                     }
 
-                    const objectNEndPosition: Vector2 = objectN.type & objectTypes.circle ? objectN.position : (objectN as Slider).endPosition;
+                    const objectNEndPosition: Vector2 = objectN instanceof Circle ? objectN.position : (<Slider> objectN).endPosition;
                     if (objectNEndPosition.getDistance(objectI.position) < stackDistance) {
                         objectN.stackHeight = objectI.stackHeight + 1;
                         objectI = objectN;
@@ -540,10 +587,12 @@ export class Parser {
     private applyStackingOld(): void {
         const stackDistance: number = 3;
         let timePreempt: number = 600;
-        if (this.map.ar as number > 5) {
-            timePreempt = 1200 + (450 - 1200) * (this.map.ar as number - 5) / 5;
-        } else if (this.map.ar as number < 5) {
-            timePreempt = 1200 - (1200 - 1800) * (5 - (this.map.ar as number)) / 5;
+        const ar: number = <number> this.map.ar;
+
+        if (ar > 5) {
+            timePreempt = 1200 + (450 - 1200) * (ar - 5) / 5;
+        } else if (ar < 5) {
+            timePreempt = 1200 - (1200 - 1800) * (5 - (ar)) / 5;
         } else {
             timePreempt = 1200;
         }
@@ -580,5 +629,26 @@ export class Parser {
                 }
             }
         }
+    }
+
+    /**
+     * Checks if a number is within a given threshold.
+     * 
+     * @param num The number to check.
+     * @param min The minimum threshold. Defaults to `-ParserConstants.MAX_PARSE_VALUE`.
+     * @param max The maximum threshold. Defaults to `ParserConstants.MAX_PARSE_VALUE`.
+     */
+    private isNumberValid(num: number, min: number = -ParserConstants.MAX_PARSE_VALUE, max: number = ParserConstants.MAX_PARSE_VALUE): boolean {
+        return !isNaN(num) && num >= min && num <= max;
+    }
+
+    /**
+     * Checks if each coordinates of a vector is within a given threshold.
+     * 
+     * @param vec The vector to check.
+     * @param limit The threshold. Defaults to `ParserConstants.MAX_COORDINATE_VALUE`.
+     */
+    private isVectorValid(vec: Vector2, min: number = -ParserConstants.MAX_COORDINATE_VALUE, max = ParserConstants.MAX_COORDINATE_VALUE): boolean {
+        return this.isNumberValid(vec.x, min, max) && this.isNumberValid(vec.y, min, max);
     }
 }

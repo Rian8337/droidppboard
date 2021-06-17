@@ -1,4 +1,4 @@
-import { HitObject } from './HitObject';
+import { HitObject } from '../../beatmap/hitobjects/HitObject';
 
 /**
  * Represents an osu!standard hit object with difficulty calculation values.

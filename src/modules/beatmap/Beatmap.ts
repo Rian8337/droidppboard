@@ -1,7 +1,8 @@
 import { Slider } from './hitobjects/Slider';
 import { HitObject } from './hitobjects/HitObject';
 import { BreakPoint } from './timings/BreakPoint';
-import { TimingPoint } from './timings/TimingPoint';
+import { TimingControlPoint } from './timings/TimingControlPoint';
+import { DifficultyControlPoint } from './timings/DifficultyControlPoint';
 
 /**
  * Represents a beatmap with advanced information.
@@ -45,7 +46,7 @@ export class Beatmap {
     /**
      * The approach rate of the beatmap.
      */
-    ar?: number = undefined;
+    ar?: number;
 
     /**
      * The circle size of the beatmap.
@@ -90,17 +91,22 @@ export class Beatmap {
     /**
      * The objects of the beatmap.
      */
-    objects: Array<HitObject> = [];
+    readonly objects: HitObject[] = [];
 
     /**
      * The timing points of the beatmap.
      */
-    timingPoints: Array<TimingPoint> = [];
+    readonly timingPoints: TimingControlPoint[] = [];
+
+    /**
+     * The difficulty timing points of the beatmap.
+     */
+    readonly difficultyTimingPoints: DifficultyControlPoint[] = [];
 
     /**
      * The break points of the beatmap.
      */
-    breakPoints: Array<BreakPoint> = [];
+    readonly breakPoints: BreakPoint[] = [];
 
     /**
      * The stack leniency of the beatmap.
@@ -108,12 +114,33 @@ export class Beatmap {
     stackLeniency: number = 0.7;
 
     /**
-     * Calculates the maximum combo of the beatmap.
+     * The amount of slider ticks in the beatmap.
+     */
+    get sliderTicks(): number {
+        const sliders: Slider[] = <Slider[]> this.objects.filter(v => v instanceof Slider);
+        return sliders.map(v => v.ticks).reduce((acc, value) => acc + value, 0);
+    }
+
+    /**
+     * The amount of sliderends in the beatmap.
+     */
+    get sliderEnds(): number {
+        return this.sliders;
+    }
+
+    /**
+     * The amount of slider repeat points in the beatmap.
+     */
+    get sliderRepeatPoints(): number {
+        const sliders: Slider[] = <Slider[]> this.objects.filter(v => v instanceof Slider);
+        return sliders.map(v => v.repeatPoints).reduce((acc, value) => acc + value, 0);
+    }
+
+    /**
+     * Gets the maximum combo of the beatmap.
      */
     maxCombo(): number {
-        let res: number = this.circles + this.spinners;
-        this.objects.filter(v => v instanceof Slider).forEach(v => res += (v as Slider).nestedHitObjects.length);
-        return res;
+        return this.circles + this.sliders + this.sliderTicks + this.sliderRepeatPoints + this.sliderEnds + this.spinners;
     }
 
     /**

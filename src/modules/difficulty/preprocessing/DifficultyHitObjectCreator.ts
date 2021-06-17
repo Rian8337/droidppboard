@@ -1,7 +1,7 @@
 import { objectTypes } from "../../constants/objectTypes";
 import { HitObject } from "../../beatmap/hitobjects/HitObject";
 import { Vector2 } from "../../mathutil/Vector2";
-import { DifficultyHitObject } from "../../beatmap/hitobjects/DifficultyHitObject";
+import { DifficultyHitObject } from "./DifficultyHitObject";
 import { Slider } from "../../beatmap/hitobjects/Slider";
 import { Precision } from "../../utils/Precision";
 
@@ -65,7 +65,7 @@ export class DifficultyHitObjectCreator {
                 if (!(difficultyObject.object.type & objectTypes.spinner)) {
                     difficultyObject.jumpDistance = difficultyObject.object.stackedPosition.scale(scalingFactor)
                         .subtract(lastCursorPosition.scale(scalingFactor))
-                        .getLength();
+                        .length;
                 }
     
                 difficultyObject.deltaTime = (difficultyObject.object.startTime - difficultyObjects[i - 1].object.startTime) / params.speedMultiplier;
@@ -126,7 +126,7 @@ export class DifficultyHitObjectCreator {
             }
 
             const diff: Vector2 = slider.stackedPosition.add(slider.path.positionAt(progress)).subtract(slider.lazyEndPosition as Vector2);
-            let dist: number = diff.getLength();
+            let dist: number = diff.length;
 
             if (dist > approxFollowCircleRadius) {
                 // The cursor would be outside the follow circle, we need to move it

@@ -6,7 +6,7 @@ import { Vector2 } from '../../mathutil/Vector2';
  */
 export abstract class HitObject {
     /**
-     * The start time of the object in milliseconds.
+     * The start time of the hitobject in milliseconds.
      */
     startTime: number;
 
@@ -36,9 +36,14 @@ export abstract class HitObject {
     readonly isNewCombo: boolean;
 
     /**
-     * The stack height of the object.
+     * The stack height of the hitobject.
      */
     stackHeight: number;
+
+    /**
+     * The radius of the object.
+     */
+    radius: number = 64;
 
     constructor(values: {
         startTime: number,
@@ -46,10 +51,10 @@ export abstract class HitObject {
         type: number,
         endTime?: number
     }) {
-        this.startTime = values.startTime || 0;
-        this.endTime = values.endTime || values.startTime;
-        this.type = values.type || 0;
-        this.position = values.position || new Vector2({x: 0, y: 0});
+        this.startTime = values.startTime;
+        this.endTime = values.endTime ?? values.startTime;
+        this.type = values.type;
+        this.position = values.position;
         this.stackedPosition = this.position;
         this.isNewCombo = !!(this.type & 1 << 2);
         this.stackHeight = 0;
@@ -76,6 +81,8 @@ export abstract class HitObject {
      * Calculates the stacked position of the hitobject.
      */
     calculateStackedPosition(scale: number): void {
+        this.radius *= scale;
+        
         const coordinate: number = this.stackHeight * scale * -6.4;
         const stackOffset: Vector2 = new Vector2({x: coordinate, y: coordinate});
         if (!(this.type & objectTypes.spinner)) {
