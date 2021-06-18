@@ -1,8 +1,8 @@
 import { Beatmap } from '../beatmap/Beatmap';
 import { MapStats } from '../utils/MapStats';
 import { Parser } from '../beatmap/Parser';
-import { DroidStarRating } from '../rebalDifficulty/DroidStarRating';
-import { OsuStarRating } from '../rebalDifficulty/OsuStarRating';
+import { DroidStarRating } from '../difficulty/DroidStarRating';
+import { OsuStarRating } from '../difficulty/OsuStarRating';
 
 /**
  * A star rating calculator that configures which mode to calculate difficulty for and what mods are applied.

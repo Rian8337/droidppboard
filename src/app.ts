@@ -412,7 +412,7 @@ function initializeSite(): void {
                     type: "Droid",
                     sr: star.droidStars.total.toFixed(2),
                     aimsr: star.droidStars.aim.toFixed(2),
-                    tapsr: star.droidStars.speed.toFixed(2),
+                    tapsr: star.droidStars.tap.toFixed(2),
                     rhythmsr: star.droidStars.rhythm.toFixed(2),
                     pp: dpp.total.toFixed(2),
                     aimpp: dpp.aim.toFixed(2),
