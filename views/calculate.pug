@@ -19,12 +19,12 @@ h3
             a(href='/toppp',class='nav')= "Top PP"
         li(class="nav")
             a(href='/calculate', class="nav", class="active")= "Calculate Beatmap PP"
-        li(class='nav')
-            a(href='/prototype?page=1', class='nav')= "Prototype"
-        li(class='nav')
-            a(href='/prototypetoppp', class='nav')= "Prototype Top PP"
-        li(class="nav")
-            a(href='/prototypecalculate', class="nav")= "Calculate Beatmap Prototype PP"
+        //- li(class='nav')
+        //-     a(href='/prototype?page=1', class='nav')= "Prototype"
+        //- li(class='nav')
+        //-     a(href='/prototypetoppp', class='nav')= "Prototype Top PP"
+        //- li(class="nav")
+        //-     a(href='/prototypecalculate', class="nav")= "Calculate Beatmap Prototype PP"
         li(class='nav')
             a(href='/about',class='nav')= "About / Donation"
 
@@ -45,24 +45,26 @@ if maptitle
 
     table(width="100%")
         tbody
-            th(width="12.5%")= "Type"
-            th(width="12.5%")= "Stars"
-            th(width="12.5%")= "Aim Stars"
-            th(width="12.5%")= "Speed Stars"
-            th(width="12.5%")= "PP"
-            th(width="12.5%")= "Aim PP"
-            th(width="12.5%")= "Speed PP"
-            th(width="12.5%")= "Accuracy PP"
+            th(width="15%")= "Type"
+            th(width="15%")= "Stars"
+            th(width="10%")= "Aim Stars"
+            th(width="10%")= "Speed/Tap Stars"
+            th(width="10%")= "Rhythm Stars"
+            th(width="10%")= "PP"
+            th(width="10%")= "Aim PP"
+            th(width="10%")= "Speed/Tap PP"
+            th(width="10%")= "Accuracy PP"
 
             each val in ppentry
                 tr
                     td= val.type
                     td= val.sr
                     td= val.aimsr
-                    td= val.speedsr
+                    td= val.tapsr
+                    td= val.rhythmsr
                     td= val.pp
                     td= val.aimpp
-                    td= val.speedpp
+                    td= val.tappp
                     td= val.accpp
 
     br

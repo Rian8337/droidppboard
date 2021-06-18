@@ -6,7 +6,6 @@ import { config } from 'dotenv';
 import { mods } from './modules/utils/mods';
 import { MapStats } from './modules/utils/MapStats';
 import { MapStars } from './modules/tools/MapStars';
-import { PerformanceCalculator } from './modules/difficulty/PerformanceCalculator';
 import { modes } from './modules/constants/modes';
 import { Beatmap } from './modules/beatmap/Beatmap';
 import { BindDatabaseResponse } from './interfaces/BindDatabaseResponse';
@@ -16,11 +15,11 @@ import { WhitelistDatabaseResponse } from './interfaces/WhitelistDatabaseRespons
 import { convertURIregex, convertURI, Comparison, getComparisonText, getComparisonObject, downloadBeatmap, refreshtopPP, refreshPrototypeTopPP } from './util';
 import { PrototypePPList } from './interfaces/PrototypePPList';
 import { PrototypeDatabaseResponse } from './interfaces/PrototypeDatabaseResponse';
-import { RebalanceMapStars } from './modules/tools/RebalanceMapStars';
-import { DroidPerformanceCalculator } from './modules/rebalDifficulty/DroidPerformanceCalculator';
-import { OsuPerformanceCalculator } from './modules/rebalDifficulty/OsuPerformanceCalculator';
-import { Precision } from './modules/utils/Precision';
-import { Accuracy } from './modules/utils/Accuracy';
+// import { RebalanceMapStars } from './modules/tools/RebalanceMapStars';
+import { DroidPerformanceCalculator } from './modules/difficulty/DroidPerformanceCalculator';
+import { OsuPerformanceCalculator } from './modules/difficulty/OsuPerformanceCalculator';
+// import { Precision } from './modules/utils/Precision';
+// import { Accuracy } from './modules/utils/Accuracy';
 config();
 // @ts-ignore
 process.env.UV_THREADPOOL_SIZE = 128;
@@ -81,7 +80,7 @@ aliceDb.connect((err, db) => {
 
 function initializeSite(): void {
     refreshtopPP(binddb, top_pp_list);
-    refreshPrototypeTopPP(prototypedb, prototype_pp_list);
+    // refreshPrototypeTopPP(prototypedb, prototype_pp_list);
 
     app.get('/', (req, res) => {
         const page: number = parseInt(req.url.split('?page=')[1]) || 1;
@@ -241,15 +240,15 @@ function initializeSite(): void {
         });
     });
 
-    app.get('/prototypetoppp', (req, res) => {
-        const mod: string = req.url.split("?mods=")[1] || "";
-        const droidMod: string = mod.toLowerCase() !== "nm" ? mods.pcToDroid(mod) || "" : "-";
-        const modList = prototype_pp_list.find(v => v.mods === droidMod) || {list: []};
-        res.render('prototypetoppp', {
-            pplist: modList.list,
-            mods: convertURI(mod).toUpperCase(),
-        });
-    });
+    // app.get('/prototypetoppp', (req, res) => {
+    //     const mod: string = req.url.split("?mods=")[1] || "";
+    //     const droidMod: string = mod.toLowerCase() !== "nm" ? mods.pcToDroid(mod) || "" : "-";
+    //     const modList = prototype_pp_list.find(v => v.mods === droidMod) || {list: []};
+    //     res.render('prototypetoppp', {
+    //         pplist: modList.list,
+    //         mods: convertURI(mod).toUpperCase(),
+    //     });
+    // });
 
     app.get('/profile', (req, res) => {
         const uid: number = parseInt(req.url.split('uid=')[1]);
@@ -270,33 +269,33 @@ function initializeSite(): void {
         });
     });
 
-    app.get("/prototype/profile", (req, res) => {
-        const uid: number = parseInt(req.url.split('uid=')[1]);
-        if (isNaN(uid)) {
-            return res.send("404 Page Not Found");
-        }
-        binddb.findOne({previous_bind: {$all: [uid]}}, { projection: { pptotal: 1 } }, function(err, findres: BindDatabaseResponse) {
-            if (err) throw err;
-            if (!findres) {
-                return res.send("404 Page Not Found");
-            }
-            prototypedb.findOne({uid: uid}, function(err, prototype: PrototypeDatabaseResponse) {
-                if (err) throw err;
-                if (!prototype) {
-                    return res.send("404 Page Not Found");
-                }
-                res.render('prototypeProfile', {
-                    title: "Player Profile",
-                    username: prototype.username,
-                    prevpptotal: findres.pptotal.toFixed(2),
-                    pptotal: prototype.pptotal.toFixed(2),
-                    difference: (prototype.pptotal - findres.pptotal).toFixed(2),
-                    entries: prototype.pp,
-                    lastUpdate: new Date(prototype.lastUpdate).toUTCString()
-                });
-            });
-        });
-    });
+    // app.get("/prototype/profile", (req, res) => {
+    //     const uid: number = parseInt(req.url.split('uid=')[1]);
+    //     if (isNaN(uid)) {
+    //         return res.send("404 Page Not Found");
+    //     }
+    //     binddb.findOne({previous_bind: {$all: [uid]}}, { projection: { pptotal: 1 } }, function(err, findres: BindDatabaseResponse) {
+    //         if (err) throw err;
+    //         if (!findres) {
+    //             return res.send("404 Page Not Found");
+    //         }
+    //         prototypedb.findOne({uid: uid}, function(err, prototype: PrototypeDatabaseResponse) {
+    //             if (err) throw err;
+    //             if (!prototype) {
+    //                 return res.send("404 Page Not Found");
+    //             }
+    //             res.render('prototypeProfile', {
+    //                 title: "Player Profile",
+    //                 username: prototype.username,
+    //                 prevpptotal: findres.pptotal.toFixed(2),
+    //                 pptotal: prototype.pptotal.toFixed(2),
+    //                 difference: (prototype.pptotal - findres.pptotal).toFixed(2),
+    //                 entries: prototype.pp,
+    //                 lastUpdate: new Date(prototype.lastUpdate).toUTCString()
+    //             });
+    //         });
+    //     });
+    // });
 
     app.get('/calculate', (req, res) => {
         res.render('calculate');
@@ -362,148 +361,6 @@ function initializeSite(): void {
         const maxCombo = map.maxCombo();
         const combo: number = Math.max(0, Math.min(parseInt(req.body.Combo), maxCombo)) || maxCombo;
 
-        const dpp: PerformanceCalculator = new PerformanceCalculator().calculate({
-            stars: star.droidStars,
-            combo: combo,
-            accPercent: acc,
-            miss: miss,
-            mode: modes.droid,
-            stats: stats
-        });
-
-        const pp: PerformanceCalculator = new PerformanceCalculator().calculate({
-            stars: star.pcStars,
-            combo: combo,
-            accPercent: acc,
-            miss: miss,
-            mode: modes.osu,
-            stats: stats
-        });
-
-        const statsForString: MapStats = new MapStats({
-            cs: map.cs,
-            ar: stats.isForceAR ? stats.ar : map.ar,
-            od: map.od,
-            hp: map.hp,
-            mods: mod,
-            speedMultiplier: stats.speedMultiplier,
-            isForceAR: stats.isForceAR
-        }).calculate({mode: modes.osu});
-
-        let mapString: string = `${map.artist} - ${map.title} (${map.creator}) [${map.version}]${mod ? ` +${mod}` : ""}`;
-        if (stats.speedMultiplier !== 1 || stats.isForceAR) {
-            mapString += " (";
-            if (stats.isForceAR) {
-                mapString += `AR${stats.ar}`;
-            }
-            if (stats.speedMultiplier !== 1) {
-                if (stats.isForceAR) {
-                    mapString += ", ";
-                }
-                mapString += `${stats.speedMultiplier}x`;
-            }
-            mapString += ")";
-        }
-
-        res.render('calculate', {
-            maptitle: mapString,
-            objectstat: `Circles: ${map.circles} - Sliders: ${map.sliders} - Spinners: ${map.spinners}`,
-            mapstat: `CS: ${map.cs}${statsForString.cs === map.cs ? "": ` (${(statsForString.cs as number).toFixed(2)})`} - AR: ${map.ar}${statsForString.ar === map.ar ? "": ` (${(statsForString.ar as number).toFixed(2)})`} - OD: ${map.od}${statsForString.od === map.od ? "" : ` (${(statsForString.od as number).toFixed(2)})`} - HP: ${map.hp}${statsForString.hp === map.hp ? "": ` (${(statsForString.hp as number).toFixed(2)})`}`,
-            playstat: `Combo: ${Math.min(combo, maxCombo)}x/${maxCombo}x - Accuracy: ${acc.toFixed(2)}% - ${miss} ${miss === 1 ? "miss" : "misses"}`,
-            ppentry: [
-                {
-                    type: "Droid",
-                    sr: star.droidStars.total.toFixed(2),
-                    aimsr: star.droidStars.aim.toFixed(2),
-                    speedsr: star.droidStars.speed.toFixed(2),
-                    pp: dpp.total.toFixed(2),
-                    aimpp: dpp.aim.toFixed(2),
-                    speedpp: dpp.speed.toFixed(2),
-                    accpp: dpp.accuracy.toFixed(2)
-                },
-                {
-                    type: "PC",
-                    sr: star.pcStars.total.toFixed(2),
-                    aimsr: star.pcStars.aim.toFixed(2),
-                    speedsr: star.pcStars.speed.toFixed(2),
-                    pp: pp.total.toFixed(2),
-                    aimpp: pp.aim.toFixed(2),
-                    speedpp: pp.speed.toFixed(2),
-                    accpp: pp.accuracy.toFixed(2)
-                }
-            ]
-        });
-    });
-
-    app.get('/prototypecalculate', (req, res) => {
-        res.render('prototypeCalculate');
-    });
-
-    app.post('/prototypecalculate', async (req, res) => {
-        let osuFile: string = "";
-
-        if (req.files) {
-            const file: fileupload.UploadedFile|undefined = req.files.BeatmapFile;
-            if (!file || !file.name.endsWith(".osu")) {
-                return res.render('calculate', {
-                    err: "Invalid file uploaded"
-                });
-            }
-            osuFile = file.data.toString("utf-8");
-        }
-
-        if (req.body.MapID && !osuFile) {
-            const a: string[] = req.body.MapID.split("/");
-            const beatmapID: number = parseInt(a[a.length - 1]);
-            if (beatmapID <= 0 || isNaN(beatmapID)) {
-                return res.render('calculate', {
-                    err: "Invalid beatmap ID"
-                });
-            }
-
-            osuFile = await downloadBeatmap(beatmapID);
-            if (!osuFile) {
-                return res.render('calculate', {
-                    err: "Beatmap with specified beatmap ID is not available"
-                });
-            }
-        }
-
-        if (!osuFile) {
-            return res.render('calculate', {
-                err: "Beatmap ID not specified and no .osu file is uploaded"
-            });
-        }
-
-        const mod: string = req.body.Mod || "";
-        const acc: number = Math.max(0, Math.min(parseFloat(req.body.Accuracy), 100)) || 100;
-        const miss: number = Math.max(0, parseInt(req.body.Miss)) || 0;
-
-        const stats: MapStats = new MapStats();
-        if (req.body.SpeedMul) {
-            stats.speedMultiplier = Math.max(0.5, Math.min(parseFloat(req.body.SpeedMul), 2));
-        }
-        if (req.body.ForceAR) {
-            stats.isForceAR = true;
-            stats.ar = Math.max(0, Math.min(parseFloat(req.body.ForceAR), 12.5));
-        }
-
-        const star: RebalanceMapStars = new RebalanceMapStars().calculate({file: osuFile, mods: mod, stats: stats});
-        if (star.pcStars.total === 0) {
-            return res.render('calculate', {
-                err: "Invalid file uploaded"
-            });
-        }
-
-        const map: Beatmap = star.pcStars.map;
-        const maxCombo = map.maxCombo();
-        const combo: number = Math.max(0, Math.min(parseInt(req.body.Combo), maxCombo)) || maxCombo;
-
-        const realAcc: Accuracy = new Accuracy({
-            percent: acc,
-            nobjects: map.objects.length
-        })
-
         const dpp: DroidPerformanceCalculator = new DroidPerformanceCalculator().calculate({
             stars: star.droidStars,
             combo: combo,
@@ -545,17 +402,17 @@ function initializeSite(): void {
             mapString += ")";
         }
 
-        res.render('prototypeCalculate', {
+        res.render('calculate', {
             maptitle: mapString,
             objectstat: `Circles: ${map.circles} - Sliders: ${map.sliders} - Spinners: ${map.spinners}`,
             mapstat: `CS: ${map.cs}${statsForString.cs === map.cs ? "": ` (${(statsForString.cs as number).toFixed(2)})`} - AR: ${map.ar}${statsForString.ar === map.ar ? "": ` (${(statsForString.ar as number).toFixed(2)})`} - OD: ${map.od}${statsForString.od === map.od ? "" : ` (${(statsForString.od as number).toFixed(2)})`} - HP: ${map.hp}${statsForString.hp === map.hp ? "": ` (${(statsForString.hp as number).toFixed(2)})`}`,
-            playstat: `Combo: ${Math.min(combo, maxCombo)}x/${maxCombo}x - Accuracy: ${acc.toFixed(2)}%${!Precision.almostEqualsNumber(acc / 100, realAcc.value()) ? " (estimated)" : ""} - ${miss} ${miss === 1 ? "miss" : "misses"}`,
+            playstat: `Combo: ${Math.min(combo, maxCombo)}x/${maxCombo}x - Accuracy: ${acc.toFixed(2)}% - ${miss} ${miss === 1 ? "miss" : "misses"}`,
             ppentry: [
                 {
                     type: "Droid",
                     sr: star.droidStars.total.toFixed(2),
                     aimsr: star.droidStars.aim.toFixed(2),
-                    tapsr: star.droidStars.tap.toFixed(2),
+                    tapsr: star.droidStars.speed.toFixed(2),
                     rhythmsr: star.droidStars.rhythm.toFixed(2),
                     pp: dpp.total.toFixed(2),
                     aimpp: dpp.aim.toFixed(2),
@@ -566,7 +423,7 @@ function initializeSite(): void {
                     type: "PC",
                     sr: star.pcStars.total.toFixed(2),
                     aimsr: star.pcStars.aim.toFixed(2),
-                    tapsr: star.pcStars.speed.toFixed(2),
+                    speedsr: star.pcStars.speed.toFixed(2),
                     rhythmsr: "N/A",
                     pp: pp.total.toFixed(2),
                     aimpp: pp.aim.toFixed(2),
@@ -576,6 +433,148 @@ function initializeSite(): void {
             ]
         });
     });
+
+    // app.get('/prototypecalculate', (req, res) => {
+    //     res.render('prototypeCalculate');
+    // });
+
+    // app.post('/prototypecalculate', async (req, res) => {
+    //     let osuFile: string = "";
+
+    //     if (req.files) {
+    //         const file: fileupload.UploadedFile|undefined = req.files.BeatmapFile;
+    //         if (!file || !file.name.endsWith(".osu")) {
+    //             return res.render('calculate', {
+    //                 err: "Invalid file uploaded"
+    //             });
+    //         }
+    //         osuFile = file.data.toString("utf-8");
+    //     }
+
+    //     if (req.body.MapID && !osuFile) {
+    //         const a: string[] = req.body.MapID.split("/");
+    //         const beatmapID: number = parseInt(a[a.length - 1]);
+    //         if (beatmapID <= 0 || isNaN(beatmapID)) {
+    //             return res.render('calculate', {
+    //                 err: "Invalid beatmap ID"
+    //             });
+    //         }
+
+    //         osuFile = await downloadBeatmap(beatmapID);
+    //         if (!osuFile) {
+    //             return res.render('calculate', {
+    //                 err: "Beatmap with specified beatmap ID is not available"
+    //             });
+    //         }
+    //     }
+
+    //     if (!osuFile) {
+    //         return res.render('calculate', {
+    //             err: "Beatmap ID not specified and no .osu file is uploaded"
+    //         });
+    //     }
+
+    //     const mod: string = req.body.Mod || "";
+    //     const acc: number = Math.max(0, Math.min(parseFloat(req.body.Accuracy), 100)) || 100;
+    //     const miss: number = Math.max(0, parseInt(req.body.Miss)) || 0;
+
+    //     const stats: MapStats = new MapStats();
+    //     if (req.body.SpeedMul) {
+    //         stats.speedMultiplier = Math.max(0.5, Math.min(parseFloat(req.body.SpeedMul), 2));
+    //     }
+    //     if (req.body.ForceAR) {
+    //         stats.isForceAR = true;
+    //         stats.ar = Math.max(0, Math.min(parseFloat(req.body.ForceAR), 12.5));
+    //     }
+
+    //     const star: RebalanceMapStars = new RebalanceMapStars().calculate({file: osuFile, mods: mod, stats: stats});
+    //     if (star.pcStars.total === 0) {
+    //         return res.render('calculate', {
+    //             err: "Invalid file uploaded"
+    //         });
+    //     }
+
+    //     const map: Beatmap = star.pcStars.map;
+    //     const maxCombo = map.maxCombo();
+    //     const combo: number = Math.max(0, Math.min(parseInt(req.body.Combo), maxCombo)) || maxCombo;
+
+    //     const realAcc: Accuracy = new Accuracy({
+    //         percent: acc,
+    //         nobjects: map.objects.length
+    //     })
+
+    //     const dpp: DroidPerformanceCalculator = new DroidPerformanceCalculator().calculate({
+    //         stars: star.droidStars,
+    //         combo: combo,
+    //         accPercent: acc,
+    //         miss: miss,
+    //         stats: stats
+    //     });
+
+    //     const pp: OsuPerformanceCalculator = new OsuPerformanceCalculator().calculate({
+    //         stars: star.pcStars,
+    //         combo: combo,
+    //         accPercent: acc,
+    //         miss: miss,
+    //         stats: stats
+    //     });
+
+    //     const statsForString: MapStats = new MapStats({
+    //         cs: map.cs,
+    //         ar: stats.isForceAR ? stats.ar : map.ar,
+    //         od: map.od,
+    //         hp: map.hp,
+    //         mods: mod,
+    //         speedMultiplier: stats.speedMultiplier,
+    //         isForceAR: stats.isForceAR
+    //     }).calculate({mode: modes.osu});
+
+    //     let mapString: string = `${map.artist} - ${map.title} (${map.creator}) [${map.version}]${mod ? ` +${mod}` : ""}`;
+    //     if (stats.speedMultiplier !== 1 || stats.isForceAR) {
+    //         mapString += " (";
+    //         if (stats.isForceAR) {
+    //             mapString += `AR${stats.ar}`;
+    //         }
+    //         if (stats.speedMultiplier !== 1) {
+    //             if (stats.isForceAR) {
+    //                 mapString += ", ";
+    //             }
+    //             mapString += `${stats.speedMultiplier}x`;
+    //         }
+    //         mapString += ")";
+    //     }
+
+    //     res.render('prototypeCalculate', {
+    //         maptitle: mapString,
+    //         objectstat: `Circles: ${map.circles} - Sliders: ${map.sliders} - Spinners: ${map.spinners}`,
+    //         mapstat: `CS: ${map.cs}${statsForString.cs === map.cs ? "": ` (${(statsForString.cs as number).toFixed(2)})`} - AR: ${map.ar}${statsForString.ar === map.ar ? "": ` (${(statsForString.ar as number).toFixed(2)})`} - OD: ${map.od}${statsForString.od === map.od ? "" : ` (${(statsForString.od as number).toFixed(2)})`} - HP: ${map.hp}${statsForString.hp === map.hp ? "": ` (${(statsForString.hp as number).toFixed(2)})`}`,
+    //         playstat: `Combo: ${Math.min(combo, maxCombo)}x/${maxCombo}x - Accuracy: ${acc.toFixed(2)}%${!Precision.almostEqualsNumber(acc / 100, realAcc.value()) ? " (estimated)" : ""} - ${miss} ${miss === 1 ? "miss" : "misses"}`,
+    //         ppentry: [
+    //             {
+    //                 type: "Droid",
+    //                 sr: star.droidStars.total.toFixed(2),
+    //                 aimsr: star.droidStars.aim.toFixed(2),
+    //                 tapsr: star.droidStars.tap.toFixed(2),
+    //                 rhythmsr: star.droidStars.rhythm.toFixed(2),
+    //                 pp: dpp.total.toFixed(2),
+    //                 aimpp: dpp.aim.toFixed(2),
+    //                 tappp: dpp.tap.toFixed(2),
+    //                 accpp: dpp.accuracy.toFixed(2)
+    //             },
+    //             {
+    //                 type: "PC",
+    //                 sr: star.pcStars.total.toFixed(2),
+    //                 aimsr: star.pcStars.aim.toFixed(2),
+    //                 tapsr: star.pcStars.speed.toFixed(2),
+    //                 rhythmsr: "N/A",
+    //                 pp: pp.total.toFixed(2),
+    //                 aimpp: pp.aim.toFixed(2),
+    //                 tappp: pp.speed.toFixed(2),
+    //                 accpp: pp.accuracy.toFixed(2)
+    //             }
+    //         ]
+    //     });
+    // });
 
     app.get('/api/getplayertop', (req, res) => {
         const requestParams: string[] = req.url.split("?")[1]?.split("&") || [];
