@@ -220,15 +220,15 @@ export class DroidPerformanceCalculator extends PerformanceCalculator {
             p50 * Math.pow((m100 + m50) / 2, 2) +
             pm * Math.pow(229.5 - 11 * <number> this.mapStatistics.od, 2);
 
-        this.accuracy = Math.pow(1.4, (79.5 - 2 * Math.sqrt(variance)) / 6) * 10;
+        this.accuracy = Math.pow(1.45, (79.5 - 2 * Math.sqrt(variance)) / 6) * 10;
 
         // Scale the accuracy value with rhythm complexity.
-        const rhythmScaling: number = 0.25 + Math.exp(this.stars.rhythm - 1) / 1.25;
+        const rhythmScaling: number = Math.pow(Math.exp(this.stars.rhythm - 1), 0.75);
         this.accuracy *= rhythmScaling;
 
         // Scale the accuracy value with amount of accuracy objects (objects that
         // depends on hit window for hit result)
-        const lengthScaling: number = Math.sqrt(Math.log(1 + (Math.E - 1) * Math.min(ncircles, 1600) / 1000));
+        const lengthScaling: number = Math.sqrt(Math.log(1 + (Math.E - 1) * Math.min(ncircles, 2400) / 1500));
         this.accuracy *= lengthScaling;
 
         if (this.convertedMods & mods.osuMods.hd) {
