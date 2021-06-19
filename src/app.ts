@@ -107,32 +107,32 @@ function initializeSite(): void {
         });
     });
 
-    app.get("/prototype", (req, res) => {
-        const page: number = parseInt(req.url.split('?page=')[1]) || 1;
-        const searchQuery: string = req.url.split('?query=')[1] || "";
-        const query = searchQuery ?
-            {$or: [{uid: parseInt(searchQuery)}, {username: new RegExp(convertURIregex(searchQuery), "i")}]} :
-            {};
+    // app.get("/prototype", (req, res) => {
+    //     const page: number = parseInt(req.url.split('?page=')[1]) || 1;
+    //     const searchQuery: string = req.url.split('?query=')[1] || "";
+    //     const query = searchQuery ?
+    //         {$or: [{uid: parseInt(searchQuery)}, {username: new RegExp(convertURIregex(searchQuery), "i")}]} :
+    //         {};
 
-        prototypedb.find(query, { projection: { _id: 0, uid: 1, pptotal: 1, username: 1 } }).sort({ pptotal: -1 }).skip((page-1)*50).limit(50).toArray(function(err, resarr: PrototypeDatabaseResponse[]) {
-            if (err) throw err;
+    //     prototypedb.find(query, { projection: { _id: 0, uid: 1, pptotal: 1, username: 1 } }).sort({ pptotal: -1 }).skip((page-1)*50).limit(50).toArray(function(err, resarr: PrototypeDatabaseResponse[]) {
+    //         if (err) throw err;
 
-            const entries = [];
-            for (let i = 0; i < resarr.length; ++i) {
-                if (resarr[i].pptotal) {
-                    resarr[i].pptotal = parseFloat(resarr[i].pptotal.toFixed(2));
-                    entries.push(resarr[i]);
-                }
-            }
+    //         const entries = [];
+    //         for (let i = 0; i < resarr.length; ++i) {
+    //             if (resarr[i].pptotal) {
+    //                 resarr[i].pptotal = parseFloat(resarr[i].pptotal.toFixed(2));
+    //                 entries.push(resarr[i]);
+    //             }
+    //         }
 
-            res.render("prototype", {
-                title: 'Prototype PP',
-                list: entries,
-                page: page,
-                query: convertURI(searchQuery)
-            });
-        });
-    });
+    //         res.render("prototype", {
+    //             title: 'Prototype PP',
+    //             list: entries,
+    //             page: page,
+    //             query: convertURI(searchQuery)
+    //         });
+    //     });
+    // });
 
     app.get('/whitelist', (req, res) => {
         const page: number = parseInt(req.url.split('?page=')[1]) || 1;
