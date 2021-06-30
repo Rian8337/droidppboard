@@ -598,7 +598,7 @@ function initializeSite(): void {
                 return res.send(`{"code": 400, "error": "Please provide a valid API key."}`);
             }
 
-            binddb.findOne({uid: uid.toString()}, (err, playerInfo: BindDatabaseResponse) => {
+            binddb.findOne({uid: uid}, (err, playerInfo: BindDatabaseResponse) => {
                 if (err) throw err;
                 const responseObject = {
                     code: 200,
