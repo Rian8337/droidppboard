@@ -107,32 +107,32 @@ function initializeSite(): void {
         });
     });
 
-    // app.get("/prototype", (req, res) => {
-    //     const page: number = parseInt(req.url.split('?page=')[1]) || 1;
-    //     const searchQuery: string = req.url.split('?query=')[1] || "";
-    //     const query = searchQuery ?
-    //         {$or: [{uid: parseInt(searchQuery)}, {username: new RegExp(convertURIregex(searchQuery), "i")}]} :
-    //         {};
+    app.get("/prototype", (req, res) => {
+        const page: number = parseInt(req.url.split('?page=')[1]) || 1;
+        const searchQuery: string = req.url.split('?query=')[1] || "";
+        const query = searchQuery ?
+            {$or: [{uid: parseInt(searchQuery)}, {username: new RegExp(convertURIregex(searchQuery), "i")}]} :
+            {};
 
-    //     prototypedb.find(query, { projection: { _id: 0, uid: 1, pptotal: 1, username: 1 } }).sort({ pptotal: -1 }).skip((page-1)*50).limit(50).toArray(function(err, resarr: PrototypeDatabaseResponse[]) {
-    //         if (err) throw err;
+        prototypedb.find(query, { projection: { _id: 0, uid: 1, pptotal: 1, username: 1 } }).sort({ pptotal: -1 }).skip((page-1)*50).limit(50).toArray(function(err, resarr: PrototypeDatabaseResponse[]) {
+            if (err) throw err;
 
-    //         const entries = [];
-    //         for (let i = 0; i < resarr.length; ++i) {
-    //             if (resarr[i].pptotal) {
-    //                 resarr[i].pptotal = parseFloat(resarr[i].pptotal.toFixed(2));
-    //                 entries.push(resarr[i]);
-    //             }
-    //         }
+            const entries = [];
+            for (let i = 0; i < resarr.length; ++i) {
+                if (resarr[i].pptotal) {
+                    resarr[i].pptotal = parseFloat(resarr[i].pptotal.toFixed(2));
+                    entries.push(resarr[i]);
+                }
+            }
 
-    //         res.render("prototype", {
-    //             title: 'Prototype PP',
-    //             list: entries,
-    //             page: page,
-    //             query: convertURI(searchQuery)
-    //         });
-    //     });
-    // });
+            res.render("prototype", {
+                title: 'Prototype PP',
+                list: entries,
+                page: page,
+                query: convertURI(searchQuery)
+            });
+        });
+    });
 
     app.get('/whitelist', (req, res) => {
         const page: number = parseInt(req.url.split('?page=')[1]) || 1;
@@ -240,15 +240,15 @@ function initializeSite(): void {
         });
     });
 
-    // app.get('/prototypetoppp', (req, res) => {
-    //     const mod: string = req.url.split("?mods=")[1] || "";
-    //     const droidMod: string = mod.toLowerCase() !== "nm" ? mods.pcToDroid(mod) || "" : "-";
-    //     const modList = prototype_pp_list.find(v => v.mods === droidMod) || {list: []};
-    //     res.render('prototypetoppp', {
-    //         pplist: modList.list,
-    //         mods: convertURI(mod).toUpperCase(),
-    //     });
-    // });
+    app.get('/prototypetoppp', (req, res) => {
+        const mod: string = req.url.split("?mods=")[1] || "";
+        const droidMod: string = mod.toLowerCase() !== "nm" ? mods.pcToDroid(mod) || "" : "-";
+        const modList = prototype_pp_list.find(v => v.mods === droidMod) || {list: []};
+        res.render('prototypetoppp', {
+            pplist: modList.list,
+            mods: convertURI(mod).toUpperCase(),
+        });
+    });
 
     app.get('/profile', (req, res) => {
         const uid: number = parseInt(req.url.split('uid=')[1]);
@@ -269,33 +269,33 @@ function initializeSite(): void {
         });
     });
 
-    // app.get("/prototype/profile", (req, res) => {
-    //     const uid: number = parseInt(req.url.split('uid=')[1]);
-    //     if (isNaN(uid)) {
-    //         return res.send("404 Page Not Found");
-    //     }
-    //     binddb.findOne({previous_bind: {$all: [uid]}}, { projection: { pptotal: 1 } }, function(err, findres: BindDatabaseResponse) {
-    //         if (err) throw err;
-    //         if (!findres) {
-    //             return res.send("404 Page Not Found");
-    //         }
-    //         prototypedb.findOne({uid: uid}, function(err, prototype: PrototypeDatabaseResponse) {
-    //             if (err) throw err;
-    //             if (!prototype) {
-    //                 return res.send("404 Page Not Found");
-    //             }
-    //             res.render('prototypeProfile', {
-    //                 title: "Player Profile",
-    //                 username: prototype.username,
-    //                 prevpptotal: findres.pptotal.toFixed(2),
-    //                 pptotal: prototype.pptotal.toFixed(2),
-    //                 difference: (prototype.pptotal - findres.pptotal).toFixed(2),
-    //                 entries: prototype.pp,
-    //                 lastUpdate: new Date(prototype.lastUpdate).toUTCString()
-    //             });
-    //         });
-    //     });
-    // });
+    app.get("/prototype/profile", (req, res) => {
+        const uid: number = parseInt(req.url.split('uid=')[1]);
+        if (isNaN(uid)) {
+            return res.send("404 Page Not Found");
+        }
+        binddb.findOne({previous_bind: {$all: [uid]}}, { projection: { pptotal: 1 } }, function(err, findres: BindDatabaseResponse) {
+            if (err) throw err;
+            if (!findres) {
+                return res.send("404 Page Not Found");
+            }
+            prototypedb.findOne({uid: uid}, function(err, prototype: PrototypeDatabaseResponse) {
+                if (err) throw err;
+                if (!prototype) {
+                    return res.send("404 Page Not Found");
+                }
+                res.render('prototypeProfile', {
+                    title: "Player Profile",
+                    username: prototype.username,
+                    prevpptotal: findres.pptotal.toFixed(2),
+                    pptotal: prototype.pptotal.toFixed(2),
+                    difference: (prototype.pptotal - findres.pptotal).toFixed(2),
+                    entries: prototype.pp,
+                    lastUpdate: new Date(prototype.lastUpdate).toUTCString()
+                });
+            });
+        });
+    });
 
     app.get('/calculate', (req, res) => {
         res.render('calculate');
