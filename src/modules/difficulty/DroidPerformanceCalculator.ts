@@ -139,7 +139,7 @@ export class DroidPerformanceCalculator extends PerformanceCalculator {
             this.aim *= flBonus;
         }
 
-        if (this.convertedMods & (mods.osuMods.hd | mods.osuMods.fl)) {
+        if ((this.convertedMods & mods.osuMods.hd) && (this.convertedMods & mods.osuMods.fl)) {
             this.aim *= 1.2;
         }
 
