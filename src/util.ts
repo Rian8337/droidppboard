@@ -132,7 +132,7 @@ export function refreshtopPP(binddb: mongodb.Collection, top_pp_list: PPList[]):
 
 export function refreshPrototypeTopPP(prototypedb: mongodb.Collection, topList: PrototypePPList[]): void {
     console.log("Refreshing prototype top pp list");
-    setTimeout(() => refreshPrototypeTopPP(prototypedb, topList), 1800000);
+    setTimeout(() => refreshPrototypeTopPP(prototypedb, topList), 600000);
     prototypedb.find({}, { projection: { _id: 0, username: 1, pp: 1}}).toArray(function(err, res: PrototypeDatabaseResponse[]) {
         topList.length = 0;
         topList.push({mods: "", list: []}, {mods: "-", list: []});
