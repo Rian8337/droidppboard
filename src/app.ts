@@ -80,7 +80,7 @@ aliceDb.connect((err, db) => {
 
 function initializeSite(): void {
     refreshtopPP(binddb, top_pp_list);
-    // refreshPrototypeTopPP(prototypedb, prototype_pp_list);
+    refreshPrototypeTopPP(prototypedb, prototype_pp_list);
 
     app.get('/', (req, res) => {
         const page: number = parseInt(req.url.split('?page=')[1]) || 1;
