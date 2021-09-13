@@ -114,13 +114,14 @@ function initializeSite(): void {
             {$or: [{uid: parseInt(searchQuery)}, {username: new RegExp(convertURIregex(searchQuery), "i")}]} :
             {};
 
-        prototypedb.find(query, { projection: { _id: 0, uid: 1, pptotal: 1, username: 1 } }).sort({ pptotal: -1 }).skip((page-1)*50).limit(50).toArray(function(err, resarr: PrototypeDatabaseResponse[]) {
+        prototypedb.find(query, { projection: { _id: 0, uid: 1, pptotal: 1, prevpptotal: 1, username: 1 } }).sort({ pptotal: -1 }).skip((page-1)*50).limit(50).toArray(function(err, resarr: PrototypeDatabaseResponse[]) {
             if (err) throw err;
 
             const entries = [];
             for (let i = 0; i < resarr.length; ++i) {
                 if (resarr[i].pptotal) {
                     resarr[i].pptotal = parseFloat(resarr[i].pptotal.toFixed(2));
+                    resarr[i].prevpptotal = parseFloat(resarr[i].prevpptotal.toFixed(2));
                     entries.push(resarr[i]);
                 }
             }
@@ -274,25 +275,19 @@ function initializeSite(): void {
         if (isNaN(uid)) {
             return res.send("404 Page Not Found");
         }
-        binddb.findOne({previous_bind: {$all: [uid]}}, { projection: { pptotal: 1 } }, function(err, findres: BindDatabaseResponse) {
+        prototypedb.findOne({uid: uid}, function(err, prototype: PrototypeDatabaseResponse) {
             if (err) throw err;
-            if (!findres) {
+            if (!prototype) {
                 return res.send("404 Page Not Found");
             }
-            prototypedb.findOne({uid: uid}, function(err, prototype: PrototypeDatabaseResponse) {
-                if (err) throw err;
-                if (!prototype) {
-                    return res.send("404 Page Not Found");
-                }
-                res.render('prototypeProfile', {
-                    title: "Player Profile",
-                    username: prototype.username,
-                    prevpptotal: findres.pptotal.toFixed(2),
-                    pptotal: prototype.pptotal.toFixed(2),
-                    difference: (prototype.pptotal - findres.pptotal).toFixed(2),
-                    entries: prototype.pp,
-                    lastUpdate: new Date(prototype.lastUpdate).toUTCString()
-                });
+            res.render('prototypeProfile', {
+                title: "Player Profile",
+                username: prototype.username,
+                prevpptotal: prototype.prevpptotal.toFixed(2),
+                pptotal: prototype.pptotal.toFixed(2),
+                difference: (prototype.pptotal - prototype.prevpptotal).toFixed(2),
+                entries: prototype.pp,
+                lastUpdate: new Date(prototype.lastUpdate).toUTCString()
             });
         });
     });

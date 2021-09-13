@@ -41,8 +41,10 @@ table(width="100%")
     tbody
         th(width="5%")= "No."
         th(width="10%")= "UID"
-        th(width="73%")= "Username"
-        th(width="12%")= "PP"
+        th(width="61%")= "Username"
+        th(width="8%")= "Live PP"
+        th(width="8%")= "Local PP"
+        th(width="8%")= "Diff"
         each val, index in list
             .item
                 tr
@@ -50,7 +52,9 @@ table(width="100%")
                     td= val.uid
                     td
                         a(href='/prototype/profile?uid='+val.uid)= val.username
+                    td= val.prevpptotal
                     td= val.pptotal
+                    td= (val.pptotal - val.prevpptotal).toFixed(2)
 
 hr
     

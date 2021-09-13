@@ -6,6 +6,7 @@ export interface PrototypeDatabaseResponse {
     uid: string;
     pp: PrototypeDatabasePPEntry[];
     pptotal: number;
+    prevpptotal: number;
 
     lastUpdate: number;
 }
