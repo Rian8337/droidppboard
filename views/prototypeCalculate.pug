@@ -23,8 +23,8 @@ h3
             a(href='/prototype?page=1', class='nav')= "Prototype"
         li(class='nav')
             a(href='/prototypetoppp', class='nav')= "Prototype Top PP"
-        //- li(class="nav")
-        //-     a(href='/prototypecalculate', class="nav", class="active")= "Calculate Beatmap Prototype PP"
+        li(class="nav")
+            a(href='/prototypecalculate', class="nav", class="active")= "Calculate Beatmap Prototype PP"
         li(class='nav')
             a(href='/about',class='nav')= "About / Donation"
 h3
@@ -46,27 +46,31 @@ if maptitle
 
     table(width="100%")
         tbody
-            th(width="15%")= "Type"
-            th(width="15%")= "Stars"
-            th(width="10%")= "Aim Stars"
-            th(width="10%")= "Speed/Tap Stars"
-            th(width="10%")= "Rhythm Stars"
-            th(width="10%")= "PP"
-            th(width="10%")= "Aim PP"
-            th(width="10%")= "Speed/Tap PP"
-            th(width="10%")= "Accuracy PP"
+            th(width="9.5%")= "Type"
+            th(width="9.5%")= "Stars"
+            th(width="9%")= "Aim Stars"
+            th(width="9%")= "Speed Stars"
+            th(width="9%")= "Rhythm Stars"
+            th(width="9%")= "Flashlight Stars"
+            th(width="9%")= "PP"
+            th(width="9%")= "Aim PP"
+            th(width="9%")= "Speed PP"
+            th(width="9%")= "Accuracy PP"
+            th(width="9%")= "Flashlight PP"
 
             each val in ppentry
                 tr
                     td= val.type
                     td= val.sr
                     td= val.aimsr
-                    td= val.tapsr
+                    td= val.speedsr
                     td= val.rhythmsr
+                    td= val.flashlightsr
                     td= val.pp
                     td= val.aimpp
-                    td= val.tappp
+                    td= val.speedpp
                     td= val.accpp
+                    td= val.flashlightpp
 
     br
     hr

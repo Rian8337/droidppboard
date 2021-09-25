@@ -1,8 +1,8 @@
 import { Beatmap } from '../beatmap/Beatmap';
 import { MapStats } from '../utils/MapStats';
 import { Parser } from '../beatmap/Parser';
-import { DroidStarRating } from '../difficulty/DroidStarRating';
-import { OsuStarRating } from '../difficulty/OsuStarRating';
+import { DroidStarRating } from '../rebaldifficulty/DroidStarRating';
+import { OsuStarRating } from '../rebaldifficulty/OsuStarRating';
 import { Mod } from '../mods/Mod';
 
 /**
