@@ -15,7 +15,7 @@ export class DifficultyHitObjectCreator {
      * The hitobjects to be generated to difficulty hitobjects.
      */
     private objects: HitObject[] = [];
-    
+
     /**
      * The threshold for small circle buff for osu!droid.
      */
@@ -50,8 +50,8 @@ export class DifficultyHitObjectCreator {
 
         this.hitObjectRadius = 32 * (1 - 0.7 * (circleSize - 5) / 5);
 
-        const scalingFactor: number = this.getScalingFactor(params.mode, this.hitObjectRadius);
-        
+        const scalingFactor: number = this.getScalingFactor(params.mode);
+
         const difficultyObjects: DifficultyHitObject[] = [];
 
         for (let i = 0; i < this.objects.length; ++i) {
@@ -66,7 +66,7 @@ export class DifficultyHitObjectCreator {
                     this.calculateSliderCursorPosition(lastObject.object);
                     object.travelDistance = lastObject.object.lazyTravelDistance * scalingFactor;
                 }
-    
+
                 const lastCursorPosition: Vector2 = this.getEndCursorPosition(lastObject.object);
 
                 // Don't need to jump to reach spinners
@@ -77,8 +77,7 @@ export class DifficultyHitObjectCreator {
                 }
 
                 object.deltaTime = (object.object.startTime - lastObject.object.startTime) / params.speedMultiplier;
-                // Every strain interval is hard capped at the equivalent of 375 BPM streaming speed as a safety measure
-                object.strainTime = Math.max(50, object.deltaTime);
+                object.strainTime = Math.max(params.mode === modes.droid ? 50 : 25, object.deltaTime);
                 object.startTime = object.object.startTime / params.speedMultiplier;
 
                 if (lastLastObject) {
@@ -95,7 +94,7 @@ export class DifficultyHitObjectCreator {
                 const angleOffset: number = 10 * Math.sin(1.5 * (Math.PI / 2 - MathUtils.clamp(object.angle, Math.PI / 6, Math.PI / 2)));
                 const distanceOffset: number = Math.pow(object.jumpDistance, 1.7) / 325;
 
-                object.flowProbability = 1 / (1 + Math.pow(Math.E, object.deltaTime - 126 + distanceOffset + angleOffset));
+                object.flowProbability = 1 / (1 + Math.exp(object.deltaTime - 126 + distanceOffset + angleOffset));
             }
 
             difficultyObjects.push(object);
@@ -117,9 +116,9 @@ export class DifficultyHitObjectCreator {
         // Incredibly close start and end time fluctuates travel distance and lazy
         // end position heavily, which we do not want to happen.
         //
-        // In the real game, this shouldn't happen--perhaps we need to reinvestigate this
+        // In the real game, this shouldn't happen. Perhaps we need to reinvestigate this
         // in the future.
-        if (Precision.almostEqualsNumber(slider.startTime, slider.endTime, 0.1)) {
+        if (Precision.almostEqualsNumber(slider.startTime, slider.endTime)) {
             return;
         }
 
@@ -154,22 +153,22 @@ export class DifficultyHitObjectCreator {
      * @param mode The mode to get the scaling factor from.
      * @param radius The radiust to get the scaling factor from.
      */
-    private getScalingFactor(mode: modes, radius: number): number {
+    private getScalingFactor(mode: modes): number {
         // We will scale distances by this factor, so we can assume a uniform CircleSize among beatmaps.
-        let scalingFactor: number = this.normalizedRadius / radius;
+        let scalingFactor: number = this.normalizedRadius / this.hitObjectRadius;
 
         // High circle size (small CS) bonus
         switch (mode) {
             case modes.droid:
                 if (this.hitObjectRadius < this.DROID_CIRCLESIZE_BUFF_THRESHOLD) {
                     scalingFactor *= 1 +
-                        Math.min(this.DROID_CIRCLESIZE_BUFF_THRESHOLD - radius, 20) / 40;
+                        Math.min(this.DROID_CIRCLESIZE_BUFF_THRESHOLD - this.hitObjectRadius, 20) / 40;
                 }
                 break;
             case modes.osu:
                 if (this.hitObjectRadius < this.PC_CIRCLESIZE_BUFF_THRESHOLD) {
                     scalingFactor *= 1 +
-                        Math.min(this.PC_CIRCLESIZE_BUFF_THRESHOLD - radius, 5) / 50;
+                        Math.min(this.PC_CIRCLESIZE_BUFF_THRESHOLD - this.hitObjectRadius, 5) / 50;
                 }
         }
 

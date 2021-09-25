@@ -137,7 +137,7 @@ export class Beatmap {
     }
 
     /**
-     * Gets the maximum combo of the beatmap.
+     * Calculates the maximum combo of the beatmap.
      */
     maxCombo(): number {
         return this.circles + this.sliders + this.sliderTicks + this.sliderRepeatPoints + this.sliderEnds + this.spinners;

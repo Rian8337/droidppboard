@@ -3,7 +3,6 @@ import * as mongodb from 'mongodb';
 import * as fileupload from 'express-fileupload';
 import * as bodyParser from 'body-parser';
 import { config } from 'dotenv';
-import { mods } from './modules/utils/mods';
 import { MapStats } from './modules/utils/MapStats';
 import { MapStars } from './modules/tools/MapStars';
 import { modes } from './modules/constants/modes';
@@ -18,6 +17,8 @@ import { PrototypeDatabaseResponse } from './interfaces/PrototypeDatabaseRespons
 // import { RebalanceMapStars } from './modules/tools/RebalanceMapStars';
 import { DroidPerformanceCalculator } from './modules/difficulty/DroidPerformanceCalculator';
 import { OsuPerformanceCalculator } from './modules/difficulty/OsuPerformanceCalculator';
+import { ModUtil } from './modules/utils/ModUtil';
+import { Mod } from './modules/mods/Mod';
 // import { Precision } from './modules/utils/Precision';
 // import { Accuracy } from './modules/utils/Accuracy';
 config();
@@ -233,7 +234,7 @@ function initializeSite(): void {
 
     app.get('/toppp', (req, res) => {
         const mod: string = req.url.split("?mods=")[1] || "";
-        const droidMod: string = mod.toLowerCase() !== "nm" ? mods.pcToDroid(mod) || "" : "-";
+        const droidMod: string = mod.toLowerCase() !== "nm" ? ModUtil.pcStringToMods(mod).map(v => v.droidString).join("") || "-" : "";
         const modList = top_pp_list.find(v => v.mods === droidMod) || {list: []};
         res.render('toppp', {
             pplist: modList.list,
@@ -243,7 +244,7 @@ function initializeSite(): void {
 
     app.get('/prototypetoppp', (req, res) => {
         const mod: string = req.url.split("?mods=")[1] || "";
-        const droidMod: string = mod.toLowerCase() !== "nm" ? mods.pcToDroid(mod) || "" : "-";
+        const droidMod: string = mod.toLowerCase() !== "nm" ? ModUtil.pcStringToMods(mod).map(v => v.droidString).join("") || "-" : "";
         const modList = prototype_pp_list.find(v => v.mods === droidMod) || {list: []};
         res.render('prototypetoppp', {
             pplist: modList.list,
@@ -300,7 +301,7 @@ function initializeSite(): void {
         let osuFile: string = "";
 
         if (req.files) {
-            const file: fileupload.UploadedFile|undefined = req.files.BeatmapFile;
+            const file: fileupload.UploadedFile = <fileupload.UploadedFile> req.files.BeatmapFile;
             if (!file || !file.name.endsWith(".osu")) {
                 return res.render('calculate', {
                     err: "Invalid file uploaded"
@@ -345,7 +346,7 @@ function initializeSite(): void {
             stats.ar = Math.max(0, Math.min(parseFloat(req.body.ForceAR), 12.5));
         }
 
-        const star: MapStars = new MapStars().calculate({file: osuFile, mods: mod, stats: stats});
+        const star: MapStars = new MapStars().calculate({file: osuFile, mods: ModUtil.pcStringToMods(mod), stats: stats});
         if (star.pcStars.total === 0) {
             return res.render('calculate', {
                 err: "Invalid file uploaded"
@@ -377,7 +378,7 @@ function initializeSite(): void {
             ar: stats.isForceAR ? stats.ar : map.ar,
             od: map.od,
             hp: map.hp,
-            mods: mod,
+            mods: ModUtil.pcStringToMods(mod),
             speedMultiplier: stats.speedMultiplier,
             isForceAR: stats.isForceAR
         }).calculate({mode: modes.osu});

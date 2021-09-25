@@ -4,11 +4,11 @@ import { BindDatabaseResponse } from './interfaces/BindDatabaseResponse';
 import { DatabasePPEntry } from './interfaces/DatabasePPEntry';
 import { PPEntry } from './interfaces/PPEntry';
 import { PPList } from './interfaces/PPList';
-import { mods } from './modules/utils/mods';
 import { PrototypePPList } from './interfaces/PrototypePPList';
 import { PrototypePPEntry } from './interfaces/PrototypePPEntry';
 import { PrototypeDatabaseResponse } from './interfaces/PrototypeDatabaseResponse';
 import { PrototypeDatabasePPEntry } from './interfaces/PrototypeDatabasePPEntry';
+import { ModUtil } from './modules/utils/ModUtil';
 
 export type Comparison = "<=" | "<" | "=" | ">" | ">=";
 
@@ -103,7 +103,7 @@ export function refreshtopPP(binddb: mongodb.Collection, top_pp_list: PPList[]):
                 };
                 top_pp_list[0].list.push(entry);
 
-                const droidMods: string = mods.pcToDroid(ppEntry.mods) || "-";
+                const droidMods: string = ModUtil.pcStringToMods(ppEntry.mods).map(v => v.droidString).join("") || "-";
                 const index: number = top_pp_list.findIndex(v => v.mods === droidMods);
                 if (index !== -1) {
                     top_pp_list[index].list.push(entry);
@@ -150,7 +150,7 @@ export function refreshPrototypeTopPP(prototypedb: mongodb.Collection, topList: 
                 };
                 topList[0].list.push(entry);
 
-                const droidMods: string = mods.pcToDroid(ppEntry.mods) || "-";
+                const droidMods: string = ModUtil.pcStringToMods(ppEntry.mods).map(v => v.droidString).join("") || "-";
                 const index: number = topList.findIndex(v => v.mods === droidMods);
                 if (index !== -1) {
                     topList[index].list.push(entry);

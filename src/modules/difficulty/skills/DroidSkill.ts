@@ -52,42 +52,20 @@ export abstract class DroidSkill extends Skill {
         this.saveToHitObject(current);
     }
 
-    /**
-     * The total summarized difficulty value of all strains for every hitobject in the beatmap.
-     */
-    protected calculateDifficultyValue(): number {
+    difficultyValue(): number {
+        if (this.strains.length === 0) {
+            return 0;
+        }
+
         let starRating: number = 0;
 
-        // Math here preserves the property that two notes of equal difficulty x, we have their summed difficulty = x * StarsPerDouble
+        // Math here preserves the property that two notes of equal difficulty x, we have their summed difficulty = x * starsPerDouble
         // This also applies to two sets of notes with equal difficulty.
         for (const strain of this.strains) {
             starRating += Math.pow(strain, this.difficultyExponent);
         }
 
-        return Math.pow(starRating, 1 / this.difficultyExponent);
-    }
-
-    /**
-     * The peak difficulty value of the map. Used to calculate the total star rating.
-     */
-    displayDifficultyValue(): number {
-        let difficulty: number = 0;
-        let weight: number = 1;
-
-        // Difficulty is the weighted sum of the highest strains from every section.
-        // We're sorting from highest to lowest strain.
-        this.strains.slice().sort((a, b) => {
-            return b - a;
-        }).forEach(strain => {
-            difficulty += strain * weight;
-            weight *= 0.9;
-        });
-
-        return difficulty;
-    }
-
-    difficultyValue(): number {
-        return this.fcTimeSkillLevel(this.calculateDifficultyValue());
+        return this.fcTimeSkillLevel(Math.pow(starRating, 1 / this.difficultyExponent));
     }
 
     /**

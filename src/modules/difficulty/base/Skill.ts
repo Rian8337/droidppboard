@@ -1,4 +1,4 @@
-import { Vector2 } from "../../mathutil/Vector2";
+import { Mod } from "../../mods/Mod";
 import { DifficultyHitObject } from "../preprocessing/DifficultyHitObject";
 
 /**
@@ -16,6 +16,15 @@ export abstract class Skill {
      * Number of previous hitobjects to keep inside the `previous` array.
      */
     protected readonly historyLength: number = 2;
+
+    /**
+     * The mods that this skill processes.
+     */
+    protected readonly mods: Mod[];
+
+    constructor(mods: Mod[]) {
+        this.mods = mods;
+    }
 
     processInternal(current: DifficultyHitObject): void {
         while (this.previous.length > this.historyLength) {

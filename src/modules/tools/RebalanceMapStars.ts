@@ -3,6 +3,7 @@ import { MapStats } from '../utils/MapStats';
 import { Parser } from '../beatmap/Parser';
 import { DroidStarRating } from '../difficulty/DroidStarRating';
 import { OsuStarRating } from '../difficulty/OsuStarRating';
+import { Mod } from '../mods/Mod';
 
 /**
  * A star rating calculator that configures which mode to calculate difficulty for and what mods are applied.
@@ -32,7 +33,7 @@ export class RebalanceMapStars {
         /**
          * Applied modifications in osu!standard format.
          */
-        mods?: string,
+        mods?: Mod[],
 
         /**
          * Custom map statistics to apply speed multiplier and force AR values as well as old statistics.
@@ -59,7 +60,7 @@ export class RebalanceMapStars {
         const droidMap: Beatmap = droidParser.map;
         const pcMap: Beatmap = pcParser.map;
 
-        const mod: string = params.mods || "";
+        const mod: Mod[] = params.mods || [];
 
         const stats: MapStats = new MapStats({
             speedMultiplier: params.stats?.speedMultiplier || 1,

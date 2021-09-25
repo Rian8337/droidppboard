@@ -1,6 +1,9 @@
 import { OsuSkill } from './OsuSkill';
 import { DifficultyHitObject } from '../preprocessing/DifficultyHitObject';
 import { Spinner } from '../../beatmap/hitobjects/Spinner';
+import { Mod } from '../../mods/Mod';
+import { Interpolation } from '../../mathutil/Interpolation';
+import { MathUtils } from '../../mathutil/MathUtils';
 
 /**
  * Represents the skill required to press keys or tap with regards to keeping up with the speed at which objects need to be hit.
@@ -17,14 +20,20 @@ export class OsuSpeed extends OsuSkill {
     protected readonly reducedSectionCount: number = 5;
     protected readonly reducedSectionBaseline: number = 0.75;
     protected readonly difficultyMultiplier: number = 1.04;
+    protected readonly decayWeight: number = 0.9;
 
     // ~200 1/4 BPM streams
     private readonly minSpeedBonus: number = 75;
 
-    // ~330 BPM 1/4 streams
-    private readonly maxSpeedBonus: number = 45;
-
     private readonly angleBonusScale: number = 90;
+
+    private readonly greatWindow: number;
+
+    constructor(mods: Mod[], greatWindow: number) {
+        super(mods);
+
+        this.greatWindow = greatWindow;
+    }
 
     /**
      * @param currentObject The hitobject to calculate.
@@ -35,11 +44,23 @@ export class OsuSpeed extends OsuSkill {
         }
 
         const distance: number = Math.min(this.SINGLE_SPACING_THRESHOLD, currentObject.jumpDistance + currentObject.travelDistance);
-        const deltaTime: number = Math.max(this.maxSpeedBonus, currentObject.deltaTime);
+        let strainTime: number = currentObject.strainTime;
+
+        const greatWindowFull: number = this.greatWindow * 2;
+        const speedWindowRatio: number = strainTime / greatWindowFull;
+
+        // Aim to nerf cheesy rhythms (very fast consecutive doubles with large deltatimes between).
+        if (this.previous[0] && strainTime < greatWindowFull && this.previous[0].strainTime > strainTime) {
+            strainTime = Interpolation.lerp(this.previous[0].strainTime, strainTime, speedWindowRatio);
+        }
+
+        // Cap deltatime to the OD 300 hitwindow.
+        // 0.93 is derived from making sure 260bpm OD8 streams aren't nerfed harshly, whilst 0.92 limits the effect of the cap.
+        strainTime /= MathUtils.clamp(strainTime / greatWindowFull / 0.93, 0.92, 1);
 
         let speedBonus: number = 1;
-        if (deltaTime < this.minSpeedBonus) {
-            speedBonus += Math.pow((this.minSpeedBonus - deltaTime) / 40, 2);
+        if (strainTime < this.minSpeedBonus) {
+            speedBonus += Math.pow((this.minSpeedBonus - strainTime) / 40, 2);
         }
 
         let angleBonus: number = 1;
@@ -63,7 +84,7 @@ export class OsuSpeed extends OsuSkill {
 
         return (1 + (speedBonus - 1) * 0.75) * angleBonus *
             (0.95 + speedBonus * Math.pow(distance / this.SINGLE_SPACING_THRESHOLD, 3.5))
-            / currentObject.strainTime;
+            / strainTime;
     }
 
     /**

@@ -15,6 +15,7 @@ import { HitObject } from './hitobjects/HitObject';
 import { MapStats } from '../utils/MapStats';
 import { MathUtils } from '../mathutil/MathUtils';
 import { ParserConstants } from '../constants/ParserConstants';
+import { Mod } from '../mods/Mod';
 
 /**
  * A beatmap parser with just enough data for pp calculation.
@@ -53,7 +54,7 @@ export class Parser {
      * @param str The `.osu` file to parse.
      * @param mods The mods to parse the beatmap for.
      */
-    parse(str: string, mods: string = ""): Parser {
+    parse(str: string, mods: Mod[] = []): Parser {
         const lines: string[] = str.split("\n");
 
         for (let i: number = 0; i < lines.length; ++i) {
@@ -130,7 +131,21 @@ export class Parser {
             case "Difficulty": this.difficulty(); break;
             case "Events": this.events(); break;
             case "TimingPoints": this.timingPoints(); break;
-            case "HitObjects": this.objects(); break;
+            case "HitObjects":
+                // Need to check if the beatmap doesn't have an uninherited timing point.
+                // This exists in cases such as /b/2290233 where the beatmap has been
+                // edited by the user.
+                //
+                // In lazer, the default BPM is set to 60 (60000 / 1000).
+                if (this.map.timingPoints.length === 0) {
+                    this.map.timingPoints.push(new TimingControlPoint({
+                        time: Number.NEGATIVE_INFINITY,
+                        msPerBeat: 1000
+                    }));
+                }
+
+                this.objects();
+                break;
             default:
                 const fmtpos = line.indexOf("file format v");
                 if (fmtpos < 0) {
@@ -400,6 +415,9 @@ export class Parser {
         }
     }
 
+    /**
+     * Converts string slider path to a `PathType`.
+     */
     private convertPathType(input: string): PathType {
         switch (input) { 
             case "B":
@@ -539,8 +557,8 @@ export class Parser {
                     }
 
                     const endPositionDistanceCheck: boolean = 
-                        objectN.type & objectTypes.slider ?
-                        (<Slider> objectN).endPosition.getDistance(objectI.position) < stackDistance
+                        objectN instanceof Slider ?
+                        objectN.endPosition.getDistance(objectI.position) < stackDistance
                         :
                         false;
 

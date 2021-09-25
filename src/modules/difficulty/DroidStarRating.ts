@@ -6,6 +6,7 @@ import { DroidTap } from './skills/DroidTap';
 import { DroidRhythm } from './skills/DroidRhythm';
 import { StarRating } from './base/StarRating';
 import { DroidSkill } from './skills/DroidSkill';
+import { Mod } from '../mods/Mod';
 
 /**
  * Difficulty calculator for osu!droid gamemode.
@@ -55,7 +56,7 @@ export class DroidStarRating extends StarRating {
         /**
          * Applied modifications in osu!standard format.
          */
-        mods?: string,
+        mods?: Mod[],
 
         /**
          * Custom map statistics to apply custom tap multiplier as well as old statistics.
@@ -66,23 +67,10 @@ export class DroidStarRating extends StarRating {
     }
 
     /**
-     * Calculates the skills provided.
-     * 
-     * @param skills The skills to calculate.
-     */
-    calculateSkills(...skills: DroidSkill[]): void {
-        this.objects.slice(1).forEach(h => {
-            skills.forEach(skill => {
-                skill.processInternal(h);
-            });
-        });
-    }
-
-    /**
      * Calculates the aim star rating of the beatmap and stores it in this instance.
      */
     calculateAim(): void {
-        const aimSkill: DroidAim = new DroidAim();
+        const aimSkill: DroidAim = new DroidAim(this.mods);
 
         this.calculateSkills(aimSkill);
 
@@ -95,7 +83,7 @@ export class DroidStarRating extends StarRating {
      * Calculates the tap star rating of the beatmap and stores it in this instance.
      */
     calculateTap(): void {
-        const tapSkill: DroidTap = new DroidTap();
+        const tapSkill: DroidTap = new DroidTap(this.mods);
 
         this.calculateSkills(tapSkill);
 
@@ -105,7 +93,7 @@ export class DroidStarRating extends StarRating {
     }
 
     calculateRhythm(): void {
-        const rhythmSkill: DroidRhythm = new DroidRhythm();
+        const rhythmSkill: DroidRhythm = new DroidRhythm(this.mods);
 
         this.calculateSkills(rhythmSkill);
 
@@ -159,9 +147,9 @@ export class DroidStarRating extends StarRating {
      */
     protected createSkills(): DroidSkill[] {
         return [
-            new DroidAim(),
-            new DroidTap(),
-            new DroidRhythm()
+            new DroidAim(this.mods),
+            new DroidTap(this.mods),
+            new DroidRhythm(this.mods)
         ];
     }
 
