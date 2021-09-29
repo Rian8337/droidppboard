@@ -25,7 +25,7 @@ export class DroidSpeed extends DroidSkill {
     // ~200 1/4 BPM streams
     private readonly minSpeedBonus: number = 75;
 
-    private readonly rhythmMultiplier: number = 0.5;
+    private readonly rhythmMultiplier: number = 2;
     private readonly historyTimeMax: number = 5000; // 5 seconds of calculateRhythmBonus max.
 
     private currentTapStrain: number = 1;
@@ -59,8 +59,8 @@ export class DroidSpeed extends DroidSkill {
         }
 
         // Cap deltatime to the OD 300 hitwindow.
-        // 0.77 is derived from making sure 260bpm OD7 streams aren't nerfed harshly, whilst 0.95 limits the effect of the cap.
-        strainTime /= MathUtils.clamp(strainTime / greatWindowFull / 0.77, 0.95, 1);
+        // 0.485 is derived from making sure 260 BPM 1/4 OD8 (droid) streams aren't nerfed harshly, whilst 0.92 limits the effect of the cap.
+        strainTime /= MathUtils.clamp(speedWindowRatio / 0.485, 0.92, 1);
 
         let speedBonus: number = 1;
 
@@ -126,11 +126,8 @@ export class DroidSpeed extends DroidSkill {
 
             if (effectiveRatio > 0.5) {
                 // Large buff for 1/3 -> 1/4 type transitions.
-                effectiveRatio = 0.5 + (effectiveRatio - 0.5) * 10;
+                effectiveRatio = 0.5 + (effectiveRatio - 0.5) * 5;
             }
-
-            // Increase scaling for when hitwindow is large but accuracy range is small.
-            effectiveRatio *= Math.max(currentDelta, prevDelta) / (this.greatWindow * 2);
 
             // Scale with time.
             effectiveRatio *= currentHistoricalDecay;
@@ -183,7 +180,7 @@ export class DroidSpeed extends DroidSkill {
             }
         }
 
-        return Math.sqrt(4 + rhythmComplexitySum * this.rhythmMultiplier) / 2;
+        return Math.sqrt(4 + rhythmComplexitySum * this.rhythmMultiplier * Math.sqrt(52 / (this.greatWindow * 2))) / 2;
     }
 
     /**
