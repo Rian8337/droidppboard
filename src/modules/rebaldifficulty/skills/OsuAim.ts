@@ -22,7 +22,7 @@ export class OsuAim extends OsuSkill {
     /**
      * @param current The hitobject to calculate.
      */
-    strainValueOf(current: DifficultyHitObject): number {
+    protected strainValueOf(current: DifficultyHitObject): number {
         if (current.object instanceof Spinner) {
             return 0;
         }
@@ -34,16 +34,14 @@ export class OsuAim extends OsuSkill {
             return Math.pow(val, 0.99);
         };
 
-        if (this.previous.length > 0) {
-            if (current.angle !== null && current.angle > this.angleBonusBegin) {
-                const angleBonus: number = Math.sqrt(
-                    Math.max(this.previous[0].jumpDistance - scale, 0) *
-                    Math.pow(Math.sin(current.angle - this.angleBonusBegin), 2) *
-                    Math.max(current.jumpDistance - scale, 0)
-                );
-                result = 1.4 * applyDiminishingExp(Math.max(0, angleBonus)) /
-                    Math.max(this.timingThreshold, this.previous[0].strainTime);
-            }
+        if (this.previous.length > 0 && current.angle !== null && current.angle > this.angleBonusBegin) {
+            const angleBonus: number = Math.sqrt(
+                Math.max(this.previous[0].jumpDistance - scale, 0) *
+                Math.pow(Math.sin(current.angle - this.angleBonusBegin), 2) *
+                Math.max(current.jumpDistance - scale, 0)
+            );
+            result = 1.4 * applyDiminishingExp(Math.max(0, angleBonus)) /
+                Math.max(this.timingThreshold, this.previous[0].strainTime);
         }
 
         const jumpDistanceExp: number = applyDiminishingExp(current.jumpDistance);
@@ -54,6 +52,16 @@ export class OsuAim extends OsuSkill {
             result + weightedDistance / Math.max(current.strainTime, this.timingThreshold),
             weightedDistance / current.strainTime
         );
+    }
+
+    /**
+     * @param current The hitobject to calculate.
+     */
+    protected strainValueAt(current: DifficultyHitObject): number {
+        this.currentStrain *= this.strainDecay(current.deltaTime);
+        this.currentStrain += this.strainValueOf(current) * this.skillMultiplier;
+
+        return this.currentStrain;
     }
 
     /**

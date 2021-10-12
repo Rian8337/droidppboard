@@ -10,6 +10,7 @@ import { Mod } from '../mods/Mod';
 import { DroidFlashlight } from './skills/DroidFlashlight';
 import { ModFlashlight } from '../mods/ModFlashlight';
 import { OsuHitWindow } from '../utils/HitWindow';
+import { ModRelax } from '../mods/ModRelax';
 
 /**
  * Difficulty calculator for osu!droid gamemode.
@@ -91,6 +92,10 @@ export class DroidStarRating extends StarRating {
      * Calculates the speed star rating of the beatmap and stores it in this instance.
      */
     calculateSpeed(): void {
+        if (this.mods.some(m => m instanceof ModRelax)) {
+            return;
+        }
+
         const speedSkill: DroidSpeed = new DroidSpeed(
             this.mods,
             new OsuHitWindow(this.stats.od!).hitWindowFor300()
@@ -101,12 +106,25 @@ export class DroidStarRating extends StarRating {
         this.speedStrainPeaks = speedSkill.strainPeaks;
 
         this.speed = this.starValue(speedSkill.difficultyValue());
+
+        const objectStrains: number[] = this.objects.map(v => v.speedStrain);
+
+        const maxStrain: number = Math.max(...objectStrains);
+
+        this.attributes.speedNoteCount = objectStrains.reduce(
+            (total, next) => total + (1 / (1 + Math.exp(-(next / maxStrain * 12 - 6)))),
+            0
+        );
     }
 
     /**
      * Calculates the rhythm star rating of the beatmap and stores it in this instance.
      */
     calculateRhythm(): void {
+        if (this.mods.some(m => m instanceof ModRelax)) {
+            return;
+        }
+
         const rhythmSkill: DroidRhythm = new DroidRhythm(
             this.mods,
             new OsuHitWindow(this.stats.od!).hitWindowFor300()
@@ -130,9 +148,6 @@ export class DroidStarRating extends StarRating {
         this.flashlight = this.starValue(flashlightSkill.difficultyValue());
     }
 
-    /**
-     * Calculates the total star rating of the beatmap and stores it in this instance.
-     */
     calculateTotal(): void {
         const aimPerformanceValue: number = this.basePerformanceValue(this.aim);
         const speedPerformanceValue: number = this.basePerformanceValue(this.speed);
@@ -153,30 +168,48 @@ export class DroidStarRating extends StarRating {
         }
     }
 
-    /**
-     * Calculates every star rating of the beatmap and stores it in this instance.
-     */
     calculateAll(): void {
         const skills: DroidSkill[] = this.createSkills();
+
+        const isRelax: boolean = this.mods.some(m => m instanceof ModRelax);
+
+        if (isRelax) {
+            // Remove speed and rhythm skill to prevent overhead
+            skills.splice(1, 2);
+        }
 
         this.calculateSkills(...skills);
 
         const aimSkill: DroidAim = <DroidAim> skills[0];
-        const speedSkill: DroidSpeed = <DroidSpeed> skills[1];
-        const rhythmSkill: DroidRhythm = <DroidRhythm> skills[2];
-        const flashlightSkill: DroidFlashlight = <DroidFlashlight> skills[3];
+        let speedSkill: DroidSpeed | undefined;
+        let rhythmSkill: DroidRhythm | undefined;
+
+        if (!isRelax) {
+            speedSkill = <DroidSpeed> skills[1];
+            rhythmSkill = <DroidRhythm> skills[2];
+        }
 
         this.aimStrainPeaks = aimSkill.strainPeaks;
-        this.speedStrainPeaks = speedSkill.strainPeaks;
-        this.flashlightStrainPeaks = flashlightSkill.strainPeaks;
-
         this.aim = this.starValue(aimSkill.difficultyValue());
 
-        this.speed = this.starValue(speedSkill.difficultyValue());
+        if (speedSkill) {
+            this.speedStrainPeaks = speedSkill.strainPeaks;
 
-        this.rhythm = this.starValue(rhythmSkill.difficultyValue());
+            this.speed = this.starValue(speedSkill.difficultyValue());
 
-        this.flashlight = this.starValue(flashlightSkill.difficultyValue());
+            const objectStrains: number[] = this.objects.map(v => v.speedStrain);
+
+            const maxStrain: number = Math.max(...objectStrains);
+
+            this.attributes.speedNoteCount = objectStrains.reduce(
+                (total, next) => total + (1 / (1 + Math.exp(-(next / maxStrain * 12 - 6)))),
+                0
+            );
+        }
+
+        if (rhythmSkill) {
+            this.rhythm = this.starValue(rhythmSkill.difficultyValue());
+        }
 
         this.calculateTotal();
     }

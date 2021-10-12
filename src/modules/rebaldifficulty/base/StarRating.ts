@@ -3,8 +3,9 @@ import { modes } from '../../constants/modes';
 import { MapStats } from '../../utils/MapStats';
 import { DifficultyHitObject } from '../preprocessing/DifficultyHitObject';
 import { DifficultyHitObjectCreator } from '../preprocessing/DifficultyHitObjectCreator';
-import { Skill } from './Skill';
+import { StrainSkill } from './StrainSkill';
 import { Mod } from '../../mods/Mod';
+import { DifficultyAttributes } from './DifficultyAttributes';
 
 /**
  * The base of difficulty calculation.
@@ -50,6 +51,13 @@ export abstract class StarRating {
      */
     flashlightStrainPeaks: number[] = [];
 
+    /**
+     * Additional data that is used in performance calculation.
+     */
+    attributes: DifficultyAttributes = {
+        speedNoteCount: 0
+    };
+
     protected readonly sectionLength: number = 400;
     protected abstract readonly difficultyMultiplier: number;
 
@@ -88,9 +96,6 @@ export abstract class StarRating {
         stats?: MapStats
     }, mode: modes): this {
         const map: Beatmap = this.map = params.map;
-        if (!map) {
-            throw new Error("A map must be defined");
-        }
 
         const mod: Mod[] = this.mods = params.mods ?? this.mods;
 
@@ -130,10 +135,15 @@ export abstract class StarRating {
      * 
      * @param skills The skills to calculate.
      */
-    protected calculateSkills(...skills: Skill[]): void {
-        this.objects.slice(1).forEach(h => {
+    protected calculateSkills(...skills: StrainSkill[]): void {
+        this.objects.slice(1).forEach((h, i) => {
             skills.forEach(skill => {
                 skill.processInternal(h);
+
+                if (i === this.objects.length - 2) {
+                    // Don't forget to save the last strain peak, which would otherwise be ignored.
+                    skill.saveCurrentPeak();
+                }
             });
         });
     }
@@ -156,7 +166,7 @@ export abstract class StarRating {
     /**
      * Creates skills to be calculated.
      */
-    protected abstract createSkills(): Skill[];
+    protected abstract createSkills(): StrainSkill[];
 
     /**
      * Calculates the star rating value of a difficulty.

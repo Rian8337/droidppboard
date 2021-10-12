@@ -1,7 +1,6 @@
 import { Slider } from "../../beatmap/hitobjects/Slider";
 import { Spinner } from "../../beatmap/hitobjects/Spinner";
 import { Mod } from "../../mods/Mod";
-import { Precision } from "../../utils/Precision";
 import { DifficultyHitObject } from "../preprocessing/DifficultyHitObject";
 import { DroidSkill } from "./DroidSkill";
 
@@ -24,14 +23,14 @@ export class DroidRhythm extends DroidSkill {
         this.greatWindow = greatWindow;
     }
 
-    strainValueAt(current: DifficultyHitObject): number {
+    protected strainValueOf(current: DifficultyHitObject): number {
         if (current.object instanceof Spinner) {
             return 0;
         }
 
         let previousIslandSize: number = -1;
         let rhythmComplexitySum: number = 0;
-        let islandSize: number = 0;
+        let islandSize: number = 1;
 
         // Store the ratio of the current start of an island to buff for tighter rhythms.
         let startRatio: number = 0;
@@ -132,8 +131,15 @@ export class DroidRhythm extends DroidSkill {
             }
         }
 
+        return Math.sqrt(4 + rhythmComplexitySum) / 2;
+    }
+
+    /**
+     * @param current The hitobject to calculate.
+     */
+    protected strainValueAt(current: DifficultyHitObject): number {
         this.currentStrain *= this.strainDecay(current.deltaTime);
-        this.currentStrain += Math.sqrt(4 + rhythmComplexitySum) / 2 * this.skillMultiplier;
+        this.currentStrain += this.strainValueOf(current) * this.skillMultiplier;
 
         return this.currentStrain;
     }
