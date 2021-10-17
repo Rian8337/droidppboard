@@ -15,8 +15,8 @@ import { convertURIregex, convertURI, Comparison, getComparisonText, getComparis
 import { PrototypePPList } from './interfaces/PrototypePPList';
 import { PrototypeDatabaseResponse } from './interfaces/PrototypeDatabaseResponse';
 import { RebalanceMapStars } from './modules/tools/RebalanceMapStars';
-import { DroidPerformanceCalculator as RebalanceDroidPerformanceCalculator } from './modules/rebaldifficulty/DroidPerformanceCalculator';
-import { OsuPerformanceCalculator as RebalanceOsuPerformanceCalculator } from './modules/rebaldifficulty/OsuPerformanceCalculator';
+// import { DroidPerformanceCalculator as RebalanceDroidPerformanceCalculator } from './modules/rebaldifficulty/DroidPerformanceCalculator';
+// import { OsuPerformanceCalculator as RebalanceOsuPerformanceCalculator } from './modules/rebaldifficulty/OsuPerformanceCalculator';
 import { DroidPerformanceCalculator } from './modules/difficulty/DroidPerformanceCalculator';
 import { OsuPerformanceCalculator } from './modules/difficulty/OsuPerformanceCalculator';
 import { ModUtil } from './modules/utils/ModUtil';
@@ -81,7 +81,7 @@ aliceDb.connect((err, db) => {
 
 function initializeSite(): void {
     refreshtopPP(binddb, top_pp_list);
-    refreshPrototypeTopPP(prototypedb, prototype_pp_list);
+    // refreshPrototypeTopPP(prototypedb, prototype_pp_list);
 
     app.get('/', (req, res) => {
         const page: number = parseInt(req.url.split('?page=')[1]) || 1;
@@ -242,7 +242,7 @@ function initializeSite(): void {
         });
     });
 
-    app.get('/prototypetoppp', (req, res) => {
+    /* app.get('/prototypetoppp', (req, res) => {
         const mod: string = req.url.split("?mods=")[1] || "";
         const droidMod: string = mod.toLowerCase() !== "nm" ? ModUtil.pcStringToMods(mod).map(v => v.droidString).join("") || "" : "-";
         const modList = prototype_pp_list.find(v => v.mods === droidMod) || {list: []};
@@ -250,7 +250,7 @@ function initializeSite(): void {
             pplist: modList.list,
             mods: convertURI(mod).toUpperCase(),
         });
-    });
+    }); */
 
     app.get('/profile', (req, res) => {
         const uid: number = parseInt(req.url.split('uid=')[1]);
@@ -271,7 +271,7 @@ function initializeSite(): void {
         });
     });
 
-    app.get("/prototype/profile", (req, res) => {
+    /* app.get("/prototype/profile", (req, res) => {
         const uid: number = parseInt(req.url.split('uid=')[1]);
         if (isNaN(uid)) {
             return res.send("404 Page Not Found");
@@ -291,7 +291,7 @@ function initializeSite(): void {
                 lastUpdate: new Date(prototype.lastUpdate).toUTCString()
             });
         });
-    });
+    }); */
 
     app.get('/calculate', (req, res) => {
         res.render('calculate');
@@ -413,29 +413,31 @@ function initializeSite(): void {
                     type: "Droid",
                     sr: star.droidStars.total.toFixed(2),
                     aimsr: star.droidStars.aim.toFixed(2),
-                    tapsr: star.droidStars.tap.toFixed(2),
-                    rhythmsr: star.droidStars.rhythm.toFixed(2),
+                    speedsr: star.droidStars.speed.toFixed(2),
+                    flashlightsr: star.droidStars.flashlight.toFixed(2),
                     pp: dpp.total.toFixed(2),
                     aimpp: dpp.aim.toFixed(2),
-                    tappp: dpp.tap.toFixed(2),
-                    accpp: dpp.accuracy.toFixed(2)
+                    speedpp: dpp.speed.toFixed(2),
+                    accpp: dpp.accuracy.toFixed(2),
+                    flashlightpp: dpp.flashlight.toFixed(2)
                 },
                 {
                     type: "PC",
                     sr: star.pcStars.total.toFixed(2),
                     aimsr: star.pcStars.aim.toFixed(2),
                     speedsr: star.pcStars.speed.toFixed(2),
-                    rhythmsr: "N/A",
+                    flashlightsr: star.pcStars.flashlight.toFixed(2),
                     pp: pp.total.toFixed(2),
                     aimpp: pp.aim.toFixed(2),
-                    tappp: pp.speed.toFixed(2),
-                    accpp: pp.accuracy.toFixed(2)
+                    speedpp: pp.speed.toFixed(2),
+                    accpp: pp.accuracy.toFixed(2),
+                    flashlightpp: pp.flashlight.toFixed(2)
                 }
             ]
         });
     });
 
-    app.get('/prototypecalculate', (req, res) => {
+    /* app.get('/prototypecalculate', (req, res) => {
         res.render('prototypeCalculate');
     });
 
@@ -579,7 +581,7 @@ function initializeSite(): void {
                 }
             ]
         });
-    });
+    }); */
 
     app.get('/api/getplayertop', (req, res) => {
         const requestParams: string[] = req.url.split("?")[1]?.split("&") || [];

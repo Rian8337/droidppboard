@@ -3,18 +3,18 @@ import { modes } from '../constants/modes';
 import { OsuStarRating } from './OsuStarRating';
 import { MapStats } from '../utils/MapStats';
 import { PerformanceCalculator } from './base/PerformanceCalculator';
-import { ModNoFail } from '../mods/ModNoFail';
-import { ModSpunOut } from '../mods/ModSpunOut';
 import { ModHidden } from '../mods/ModHidden';
 import { ModFlashlight } from '../mods/ModFlashlight';
 import { ModScoreV2 } from '../mods/ModScoreV2';
 import { ModTouchDevice } from '../mods/ModTouchDevice';
+import { ModRelax } from '../mods/ModRelax';
 
 /**
  * A performance points calculator that calculates performance points for osu!standard gamemode.
  */
 export class OsuPerformanceCalculator extends PerformanceCalculator {
-    stars: OsuStarRating = new OsuStarRating();
+    override stars: OsuStarRating = new OsuStarRating();
+    override finalMultiplier = 1.12;
 
     /**
      * The aim performance value.
@@ -36,7 +36,7 @@ export class OsuPerformanceCalculator extends PerformanceCalculator {
      */
     flashlight: number = 0;
 
-    calculate(params: {
+    override calculate(params: {
         /**
          * The star rating instance to calculate.
          */
@@ -64,34 +64,16 @@ export class OsuPerformanceCalculator extends PerformanceCalculator {
     }): this {
         this.handleParams(params, modes.osu);
 
-        const objectCount: number = this.stars.objects.length;
-        const maxCombo: number = this.stars.map.maxCombo();
-        const miss: number = this.computedAccuracy.nmiss;
-        const combo: number = params.combo || maxCombo - miss;
-
-        // Penalize misses by assessing # of misses relative to the total # of objects. Default a 3% reduction for any # of misses.
-        this.comboPenalty = Math.min(Math.pow(combo / maxCombo, 0.8), 1);
-
         this.calculateAimValue();
         this.calculateSpeedValue();
         this.calculateAccuracyValue();
         this.calculateFlashlightValue();
 
-        // Custom multiplier for SO and NF.
-        // This is being adjusted to keep the final pp value scaled around what it used to be when changing things.
-        let finalMultiplier: number = 1.12;
-        if (this.stars.mods.some(m => m instanceof ModNoFail)) {
-            finalMultiplier *= Math.max(0.9, 1 - 0.02 * miss);
-        }
-        if (this.stars.mods.some(m => m instanceof ModSpunOut)) {
-            finalMultiplier *= 1 - Math.pow(this.stars.map.spinners / objectCount, 0.85);
-        }
-
         this.total = Math.pow(
             Math.pow(this.aim, 1.1) + Math.pow(this.speed, 1.1) +
             Math.pow(this.accuracy, 1.1) + Math.pow(this.flashlight, 1.1),
             1 / 1.1
-        ) * finalMultiplier;
+        ) * this.finalMultiplier;
 
         return this;
     }
@@ -99,12 +81,12 @@ export class OsuPerformanceCalculator extends PerformanceCalculator {
     /**
      * Calculates the aim performance value of the beatmap.
      */
-    protected calculateAimValue(): void {
+    private calculateAimValue(): void {
         // Global variables
         const objectCount: number = this.stars.objects.length;
-        const calculatedAR: number = <number> this.mapStatistics.ar;
+        const calculatedAR: number = this.mapStatistics.ar!;
 
-        this.aim = this.baseValue(this.stars.aim);
+        this.aim = this.baseValue(Math.pow(this.stars.aim, this.stars.mods.some(m => m instanceof ModTouchDevice) ? 0.8 : 1));
 
         // Longer maps are worth more
         let lengthBonus = 0.95 + 0.4 * Math.min(1, objectCount / 2000);
@@ -153,10 +135,10 @@ export class OsuPerformanceCalculator extends PerformanceCalculator {
     /**
      * Calculates the speed performance value of the beatmap.
      */
-    protected calculateSpeedValue(): void {
+    private calculateSpeedValue(): void {
         // Global variables
         const objectCount: number = this.stars.objects.length;
-        const calculatedAR: number = <number> this.mapStatistics.ar;
+        const calculatedAR: number = this.mapStatistics.ar!;
         const n50: number = this.computedAccuracy.n50;
 
         this.speed = this.baseValue(this.stars.speed);
@@ -192,7 +174,7 @@ export class OsuPerformanceCalculator extends PerformanceCalculator {
         }
 
         // Scale the speed value with accuracy and OD.
-        this.speed *= (0.95 + Math.pow(<number> this.mapStatistics.od, 2) / 750) *
+        this.speed *= (0.95 + Math.pow(this.mapStatistics.od!, 2) / 750) *
             Math.pow(
                 this.computedAccuracy.value(objectCount),
                 (14.5 - Math.max(<number> this.mapStatistics.od, 8)) / 2
@@ -205,26 +187,28 @@ export class OsuPerformanceCalculator extends PerformanceCalculator {
     /**
      * Calculates the accuracy performance value of the beatmap.
      */
-    protected calculateAccuracyValue(): void {
-        // Global variables
-        const n300: number = this.computedAccuracy.n300;
-        const n100: number = this.computedAccuracy.n100;
-        const n50: number = this.computedAccuracy.n50;
+    private calculateAccuracyValue(): void {
+        if (this.stars.mods.some(m => m instanceof ModRelax)) {
+            return;
+        }
 
+        // Global variables
         const nobjects: number = this.stars.objects.length;
         const ncircles: number = this.stars.mods.some(m => m instanceof ModScoreV2) ? nobjects - this.stars.map.spinners : this.stars.map.circles;
 
-        const realAccuracy: number = Math.max(
-            ncircles > 0 ?
-            ((n300 - (nobjects - ncircles)) * 6 + n100 * 2 + n50) / (ncircles * 6) :
-            0,
-            0
-        );
+        if (ncircles === 0) {
+            return;
+        }
+
+        const realAccuracy: Accuracy = new Accuracy({
+            nobjects: ncircles,
+            ...this.computedAccuracy
+        });
 
         // Lots of arbitrary values from testing.
         // Considering to use derivation from perfect accuracy in a probabilistic manner - assume normal distribution
-        this.accuracy = Math.pow(1.52163, <number> this.mapStatistics.od) *
-            Math.pow(realAccuracy, 24) * 2.83;
+        this.accuracy = Math.pow(1.52163, this.mapStatistics.od!) *
+            Math.pow(realAccuracy.value(ncircles), 24) * 2.83;
 
         // Bonus for many hitcircles - it's harder to keep good accuracy up for longer
         this.accuracy *= Math.min(1.15, Math.pow(ncircles / 1000, 0.3));
@@ -237,6 +221,9 @@ export class OsuPerformanceCalculator extends PerformanceCalculator {
         }
     }
 
+    /**
+     * Calculates the flashlight performance value of the beatmap.
+     */
     private calculateFlashlightValue(): void {
         if (!this.stars.mods.some(m => m instanceof ModFlashlight)) {
             return;
@@ -275,7 +262,7 @@ export class OsuPerformanceCalculator extends PerformanceCalculator {
         this.flashlight *= 0.98 + odScaling;
     }
 
-    toString(): string {
+    override toString(): string {
         return (
             this.total.toFixed(2) + " pp (" + this.aim.toFixed(2)
             + " aim, " + this.speed.toFixed(2) + " speed, "
