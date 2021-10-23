@@ -81,7 +81,7 @@ aliceDb.connect((err, db) => {
 
 function initializeSite(): void {
     refreshtopPP(binddb, top_pp_list);
-    // refreshPrototypeTopPP(prototypedb, prototype_pp_list);
+    refreshPrototypeTopPP(prototypedb, prototype_pp_list);
 
     app.get('/', (req, res) => {
         const page: number = parseInt(req.url.split('?page=')[1]) || 1;
@@ -242,7 +242,7 @@ function initializeSite(): void {
         });
     });
 
-    /* app.get('/prototypetoppp', (req, res) => {
+    app.get('/prototypetoppp', (req, res) => {
         const mod: string = req.url.split("?mods=")[1] || "";
         const droidMod: string = mod.toLowerCase() !== "nm" ? ModUtil.pcStringToMods(mod).map(v => v.droidString).join("") || "" : "-";
         const modList = prototype_pp_list.find(v => v.mods === droidMod) || {list: []};
@@ -250,7 +250,7 @@ function initializeSite(): void {
             pplist: modList.list,
             mods: convertURI(mod).toUpperCase(),
         });
-    }); */
+    });
 
     app.get('/profile', (req, res) => {
         const uid: number = parseInt(req.url.split('uid=')[1]);
@@ -271,7 +271,7 @@ function initializeSite(): void {
         });
     });
 
-    /* app.get("/prototype/profile", (req, res) => {
+    app.get("/prototype/profile", (req, res) => {
         const uid: number = parseInt(req.url.split('uid=')[1]);
         if (isNaN(uid)) {
             return res.send("404 Page Not Found");
@@ -291,7 +291,7 @@ function initializeSite(): void {
                 lastUpdate: new Date(prototype.lastUpdate).toUTCString()
             });
         });
-    }); */
+    });
 
     app.get('/calculate', (req, res) => {
         res.render('calculate');
