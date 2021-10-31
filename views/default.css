@@ -8,6 +8,7 @@
 h1 {
     color:white;
     font: 32px Exo;
+    text-align: center;
     font-weight: 700;
     background-image: url(https://osu.ppy.sh/images/headers/profile-covers/c4.jpg);
     height: 15%;
