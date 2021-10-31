@@ -139,7 +139,7 @@ export class Beatmap {
     /**
      * Calculates the maximum combo of the beatmap.
      */
-    maxCombo(): number {
+    get maxCombo(): number {
         return this.circles + this.sliders + this.sliderTicks + this.sliderRepeatPoints + this.sliderEnds + this.spinners;
     }
 
@@ -162,7 +162,7 @@ export class Beatmap {
             + this.circles + " circles, "
             + this.sliders + " sliders, "
             + this.spinners + " spinners" + "\n"
-            + this.maxCombo() + " max combo" + "\n"
+            + this.maxCombo + " max combo" + "\n"
         );
         return res;
     }

@@ -70,7 +70,7 @@ export class DroidPerformanceCalculator extends PerformanceCalculator {
     }): this {
         this.handleParams(params, modes.droid);
 
-        const maxCombo: number = this.stars.map.maxCombo();
+        const maxCombo: number = this.stars.map.maxCombo;
         const miss: number = this.computedAccuracy.nmiss;
         const combo: number = params.combo || maxCombo - miss;
 

@@ -14,7 +14,7 @@ import { WhitelistDatabaseResponse } from './interfaces/WhitelistDatabaseRespons
 import { convertURIregex, convertURI, Comparison, getComparisonText, getComparisonObject, downloadBeatmap, refreshtopPP, refreshPrototypeTopPP } from './util';
 import { PrototypePPList } from './interfaces/PrototypePPList';
 import { PrototypeDatabaseResponse } from './interfaces/PrototypeDatabaseResponse';
-import { RebalanceMapStars } from './modules/tools/RebalanceMapStars';
+// import { RebalanceMapStars } from './modules/tools/RebalanceMapStars';
 // import { DroidPerformanceCalculator as RebalanceDroidPerformanceCalculator } from './modules/rebaldifficulty/DroidPerformanceCalculator';
 // import { OsuPerformanceCalculator as RebalanceOsuPerformanceCalculator } from './modules/rebaldifficulty/OsuPerformanceCalculator';
 import { DroidPerformanceCalculator } from './modules/difficulty/DroidPerformanceCalculator';
@@ -354,7 +354,7 @@ function initializeSite(): void {
         }
 
         const map: Beatmap = star.pcStars.map;
-        const maxCombo = map.maxCombo();
+        const maxCombo = map.maxCombo;
         const combo: number = Math.max(0, Math.min(parseInt(req.body.Combo), maxCombo)) || maxCombo;
 
         const realAcc: Accuracy = new Accuracy({
@@ -413,11 +413,11 @@ function initializeSite(): void {
                     type: "Droid",
                     sr: star.droidStars.total.toFixed(2),
                     aimsr: star.droidStars.aim.toFixed(2),
-                    speedsr: star.droidStars.speed.toFixed(2),
+                    speedsr: star.droidStars.tap.toFixed(2),
                     flashlightsr: star.droidStars.flashlight.toFixed(2),
                     pp: dpp.total.toFixed(2),
                     aimpp: dpp.aim.toFixed(2),
-                    speedpp: dpp.speed.toFixed(2),
+                    speedpp: dpp.tap.toFixed(2),
                     accpp: dpp.accuracy.toFixed(2),
                     flashlightpp: dpp.flashlight.toFixed(2)
                 },
