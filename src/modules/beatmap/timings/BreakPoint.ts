@@ -1,7 +1,7 @@
 /**
  * Represents a break period in a beatmap.
  */
-export class BreakPoint {
+ export class BreakPoint {
     /**
      * The minimum duration required for a break to have any effect.
      */

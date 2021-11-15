@@ -1,18 +1,19 @@
 import { Vector2 } from '../mathutil/Vector2';
 import { Precision } from './Precision';
+import { Utils } from './Utils';
 
 /**
  * Path approximator for sliders.
  */
-export class PathApproximator {
-    private readonly bezierTolerance: number = 0.25;
+export abstract class PathApproximator {
+    private static readonly bezierTolerance: number = 0.25;
 
     /**
      * The amount of pieces to calculate for each control point quadruplet.
      */
-    private readonly catmullDetail: number = 50;
+    private static readonly catmullDetail: number = 50;
 
-    private readonly circularArcTolerance: number = 0.1;
+    private static readonly circularArcTolerance: number = 0.1;
 
     /**
      * Approximates a bezier slider's path.
@@ -22,42 +23,29 @@ export class PathApproximator {
      * 
      * @param controlPoints The anchor points of the slider.
      */
-    approximateBezier(controlPoints: Vector2[]): Vector2[] {
+    static approximateBezier(controlPoints: Vector2[]): Vector2[] {
         const output: Vector2[] = [];
         const count: number = controlPoints.length - 1;
-        if (count === 0) {
+
+        if (count < 0) {
             return output;
         }
 
-        const subdivisionBuffer1: Vector2[] = [];
-        const subdivisionBuffer2: Vector2[] = [];
-        for (let i = 0; i < count; ++i) {
-            subdivisionBuffer1.push(new Vector2({x: 0, y: 0}));
-        }
-
-        for (let i = 0; i < count * 2 + 1; ++i) {
-            subdivisionBuffer2.push(new Vector2({x: 0, y: 0}));
-        }
+        const subdivisionBuffer1: Vector2[] = new Array(count + 1);
+        const subdivisionBuffer2: Vector2[] = new Array(count * 2 + 1);
 
         // "toFlatten" contains all the curves which are not yet approximated well enough.
         // We use a stack to emulate recursion without the risk of running into a stack overflow.
         // (More specifically, we iteratively and adaptively refine our curve with a
         // depth-first search (https://en.wikipedia.org/wiki/Depth-first_search)
         // over the tree resulting from the subdivisions we make.)
-        const toFlatten: Vector2[][] = [];
+        const toFlatten: Vector2[][] = [Utils.deepCopy(controlPoints)];
         const freeBuffers: Vector2[][] = [];
-
-        const deepCopy: Vector2[] = [];
-        controlPoints.forEach(c => {
-            deepCopy.push(new Vector2({x: c.x, y: c.y}));
-        });
-
-        toFlatten.push(deepCopy);
 
         const leftChild: Vector2[] = subdivisionBuffer2;
 
         while (toFlatten.length > 0) {
-            const parent: Vector2[] = toFlatten.pop() as Vector2[];
+            const parent: Vector2[] = toFlatten.pop()!;
             if (this.bezierIsFlatEnough(parent)) {
                 // If the control points we currently operate on are sufficiently "flat", we use
                 // an extension to De Casteljau's algorithm to obtain a piecewise-linear approximation
@@ -70,14 +58,7 @@ export class PathApproximator {
 
             // If we do not yet have a sufficiently "flat" (in other words, detailed) approximation we keep
             // subdividing the curve we are currently operating on.
-            let rightChild: Vector2[] = [];
-            if (freeBuffers.length > 0) {
-                rightChild = freeBuffers.pop() as Vector2[];
-            } else {
-                for (let i = 0; i < count + 1; ++i) {
-                    rightChild.push(new Vector2({x: 0, y: 0}));
-                }
-            }
+            const rightChild: Vector2[] = freeBuffers.length > 0 ? freeBuffers.pop()! : new Array(count + 1);
 
             this.bezierSubdivide(parent, leftChild, rightChild, subdivisionBuffer1, count + 1);
 
@@ -101,7 +82,7 @@ export class PathApproximator {
      * 
      * @param controlPoints The anchor points of the slider.
      */
-    approximateCatmull(controlPoints: Vector2[]): Vector2[] {
+    static approximateCatmull(controlPoints: Vector2[]): Vector2[] {
         const result: Vector2[] = [];
 
         for (let i = 0; i < controlPoints.length - 1; ++i) {
@@ -126,34 +107,29 @@ export class PathApproximator {
      * 
      * @param controlPoints The anchor points of the slider.
      */
-    approximateCircularArc(controlPoints: Vector2[]): Vector2[] {
+    static approximateCircularArc(controlPoints: Vector2[]): Vector2[] {
         const a: Vector2 = controlPoints[0];
         const b: Vector2 = controlPoints[1];
         const c: Vector2 = controlPoints[2];
 
-        const aSq: number = Math.pow(b.subtract(c).length, 2);
-        const bSq: number = Math.pow(a.subtract(c).length, 2);
-        const cSq: number = Math.pow(a.subtract(b).length, 2);
-
         // If we have a degenerate triangle where a side-length is almost zero, then give up and fall
         // back to a more numerically stable method.
-        if ([aSq, bSq, cSq].some(v => Precision.almostEqualsNumber(v, 0))) {
+        if (Precision.almostEqualsNumber(0, (b.y - a.y) * (c.x - a.x) - (b.x - a.x) * (c.y - a.y))) {
             return [];
         }
 
-        const s: number = aSq * (bSq + cSq - aSq);
-        const t: number = bSq * (aSq + cSq - bSq);
-        const u: number = cSq * (aSq + bSq - cSq);
-        const sum: number = s + t + u;
+        // See: https://en.wikipedia.org/wiki/Circumscribed_circle#Cartesian_coordinates_2
+        const d: number = 2 * (a.x * b.subtract(c).y + b.x * c.subtract(a).y + c.x * a.subtract(b).y);
 
-        // If we have a degenerate triangle with an almost-zero size, then give up and fall
-        // back to a more numerically stable method.
-        if (Precision.almostEqualsNumber(sum, 0)) {
-            return [];
-        }
+        const aSq: number = Math.pow(a.length, 2);
+        const bSq: number = Math.pow(b.length, 2);
+        const cSq: number = Math.pow(c.length, 2);
 
-        const scaledVec: Vector2 = a.scale(s).add(b.scale(t)).add(c.scale(u));
-        const center: Vector2 = scaledVec.divide(sum);
+        const center: Vector2 = new Vector2({
+            x: aSq * b.subtract(c).y + bSq * c.subtract(a).y + cSq * a.subtract(b).y,
+            y: aSq * c.subtract(b).x + bSq * a.subtract(c).x + cSq * b.subtract(a).x
+        }).divide(d);
+
         const dA: Vector2 = a.subtract(center);
         const dC: Vector2 = c.subtract(center);
 
@@ -205,7 +181,7 @@ export class PathApproximator {
      * 
      * @param controlPoints The anchor points of the slider.
      */
-    approximateLinear(controlPoints: Vector2[]): Vector2[] {
+    static approximateLinear(controlPoints: Vector2[]): Vector2[] {
         return controlPoints;
     }
 
@@ -220,7 +196,7 @@ export class PathApproximator {
      * 
      * @param controlPoints The anchor points of the slider.
      */
-    private bezierIsFlatEnough(controlPoints: Vector2[]): boolean {
+    private static bezierIsFlatEnough(controlPoints: Vector2[]): boolean {
         for (let i = 1; i < controlPoints.length - 1; ++i) {
             const prev: Vector2 = controlPoints[i - 1];
             const current: Vector2 = controlPoints[i];
@@ -248,7 +224,7 @@ export class PathApproximator {
      * @param subdivisionBuffer2 The second buffer containing the current subdivision state.
      * @param count The number of control points in the original array.
      */
-    private bezierApproximate(controlPoints: Vector2[], output: Vector2[], subdivisionBuffer1: Vector2[], subdivisionBuffer2: Vector2[], count: number): void {
+    private static bezierApproximate(controlPoints: Vector2[], output: Vector2[], subdivisionBuffer1: Vector2[], subdivisionBuffer2: Vector2[], count: number): void {
         const l: Vector2[] = subdivisionBuffer2;
         const r: Vector2[] = subdivisionBuffer1;
 
@@ -262,7 +238,7 @@ export class PathApproximator {
 
         for (let i = 1; i < count - 1; ++i) {
             const index: number = 2 * i;
-            const p: Vector2 = (l[index - 1].add(l[index].scale(2)).add(l[index + 1])).scale(0.25);
+            const p: Vector2 = l[index - 1].add(l[index].scale(2)).add(l[index + 1]).scale(0.25);
             output.push(p);
         }
     }
@@ -278,7 +254,7 @@ export class PathApproximator {
      * @param subdivisionBuffer Parts of the slider for approximation.
      * @param count The amount of anchor points in the slider.
      */
-    private bezierSubdivide(controlPoints: Vector2[], l: Vector2[], r: Vector2[], subdivisionBuffer: Vector2[], count: number): void {
+    private static bezierSubdivide(controlPoints: Vector2[], l: Vector2[], r: Vector2[], subdivisionBuffer: Vector2[], count: number): void {
         const midpoints: Vector2[] = subdivisionBuffer;
 
         for (let i = 0; i < count; ++i) {
@@ -304,7 +280,7 @@ export class PathApproximator {
      * @param vec4 The fourth vector.
      * @param t The parameter at which to find the point on the spline, in the range [0, 1].
      */
-    private catmullFindPoint(vec1: Vector2, vec2: Vector2, vec3: Vector2, vec4: Vector2, t: number): Vector2 {
+    private static catmullFindPoint(vec1: Vector2, vec2: Vector2, vec3: Vector2, vec4: Vector2, t: number): Vector2 {
         const t2: number = Math.pow(t, 2);
         const t3: number = Math.pow(t, 3);
 

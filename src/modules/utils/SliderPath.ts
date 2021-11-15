@@ -15,7 +15,7 @@ export class SliderPath {
     /**
      * The control points (anchor points) of the slider.
      */
-    readonly controlPoints: Vector2[] = [];
+    readonly controlPoints: Vector2[];
 
     /**
      * Distance that is expected when calculating slider path.
@@ -37,11 +37,6 @@ export class SliderPath {
      */
     readonly cumulativeLength: number[] = [];
 
-    /**
-     * The path approximator of the slider.
-     */
-    readonly pathApproximator: PathApproximator = new PathApproximator();
-
     constructor(values: {
         /**
          * The path type of the slider.
@@ -59,7 +54,7 @@ export class SliderPath {
         expectedDistance: number
     }) {
         this.pathType = values.pathType;
-        this.controlPoints = values.controlPoints || [];
+        this.controlPoints = values.controlPoints;
         this.expectedDistance = values.expectedDistance;
 
         this.ensureInitialized();
@@ -87,14 +82,15 @@ export class SliderPath {
     calculatePath(): void {
         this.calculatedPath.length = 0;
 
-        let start: number = 0;
+        let spanStart: number = 0;
 
         for (let i = 0; i < this.controlPoints.length; i++) {
             if (
                 i === this.controlPoints.length - 1 ||
                 this.controlPoints[i].equals(this.controlPoints[i + 1])
             ) {
-                const cpSpan: Vector2[] = this.controlPoints.slice(start, i + 1);
+                const spanEnd: number = i + 1;
+                const cpSpan: Vector2[] = this.controlPoints.slice(spanStart, spanEnd);
                 this.calculateSubPath(cpSpan).forEach(t => {
                     if (
                         this.calculatedPath.length === 0 ||
@@ -103,7 +99,7 @@ export class SliderPath {
                         this.calculatedPath.push(t);
                     }
                 });
-                start = i;
+                spanStart = spanEnd;
             }
         }
     }
@@ -114,22 +110,25 @@ export class SliderPath {
     calculateSubPath(subControlPoints: Vector2[]): Vector2[] {
         switch (this.pathType) {
             case PathType.Linear:
-                return this.pathApproximator.approximateLinear(subControlPoints);
+                return PathApproximator.approximateLinear(subControlPoints);
             case PathType.PerfectCurve:
                 if (subControlPoints.length !== 3) {
                     break;
                 }
-                const subPath: Vector2[] = this.pathApproximator.approximateCircularArc(subControlPoints);
+
+                const subPath: Vector2[] = PathApproximator.approximateCircularArc(subControlPoints);
+
                 // If for some reason a circular arc could not be fit to the 3 given points, fall back to a numerically stable bezier approximation.
                 if (subPath.length === 0) {
                     break;
                 }
+
                 return subPath;
             case PathType.Catmull:
-                return this.pathApproximator.approximateCatmull(subControlPoints);
+                return PathApproximator.approximateCatmull(subControlPoints);
         }
 
-        return this.pathApproximator.approximateBezier(subControlPoints);
+        return PathApproximator.approximateBezier(subControlPoints);
     }
 
     /**
@@ -147,6 +146,12 @@ export class SliderPath {
         }
 
         if (calculatedLength !== this.expectedDistance) {
+            // In osu-stable, if the last two control points of a slider are equal, extension is not performed.
+            if (this.controlPoints.length >= 2 && this.controlPoints[this.controlPoints.length - 1].equals(this.controlPoints[this.controlPoints.length - 2]) && this.expectedDistance > calculatedLength) {
+                this.cumulativeLength.push(calculatedLength);
+                return;
+            }
+
             // The last length is always incorrect
             this.cumulativeLength.pop();
             let pathEndIndex: number = this.calculatedPath.length - 1;

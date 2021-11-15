@@ -14,9 +14,9 @@ import { WhitelistDatabaseResponse } from './interfaces/WhitelistDatabaseRespons
 import { convertURIregex, convertURI, Comparison, getComparisonText, getComparisonObject, downloadBeatmap, refreshtopPP, refreshPrototypeTopPP } from './util';
 import { PrototypePPList } from './interfaces/PrototypePPList';
 import { PrototypeDatabaseResponse } from './interfaces/PrototypeDatabaseResponse';
-// import { RebalanceMapStars } from './modules/tools/RebalanceMapStars';
-// import { DroidPerformanceCalculator as RebalanceDroidPerformanceCalculator } from './modules/rebaldifficulty/DroidPerformanceCalculator';
-// import { OsuPerformanceCalculator as RebalanceOsuPerformanceCalculator } from './modules/rebaldifficulty/OsuPerformanceCalculator';
+import { RebalanceMapStars } from './modules/tools/RebalanceMapStars';
+import { DroidPerformanceCalculator as RebalanceDroidPerformanceCalculator } from './modules/rebaldifficulty/DroidPerformanceCalculator';
+import { OsuPerformanceCalculator as RebalanceOsuPerformanceCalculator } from './modules/rebaldifficulty/OsuPerformanceCalculator';
 import { DroidPerformanceCalculator } from './modules/difficulty/DroidPerformanceCalculator';
 import { OsuPerformanceCalculator } from './modules/difficulty/OsuPerformanceCalculator';
 import { ModUtil } from './modules/utils/ModUtil';
@@ -437,7 +437,7 @@ function initializeSite(): void {
         });
     });
 
-    /* app.get('/prototypecalculate', (req, res) => {
+    app.get('/prototypecalculate', (req, res) => {
         res.render('prototypeCalculate');
     });
 
@@ -498,7 +498,7 @@ function initializeSite(): void {
         }
 
         const map: Beatmap = star.pcStars.map;
-        const maxCombo = map.maxCombo();
+        const { maxCombo } = map;
         const combo: number = Math.max(0, Math.min(parseInt(req.body.Combo), maxCombo)) || maxCombo;
 
         const realAcc: Accuracy = new Accuracy({
@@ -557,12 +557,11 @@ function initializeSite(): void {
                     type: "Droid",
                     sr: star.droidStars.total.toFixed(2),
                     aimsr: star.droidStars.aim.toFixed(2),
-                    speedsr: star.droidStars.speed.toFixed(2),
-                    rhythmsr: star.droidStars.rhythm.toFixed(2),
+                    tapsr: star.droidStars.tap.toFixed(2),
                     flashlightsr: star.droidStars.flashlight.toFixed(2),
                     pp: dpp.total.toFixed(2),
                     aimpp: dpp.aim.toFixed(2),
-                    speedpp: dpp.speed.toFixed(2),
+                    tappp: dpp.tap.toFixed(2),
                     accpp: dpp.accuracy.toFixed(2),
                     flashlightpp: dpp.flashlight.toFixed(2)
                 },
@@ -571,7 +570,6 @@ function initializeSite(): void {
                     sr: star.pcStars.total.toFixed(2),
                     aimsr: star.pcStars.aim.toFixed(2),
                     speedsr: star.pcStars.speed.toFixed(2),
-                    rhythmsr: "N/A",
                     flashlightsr: star.pcStars.flashlight.toFixed(2),
                     pp: pp.total.toFixed(2),
                     aimpp: pp.aim.toFixed(2),
@@ -581,7 +579,7 @@ function initializeSite(): void {
                 }
             ]
         });
-    }); */
+    });
 
     app.get('/api/getplayertop', (req, res) => {
         const requestParams: string[] = req.url.split("?")[1]?.split("&") || [];

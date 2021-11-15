@@ -11,13 +11,13 @@ import { HitObject } from './HitObject';
 export class Circle extends HitObject {
     constructor(values: {
         startTime: number,
-        type: number,
+        type?: number,
         position: Vector2
     }) {
         super(values);
     }
 
-    toString(): string {
+    override toString(): string {
         return `Position: [${this.position.x}, ${this.position.y}]`;
     }
 }

@@ -22,6 +22,17 @@ export abstract class StrainSkill extends Skill {
     readonly strainPeaks: number[] = [];
 
     /**
+     * The number of sections with the highest strains, which the peak strain reductions will apply to.
+     * This is done in order to decrease their impact on the overall difficulty of the map for this skill.
+     */
+    protected abstract readonly reducedSectionCount: number;
+
+    /**
+     * The baseline multiplier applied to the section with the biggest strain.
+     */
+    protected abstract readonly reducedSectionBaseline: number;
+
+    /**
      * Strain values are multiplied by this number for the given skill. Used to balance the value of different skills between each other.
      */
     protected abstract readonly skillMultiplier: number;
@@ -42,7 +53,7 @@ export abstract class StrainSkill extends Skill {
      * 
      * @param current The hitobject to process.
      */
-    protected process(current: DifficultyHitObject): void {
+    protected override process(current: DifficultyHitObject): void {
         // The first object doesn't generate a strain, so we begin with an incremented section end
         if (this.previous.length === 0) {
             this.currentSectionEnd = Math.ceil(current.startTime / this.sectionLength) * this.sectionLength;

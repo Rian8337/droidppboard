@@ -23,14 +23,13 @@ export class RepeatPoint extends HitObject {
     }) {
         super({
             startTime: values.startTime,
-            position: values.position,
-            type: 0
+            position: values.position
         });
         this.repeatIndex = values.repeatIndex;
         this.spanDuration = values.spanDuration;
     }
 
-    toString(): string {
+    override toString(): string {
         return `Position: [${this.position.x}, ${this.position.y}], repeat index: ${this.repeatIndex}, span duration: ${this.spanDuration}`;
     }
 }

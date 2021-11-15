@@ -5,6 +5,7 @@ import { DifficultyHitObject } from '../preprocessing/DifficultyHitObject';
 import { DifficultyHitObjectCreator } from '../preprocessing/DifficultyHitObjectCreator';
 import { StrainSkill } from './StrainSkill';
 import { Mod } from '../../mods/Mod';
+import { ModFlashlight } from '../../mods/ModFlashlight';
 import { DifficultyAttributes } from './DifficultyAttributes';
 
 /**
@@ -54,8 +55,9 @@ export abstract class StarRating {
     /**
      * Additional data that is used in performance calculation.
      */
-    attributes: DifficultyAttributes = {
-        speedNoteCount: 0
+    readonly attributes: DifficultyAttributes = {
+        speedNoteCount: 0,
+        sliderFactor: 1
     };
 
     protected readonly sectionLength: number = 400;

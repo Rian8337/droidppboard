@@ -4,6 +4,7 @@ import { Parser } from '../beatmap/Parser';
 import { DroidStarRating } from '../rebaldifficulty/DroidStarRating';
 import { OsuStarRating } from '../rebaldifficulty/OsuStarRating';
 import { Mod } from '../mods/Mod';
+import { Utils } from '../utils/Utils';
 
 /**
  * A star rating calculator that configures which mode to calculate difficulty for and what mods are applied.
@@ -44,31 +45,17 @@ export class RebalanceMapStars {
             throw new Error("Please enter an osu file!");
         }
 
-        // Wish JavaScript has an actual clone method...
-        const droidParser: Parser = new Parser();
-        const pcParser: Parser = new Parser();
-        try {
-            droidParser.parse(params.file, params.mods);
-            pcParser.parse(params.file, params.mods);
-        } catch (e) {
-            console.log("Invalid osu file");
-            return this;
-        }
+        const mod: Mod[] = params.mods ?? [];
 
-        // Copy original parser without having to parse a new beatmap, this way
-        // droidMap and pcMap will not reference to the same parser instance
-        const droidMap: Beatmap = droidParser.map;
-        const pcMap: Beatmap = pcParser.map;
-
-        const mod: Mod[] = params.mods || [];
+        const parser: Parser = new Parser().parse(params.file, mod);
 
         const stats: MapStats = new MapStats({
             speedMultiplier: params.stats?.speedMultiplier || 1,
             isForceAR: params.stats?.isForceAR || false
         });
 
-        this.droidStars.calculate({map: droidMap, mods: mod, stats});
-        this.pcStars.calculate({map: pcMap, mods: mod, stats});
+        this.droidStars.calculate({map: Utils.deepCopy(parser.map), mods: mod, stats});
+        this.pcStars.calculate({map: Utils.deepCopy(parser.map), mods: mod, stats});
 
         return this;
     }

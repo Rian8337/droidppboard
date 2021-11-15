@@ -19,16 +19,17 @@ h3
             a(href='/toppp',class='nav')= "Top PP"
         li(class="nav")
             a(href='/calculate', class="nav")= "Calculate Beatmap PP"
-        //- li(class='nav')
-        //-     a(href='/prototype?page=1', class='nav')= "Prototype"
-        //- li(class='nav')
-        //-     a(href='/prototypetoppp', class='nav')= "Prototype Top PP"
-        //- li(class="nav")
-        //-     a(href='/prototypecalculate', class="nav", class="active")= "Calculate Beatmap Prototype PP"
+        li(class='nav')
+            a(href='/prototype?page=1', class='nav')= "Prototype"
+        li(class='nav')
+            a(href='/prototypetoppp', class='nav')= "Prototype Top PP"
+        li(class="nav")
+            a(href='/prototypecalculate', class="nav", class="active")= "Calculate Beatmap Prototype PP"
         li(class='nav')
             a(href='/about',class='nav')= "About / Donation"
 h3
     strong: b The PP values in this list are under development! 
+            | Current work: Xexxar's aim rework
 hr
 
 if err
@@ -46,29 +47,27 @@ if maptitle
 
     table(width="100%")
         tbody
-            th(width="9.5%")= "Type"
-            th(width="9.5%")= "Stars"
-            th(width="9%")= "Aim Stars"
-            th(width="9%")= "Speed Stars"
-            th(width="9%")= "Rhythm Stars"
-            th(width="9%")= "Flashlight Stars"
-            th(width="9%")= "PP"
-            th(width="9%")= "Aim PP"
-            th(width="9%")= "Speed PP"
-            th(width="9%")= "Accuracy PP"
-            th(width="9%")= "Flashlight PP"
+            th(width="10%")= "Type"
+            th(width="10%")= "Stars"
+            th(width="10%")= "Aim Stars"
+            th(width="10%")= "Speed/Tap Stars"
+            th(width="10%")= "Flashlight Stars"
+            th(width="10%")= "PP"
+            th(width="10%")= "Aim PP"
+            th(width="10%")= "Speed/Tap PP"
+            th(width="10%")= "Accuracy PP"
+            th(width="10%")= "Flashlight PP"
 
             each val in ppentry
                 tr
                     td= val.type
                     td= val.sr
                     td= val.aimsr
-                    td= val.speedsr
-                    td= val.rhythmsr
+                    td= val.tapsr || val.speedsr
                     td= val.flashlightsr
                     td= val.pp
                     td= val.aimpp
-                    td= val.speedpp
+                    td= val.tappp || val.speedpp
                     td= val.accpp
                     td= val.flashlightpp
 

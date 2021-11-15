@@ -6,17 +6,19 @@ import { DroidSkill } from "./DroidSkill";
  * Represents the skill required to memorize and hit every object in a beatmap with the Flashlight mod enabled.
  */
 export class DroidFlashlight extends DroidSkill {
-    protected readonly historyLength: number = 10;
-    protected readonly skillMultiplier: number = 0.15;
-    protected readonly strainDecayBase: number = 0.15;
-    protected readonly starsPerDouble: number = 1.1;
+    protected override readonly historyLength: number = 10;
+    protected override readonly skillMultiplier: number = 0.15;
+    protected override readonly strainDecayBase: number = 0.15;
+    protected override readonly reducedSectionCount: number = 10;
+    protected override readonly reducedSectionBaseline: number = 0.75;
+    protected override readonly starsPerDouble: number = 1.1;
 
     protected strainValueOf(current: DifficultyHitObject): number {
         if (current.object instanceof Spinner) {
             return 0;
         }
 
-        const scalingFactor: number = 52 / current.radius;
+        const scalingFactor: number = 52 / current.object.radius;
 
         let smallDistNerf: number = 1;
 
@@ -52,14 +54,14 @@ export class DroidFlashlight extends DroidSkill {
     /**
      * @param current The hitobject to calculate.
      */
-    protected strainValueAt(current: DifficultyHitObject): number {
+    protected override strainValueAt(current: DifficultyHitObject): number {
         this.currentStrain *= this.strainDecay(current.deltaTime);
         this.currentStrain += this.strainValueOf(current) * this.skillMultiplier;
 
         return this.currentStrain;
     }
 
-    saveToHitObject(current: DifficultyHitObject): void {
+    protected override saveToHitObject(current: DifficultyHitObject): void {
         current.flashlightStrain = this.currentStrain;
     }
 }

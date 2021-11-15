@@ -13,8 +13,8 @@ import { ModRelax } from '../mods/ModRelax';
  * A performance points calculator that calculates performance points for osu!standard gamemode.
  */
 export class OsuPerformanceCalculator extends PerformanceCalculator {
-    stars: OsuStarRating = new OsuStarRating();
-    finalMultiplier = 1.12;
+    override stars: OsuStarRating = new OsuStarRating();
+    protected override finalMultiplier = 1.12;
 
     /**
      * The aim performance value.
@@ -36,7 +36,7 @@ export class OsuPerformanceCalculator extends PerformanceCalculator {
      */
     flashlight: number = 0;
 
-    calculate(params: {
+    override calculate(params: {
         /**
          * The star rating instance to calculate.
          */
@@ -64,13 +64,6 @@ export class OsuPerformanceCalculator extends PerformanceCalculator {
     }): this {
         this.handleParams(params, modes.osu);
 
-        const maxCombo: number = this.stars.map.maxCombo;
-        const miss: number = this.computedAccuracy.nmiss;
-        const combo: number = params.combo || maxCombo - miss;
-
-        // Penalize misses by assessing # of misses relative to the total # of objects. Default a 3% reduction for any # of misses.
-        this.comboPenalty = Math.min(Math.pow(combo / maxCombo, 0.8), 1);
-
         this.calculateAimValue();
         this.calculateSpeedValue();
         this.calculateAccuracyValue();
@@ -91,7 +84,7 @@ export class OsuPerformanceCalculator extends PerformanceCalculator {
     private calculateAimValue(): void {
         // Global variables
         const objectCount: number = this.stars.objects.length;
-        const calculatedAR: number = <number> this.mapStatistics.ar;
+        const calculatedAR: number = this.mapStatistics.ar!;
 
         this.aim = this.baseValue(Math.pow(this.stars.aim, this.stars.mods.some(m => m instanceof ModTouchDevice) ? 0.8 : 1));
 
@@ -103,9 +96,9 @@ export class OsuPerformanceCalculator extends PerformanceCalculator {
 
         this.aim *= lengthBonus;
 
-        if (this.computedAccuracy.nmiss > 0) {
+        if (this.effectiveMissCount > 0) {
             // Penalize misses by assessing # of misses relative to the total # of objects. Default a 3% reduction for any # of misses.
-            this.aim *= 0.97 * Math.pow(1 - Math.pow(this.computedAccuracy.nmiss / objectCount, 0.775), this.computedAccuracy.nmiss);
+            this.aim *= 0.97 * Math.pow(1 - Math.pow(this.effectiveMissCount / objectCount, 0.775), this.effectiveMissCount);
         }
 
         // Combo scaling
@@ -114,14 +107,13 @@ export class OsuPerformanceCalculator extends PerformanceCalculator {
         // AR scaling
         let arFactor: number = 0;
         if (calculatedAR > 10.33) {
-            arFactor += calculatedAR - 10.33;
+            arFactor += 0.3 * (calculatedAR - 10.33);
         } else if (calculatedAR < 8) {
-            arFactor += 0.025 * (8 - calculatedAR);
+            arFactor += 0.1 * (8 - calculatedAR);
         }
 
-        const arTotalHitsFactor: number = 1 / (1 + Math.exp(-(0.007 * (objectCount - 400))));
-
-        this.aim *=  1 + (0.03 + 0.37 * arTotalHitsFactor) * arFactor;
+        // Buff for longer maps with high AR.
+        this.aim *= 1 + arFactor * lengthBonus;
 
         // We want to give more reward for lower AR when it comes to aim and HD. This nerfs high AR and buffs lower AR.
         let hiddenBonus: number = 1;
@@ -131,8 +123,11 @@ export class OsuPerformanceCalculator extends PerformanceCalculator {
 
         this.aim *= hiddenBonus;
 
-        // Scale the aim value with accuracy slightly.
-        this.aim *= 0.5 + this.computedAccuracy.value(objectCount) / 2;
+        // Scale the aim value with slider factor to nerf very likely dropped sliderends.
+        this.aim *= this.sliderNerfFactor;
+
+        // Scale the aim value with accuracy.
+        this.aim *= this.computedAccuracy.value(objectCount);
 
         // It is also important to consider accuracy difficulty when doing that.
         const odScaling: number = Math.pow(<number> this.mapStatistics.od, 2) / 2500;
@@ -145,7 +140,7 @@ export class OsuPerformanceCalculator extends PerformanceCalculator {
     private calculateSpeedValue(): void {
         // Global variables
         const objectCount: number = this.stars.objects.length;
-        const calculatedAR: number = <number> this.mapStatistics.ar;
+        const calculatedAR: number = this.mapStatistics.ar!;
         const n50: number = this.computedAccuracy.n50;
 
         this.speed = this.baseValue(this.stars.speed);
@@ -158,30 +153,26 @@ export class OsuPerformanceCalculator extends PerformanceCalculator {
 
         this.speed *= lengthBonus;
 
-        if (this.computedAccuracy.nmiss > 0) {
+        if (this.effectiveMissCount > 0) {
             // Penalize misses by assessing # of misses relative to the total # of objects. Default a 3% reduction for any # of misses.
-            this.speed *= 0.97 * Math.pow(1 - Math.pow(this.computedAccuracy.nmiss / objectCount, 0.775), Math.pow(this.computedAccuracy.nmiss, 0.875));
+            this.speed *= 0.97 * Math.pow(1 - Math.pow(this.effectiveMissCount / objectCount, 0.775), Math.pow(this.effectiveMissCount, 0.875));
         }
 
         // Combo scaling
         this.speed *= this.comboPenalty;
 
         // AR scaling
-        let arFactor: number = 0;
         if (calculatedAR > 10.33) {
-            arFactor += calculatedAR - 10.33;
+            // Buff for longer maps with high AR.
+            this.speed *= 1 + 0.3 * (calculatedAR - 10.33) * lengthBonus;
         }
-
-        const arTotalHitsFactor: number = 1 / (1 + Math.exp(-(0.007 * (objectCount - 400))));
-
-        this.speed *= 1 + (0.03 + 0.37 * arTotalHitsFactor) * arFactor;
 
         if (this.stars.mods.some(m => m instanceof ModHidden)) {
             this.speed *= 1 + 0.04 * (12 - calculatedAR);
         }
 
         // Scale the speed value with accuracy and OD.
-        this.speed *= (0.95 + Math.pow(<number> this.mapStatistics.od, 2) / 750) *
+        this.speed *= (0.95 + Math.pow(this.mapStatistics.od!, 2) / 750) *
             Math.pow(
                 this.computedAccuracy.value(objectCount),
                 (14.5 - Math.max(<number> this.mapStatistics.od, 8)) / 2
@@ -200,24 +191,22 @@ export class OsuPerformanceCalculator extends PerformanceCalculator {
         }
 
         // Global variables
-        const n300: number = this.computedAccuracy.n300;
-        const n100: number = this.computedAccuracy.n100;
-        const n50: number = this.computedAccuracy.n50;
-
         const nobjects: number = this.stars.objects.length;
         const ncircles: number = this.stars.mods.some(m => m instanceof ModScoreV2) ? nobjects - this.stars.map.spinners : this.stars.map.circles;
 
-        const realAccuracy: number = Math.max(
-            ncircles > 0 ?
-            ((n300 - (nobjects - ncircles)) * 6 + n100 * 2 + n50) / (ncircles * 6) :
-            0,
-            0
-        );
+        if (ncircles === 0) {
+            return;
+        }
+
+        const realAccuracy: Accuracy = new Accuracy({
+            ...this.computedAccuracy,
+            n300: this.computedAccuracy.n300 - (this.stars.objects.length - ncircles)
+        });
 
         // Lots of arbitrary values from testing.
         // Considering to use derivation from perfect accuracy in a probabilistic manner - assume normal distribution
-        this.accuracy = Math.pow(1.52163, <number> this.mapStatistics.od) *
-            Math.pow(realAccuracy, 24) * 2.83;
+        this.accuracy = Math.pow(1.52163, this.mapStatistics.od!) *
+            Math.pow(realAccuracy.value(ncircles), 24) * 2.83;
 
         // Bonus for many hitcircles - it's harder to keep good accuracy up for longer
         this.accuracy *= Math.min(1.15, Math.pow(ncircles / 1000, 0.3));
@@ -254,9 +243,9 @@ export class OsuPerformanceCalculator extends PerformanceCalculator {
         // Combo scaling
         this.flashlight *= this.comboPenalty;
 
-        if (this.computedAccuracy.nmiss > 0) {
+        if (this.effectiveMissCount > 0) {
             // Penalize misses by assessing # of misses relative to the total # of objects. Default a 3% reduction for any # of misses.
-            this.flashlight *= 0.97 * Math.pow(1 - Math.pow(this.computedAccuracy.nmiss / objectCount, 0.775), Math.pow(this.computedAccuracy.nmiss, 0.875));
+            this.flashlight *= 0.97 * Math.pow(1 - Math.pow(this.effectiveMissCount / objectCount, 0.775), Math.pow(this.effectiveMissCount, 0.875));
         }
 
         // Account for shorter maps having a higher ratio of 0 combo/100 combo flashlight radius.
@@ -271,7 +260,7 @@ export class OsuPerformanceCalculator extends PerformanceCalculator {
         this.flashlight *= 0.98 + odScaling;
     }
 
-    toString(): string {
+    override toString(): string {
         return (
             this.total.toFixed(2) + " pp (" + this.aim.toFixed(2)
             + " aim, " + this.speed.toFixed(2) + " speed, "

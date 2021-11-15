@@ -141,16 +141,14 @@ export class MapStats {
          */
         isForceAR?: boolean
     }): MapStats {
-        if (params) {
-            if (params.mods) {
-                this.mods = ModUtil.pcStringToMods(params.mods);
-            }
-            if (params.speedMultiplier) {
-                this.speedMultiplier = params.speedMultiplier;
-            }
-            if (params.isForceAR) {
-                this.isForceAR = params.isForceAR;
-            }
+        if (params?.mods) {
+            this.mods = ModUtil.pcStringToMods(params.mods);
+        }
+        if (params?.speedMultiplier) {
+            this.speedMultiplier = params.speedMultiplier;
+        }
+        if (params?.isForceAR) {
+            this.isForceAR = params.isForceAR;
         }
 
         let statisticsMultiplier: number = 1;
@@ -171,8 +169,8 @@ export class MapStats {
             statisticsMultiplier *= 0.5;
         }
 
-        switch (params?.mode || modes.osu) {
-            case modes.droid: {
+        switch (params?.mode ?? modes.osu) {
+            case modes.droid:
                 // In droid pre-1.6.8, NC speed multiplier is assumed bugged (1.39)
                 if (this.mods.some(m => m instanceof ModNightCore) && this.oldStatistics) {
                     this.speedMultiplier *= 1.39 / 1.5;
@@ -203,7 +201,7 @@ export class MapStats {
                         * (54.42 - this.cs * 4.48)
                         * 2 / 128)
                         + 0.5 * (11 - 5.2450170716245195) / 5;
-                    
+
                     if (this.mods.some(m => m instanceof ModHardRock)) {
                         scale -= 0.125;
                     }
@@ -215,8 +213,8 @@ export class MapStats {
                     }
                     if (this.mods.some(m => m instanceof ModSmallCircle)) {
                         scale -= ((assumedHeight / 480)
-                        * (4 * 4.48)
-                        * 2 / 128);
+                            * (4 * 4.48)
+                            * 2 / 128);
                     }
                     const radius: number = 64 * scale / (assumedHeight * 0.85 / 384);
                     this.cs = Math.min(5 + (1 - radius / 32) * 5 / 0.7, 10);
@@ -239,8 +237,7 @@ export class MapStats {
                     this.ar = MapStats.modifyAR(this.ar, this.speedMultiplier, 1);
                 }
                 break;
-            }
-            case modes.osu: {
+            case modes.osu:
                 if (!this.mods.some(m => ModUtil.mapChangingMods.find(mod => mod.acronym === m.acronym)) && this.speedMultiplier === 1) {
                     break;
                 }
@@ -262,12 +259,11 @@ export class MapStats {
                 if (this.ar !== undefined && !this.isForceAR) {
                     this.ar = MapStats.modifyAR(this.ar, this.speedMultiplier, statisticsMultiplier);
                 }
-                
+
                 if (this.od !== undefined) {
                     this.od = MapStats.modifyOD(this.od, this.speedMultiplier, statisticsMultiplier);
                 }
                 break;
-            }
             default: throw new TypeError("Mode not supported");
         }
         return this;
