@@ -1,0 +1,50 @@
+head
+    meta(charset='UTF-8')
+    meta(name='viewport' content='width=device-width, initial-scale=1.0')
+    meta(name='description' content='Top Prototype PP Plays in the Elaina PP Project.')
+    title PP Board - Top PP Plays
+    link(rel='stylesheet' href='../../styles/main.css')
+    link(rel='stylesheet' href='../../styles/play-list.css')
+    link(rel='icon' href='../../icons/icon.png' type='image/x-icon')
+
+body
+    .top-banner
+        h1 Elaina PP Project
+        p A basic PP project for osu!droid.
+    hr
+
+    .main-menu
+        a(href='/') Home
+        a(href='/leaderboard') Leaderboard
+        a(href='/whitelist') Whitelist
+        a(href='/top-plays') Top Plays
+        a(href='/calculate') Calculate Beatmap PP
+        a(href='/prototype') Prototype
+        a.menu-active(href='/prototype/top-plays') Prototype Top Plays
+        a(href='/prototype/calculate') Calculate Beatmap Prototype PP
+    hr
+
+    h2.subtitle Prototype Top PP Plays 
+
+    form
+        input.search(type='text' name='mods' placeholder='Filter mods...' value=mods ? mods : "")
+        input.submit-search(type='submit' value='Filter')
+
+    ul
+        each val, index in entries
+            li= val.title
+                |
+                span(style='font: 11px Exo-Medium;')= " played by " + val.username
+
+                p.play-info #{val.combo}x | #{val.accuracy}% | #{val.miss} ❌
+
+                .mod-list
+                    each mod in val.displayMods
+                        img(src='../../icons/mods/' + mod.acronym + '.png', title=mod.name alt=mod.acronym)
+                    else
+                        img(src='../../icons/mods/NM.png', title="NoMod" alt="NM")
+
+                p.prototype-pp #{val.prevPP}pp → #{val.pp}pp
+                p.diff (#{(val.pp - val.prevPP) >= 0 ? '+' : ''}#{(val.pp - val.prevPP).toFixed(2)}pp)
+
+    p Top prototype pp will be updated every 10 minutes. If you do not see any play, please reload the page after 1-2 minutes.

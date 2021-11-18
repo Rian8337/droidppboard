@@ -1,0 +1,55 @@
+head
+    meta(charset='UTF-8')
+    meta(name='viewport' content='width=device-width, initial-scale=1.0')
+    meta(name='description' content='Player Profile: ' + username)
+    title PP Board - #{username}
+    link(rel='stylesheet' href='../styles/main.css')
+    link(rel='stylesheet' href='../styles/profile.css')
+    link(rel='stylesheet' href='../styles/play-list.css')
+    link(rel='icon' href='../icons/icon.png' type='image/x-icon')
+
+body
+    .top-banner
+        h1 Elaina PP Project
+        p A basic PP project for osu!droid.
+    hr
+
+    .main-menu
+        a(href='/') Home
+        a(href='/leaderboard') Leaderboard
+        a(href='/whitelist') Whitelist
+        a(href='/top-plays') Top Plays
+        a(href='/calculate') Calculate Beatmap PP
+        a(href='/prototype') Prototype
+        a(href='/prototype/top-plays') Prototype Top Plays
+        a(href='/prototype/calculate') Calculate Beatmap Prototype PP
+    hr
+
+    if !username
+        h2.subtitle Player not found!
+    else
+        h2.subtitle Player Profile: #{username}
+
+        table
+            tr
+                th Total PP
+                td #{pptotal.toFixed(2)}pp
+            tr
+                th PP Rank
+                td ##{pprank}
+            tr
+                th Play Count
+                td= playcount
+
+        ul
+            each val, index in entries
+                li= val.title
+                    p.play-info #{val.combo}x | #{val.accuracy}% | #{val.miss} ❌
+
+                    .mod-list
+                        each mod in val.displayMods
+                            img(src='../icons/mods/' + mod.acronym + '.png', title=mod.name alt=mod.acronym)
+                        else
+                            img(src='../icons/mods/NM.png', title="NoMod" alt="NM")
+
+                    p.pp #{val.pp}pp

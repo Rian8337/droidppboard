@@ -1,0 +1,26 @@
+.nav-button {
+    width: 100%;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.nav-button a {
+    appearance: button;
+    text-decoration: none;
+}
+
+.page-nav {
+    background-color: #222;
+}
+
+.page-count {
+    background-color: #333;
+}
+
+.page-nav:hover {
+    background-color: rgba(211, 211, 211, 0.75);
+}
+
+.page-count {
+    background-color: #333;
+}

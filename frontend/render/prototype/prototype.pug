@@ -1,0 +1,66 @@
+head
+    meta(charset='UTF-8')
+    meta(name='viewport' content='width=device-width, initial-scale=1.0')
+    meta(name='description' content='View the rankings of the prototype version of osu!droid Elaina PP Project site.')
+    title PP Board - Prototype Leaderboard
+    link(rel='stylesheet' href='../../styles/main.css')
+    link(rel='stylesheet' href='../../styles/table.css')
+    link(rel='stylesheet' href='../../styles/navigation.css')
+    link(rel='icon' href='../../icons/icon.png' type='image/x-icon')
+
+body
+    .top-banner
+        h1 Elaina PP Project
+        p A basic PP project for osu!droid.
+    hr
+
+    .main-menu
+        a(href='/') Home
+        a(href='/leaderboard') Leaderboard
+        a(href='/whitelist') Whitelist
+        a(href='/top-plays') Top Plays
+        a(href='/calculate') Calculate Beatmap PP
+        a.menu-active(href='/prototype') Prototype
+        a(href='/prototype/top-plays') Prototype Top Plays
+        a(href='/prototype/calculate') Calculate Beatmap Prototype PP
+    hr
+
+    h2.subtitle Official Player Prototype Leaderboard
+
+    h3.description
+        | The PP values in this list are under development!
+        br
+        | Current work: 2-hand rebalance
+        br
+        br
+        | Click/tap a player's name to visit their profile page.
+
+    form
+        input.search(type='text' name='query' placeholder='Search player...' value=query ? query : "")
+        input.submit-search(type='submit' value='Search')
+
+    table.listing
+        tr
+            th(style='width: 5%;') No.
+            th(style='width: 15%;') UID
+            th(style='width: 22.5%;') Username
+            th(style='width: 20%;') Live PP
+            th(style='width: 20%;') Local PP
+            th(style='width: 17.5%;') Diff
+
+        each val, index in list
+            tr
+                td= (page - 1) * 50 + index + 1
+                td= val.uid
+                td.assign-left
+                    a(href='/prototype/profile?uid=' + val.uid)= val.username
+                td= val.prevpptotal.toFixed(2)
+                td= val.pptotal.toFixed(2)
+                td= (val.pptotal - val.prevpptotal).toFixed(2)
+
+    br
+
+    .nav-button
+        a.page-nav(style='width: 40%;' href='/prototype?page=' + Math.max(1, page - 1) + (query ? '?query=' + query : ''))= "<<< Previous Page"
+        a.page-count(style='width: 20%;' disabled)= "Page: " + page
+        a.page-nav(style='width: 40%;' href='/prototype?page=' + Math.max(1, page + 1) + (query ? '?query=' + query : ''))= "Next Page >>>"

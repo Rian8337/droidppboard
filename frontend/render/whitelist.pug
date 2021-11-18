@@ -1,0 +1,113 @@
+head
+    meta(charset='UTF-8')
+    meta(name='viewport' content='width=device-width, initial-scale=1.0')
+    meta(name='description' content='List of whitelisted beatmaps in Elaina PP Project.')
+    title PP Board - Whitelist
+    link(rel='stylesheet' href='../styles/main.css')
+    link(rel='stylesheet' href='../styles/table.css')
+    link(rel='stylesheet' href='../styles/navigation.css')
+    link(rel='icon' href='../icons/icon.png' type='image/x-icon')
+
+body
+    .top-banner
+        h1 Elaina PP Project
+        p A basic PP project for osu!droid.
+    hr
+
+    .main-menu
+        a(href='/') Home
+        a(href='/leaderboard') Leaderboard
+        a.menu-active(href='/whitelist') Whitelist
+        a(href='/top-plays') Top Plays
+        a(href='/calculate') Calculate Beatmap PP
+        a(href='/prototype') Prototype
+        a(href='/prototype/top-plays') Prototype Top Plays
+        a(href='/prototype/calculate') Calculate Beatmap Prototype PP
+    hr
+
+    h2.subtitle Whitelisted Beatmaps
+
+    h3.description
+        p Click/tap a beatmap's name to visit its osu! page.
+        p For more information on how to filter beatmaps, scroll all the way down.
+
+    form
+        input.search(type='text' name='query' placeholder='Search or filter beatmaps...' value=query ? query : "")
+        input.submit-search(type='submit' value='Apply')
+
+    table.listing
+        tr
+            th(style='width: 40%;') Beatmap Name
+            th(style='width: 10%;') CS
+            th(style='width: 10%;') AR
+            th(style='width: 10%;') OD
+            th(style='width: 10%;') HP
+            th(style='width: 10%;') SR
+            th(style='width: 10%;') BPM
+
+        each val, index in list
+            tr
+                td
+                    a(href='https://osu.ppy.sh/b/' + val.mapid)= val.mapname
+                td= val.diffstat.cs
+                td= val.diffstat.ar
+                td= val.diffstat.od
+                td= val.diffstat.hp
+                td= val.diffstat.sr
+                td= val.diffstat.bpm
+
+    br
+
+    .nav-button
+        a.page-nav(style='width: 40%;' href='/whitelist?page=' + Math.max(1, page - 1) + (query ? '?query=' + query : ''))= "<<< Previous Page"
+        a.page-count(style='width: 20%;' disabled)= "Page: " + page
+        a.page-nav(style='width: 40%;' href='/whitelist?page=' + Math.max(1, page + 1) + (query ? '?query=' + query : ''))= "Next Page >>>"
+
+    hr
+
+    h3 Filtering Beatmaps
+    table.beatmap-filter
+        tr
+            th Filter Options
+            td CS, AR, OD, HP, SR, BPM
+        tr
+            th Sorting Options
+            td
+                p CS, AR, OD, HP, SR, BPM, mapid, mapname
+                p By default, sorting is ascending. You can put "-" in front of a sorting option to use descend sort.
+        tr
+            th Equality Symbols
+            td
+                ul
+                    li= "<= (less than or equal to)"
+                    li= "< (less than)"
+                    li= "= (equal to)"
+                    li= "> (more than)"
+                    li= ">= (more than or equal to)"
+        tr
+            th Behavior
+            td
+                ul
+                    li By default, there is no filter, and the sort option is set to beatmap name.
+                    li Using SR and/or BPM sort option will override beatmap name sort option.
+                    li Anything that doesn't fall into any of the filter or sort option will be treated as searching beatmap name.
+        tr
+            th Examples
+            td
+                ul
+                    li
+                        strong= "cs>=4.2 cs<=5 sort=cs"
+                        |
+                        p will search for beatmaps with CS between 4.2 (inclusive) and 5 (inclusive) and sort them based on CS ascendingly
+                    li
+                        strong= "od>=5 od<9 ar>7 ar<=9.7 sort=-ar"
+                        |
+                        p will search for beatmaps with AR between 7 (exclusive) and 9.7 (inclusive) and OD between 5 (inclusive) and 9 (exclusive), and then sorting the search result by AR descendingly
+                    li
+                        strong= "od>=7 bpm>=180"
+                        |
+                        p will search for beatmaps with OD above 7 (inclusive) and BPM above 180 (inclusive) and sort them based on BPM ascendingly
+                    li
+                        strong= "cs>=4.2 ar>9.3 od>=8 hp>=5 sort=-sr logic boi is the best"
+                        |
+                        p will search for beatmaps with CS above 4.2 (inclusive), AR above 9.3 (exclusive), OD above 8 (inclusive), HP above 5 (inclusive), and matches the keyword "logic boi is the best" (much like osu! search function), and then sorting the search result by star rating descendingly

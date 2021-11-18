@@ -1,0 +1,58 @@
+head
+    meta(charset='UTF-8')
+    meta(name='viewport' content='width=device-width, initial-scale=1.0')
+    meta(name='description' content='View the rankings of Elaina PP Project.')
+    title PP Board - Leaderboard
+    link(rel='stylesheet' href='../styles/main.css')
+    link(rel='stylesheet' href='../styles/table.css')
+    link(rel='stylesheet' href='../styles/navigation.css')
+    link(rel='icon' href='../icons/icon.png' type='image/x-icon')
+
+body
+    .top-banner
+        h1 Elaina PP Project
+        p A basic PP project for osu!droid.
+    hr
+
+    .main-menu
+        a(href='/') Home
+        a.menu-active(href='/leaderboard') Leaderboard
+        a(href='/whitelist') Whitelist
+        a(href='/top-plays') Top Plays
+        a(href='/calculate') Calculate Beatmap PP
+        a(href='/prototype') Prototype
+        a(href='/prototype/top-plays') Prototype Top Plays
+        a(href='/prototype/calculate') Calculate Beatmap Prototype PP
+    hr
+
+    h2.subtitle Official Player Leaderboard
+
+    h3.description Click/tap a player's name to visit their profile page.
+
+    form
+        input.search(type='text' name='query' placeholder='Search player...' value=query ? query : "")
+        input.submit-search(type='submit' value='Search')
+
+    table.listing
+        tr
+            th(style='width: 5%;') No.
+            th(style='width: 15%;') UID
+            th(style='width: 40%;') Username
+            th(style='width: 20%;') Play Count
+            th(style='width: 20%;') PP
+
+        each val, index in list
+            tr
+                td= (page - 1) * 50 + index + 1
+                td= val.uid
+                td.assign-left
+                    a(href='/profile?uid=' + val.uid)= val.username
+                td= val.playc
+                td= val.pptotal.toFixed(2)
+
+    br
+
+    .nav-button
+        a.page-nav(style='width: 40%;' href='/leaderboard?page=' + Math.max(1, page - 1) + (query ? '?query=' + query : ''))= "<<< Previous Page"
+        a.page-count(style='width: 20%;' disabled)= "Page: " + page
+        a.page-nav(style='width: 40%;' href='/leaderboard?page=' + Math.max(1, page + 1) + (query ? '?query=' + query : ''))= "Next Page >>>"
