@@ -24,7 +24,7 @@ router.get("/", async (req, res) => {
     const result: PrototypePP[] = await DatabaseManager.aliceDb.collections.prototypePP.searchPlayers(page, searchQuery);
 
     res.render(
-        join(Util.getFrontendPath(), "render", "prototype", "prototype"),
+        join(Util.getFrontendPath(), "render", "prototype", "prototype-leaderboard"),
         {
             list: result,
             page: page,

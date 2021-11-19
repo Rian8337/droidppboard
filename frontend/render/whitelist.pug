@@ -4,7 +4,8 @@ head
     meta(name='description' content='List of whitelisted beatmaps in Elaina PP Project.')
     title PP Board - Whitelist
     link(rel='stylesheet' href='../styles/main.css')
-    link(rel='stylesheet' href='../styles/table.css')
+    link(rel='stylesheet' href='../styles/table-listing.css')
+    link(rel='stylesheet' href='../styles/table-beatmap-filter.css')
     link(rel='stylesheet' href='../styles/navigation.css')
     link(rel='icon' href='../icons/icon.png' type='image/x-icon')
 
@@ -20,7 +21,7 @@ body
         a.menu-active(href='/whitelist') Whitelist
         a(href='/top-plays') Top Plays
         a(href='/calculate') Calculate Beatmap PP
-        a(href='/prototype') Prototype
+        a(href='/prototype') Prototype Leaderboard
         a(href='/prototype/top-plays') Prototype Top Plays
         a(href='/prototype/calculate') Calculate Beatmap Prototype PP
     hr
@@ -98,16 +99,22 @@ body
                     li
                         strong= "cs>=4.2 cs<=5 sort=cs"
                         |
-                        p will search for beatmaps with CS between 4.2 (inclusive) and 5 (inclusive) and sort them based on CS ascendingly
+                        p will search for beatmaps with CS between 4.2 (inclusive) and 5 (inclusive) and sort the search results by CS ascendingly
                     li
                         strong= "od>=5 od<9 ar>7 ar<=9.7 sort=-ar"
                         |
-                        p will search for beatmaps with AR between 7 (exclusive) and 9.7 (inclusive) and OD between 5 (inclusive) and 9 (exclusive), and then sorting the search result by AR descendingly
+                        p will search for beatmaps with AR between 7 (exclusive) and 9.7 (inclusive) and OD between 5 (inclusive) and 9 (exclusive), and sort the search results by AR descendingly
                     li
                         strong= "od>=7 bpm>=180"
                         |
-                        p will search for beatmaps with OD above 7 (inclusive) and BPM above 180 (inclusive) and sort them based on BPM ascendingly
+                        p will search for beatmaps with OD above 7 (inclusive) and BPM above 180 (inclusive) and sort the search results by BPM ascendingly
                     li
                         strong= "cs>=4.2 ar>9.3 od>=8 hp>=5 sort=-sr logic boi is the best"
                         |
-                        p will search for beatmaps with CS above 4.2 (inclusive), AR above 9.3 (exclusive), OD above 8 (inclusive), HP above 5 (inclusive), and matches the keyword "logic boi is the best" (much like osu! search function), and then sorting the search result by star rating descendingly
+                        p will search for beatmaps with CS above 4.2 (inclusive), AR above 9.3 (exclusive), OD above 8 (inclusive), HP above 5 (inclusive), and matches the keyword "logic boi is the best" (much like osu! search function), and sort the search results by star rating descendingly
+hr
+footer
+    p osu!droid Elaina PP Project Site
+    p &copy; 2021 Rian8337
+    a(href='https://discord.gg/nyD92cE')
+        img(src='https://discord.com/api/guilds/316545691545501706/widget.png?style=shield')

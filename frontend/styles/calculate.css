@@ -1,24 +1,13 @@
-form.calculate-form {
-    width: 100%;
-    text-align: center;
-    overflow: hidden;
-}
-
 h4 {
     text-align: center;
     font: 18px Exo-Bold;
     text-decoration: none;
 }
 
-.left {
-    clear: left;
-    width: 50%;
-    float: left;
-    margin-bottom: 20px;
-}
-
-.right {
-    margin-left: calc(50% + 10px);
+form.calculate-form {
+    width: 100%;
+    text-align: center;
+    overflow: hidden;
 }
 
 form.calculate-form label {

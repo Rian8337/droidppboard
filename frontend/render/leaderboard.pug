@@ -4,7 +4,8 @@ head
     meta(name='description' content='View the rankings of Elaina PP Project.')
     title PP Board - Leaderboard
     link(rel='stylesheet' href='../styles/main.css')
-    link(rel='stylesheet' href='../styles/table.css')
+    link(rel='stylesheet' href='../styles/table-listing.css')
+    link(rel='stylesheet' href='../styles/input-search.css')
     link(rel='stylesheet' href='../styles/navigation.css')
     link(rel='icon' href='../icons/icon.png' type='image/x-icon')
 
@@ -20,7 +21,7 @@ body
         a(href='/whitelist') Whitelist
         a(href='/top-plays') Top Plays
         a(href='/calculate') Calculate Beatmap PP
-        a(href='/prototype') Prototype
+        a(href='/prototype') Prototype Leaderboard
         a(href='/prototype/top-plays') Prototype Top Plays
         a(href='/prototype/calculate') Calculate Beatmap Prototype PP
     hr
@@ -56,3 +57,9 @@ body
         a.page-nav(style='width: 40%;' href='/leaderboard?page=' + Math.max(1, page - 1) + (query ? '?query=' + query : ''))= "<<< Previous Page"
         a.page-count(style='width: 20%;' disabled)= "Page: " + page
         a.page-nav(style='width: 40%;' href='/leaderboard?page=' + Math.max(1, page + 1) + (query ? '?query=' + query : ''))= "Next Page >>>"
+hr
+footer
+    p osu!droid Elaina PP Project Site
+    p &copy; 2021 Rian8337
+    a(href='https://discord.gg/nyD92cE')
+        img(src='https://discord.com/api/guilds/316545691545501706/widget.png?style=shield')

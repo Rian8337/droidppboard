@@ -4,7 +4,7 @@ head
     meta(name='description' content='Calculate a beatmap with respect to the prototype version of Elaina PP Project.')
     title PP Board - Calculate Beatmap PP
     link(rel='stylesheet' href='../../styles/main.css')
-    link(rel='stylesheet' href='../../styles/table.css')
+    link(rel='stylesheet' href='../styles/table-calculation-result.css')
     link(rel='stylesheet' href='../../styles/calculate.css')
     link(rel='icon' href='../../icons/icon.png' type='image/x-icon')
 
@@ -20,7 +20,7 @@ body
         a(href='/whitelist') Whitelist
         a(href='/top-plays') Top Plays
         a(href='/calculate') Calculate Beatmap PP
-        a(href='/prototype') Prototype
+        a(href='/prototype') Prototype Leaderboard
         a(href='/prototype/top-plays') Prototype Top Plays
         a.menu-active(href='/prototype/calculate') Calculate Beatmap Prototype PP
     hr
@@ -31,6 +31,11 @@ body
         h3 Error: #{err}.
 
     if mapdata
+        h3.description
+            | The PP values in this list are under development!
+            br
+            | Current work: Xexxar's aim rework
+
         h4 Calculation Result
         table.calculation-result
             caption Beatmap Statistics
@@ -195,3 +200,9 @@ body
         input.parameter(type='text' name='forcear' placeholder='Insert force AR...' value=formdata ? formdata.forcear : '')
         br
         input.submit(type='submit' value='Calculate')
+hr
+footer
+    p osu!droid Elaina PP Project Site
+    p &copy; 2021 Rian8337
+    a(href='https://discord.gg/nyD92cE')
+        img(src='https://discord.com/api/guilds/316545691545501706/widget.png?style=shield')
