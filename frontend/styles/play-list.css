@@ -29,7 +29,7 @@ li p.pp {
     font: 15px Exo-Bold;
 }
 
-li p.prototype-pp {
+li p.pp-with-description {
     position: relative;
     float: right;
     bottom: 50px;
@@ -37,7 +37,7 @@ li p.prototype-pp {
     font: 15px Exo-Bold;
 }
 
-li p.diff {
+li p.pp-description {
     clear: both;
     position: relative;
     float: right;

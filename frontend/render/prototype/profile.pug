@@ -66,8 +66,8 @@ body
                         else
                             img(src='../../icons/mods/NM.png', title="NoMod" alt="NM")
 
-                    p.prototype-pp #{val.prevPP}pp → #{val.pp}pp
-                    p.diff (#{(val.pp - val.prevPP) >= 0 ? '+' : ''}#{(val.pp - val.prevPP).toFixed(2)}pp)
+                    p.pp-with-description #{val.prevPP}pp → #{val.pp}pp
+                    p.pp-description (#{(val.pp - val.prevPP) >= 0 ? '+' : ''}#{(val.pp - val.prevPP).toFixed(2)}pp; #{(val.pp * Math.pow(0.95, index)).toFixed(2)}pp; weighted #{Math.round(100 * Math.pow(0.95, index))}%)
 hr
 footer
     p osu!droid Elaina PP Project Site
