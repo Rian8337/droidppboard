@@ -5,10 +5,16 @@
     width: 100%;
     border-bottom: 1px solid rgb(100, 100, 100);
     border-collapse: collapse;
+    background-color: #222;
 }
 
 .calculation-result caption {
     font: 15px Exo-Bold;
+}
+
+.calculation-result tr {
+    border-bottom: 1px solid rgb(100, 100, 100);
+    border-collapse: collapse;
 }
 
 .calculation-result tr th {
