@@ -48,9 +48,9 @@ body
 
                     .mod-list
                         each mod in val.displayMods
-                            img(src='../icons/mods/' + mod.acronym + '.png', title=mod.name alt=mod.acronym)
+                            img.mod-image(src='../icons/mods/' + mod.acronym + '.png', title=mod.name alt=mod.acronym)
                         else
-                            img(src='../icons/mods/NM.png', title="NoMod" alt="NM")
+                            img.mod-image(src='../icons/mods/NM.png', title="NoMod" alt="NM")
 
                     p.pp-with-description #{val.pp}pp
                     p.pp-description (#{(val.pp * Math.pow(0.95, index)).toFixed(2)}pp; weighted #{Math.round(100 * Math.pow(0.95, index))}%)

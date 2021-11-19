@@ -53,7 +53,14 @@ li .mod-list {
     overflow: auto;
 }
 
-li .mod-list img {
+.mod-image {
     width: 33px;
     height: 21px;
+}
+
+li .prototype-mod-list {
+    text-align: left;
+    position: relative;
+    max-width: 40%;
+    overflow: auto;
 }
