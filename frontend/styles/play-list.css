@@ -24,7 +24,7 @@ li p.play-info {
 li p.pp {
     position: relative;
     float: right;
-    bottom: 32.5px;
+    bottom: 33px;
     max-width: calc(100% - 10px);
     font: 15px Exo-Bold;
 }
