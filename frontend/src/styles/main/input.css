@@ -1,0 +1,24 @@
+.search {
+    background-color: #333;
+    font: 15px Exo-Medium;
+    color: white;
+    border: none;
+    border-bottom: 3px solid rgb(252, 161, 176);
+    border-radius: 6px;
+    width: 70%;
+    padding: 10px;
+    margin-bottom: 15px;
+}
+
+.submit-search {
+    font: 15px Exo-Medium;
+    width: 20%;
+    padding: 10px;
+    color: white;
+    background-color: #222;
+    margin-left: 10px;
+}
+
+.submit-search:hover {
+    background-color: #111;
+}

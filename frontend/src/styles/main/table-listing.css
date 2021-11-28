@@ -1,0 +1,41 @@
+.listing {
+    font: 12px Exo-Medium;
+    width: 100%;
+}
+
+.listing,
+thead th,
+tbody td {
+    border: none;
+    border-bottom: 1px solid rgb(100, 100, 100);
+    border-collapse: collapse;
+    background-color: rgba(34, 34, 34, 0.75);
+    text-align: center;
+    overflow: auto;
+    padding: 5px;
+}
+
+.listing thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background-color: rgba(17, 17, 17);
+}
+
+.listing tbody td.assign-left {
+    text-align: left;
+    padding-left: 10px;
+    cursor: pointer;
+}
+
+.listing tbody td a {
+    display: block;
+}
+
+.listing tbody tr:nth-child(even) {
+    background-color: rgba(68, 68, 68, 0.75);
+}
+
+.listing tbody tr:hover {
+    background-color: lightgray;
+}

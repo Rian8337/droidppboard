@@ -1,0 +1,47 @@
+h4 {
+    text-align: center;
+    font: 18px Exo-Bold;
+    text-decoration: none;
+}
+
+.calculate-form {
+    width: 100%;
+    text-align: center;
+    overflow: hidden;
+}
+
+.calculate-form label {
+    font: 13px Exo-Medium;
+}
+
+.calculate-form label p {
+    font: 16px Exo-Bold;
+    margin-top: 0;
+}
+
+.calculate-form input.parameter {
+    background-color: #333;
+    font: 12px Exo-Medium;
+    color: white;
+    border: none;
+    border-bottom: 3px solid rgb(252, 161, 176);
+    border-radius: 6px;
+    width: 50%;
+    padding: 10px;
+    margin-top: 10px;
+    margin-bottom: 20px;
+}
+
+.calculate-form input.submit {
+    font: 15px Exo-Medium;
+    padding: 10px;
+    color: white;
+    background-color: #222;
+}
+
+.strain-graph {
+    text-align: center;
+    font: 15px Exo-Bold;
+    max-height: 100%;
+    max-width: 100%;
+}

@@ -1,34 +1,69 @@
 {
   "name": "ppboard",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "Experimental leaderboard for Elaina PP Project",
-  "main": "main.ts",
+  "main": "index.js",
   "scripts": {
-    "start": "node --trace-warnings -r ts-node/register .",
+    "build-backend": "cd backend && npm install",
+    "build-frontend": "cd frontend && npm install && npm run build",
+    "heroku-postbuild": "npm run build-backend && npm run build-frontend",
+    "start": "cd backend && npm start",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "engines": {
     "node": "16.x"
   },
   "keywords": [],
-  "author": "Rian8337",
+  "author": "",
   "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^16.11.9",
+    "@typescript-eslint/eslint-plugin": "^5.4.0",
+    "@typescript-eslint/parser": "^5.4.0",
+    "eslint": "^8.2.0",
+    "eslint-plugin-react": "^7.27.1",
+    "typescript": "^4.5.2"
+  },
   "dependencies": {
-    "@types/cors": "^2.8.12",
-    "@types/express": "^4.17.13",
-    "@types/express-fileupload": "^1.1.7",
-    "@types/lodash": "^4.14.177",
-    "@types/node": "^16.11.7",
-    "@types/request": "^2.48.7",
-    "canvas": "^2.8.0",
-    "dotenv": "^10.0.0",
-    "express": "^4.17.1",
-    "express-fileupload": "^1.2.1",
-    "lodash": "^4.17.21",
-    "mongodb": "^4.1.4",
-    "pug": "^3.0.2",
-    "request": "^2.88.2",
-    "ts-node": "^10.4.0",
-    "typescript": "^4.4.4"
+    "app-database": "file:modules/app-database",
+    "app-structures": "file:modules/app-structures",
+    "mongodb": "^4.2.0",
+    "osu-droid": "file:modules/osu-droid"
+  },
+  "eslintConfig": {
+    "env": {
+      "browser": true,
+      "es2021": true,
+      "node": true
+    },
+    "extends": [
+      "eslint:recommended",
+      "plugin:react/recommended",
+      "plugin:@typescript-eslint/recommended"
+    ],
+    "parser": "@typescript-eslint/parser",
+    "parserOptions": {
+      "ecmaFeatures": {
+        "jsx": true
+      },
+      "ecmaVersion": 2021,
+      "sourceType": "module"
+    },
+    "plugins": [
+      "react",
+      "@typescript-eslint"
+    ],
+    "rules": {
+      "@typescript-eslint/no-empty-function": "off",
+      "@typescript-eslint/no-inferrable-types": "off",
+      "@typescript-eslint/no-non-null-assertion": "off",
+      "prefer-const": "warn",
+      "react/react-in-jsx-scope": "off"
+    },
+    "settings": {
+      "react": {
+        "version": "detect"
+      }
+    }
   }
 }

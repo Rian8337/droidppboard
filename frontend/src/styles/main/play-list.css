@@ -1,0 +1,77 @@
+.play-list {
+    position: relative;
+    right: 27.5px;
+}
+
+.play-item {
+    width: 100%;
+    font: 14px Exo-Bold;
+    padding: 8px;
+    margin-top: 4px;
+    list-style-type: none;
+    border: 1px solid pink;
+    border-bottom: 5px solid pink;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+}
+
+.play-item p.title {
+    margin: 0;
+    padding: 0;
+    white-space: normal;
+    width: 100%;
+}
+
+.play-item span.title-note {
+    font: 11px Exo-Medium;
+}
+
+.play-item p.play-info {
+    font: 12px Exo-Medium;
+}
+
+.play-item p.pp-without-description {
+    position: relative;
+    float: right;
+    bottom: 33px;
+    max-width: calc(100% - 10px);
+    font: 15px Exo-Bold;
+}
+
+.play-item p.pp-with-description {
+    position: relative;
+    float: right;
+    bottom: 50px;
+    max-width: calc(100% - 10px);
+    font: 15px Exo-Bold;
+}
+
+.play-item p.pp-description {
+    clear: both;
+    position: relative;
+    float: right;
+    bottom: 75px;
+    max-width: calc(100% - 10px);
+    font: 11px Exo-Medium;
+}
+
+.play-item .mod-list {
+    text-align: left;
+    position: relative;
+    max-width: 50%;
+    overflow: auto;
+}
+
+.mod-image {
+    width: 33px;
+    height: 21px;
+}
+
+.play-item .prototype-mod-list {
+    text-align: left;
+    position: relative;
+    max-width: 40%;
+    overflow: auto;
+}
