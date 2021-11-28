@@ -1,7 +1,7 @@
-import { CalculationResult } from "app-structures";
+import { ICalculationResult } from "app-structures";
 
 export default function StrainGraphCalculationResult(props: {
-    strainGraph: CalculationResult["strainGraph"];
+    strainGraph: ICalculationResult["strainGraph"];
 }) {
     const { strainGraph } = props;
 

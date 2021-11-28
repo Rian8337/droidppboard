@@ -1,7 +1,7 @@
-import { CalculationResult } from "app-structures";
+import { ICalculationResult } from "app-structures";
 
 export default function PerformanceCalculationResult(props: {
-    performance: CalculationResult["performance"];
+    performance: ICalculationResult["performance"];
 }) {
     const { performance } = props;
 

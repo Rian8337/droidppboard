@@ -1,4 +1,4 @@
-import { CalculationParams, CalculationResult } from "app-structures";
+import { ICalculationParams, ICalculationResult } from "app-structures";
 import { motion } from "framer-motion";
 import "../../styles/modules/components/CalculationResult.module.css";
 import BeatmapCalculationResult from "./BeatmapCalculationResult";
@@ -8,8 +8,8 @@ import PerformanceCalculationResult from "./PerformanceCalculationResult";
 import StrainGraphCalculationResult from "./StrainGraphCalculationResult";
 
 export default function CalculationResult(props: {
-    params: CalculationParams;
-    result: CalculationResult;
+    params: ICalculationParams;
+    result: ICalculationResult;
 }) {
     const { params, result } = props;
     const { beatmap, difficulty, performance, strainGraph } = result;

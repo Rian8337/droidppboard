@@ -1,4 +1,4 @@
-export interface CalculationParams {
+export interface ICalculationParams {
     readonly beatmaplink?: string;
     readonly mods: string;
     readonly accuracy: number;

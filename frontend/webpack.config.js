@@ -7,18 +7,25 @@ const path = require("path");
 
 module.exports = {
     mode: prod ? "production" : "development",
-    entry: "./src/index.tsx",
+    entry: path.join(process.cwd(), "src", "index.tsx"),
     output: {
         path: path.join(process.cwd(), "build"),
+        filename: "bundle.js",
     },
     module: {
         rules: [
             {
-                test: /\.(ts|tsx)$/i,
+                test: /\.(ts|js)x$/i,
                 exclude: /node_modules/,
-                resolve: {
-                    extensions: [".ts", ".tsx", ".js", ".json"],
-                },
+                use: [
+                    {
+                        loader: "babel-loader",
+                    },
+                ],
+            },
+            {
+                test: /\.(ts)$/i,
+                exclude: /node_modules/,
                 use: "ts-loader",
             },
             {
@@ -30,6 +37,9 @@ module.exports = {
                 use: "url-loader",
             },
         ],
+    },
+    resolve: {
+        extensions: [".tsx", ".ts", ".jsx", ".js"],
     },
     devtool: prod ? undefined : "source-map",
     plugins: [

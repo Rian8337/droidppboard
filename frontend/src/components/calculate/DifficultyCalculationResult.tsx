@@ -1,7 +1,7 @@
-import { CalculationResult } from "app-structures";
+import { ICalculationResult } from "app-structures";
 
 export default function DifficultyCalculationResult(props: {
-    difficulty: CalculationResult["difficulty"];
+    difficulty: ICalculationResult["difficulty"];
 }) {
     const { difficulty } = props;
 

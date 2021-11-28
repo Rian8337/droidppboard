@@ -1,7 +1,7 @@
 import express from "express";
 import { Util } from "../Util";
 import { Accuracy, Beatmap, DroidPerformanceCalculator, MapStars, MapStats, MathUtils, Mod, ModUtil, OsuPerformanceCalculator, RebalanceDroidPerformanceCalculator, RebalanceMapStars, RebalanceOsuPerformanceCalculator } from "osu-droid";
-import { CalculationResult } from "app-structures";
+import { ICalculationResult } from "app-structures";
 import { Precision } from "osu-droid/src/utils/Precision";
 import { ReadStream } from "fs";
 
@@ -106,7 +106,7 @@ router.post("/", async (req, res) => {
         stats: stats
     });
 
-    const response: CalculationResult = {
+    const response: ICalculationResult = {
         beatmap: {
             id: beatmapId,
             artist: map.artist,

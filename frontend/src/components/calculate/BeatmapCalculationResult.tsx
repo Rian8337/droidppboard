@@ -1,7 +1,7 @@
-import { CalculationResult } from "app-structures";
+import { ICalculationResult } from "app-structures";
 
 export default function BeatmapCalculationResult(props: {
-    beatmap: CalculationResult["beatmap"];
+    beatmap: ICalculationResult["beatmap"];
 }) {
     const { beatmap } = props;
 

@@ -1,9 +1,9 @@
-import { CalculationParams, CalculationResult } from "app-structures";
+import { ICalculationParams, ICalculationResult } from "app-structures";
 import { MathUtils, Mod, ModUtil } from "osu-droid";
 
 export default function ParameterCalculationResult(props: {
-    params: CalculationParams;
-    beatmap: CalculationResult["beatmap"];
+    params: ICalculationParams;
+    beatmap: ICalculationResult["beatmap"];
     estimated: boolean;
 }) {
     const { beatmap, params } = props;

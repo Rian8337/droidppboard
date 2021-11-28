@@ -1,8 +1,5 @@
 import { Context, createContext, FC, useState } from "react";
-import {
-    CalculationParams,
-    CalculationResult,
-} from "../../../modules/app-structures/src";
+import { ICalculationParams, ICalculationResult } from "app-structures";
 import { CalculationSetting } from "../interfaces/CalculationSetting";
 
 const PrototypeCalculationContext: Context<CalculationSetting> =
@@ -14,21 +11,21 @@ const PrototypeCalculationContext: Context<CalculationSetting> =
     });
 
 export const PrototypeCalculationContextProvider: FC = (props) => {
-    const [params, setParams] = useState<CalculationParams | undefined>(
+    const [params, setParams] = useState<ICalculationParams | undefined>(
         undefined
     );
-    const [result, setResult] = useState<CalculationResult | undefined>(
+    const [result, setResult] = useState<ICalculationResult | undefined>(
         undefined
     );
     const [errorMessage, setErrorMessage] = useState<string | undefined>(
         undefined
     );
 
-    const modifyParams = (params?: CalculationParams) => {
+    const modifyParams = (params?: ICalculationParams) => {
         setParams(params);
     };
 
-    const modifyResult = (result?: CalculationResult) => {
+    const modifyResult = (result?: ICalculationResult) => {
         setResult(result);
     };
 

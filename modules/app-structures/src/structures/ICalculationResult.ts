@@ -1,7 +1,7 @@
 import { DifficultyCalculationResult } from "./DifficultyCalculationResult";
 import { PerformanceCalculationResult } from "./PerformanceCalculationResult";
 
-export interface CalculationResult {
+export interface ICalculationResult {
     readonly beatmap: Readonly<{
         id?: number;
         artist: string;
