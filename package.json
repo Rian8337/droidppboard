@@ -6,7 +6,7 @@
   "scripts": {
     "build-backend": "cd backend && npm install",
     "build-frontend-windows": "cd frontend && NODE_ENV=development npm install && npm run build-windows && npm prune",
-    "build-frontend-linux": "cd frontend && NODE_ENV=development npm install && npm list && npm run build-linux && npm prune",
+    "build-frontend-linux": "cd frontend && NODE_ENV=development npm install && npm run build-linux && npm prune",
     "heroku-postbuild": "npm run build-backend && npm run build-frontend-linux",
     "start": "cd backend && npm start",
     "test": "echo \"Error: no test specified\" && exit 1"
