@@ -5,8 +5,9 @@
   "main": "index.js",
   "scripts": {
     "build-backend": "cd backend && npm install",
-    "build-frontend": "cd frontend && npm install && npm install --only=dev && npm run build && npm prune",
-    "heroku-postbuild": "npm run build-backend && npm run build-frontend",
+    "build-frontend-windows": "cd frontend && npm install && npm run build-windows && npm prune",
+    "build-frontend-linux": "cd frontend && npm install && npm run build-linux && npm prune",
+    "heroku-postbuild": "npm run build-backend && npm run build-frontend-linux",
     "start": "cd backend && npm start",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
