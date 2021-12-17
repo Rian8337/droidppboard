@@ -4,6 +4,7 @@
   "description": "Experimental leaderboard for Elaina PP Project",
   "main": "index.js",
   "scripts": {
+    "build-packages": "npm run build-app-database && npm run build-app-structures && npm run build-osu-droid",
     "build-backend": "cd backend && npm install",
     "build-frontend-windows": "cd frontend && NODE_ENV=development npm install && npm run build-windows && npm prune --production",
     "build-frontend-linux": "cd frontend && NODE_ENV=development npm install && npm run build-linux && npm prune --production",
@@ -18,18 +19,18 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@types/node": "^16.11.11",
     "@typescript-eslint/eslint-plugin": "^5.4.0",
     "@typescript-eslint/parser": "^5.4.0",
     "eslint": "^8.2.0",
-    "eslint-plugin-react": "^7.27.1"
+    "eslint-plugin-react": "^7.27.1",
+    "typescript": "^4.5.2"
   },
   "dependencies": {
-    "@types/node": "^16.11.10",
     "app-database": "file:modules/app-database",
     "app-structures": "file:modules/app-structures",
     "mongodb": "^4.2.0",
-    "osu-droid": "file:modules/osu-droid",
-    "typescript": "^4.5.2"
+    "osu-droid": "file:modules/osu-droid"
   },
   "eslintConfig": {
     "env": {

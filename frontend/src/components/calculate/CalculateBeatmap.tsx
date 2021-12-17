@@ -61,10 +61,9 @@ export default function CalculateBeatmap(props: { prototype: boolean }) {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.5 }}
+                        style={{ textAlign: "center" }}
                     >
-                        <h3 style={{ textAlign: "center" }}>
-                            Calculating Beatmap...
-                        </h3>
+                        Calculating Beatmap...
                     </motion.h3>
                 ) : null}
             </div>
