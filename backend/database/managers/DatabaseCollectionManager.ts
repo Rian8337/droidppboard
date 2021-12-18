@@ -14,7 +14,10 @@ export abstract class DatabaseCollectionManager<T extends BaseDocument, C> {
     /**
      * The constructor function of the utility of this collection.
      */
-    protected abstract readonly utilityInstance: DatabaseUtilityConstructor<T, C>;
+    protected abstract readonly utilityInstance: DatabaseUtilityConstructor<
+        T,
+        C
+    >;
 
     /**
      * The default document of this collection.
@@ -37,7 +40,7 @@ export abstract class DatabaseCollectionManager<T extends BaseDocument, C> {
 
     /**
      * Gets multiple documents from the collection.
-     * 
+     *
      * @param filter The document filter.
      * @returns The documents.
      */
@@ -45,18 +48,18 @@ export abstract class DatabaseCollectionManager<T extends BaseDocument, C> {
 
     /**
      * Gets multiple documents from the collection.
-     * 
+     *
      * @param filter The document filter.
-     * @param options The options for retrieving the documents. 
+     * @param options The options for retrieving the documents.
      * @returns The documents.
      */
     async get(filter: Filter<T>, options?: FindOptions<T>): Promise<C[]>;
 
     /**
      * Gets multiple documents from the collection.
-     * 
+     *
      * @param filter The document filter.
-     * @param options The options for retrieving the documents. 
+     * @param options The options for retrieving the documents.
      * @returns The documents.
      */
     async get(filter: Filter<T>, options: FindOptions<T>): Promise<C[]>;
@@ -68,16 +71,16 @@ export abstract class DatabaseCollectionManager<T extends BaseDocument, C> {
      * @param options The options for retrieving the documents. 
      * @returns The documents.
      */
-    async get(filter: Filter<T> = { }, options?: FindOptions<T>): Promise<C[]> {
+    async get(filter: Filter<T> = {}, options?: FindOptions<T>): Promise<C[]> {
         const res: T[] = await this.collection.find(filter, options).toArray();
 
-        return res.map(v => new this.utilityInstance(v));
+        return res.map((v) => new this.utilityInstance(v));
     }
 
     /**
      * Gets a document from the collection and convert it
      * to its utility.
-     * 
+     *
      * @param filter The document filter.
      * @returns The converted document.
      */
@@ -86,7 +89,7 @@ export abstract class DatabaseCollectionManager<T extends BaseDocument, C> {
     /**
      * Gets a document from the collection and convert it
      * to its utility.
-     * 
+     *
      * @param filter The document filter.
      * @param options The options for retrieving the documents.
      * @returns The converted document.
@@ -96,22 +99,28 @@ export abstract class DatabaseCollectionManager<T extends BaseDocument, C> {
     /**
      * Gets a document from the collection and convert it
      * to its utility.
-     * 
+     *
      * @param filter The document filter.
      * @param options The options for retrieving the documents.
      * @returns The converted document.
      */
-    async getOne(filter: Filter<T>, options?: FindOptions<T>): Promise<C | null>;
+    async getOne(
+        filter: Filter<T>,
+        options?: FindOptions<T>
+    ): Promise<C | null>;
 
     /**
      * Gets a document from the collection and convert it
      * to its utility.
-     * 
+     *
      * @param filter The document filter.
      * @param options The options for retrieving the documents.
      * @returns The converted document.
      */
-    async getOne(filter: Filter<T> = { }, options?: FindOptions<T>): Promise<C | null> {
+    async getOne(
+        filter: Filter<T> = {},
+        options?: FindOptions<T>
+    ): Promise<C | null> {
         const res: T | null = await this.collection.findOne(filter, options);
 
         return res ? new this.utilityInstance(res) : null;

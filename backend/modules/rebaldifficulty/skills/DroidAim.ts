@@ -51,7 +51,10 @@ export class DroidAim extends DroidSkill {
      * Calculates the aim strain of a hitobject.
      */
     private aimStrainOf(current: DifficultyHitObject): number {
-        if (this.previous.length <= 1 || this.previous[0].object instanceof Spinner) {
+        if (
+            this.previous.length <= 1 ||
+            this.previous[0].object instanceof Spinner
+        ) {
             return 0;
         }
 
@@ -64,24 +67,34 @@ export class DroidAim extends DroidSkill {
         // But if the last object is a slider, then we extend the travel velocity through the slider into the current object.
         if (last.object instanceof Slider && this.withSliders) {
             // Calculate the movement velocity from slider end to current object.
-            const movementVelocity: number = current.movementDistance / current.movementTime;
+            const movementVelocity: number =
+                current.movementDistance / current.movementTime;
 
             // Calculate the slider velocity from slider head to slider end.
-            const travelVelocity: number = current.travelDistance / current.travelTime;
+            const travelVelocity: number =
+                current.travelDistance / current.travelTime;
 
             // Take the larger total combined velocity.
-            currentVelocity = Math.max(currentVelocity, movementVelocity + travelVelocity);
+            currentVelocity = Math.max(
+                currentVelocity,
+                movementVelocity + travelVelocity
+            );
         }
 
         // As above, do the same for the previous hitobject.
         let prevVelocity: number = last.jumpDistance / last.strainTime;
 
         if (lastLast.object instanceof Slider && this.withSliders) {
-            const movementVelocity: number = last.movementDistance / last.movementTime;
+            const movementVelocity: number =
+                last.movementDistance / last.movementTime;
 
-            const travelVelocity: number = last.travelDistance / last.travelTime;
+            const travelVelocity: number =
+                last.travelDistance / last.travelTime;
 
-            prevVelocity = Math.max(prevVelocity, movementVelocity + travelVelocity);
+            prevVelocity = Math.max(
+                prevVelocity,
+                movementVelocity + travelVelocity
+            );
         }
 
         let wideAngleBonus: number = 0;
@@ -92,12 +105,22 @@ export class DroidAim extends DroidSkill {
         // Start strain with regular velocity.
         let strain: number = currentVelocity;
 
-        if (Math.max(current.strainTime, last.strainTime) < 1.25 * Math.min(current.strainTime, last.strainTime)) {
+        if (
+            Math.max(current.strainTime, last.strainTime) <
+            1.25 * Math.min(current.strainTime, last.strainTime)
+        ) {
             // If rhythms are the same.
 
-            if (current.angle !== null && last.angle !== null && lastLast.angle !== null) {
+            if (
+                current.angle !== null &&
+                last.angle !== null &&
+                lastLast.angle !== null
+            ) {
                 // Rewarding angles, take the smaller velocity as base.
-                const angleBonus: number = Math.min(currentVelocity, prevVelocity);
+                const angleBonus: number = Math.min(
+                    currentVelocity,
+                    prevVelocity
+                );
 
                 wideAngleBonus = this.calculateWideAngleBonus(current.angle);
                 acuteAngleBonus = this.calculateAcuteAngleBonus(current.angle);
@@ -112,39 +135,109 @@ export class DroidAim extends DroidSkill {
                         // The maximum velocity we buff is equal to 125 / strainTime.
                         Math.min(angleBonus, 125 / current.strainTime) *
                         // Scale buff from 300 BPM 1/2 to 400 BPM 1/2.
-                        Math.pow(Math.sin(Math.PI / 2 * Math.min(1, (100 - current.strainTime) / 25)), 2) *
+                        Math.pow(
+                            Math.sin(
+                                (Math.PI / 2) *
+                                    Math.min(1, (100 - current.strainTime) / 25)
+                            ),
+                            2
+                        ) *
                         // Buff distance exceeding 50 (radius) up to 100 (diameter).
-                        Math.pow(Math.sin(Math.PI / 2 * (MathUtils.clamp(current.jumpDistance, 50, 100) - 50) / 50), 2);
+                        Math.pow(
+                            Math.sin(
+                                ((Math.PI / 2) *
+                                    (MathUtils.clamp(
+                                        current.jumpDistance,
+                                        50,
+                                        100
+                                    ) -
+                                        50)) /
+                                    50
+                            ),
+                            2
+                        );
                 }
 
                 // Penalize wide angles if they're repeated, reducing the penalty as last.angle gets more acute.
-                wideAngleBonus *= angleBonus * (1 - Math.min(wideAngleBonus, Math.pow(this.calculateWideAngleBonus(last.angle), 3)));
+                wideAngleBonus *=
+                    angleBonus *
+                    (1 -
+                        Math.min(
+                            wideAngleBonus,
+                            Math.pow(
+                                this.calculateWideAngleBonus(last.angle),
+                                3
+                            )
+                        ));
                 // Penalize acute angles if they're repeated, reducing the penalty as lastLast.angle gets more obtuse.
-                acuteAngleBonus *= 0.5 + 0.5 * (1 - Math.min(acuteAngleBonus, Math.pow(this.calculateAcuteAngleBonus(lastLast.angle), 3)));
+                acuteAngleBonus *=
+                    0.5 +
+                    0.5 *
+                        (1 -
+                            Math.min(
+                                acuteAngleBonus,
+                                Math.pow(
+                                    this.calculateAcuteAngleBonus(
+                                        lastLast.angle
+                                    ),
+                                    3
+                                )
+                            ));
             }
         }
 
         if (Math.max(prevVelocity, currentVelocity)) {
             // We want to use the average velocity over the whole object when awarding differences, not the individual jump and slider path velocities.
-            prevVelocity = (last.jumpDistance + last.travelDistance) / last.strainTime;
-            currentVelocity = (current.jumpDistance + current.travelDistance) / current.strainTime;
+            prevVelocity =
+                (last.jumpDistance + last.travelDistance) / last.strainTime;
+            currentVelocity =
+                (current.jumpDistance + current.travelDistance) /
+                current.strainTime;
 
             // Scale with ratio of difference compared to half the max distance.
-            const distanceRatio: number = Math.pow(Math.sin(Math.PI / 2 * Math.abs(prevVelocity - currentVelocity) / Math.max(prevVelocity, currentVelocity)), 2);
+            const distanceRatio: number = Math.pow(
+                Math.sin(
+                    ((Math.PI / 2) * Math.abs(prevVelocity - currentVelocity)) /
+                        Math.max(prevVelocity, currentVelocity)
+                ),
+                2
+            );
 
             // Reward for % distance up to 125 / strainTime for overlaps where velocity is still changing.
-            const overlapVelocityBuff: number = Math.min(125 / Math.min(current.strainTime, last.strainTime), Math.abs(prevVelocity - currentVelocity));
+            const overlapVelocityBuff: number = Math.min(
+                125 / Math.min(current.strainTime, last.strainTime),
+                Math.abs(prevVelocity - currentVelocity)
+            );
 
             // Reward for % distance slowed down compared to previous, paying attention to not award overlap.
-            const nonOverlapVelocityBuff: number = Math.abs(prevVelocity - currentVelocity) *
+            const nonOverlapVelocityBuff: number =
+                Math.abs(prevVelocity - currentVelocity) *
                 // Do not award overlap.
-                Math.pow(Math.sin(Math.PI / 2 * Math.min(1, Math.min(current.jumpDistance, last.jumpDistance) / 100)), 2);
+                Math.pow(
+                    Math.sin(
+                        (Math.PI / 2) *
+                            Math.min(
+                                1,
+                                Math.min(
+                                    current.jumpDistance,
+                                    last.jumpDistance
+                                ) / 100
+                            )
+                    ),
+                    2
+                );
 
             // Choose the largest bonus, multiplied by ratio.
-            velocityChangeBonus = Math.max(overlapVelocityBuff, nonOverlapVelocityBuff) * distanceRatio;
+            velocityChangeBonus =
+                Math.max(overlapVelocityBuff, nonOverlapVelocityBuff) *
+                distanceRatio;
 
             // Penalize for rhythm changes.
-            velocityChangeBonus *= Math.pow(Math.min(current.strainTime, last.strainTime) / Math.max(current.strainTime, last.strainTime), 2);
+            velocityChangeBonus *= Math.pow(
+                Math.min(current.strainTime, last.strainTime) /
+                    Math.max(current.strainTime, last.strainTime),
+                2
+            );
         }
 
         if (current.travelTime) {
@@ -153,7 +246,11 @@ export class DroidAim extends DroidSkill {
         }
 
         // Add in acute angle bonus or wide angle bonus + velocity change bonus, whichever is larger.
-        strain += Math.max(acuteAngleBonus * this.acuteAngleMultiplier, wideAngleBonus * this.wideAngleMultiplier + velocityChangeBonus * this.velocityChangeMultiplier);
+        strain += Math.max(
+            acuteAngleBonus * this.acuteAngleMultiplier,
+            wideAngleBonus * this.wideAngleMultiplier +
+                velocityChangeBonus * this.velocityChangeMultiplier
+        );
 
         // Add in additional slider velocity bonus.
         if (this.withSliders) {
@@ -170,12 +267,22 @@ export class DroidAim extends DroidSkill {
         let speedBonus: number = 1;
 
         if (current.strainTime < this.minSpeedBonus) {
-            speedBonus += 0.75 * Math.pow((this.minSpeedBonus - current.strainTime) / 45, 2);
+            speedBonus +=
+                0.75 *
+                Math.pow((this.minSpeedBonus - current.strainTime) / 45, 2);
         }
 
-        const distance: number = Math.min(this.SINGLE_SPACING_THRESHOLD, current.jumpDistance + current.travelDistance);
+        const distance: number = Math.min(
+            this.SINGLE_SPACING_THRESHOLD,
+            current.jumpDistance + current.travelDistance
+        );
 
-        return 50 * speedBonus * Math.pow(distance / this.SINGLE_SPACING_THRESHOLD, 5) / current.strainTime;
+        return (
+            (50 *
+                speedBonus *
+                Math.pow(distance / this.SINGLE_SPACING_THRESHOLD, 5)) /
+            current.strainTime
+        );
     }
 
     /**
@@ -183,7 +290,8 @@ export class DroidAim extends DroidSkill {
      */
     protected override strainValueAt(current: DifficultyHitObject): number {
         this.currentStrain *= this.strainDecay(current.deltaTime);
-        this.currentStrain += this.strainValueOf(current) * this.skillMultiplier;
+        this.currentStrain +=
+            this.strainValueOf(current) * this.skillMultiplier;
 
         return this.currentStrain;
     }
@@ -199,7 +307,14 @@ export class DroidAim extends DroidSkill {
      * Calculates the bonus of wide angles.
      */
     private calculateWideAngleBonus(angle: number): number {
-        return Math.pow(Math.sin(3 / 4 * (Math.min(5 / 6 * Math.PI, Math.max(Math.PI / 6, angle)) - Math.PI / 6)), 2);
+        return Math.pow(
+            Math.sin(
+                (3 / 4) *
+                    (Math.min((5 / 6) * Math.PI, Math.max(Math.PI / 6, angle)) -
+                        Math.PI / 6)
+            ),
+            2
+        );
     }
 
     /**

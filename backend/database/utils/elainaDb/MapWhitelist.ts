@@ -14,7 +14,10 @@ export class MapWhitelist implements DatabaseMapWhitelist {
     whitelistScanDone?: boolean;
     readonly _id?: ObjectId;
 
-    constructor(data: DatabaseMapWhitelist = DatabaseManager.elainaDb?.collections.mapWhitelist.defaultDocument ?? {}) {
+    constructor(
+        data: DatabaseMapWhitelist = DatabaseManager.elainaDb?.collections
+            .mapWhitelist.defaultDocument ?? {}
+    ) {
         this._id = data._id;
         this.mapid = data.mapid;
         this.hashid = data.hashid;

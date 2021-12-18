@@ -20,7 +20,11 @@ export class AliceDBCollection {
      * @param aliceDb The database that is only used by this bot (my database).
      */
     constructor(aliceDb: Db) {
-        this.dppAPIKey = new DPPAPIKeyCollectionManager(aliceDb.collection("ppapikey"));
-        this.prototypePP = new PrototypePPCollectionManager(aliceDb.collection("prototypepp"));
+        this.dppAPIKey = new DPPAPIKeyCollectionManager(
+            aliceDb.collection("ppapikey")
+        );
+        this.prototypePP = new PrototypePPCollectionManager(
+            aliceDb.collection("prototypepp")
+        );
     }
 }

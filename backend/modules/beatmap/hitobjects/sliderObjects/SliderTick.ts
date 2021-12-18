@@ -1,5 +1,5 @@
-import { HitObject } from '../HitObject';
-import { Vector2 } from '../../../mathutil/Vector2';
+import { HitObject } from "../HitObject";
+import { Vector2 } from "../../../mathutil/Vector2";
 
 /**
  * Represents a slider tick in a slider.
@@ -16,14 +16,14 @@ export class SliderTick extends HitObject {
     readonly spanStartTime: number;
 
     constructor(values: {
-        position: Vector2,
-        startTime: number,
-        spanIndex: number,
-        spanStartTime: number
+        position: Vector2;
+        startTime: number;
+        spanIndex: number;
+        spanStartTime: number;
     }) {
         super({
             startTime: values.startTime,
-            position: values.position
+            position: values.position,
         });
 
         this.spanIndex = values.spanIndex;

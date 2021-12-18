@@ -4,4 +4,4 @@
 export interface DifficultyAttributes {
     speedNoteCount: number;
     sliderFactor: number;
-};
+}

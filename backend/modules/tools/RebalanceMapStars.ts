@@ -1,10 +1,10 @@
-import { Beatmap } from '../beatmap/Beatmap';
-import { MapStats } from '../utils/MapStats';
-import { Parser } from '../beatmap/Parser';
-import { DroidStarRating } from '../rebaldifficulty/DroidStarRating';
-import { OsuStarRating } from '../rebaldifficulty/OsuStarRating';
-import { Mod } from '../mods/Mod';
-import { Utils } from '../utils/Utils';
+import { Beatmap } from "../beatmap/Beatmap";
+import { MapStats } from "../utils/MapStats";
+import { Parser } from "../beatmap/Parser";
+import { DroidStarRating } from "../rebaldifficulty/DroidStarRating";
+import { OsuStarRating } from "../rebaldifficulty/OsuStarRating";
+import { Mod } from "../mods/Mod";
+import { Utils } from "../utils/Utils";
 
 /**
  * A star rating calculator that configures which mode to calculate difficulty for and what mods are applied.
@@ -22,24 +22,24 @@ export class RebalanceMapStars {
 
     /**
      * Calculates the star rating of a beatmap.
-     * 
+     *
      * The beatmap will be automatically parsed using parser utilities.
      */
     calculate(params: {
         /**
          * The .osu file of the beatmap.
          */
-        file: string,
+        file: string;
 
         /**
          * Applied modifications in osu!standard format.
          */
-        mods?: Mod[],
+        mods?: Mod[];
 
         /**
          * Custom map statistics to apply speed multiplier and force AR values as well as old statistics.
          */
-        stats?: MapStats
+        stats?: MapStats;
     }): RebalanceMapStars {
         if (!params.file) {
             throw new Error("Please enter an osu file!");
@@ -51,11 +51,19 @@ export class RebalanceMapStars {
 
         const stats: MapStats = new MapStats({
             speedMultiplier: params.stats?.speedMultiplier || 1,
-            isForceAR: params.stats?.isForceAR || false
+            isForceAR: params.stats?.isForceAR || false,
         });
 
-        this.droidStars.calculate({map: Utils.deepCopy(parser.map), mods: mod, stats});
-        this.pcStars.calculate({map: Utils.deepCopy(parser.map), mods: mod, stats});
+        this.droidStars.calculate({
+            map: Utils.deepCopy(parser.map),
+            mods: mod,
+            stats,
+        });
+        this.pcStars.calculate({
+            map: Utils.deepCopy(parser.map),
+            mods: mod,
+            stats,
+        });
 
         return this;
     }

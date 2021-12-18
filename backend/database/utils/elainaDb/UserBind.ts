@@ -27,7 +27,10 @@ export class UserBind implements DatabaseUserBind {
     calculationInfo?: RecalculationProgress;
     readonly _id?: ObjectId;
 
-    constructor(data: DatabaseUserBind = DatabaseManager.elainaDb?.collections.userBind.defaultDocument ?? {}) {
+    constructor(
+        data: DatabaseUserBind = DatabaseManager.elainaDb?.collections.userBind
+            .defaultDocument ?? {}
+    ) {
         this._id = data._id;
         this.discordid = data.discordid;
         this.uid = data.uid;
@@ -55,7 +58,7 @@ export class UserBind implements DatabaseUserBind {
         for (const entry of this.pp) {
             arr.push({
                 ...entry,
-                displayMods: ModUtil.pcStringToMods(entry.mods)
+                displayMods: ModUtil.pcStringToMods(entry.mods),
             });
         }
 

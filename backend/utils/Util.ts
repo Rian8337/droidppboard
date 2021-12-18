@@ -28,7 +28,8 @@ export abstract class Util {
     /**
      * List of top prototype plays from all players, mapped by droid mod string that's sorted alphabetically.
      */
-    static readonly topPrototypePPList: Map<string, TopPrototypePPEntry[]> = new Map();
+    static readonly topPrototypePPList: Map<string, TopPrototypePPEntry[]> =
+        new Map();
 
     /**
      * Gets the path to frontend directory.
@@ -39,7 +40,7 @@ export abstract class Util {
 
     /**
      * Converts an array into a map.
-     * 
+     *
      * @param array The array.
      * @param key The key that will be used to map each value in the array.
      * @returns The collection from the array.
@@ -54,10 +55,21 @@ export abstract class Util {
         return map;
     }
 
-    static initCanvas(): void { 
-        registerFont(join(this.getFrontendPath(), "fonts", "Exo-Medium.ttf"), { family: "Exo" });
-        registerFont(join(this.getFrontendPath(), "fonts", "Exo-SemiBold.ttf"), { family: "Exo", style: "SemiBold" });
-        registerFont(join(this.getFrontendPath(), "fonts", "Exo-Bold.ttf"), { family: "Exo", style: "Bold" });
+    static initCanvas(): void {
+        registerFont(join(this.getFrontendPath(), "fonts", "Exo-Medium.ttf"), {
+            family: "Exo",
+        });
+        registerFont(
+            join(this.getFrontendPath(), "fonts", "Exo-SemiBold.ttf"),
+            {
+                family: "Exo",
+                style: "SemiBold",
+            }
+        );
+        registerFont(join(this.getFrontendPath(), "fonts", "Exo-Bold.ttf"), {
+            family: "Exo",
+            style: "Bold",
+        });
     }
 
     static convertURI(input: string): string {
@@ -67,7 +79,7 @@ export abstract class Util {
 
         for (let i = 0; i < arr.length; ++i) {
             if (i !== arr.length - 1 && arr[i] === "+" && arr[i + 1] !== "+") {
-                arr[i] = ' ';
+                arr[i] = " ";
             }
         }
 
@@ -116,116 +128,139 @@ export abstract class Util {
     static getComparisonObject(comparison: Comparison, value: number): object {
         const comparisonString: string = this.getComparisonText(comparison);
 
-        return Object.defineProperty({}, comparisonString, {value, writable: true, configurable: true, enumerable: true});
+        return Object.defineProperty({}, comparisonString, {
+            value,
+            writable: true,
+            configurable: true,
+            enumerable: true,
+        });
     }
 
     static refreshTopPP(): void {
         setTimeout(() => this.refreshTopPP(), 1800 * 1000);
         console.log("Refreshing top plays");
 
-        DatabaseManager.elainaDb.collections.userBind.get({}, { projection: { _id: 0, username: 1, pp: 1 } }).then(res => {
-            this.topPPList.clear();
+        DatabaseManager.elainaDb.collections.userBind
+            .get({}, { projection: { _id: 0, username: 1, pp: 1 } })
+            .then((res) => {
+                this.topPPList.clear();
 
-            this.topPPList.set("", [])
-                .set("-", []);
+                this.topPPList.set("", []).set("-", []);
 
-            for (let i = 0; i < res.length; ++i) {
-                const bindInfo: UserBind = res[i];
+                for (let i = 0; i < res.length; ++i) {
+                    const bindInfo: UserBind = res[i];
 
-                const ppEntries: PPEntry[] = bindInfo.pp;
+                    const ppEntries: PPEntry[] = bindInfo.pp;
 
-                for (const ppEntry of ppEntries) {
-                    const convertedMods: Mod[] = ModUtil.pcStringToMods(ppEntry.mods);
+                    for (const ppEntry of ppEntries) {
+                        const convertedMods: Mod[] = ModUtil.pcStringToMods(
+                            ppEntry.mods
+                        );
 
-                    const topEntry: TopPPEntry = {
-                        ...ppEntry,
-                        displayMods: ModUtil.pcStringToMods(ppEntry.mods),
-                        username: bindInfo.username
-                    };
+                        const topEntry: TopPPEntry = {
+                            ...ppEntry,
+                            displayMods: ModUtil.pcStringToMods(ppEntry.mods),
+                            username: bindInfo.username,
+                        };
 
-                    this.topPPList.get("")!.push(topEntry);
+                        this.topPPList.get("")!.push(topEntry);
 
-                    const droidMods: string = convertedMods.map(v => v.droidString).sort((a, b) => a.localeCompare(b)).join("") || "-";
+                        const droidMods: string =
+                            convertedMods
+                                .map((v) => v.droidString)
+                                .sort((a, b) => a.localeCompare(b))
+                                .join("") || "-";
 
-                    const playList: TopPPEntry[] = this.topPPList.get(droidMods) ?? [];
+                        const playList: TopPPEntry[] =
+                            this.topPPList.get(droidMods) ?? [];
 
-                    playList.push(topEntry);
+                        playList.push(topEntry);
 
-                    this.topPPList.set(droidMods, playList);
+                        this.topPPList.set(droidMods, playList);
+                    }
                 }
-            }
 
-            for (const [, plays] of this.topPPList) {
-                plays.sort((a, b) => {
-                    return b.pp - a.pp;
-                });
+                for (const [, plays] of this.topPPList) {
+                    plays.sort((a, b) => {
+                        return b.pp - a.pp;
+                    });
 
-                plays.splice(100);
-            }
+                    plays.splice(100);
+                }
 
-            console.log("Refreshing top plays done");
-        });
+                console.log("Refreshing top plays done");
+            });
     }
 
     static refreshPrototypeTopPP(): void {
         setTimeout(() => this.refreshPrototypeTopPP(), 600 * 1000);
         console.log("Refreshing top prototype plays");
 
-        DatabaseManager.aliceDb.collections.prototypePP.get({}, { projection: { _id: 0, username: 1, pp: 1 } }).then(res => {
-            this.topPrototypePPList.clear();
+        DatabaseManager.aliceDb.collections.prototypePP
+            .get({}, { projection: { _id: 0, username: 1, pp: 1 } })
+            .then((res) => {
+                this.topPrototypePPList.clear();
 
-            this.topPrototypePPList.set("", [])
-                .set("-", []);
+                this.topPrototypePPList.set("", []).set("-", []);
 
-            for (let i = 0; i < res.length; ++i) {
-                const playerInfo: PrototypePP = res[i];
+                for (let i = 0; i < res.length; ++i) {
+                    const playerInfo: PrototypePP = res[i];
 
-                const ppEntries: PrototypePPEntry[] = playerInfo.pp;
+                    const ppEntries: PrototypePPEntry[] = playerInfo.pp;
 
-                for (const ppEntry of ppEntries) {
-                    const convertedMods: Mod[] = ModUtil.pcStringToMods(ppEntry.mods);
+                    for (const ppEntry of ppEntries) {
+                        const convertedMods: Mod[] = ModUtil.pcStringToMods(
+                            ppEntry.mods
+                        );
 
-                    const topEntry: TopPrototypePPEntry = {
-                        ...ppEntry,
-                        displayMods: ModUtil.pcStringToMods(ppEntry.mods),
-                        username: playerInfo.username
-                    };
+                        const topEntry: TopPrototypePPEntry = {
+                            ...ppEntry,
+                            displayMods: ModUtil.pcStringToMods(ppEntry.mods),
+                            username: playerInfo.username,
+                        };
 
-                    this.topPrototypePPList.get("")!.push(topEntry);
+                        this.topPrototypePPList.get("")!.push(topEntry);
 
-                    const droidMods: string = convertedMods.map(v => v.droidString).sort((a, b) => a.localeCompare(b)).join("") || "-";
+                        const droidMods: string =
+                            convertedMods
+                                .map((v) => v.droidString)
+                                .sort((a, b) => a.localeCompare(b))
+                                .join("") || "-";
 
-                    const playList: TopPrototypePPEntry[] = this.topPrototypePPList.get(droidMods) ?? [];
+                        const playList: TopPrototypePPEntry[] =
+                            this.topPrototypePPList.get(droidMods) ?? [];
 
-                    playList.push(topEntry);
+                        playList.push(topEntry);
 
-                    this.topPrototypePPList.set(droidMods, playList);
+                        this.topPrototypePPList.set(droidMods, playList);
+                    }
                 }
-            }
 
-            for (const plays of this.topPrototypePPList.values()) {
-                plays.sort((a, b) => {
-                    return b.pp - a.pp;
-                });
+                for (const plays of this.topPrototypePPList.values()) {
+                    plays.sort((a, b) => {
+                        return b.pp - a.pp;
+                    });
 
-                plays.splice(100);
-            }
+                    plays.splice(100);
+                }
 
-            console.log("Refreshing top prototype plays done");
-        });
+                console.log("Refreshing top prototype plays done");
+            });
     }
 
     /**
      * Downloads a beatmap's .osu file.
-     * 
+     *
      * @param beatmapId The ID of the beatmap to download.
      */
     static downloadBeatmap(beatmapId: number): Promise<string> {
-        return new Promise(resolve => {
+        return new Promise((resolve) => {
             let data: string = "";
 
-            request(`https://osu.ppy.sh/osu/${beatmapId}`, {encoding: "utf-8"})
-                .on("data", chunk => {
+            request(`https://osu.ppy.sh/osu/${beatmapId}`, {
+                encoding: "utf-8",
+            })
+                .on("data", (chunk) => {
                     data += chunk;
                 })
                 .on("complete", () => {

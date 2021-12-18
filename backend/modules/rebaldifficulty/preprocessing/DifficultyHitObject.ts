@@ -1,5 +1,5 @@
-import { HitObject } from '../../beatmap/hitobjects/HitObject';
-import { Vector2 } from '../../mathutil/Vector2';
+import { HitObject } from "../../beatmap/hitobjects/HitObject";
+import { Vector2 } from "../../mathutil/Vector2";
 
 /**
  * Represents an osu!standard hit object with difficulty calculation values.
@@ -53,7 +53,7 @@ export class DifficultyHitObject {
 
     /**
      * Angle the player has to take to hit this hitobject.
-     * 
+     *
      * Calculated as the angle between the circles (current-2, current-1, current).
      */
     angle: number | null = null;

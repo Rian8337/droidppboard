@@ -7,30 +7,34 @@ import { Util } from "../utils/Util";
 const router: express.Router = express.Router();
 
 router.get("/", async (req, res) => {
-    const renderPath: string = join(Util.getFrontendPath(), "render", "profile");
+    const renderPath: string = join(
+        Util.getFrontendPath(),
+        "render",
+        "profile"
+    );
 
-    const uid: number = parseInt(req.url.split('uid=')[1]);
+    const uid: number = parseInt(req.url.split("uid=")[1]);
 
     if (isNaN(uid)) {
         return res.render(renderPath);
     }
 
-    const bindInfo: UserBind | null = await DatabaseManager.elainaDb.collections.userBind.getFromUid(uid);
+    const bindInfo: UserBind | null =
+        await DatabaseManager.elainaDb.collections.userBind.getFromUid(uid);
 
     if (!bindInfo) {
         return res.render(renderPath);
     }
 
-    res.render(
-        renderPath,
-        {
-            username: bindInfo.username,
-            pprank: await DatabaseManager.elainaDb.collections.userBind.getUserDPPRank(bindInfo.pptotal),
-            playcount: bindInfo.playc,
-            pptotal: bindInfo.pptotal,
-            entries: bindInfo.ppToDisplay()
-        }
-    );
+    res.render(renderPath, {
+        username: bindInfo.username,
+        pprank: await DatabaseManager.elainaDb.collections.userBind.getUserDPPRank(
+            bindInfo.pptotal
+        ),
+        playcount: bindInfo.playc,
+        pptotal: bindInfo.pptotal,
+        entries: bindInfo.ppToDisplay(),
+    });
 });
 
 export default router;

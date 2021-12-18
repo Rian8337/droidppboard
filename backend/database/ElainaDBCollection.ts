@@ -26,8 +26,14 @@ export class ElainaDBCollection {
      * @param elainaDb The database that is shared with the old bot (Nero's database).
      */
     constructor(elainaDb: Db) {
-        this.mapBlacklist = new MapBlacklistCollectionManager(elainaDb.collection("mapblacklist"));
-        this.mapWhitelist = new MapWhitelistCollectionManager(elainaDb.collection("mapwhitelist"));
-        this.userBind = new UserBindCollectionManager(elainaDb.collection("userbind"));
+        this.mapBlacklist = new MapBlacklistCollectionManager(
+            elainaDb.collection("mapblacklist")
+        );
+        this.mapWhitelist = new MapWhitelistCollectionManager(
+            elainaDb.collection("mapwhitelist")
+        );
+        this.userBind = new UserBindCollectionManager(
+            elainaDb.collection("userbind")
+        );
     }
 }

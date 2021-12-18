@@ -20,7 +20,10 @@ export class PrototypePP implements DatabasePrototypePP {
     scanDone: boolean;
     readonly _id?: ObjectId;
 
-    constructor(data: DatabasePrototypePP = DatabaseManager.aliceDb?.collections.prototypePP.defaultDocument ?? {}) {
+    constructor(
+        data: DatabasePrototypePP = DatabaseManager.aliceDb?.collections
+            .prototypePP.defaultDocument ?? {}
+    ) {
         this._id = data._id;
         this.discordid = data.discordid;
         this.lastUpdate = data.lastUpdate;
@@ -42,7 +45,7 @@ export class PrototypePP implements DatabasePrototypePP {
         for (const entry of this.pp) {
             arr.push({
                 ...entry,
-                displayMods: ModUtil.pcStringToMods(entry.mods)
+                displayMods: ModUtil.pcStringToMods(entry.mods),
             });
         }
 
