@@ -1,6 +1,5 @@
 import express from "express";
 import fileupload from "express-fileupload";
-import { registerFont } from "canvas";
 import { join } from "path";
 import { config } from "dotenv";
 import { Util } from "./backend/utils/Util";
