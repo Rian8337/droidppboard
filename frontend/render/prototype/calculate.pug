@@ -142,7 +142,7 @@ body
         hr
 
     h4 Calculation Form
-    form.calculate-form(method='post')
+    form.calculate-form(method='post' enctype='multipart/form-data')
         label(for='beatmapfile')
             p Beatmap File
             | Use this if you want to calculate a .osu file. Useful if the beatmap is not available in osu! beatmap listing.
