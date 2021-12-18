@@ -1,10 +1,16 @@
 import express from "express";
+import rateLimit from "express-rate-limit";
 import { DatabaseManager } from "../database/DatabaseManager";
 import { DPPAPIKey } from "../database/utils/aliceDb/DPPAPIKey";
 import { UserBind } from "../database/utils/elainaDb/UserBind";
 import { PPEntry } from "../structures/PPEntry";
 
 const router: express.Router = express.Router();
+
+router.use(rateLimit({
+    windowMs: 1000,
+    max: 2,
+}));
 
 router.get("/getplayertop", async (req, res) => {
     const requestParams: string[] = req.url.split("?")[1]?.split("&") || [];

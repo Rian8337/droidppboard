@@ -19,6 +19,7 @@ config();
 const app: express.Express = express();
 
 app.set("view engine", "pug");
+app.set("trust proxy", 1);
 app.use(fileupload({
     limits: {
         fileSize: 1000000 // 1 MB
