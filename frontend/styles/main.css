@@ -36,6 +36,7 @@ hr {
     font: 20px Exo-Bold;
     text-align: center;
     background-image: url(https://osu.ppy.sh/images/headers/profile-covers/c4.jpg);
+    background-position: center;
     padding: 10px;
 }
 
