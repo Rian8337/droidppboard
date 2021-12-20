@@ -16,9 +16,10 @@ router.get("/getplayertop", async (req, res) => {
     const requestParams: string[] = req.url.split("?")[1]?.split("&") || [];
 
     if (requestParams.length !== 2) {
-        return res.send(
-            `{"code": 400, "error": "Please provide exactly 2 request parameters (uid and API key)."}`
-        );
+        return res.json({
+            code: 400,
+            error: "Please provide exactly 2 request parameters (uid and API key)."
+        });
     }
 
     const key: string =
@@ -27,7 +28,10 @@ router.get("/getplayertop", async (req, res) => {
             ?.split("key=")[1] || "";
 
     if (!key) {
-        return res.send(`{"code": 400, "error": "Please provide an API key."}`);
+        return res.json({
+            code: 400,
+            error: "Please provide an API key."
+        });
     }
 
     const uid: number = parseInt(
@@ -37,9 +41,10 @@ router.get("/getplayertop", async (req, res) => {
     );
 
     if (!uid) {
-        return res.send(
-            `{"code": 400, "error": "Please provide a valid uid."}`
-        );
+        return res.json({
+            code: 400,
+            error: "Please provide a valid uid."
+        });
     }
 
     const keyInfo: DPPAPIKey | null =
@@ -48,9 +53,10 @@ router.get("/getplayertop", async (req, res) => {
         });
 
     if (!keyInfo) {
-        return res.send(
-            `{"code": 400, "error": "Please provide a valid API key."}`
-        );
+        return res.send({
+            code: 400,
+            error: "Please provide a valid API key."
+        });
     }
 
     const bindInfo: UserBind | null =
@@ -62,7 +68,7 @@ router.get("/getplayertop", async (req, res) => {
     };
 
     if (!bindInfo) {
-        return res.send(JSON.stringify(responseObject));
+        return res.json(responseObject);
     }
 
     const ppList: PPEntry[] = bindInfo.pp;
@@ -79,6 +85,61 @@ router.get("/getplayertop", async (req, res) => {
     };
 
     res.send(JSON.stringify(responseObject).replace(/[<>]/g, ""));
+});
+
+router.get("/getleaderboard", async (req, res) => {
+    const requestParams: string[] = req.url.split("?")[1]?.split("&") || [];
+
+    const key: string =
+        requestParams
+            .find((param) => param.startsWith("key="))
+            ?.split("key=")[1] || "";
+
+    if (!key) {
+        return res.json({
+            code: 400,
+            error: "Please provide an API key."
+        });
+    }
+
+    const keyInfo: DPPAPIKey | null =
+        await DatabaseManager.aliceDb.collections.dppAPIKey.getOne({
+            key: key,
+        });
+
+    if (!keyInfo) {
+        return res.json({
+            code: 400,
+            error: "Please provide a valid API key."
+        });
+    }
+
+    const page: number = Math.max(
+        1,
+        parseInt(requestParams.find(v => v.startsWith("page="))?.split("=")[1] || "1")
+    );
+
+    if (isNaN(page)) {
+        return res.json({
+            code: 400,
+            error: "Please provide a valid page."
+        });
+    }
+
+    const searchQuery: string = requestParams.find(v => v.startsWith("query="))?.split("=")[1] ?? "";
+
+    const result: UserBind[] =
+        await DatabaseManager.elainaDb.collections.userBind.searchPlayers(
+            page,
+            searchQuery
+        );
+
+    const responseObject = {
+        code: 200,
+        data: result
+    };
+
+    res.json(responseObject);
 });
 
 export default router;
