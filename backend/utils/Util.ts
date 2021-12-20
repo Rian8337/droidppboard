@@ -150,7 +150,7 @@ export abstract class Util {
                 for (let i = 0; i < res.length; ++i) {
                     const bindInfo: UserBind = res[i];
 
-                    const ppEntries: PPEntry[] = bindInfo.pp;
+                    const ppEntries: PPEntry[] = bindInfo.pp ?? [];
 
                     for (const ppEntry of ppEntries) {
                         const convertedMods: Mod[] = ModUtil.pcStringToMods(
@@ -206,7 +206,7 @@ export abstract class Util {
                 for (let i = 0; i < res.length; ++i) {
                     const playerInfo: PrototypePP = res[i];
 
-                    const ppEntries: PrototypePPEntry[] = playerInfo.pp;
+                    const ppEntries: PrototypePPEntry[] = playerInfo.pp ?? [];
 
                     for (const ppEntry of ppEntries) {
                         const convertedMods: Mod[] = ModUtil.pcStringToMods(
