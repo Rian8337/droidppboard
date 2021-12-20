@@ -27,11 +27,11 @@ export class PrototypePP implements DatabasePrototypePP {
         this._id = data._id;
         this.discordid = data.discordid;
         this.lastUpdate = data.lastUpdate;
-        this.pp = data.pp ?? [];
+        this.pp = data.pp;
         this.pptotal = data.pptotal;
         this.prevpptotal = data.prevpptotal;
         this.uid = data.uid;
-        this.previous_bind = data.previous_bind ?? [];
+        this.previous_bind = data.previous_bind;
         this.username = data.username;
         this.scanDone = data.scanDone;
     }

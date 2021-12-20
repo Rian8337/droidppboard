@@ -37,9 +37,9 @@ export class UserBind implements DatabaseUserBind {
         this.username = data.username;
         this.pptotal = data.pptotal;
         this.playc = data.playc;
-        this.pp = data.pp ?? [];
+        this.pp = data.pp;
         this.clan = data.clan;
-        this.previous_bind = data.previous_bind ?? [];
+        this.previous_bind = data.previous_bind;
         this.joincooldown = data.joincooldown;
         this.oldclan = data.oldclan;
         this.oldjoincooldown = data.oldjoincooldown;
