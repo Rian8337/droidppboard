@@ -1,6 +1,6 @@
 import express from "express";
 import { join } from "path";
-import { ModUtil } from "../modules/utils/ModUtil";
+import { ModUtil } from "osu-droid";
 import { Util } from "../utils/Util";
 
 const router: express.Router = express.Router();
@@ -11,9 +11,9 @@ router.get("/", (req, res) => {
     const droidMod: string =
         mod.toLowerCase() !== "nm"
             ? ModUtil.pcStringToMods(mod)
-                  .map((v) => v.droidString)
-                  .sort((a, b) => a.localeCompare(b))
-                  .join("") || ""
+                .map((v) => v.droidString)
+                .sort((a, b) => a.localeCompare(b))
+                .join("") || ""
             : "-";
 
     res.render(join(Util.getFrontendPath(), "render", "top-plays"), {

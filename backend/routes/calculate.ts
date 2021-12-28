@@ -1,16 +1,7 @@
 import express from "express";
 import { UploadedFile } from "express-fileupload";
+import { Accuracy, Beatmap, DroidPerformanceCalculator, MapStars, MapStats, MathUtils, Mod, ModUtil, OsuPerformanceCalculator, Parser, Precision } from "osu-droid";
 import { join } from "path";
-import { Beatmap } from "../modules/beatmap/Beatmap";
-import { DroidPerformanceCalculator } from "../modules/difficulty/DroidPerformanceCalculator";
-import { OsuPerformanceCalculator } from "../modules/difficulty/OsuPerformanceCalculator";
-import { MathUtils } from "../modules/mathutil/MathUtils";
-import { Mod } from "../modules/mods/Mod";
-import { MapStars } from "../modules/tools/MapStars";
-import { Accuracy } from "../modules/utils/Accuracy";
-import { MapStats } from "../modules/utils/MapStats";
-import { ModUtil } from "../modules/utils/ModUtil";
-import { Precision } from "../modules/utils/Precision";
 import { Util } from "../utils/Util";
 
 const router: express.Router = express.Router();
@@ -81,8 +72,10 @@ router.post("/", async (req, res) => {
         stats.isForceAR = !isNaN(stats.ar);
     }
 
+    const parser: Parser = new Parser().parse(osuFile);
+
     const star: MapStars = new MapStars().calculate({
-        file: osuFile,
+        map: parser.map,
         mods: convertedMods,
         stats: stats,
     });

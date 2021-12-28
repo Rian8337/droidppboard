@@ -27,6 +27,7 @@
     "express-rate-limit": "^5.5.1",
     "lodash": "^4.17.21",
     "mongodb": "^4.1.4",
+    "osu-droid": "github:Rian8337/osu-droid-module",
     "pug": "^3.0.2",
     "request": "^2.88.2",
     "ts-node": "^10.4.0",

@@ -1,18 +1,9 @@
 import express from "express";
 import { UploadedFile } from "express-fileupload";
+import { Accuracy, Beatmap, MapStats, MathUtils, Mod, ModUtil, Parser, Precision, RebalanceDroidPerformanceCalculator, RebalanceMapStars, RebalanceOsuPerformanceCalculator } from "osu-droid";
 import { join } from "path";
 import { DatabaseManager } from "../database/DatabaseManager";
 import { PrototypePP } from "../database/utils/aliceDb/PrototypePP";
-import { Beatmap } from "../modules/beatmap/Beatmap";
-import { MathUtils } from "../modules/mathutil/MathUtils";
-import { Mod } from "../modules/mods/Mod";
-import { DroidPerformanceCalculator } from "../modules/rebaldifficulty/DroidPerformanceCalculator";
-import { OsuPerformanceCalculator } from "../modules/rebaldifficulty/OsuPerformanceCalculator";
-import { RebalanceMapStars as MapStars } from "../modules/tools/RebalanceMapStars";
-import { Accuracy } from "../modules/utils/Accuracy";
-import { MapStats } from "../modules/utils/MapStats";
-import { ModUtil } from "../modules/utils/ModUtil";
-import { Precision } from "../modules/utils/Precision";
 import { Util } from "../utils/Util";
 
 const router: express.Router = express.Router();
@@ -84,9 +75,9 @@ router.get("/top-plays", (req, res) => {
     const droidMod: string =
         mod.toLowerCase() !== "nm"
             ? ModUtil.pcStringToMods(mod)
-                  .map((v) => v.droidString)
-                  .sort((a, b) => a.localeCompare(b))
-                  .join("") || ""
+                .map((v) => v.droidString)
+                .sort((a, b) => a.localeCompare(b))
+                .join("") || ""
             : "-";
 
     res.render(
@@ -167,8 +158,10 @@ router.post("/calculate", async (req, res) => {
         stats.isForceAR = !isNaN(stats.ar);
     }
 
-    const star: MapStars = new MapStars().calculate({
-        file: osuFile,
+    const parser: Parser = new Parser().parse(osuFile);
+
+    const star: RebalanceMapStars = new RebalanceMapStars().calculate({
+        map: parser.map,
         mods: convertedMods,
         stats: stats,
     });
@@ -189,8 +182,8 @@ router.post("/calculate", async (req, res) => {
         nobjects: map.objects.length,
     });
 
-    const dpp: DroidPerformanceCalculator =
-        new DroidPerformanceCalculator().calculate({
+    const dpp: RebalanceDroidPerformanceCalculator =
+        new RebalanceDroidPerformanceCalculator().calculate({
             stars: star.droidStars,
             combo: combo,
             accPercent: realAcc,
@@ -198,8 +191,8 @@ router.post("/calculate", async (req, res) => {
             stats: stats,
         });
 
-    const pp: OsuPerformanceCalculator =
-        new OsuPerformanceCalculator().calculate({
+    const pp: RebalanceOsuPerformanceCalculator =
+        new RebalanceOsuPerformanceCalculator().calculate({
             stars: star.pcStars,
             combo: combo,
             accPercent: realAcc,

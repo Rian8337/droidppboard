@@ -1,5 +1,5 @@
 import { ObjectId } from "bson";
-import { ModUtil } from "../../../modules/utils/ModUtil";
+import { ModUtil } from "osu-droid";
 import { DisplayPrototypePPEntry } from "../../../structures/DisplayPrototypePPEntry";
 import { PrototypePPEntry } from "../../../structures/PrototypePPEntry";
 import { DatabaseManager } from "../../DatabaseManager";

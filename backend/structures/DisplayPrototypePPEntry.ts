@@ -1,4 +1,4 @@
-import { Mod } from "../modules/mods/Mod";
+import { Mod } from "osu-droid";
 import { PrototypePPEntry } from "./PrototypePPEntry";
 
 /**

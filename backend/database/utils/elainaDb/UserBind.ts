@@ -1,5 +1,5 @@
 import { ObjectId } from "bson";
-import { ModUtil } from "../../../modules/utils/ModUtil";
+import { ModUtil } from "osu-droid";
 import { DisplayPPEntry } from "../../../structures/DisplayPPEntry";
 import { PPEntry } from "../../../structures/PPEntry";
 import { RecalculationProgress } from "../../../structures/RecalculationProgress";
