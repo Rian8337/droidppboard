@@ -26,7 +26,7 @@ router.get("/", async (req, res) => {
     const page: number = parseInt(req.url.split('page=')[1]);
 
     if (!isNaN(page)) {
-        playerInfo.pp = playerInfo.pp.slice(15 * (page - 1), 15 + 15 * (page - 1));
+        playerInfo.pp = playerInfo.pp.slice(5 * (page - 1), 5 + 5 * (page - 1));
     }
 
     const response = {
