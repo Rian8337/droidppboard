@@ -1,9 +1,9 @@
-import { DisplayPPEntry } from "./DisplayPPEntry";
+import { PPEntry } from "./PPEntry";
 
 /**
- * Represents a PP entry that will be displayed in top plays list.
+ * Represents a PP entry that is used for caching.
  */
-export interface TopPPEntry extends DisplayPPEntry {
+export interface TopPPEntry extends PPEntry {
     /**
      * The username of the player who has this entry.
      */

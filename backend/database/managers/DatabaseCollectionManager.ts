@@ -72,7 +72,7 @@ export abstract class DatabaseCollectionManager<T extends BaseDocument, C> {
      * @returns The documents.
      */
     async get(filter: Filter<T> = {}, options?: FindOptions<T>): Promise<C[]> {
-        const res: T[] = await this.collection.find(filter, options).toArray();
+        const res: T[] = <T[]>await this.collection.find(filter, options).toArray();
 
         return res.map((v) => new this.utilityInstance(v));
     }

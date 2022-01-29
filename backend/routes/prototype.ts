@@ -1,9 +1,12 @@
+import { ModUtil, Mod, MathUtils, MapStats, Parser, Beatmap, Accuracy, Precision } from "@rian8337/osu-base";
+import { MapStars, DroidPerformanceCalculator, OsuPerformanceCalculator } from "@rian8337/osu-rebalance-difficulty-calculator";
+import getStrainChart from "@rian8337/osu-strain-graph-generator";
 import express from "express";
 import { UploadedFile } from "express-fileupload";
-import { Accuracy, Beatmap, MapStats, MathUtils, Mod, ModUtil, Parser, Precision, RebalanceDroidPerformanceCalculator, RebalanceMapStars, RebalanceOsuPerformanceCalculator } from "osu-droid";
 import { join } from "path";
 import { DatabaseManager } from "../database/DatabaseManager";
 import { PrototypePP } from "../database/utils/aliceDb/PrototypePP";
+import { DisplayTopPrototypePPEntry } from "../structures/DisplayTopPrototypePPEntry";
 import { Util } from "../utils/Util";
 
 const router: express.Router = express.Router();
@@ -80,10 +83,18 @@ router.get("/top-plays", (req, res) => {
                 .join("") || ""
             : "-";
 
+    const entries: DisplayTopPrototypePPEntry[] = (Util.topPrototypePPList.get(droidMod) ?? [])
+        .map(v => {
+            return {
+                ...v,
+                displayMods: ModUtil.pcStringToMods(v.mods)
+            };
+        });
+
     res.render(
         join(Util.getFrontendPath(), "render", "prototype", "top-plays"),
         {
-            entries: Util.topPrototypePPList.get(droidMod) ?? [],
+            entries: entries,
             mods: Util.convertURI(mod).toUpperCase(),
         }
     );
@@ -160,7 +171,7 @@ router.post("/calculate", async (req, res) => {
 
     const parser: Parser = new Parser().parse(osuFile);
 
-    const star: RebalanceMapStars = new RebalanceMapStars().calculate({
+    const star: MapStars = new MapStars().calculate({
         map: parser.map,
         mods: convertedMods,
         stats: stats,
@@ -182,8 +193,8 @@ router.post("/calculate", async (req, res) => {
         nobjects: map.objects.length,
     });
 
-    const dpp: RebalanceDroidPerformanceCalculator =
-        new RebalanceDroidPerformanceCalculator().calculate({
+    const dpp: DroidPerformanceCalculator =
+        new DroidPerformanceCalculator().calculate({
             stars: star.droidStars,
             combo: combo,
             accPercent: realAcc,
@@ -191,8 +202,8 @@ router.post("/calculate", async (req, res) => {
             stats: stats,
         });
 
-    const pp: RebalanceOsuPerformanceCalculator =
-        new RebalanceOsuPerformanceCalculator().calculate({
+    const pp: OsuPerformanceCalculator =
+        new OsuPerformanceCalculator().calculate({
             stars: star.pcStars,
             combo: combo,
             accPercent: realAcc,
@@ -222,10 +233,10 @@ router.post("/calculate", async (req, res) => {
             },
             straingraph: {
                 droid: (
-                    await star.droidStars.getStrainChart(undefined, "#3884ff")
+                    await getStrainChart(star.droidStars, undefined, "#3884ff")
                 )?.toString("base64"),
                 osu: (
-                    await star.pcStars.getStrainChart(undefined, "#38caff")
+                    await getStrainChart(star.pcStars, undefined, "#38caff")
                 )?.toString("base64"),
             },
         },

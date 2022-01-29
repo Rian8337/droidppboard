@@ -1,14 +1,16 @@
 import request from "request";
+import { Request } from "express";
 import { join } from "path";
 import { DatabaseManager } from "../database/DatabaseManager";
 import { UserBind } from "../database/utils/elainaDb/UserBind";
-import { Mod, ModUtil } from "osu-droid";
+import { Mod, ModUtil } from "@rian8337/osu-base";
 import { PPEntry } from "../structures/PPEntry";
 import { TopPPEntry } from "../structures/TopPPEntry";
 import { TopPrototypePPEntry } from "../structures/TopPrototypePPEntry";
 import { PrototypePPEntry } from "../structures/PrototypePPEntry";
 import { PrototypePP } from "../database/utils/aliceDb/PrototypePP";
 import { registerFont } from "canvas";
+import { ReadStream } from "fs";
 
 /**
  * Comparisons used for searching whitelisted beatmaps.
@@ -158,7 +160,6 @@ export abstract class Util {
 
                         const topEntry: TopPPEntry = {
                             ...ppEntry,
-                            displayMods: ModUtil.pcStringToMods(ppEntry.mods),
                             username: bindInfo.username,
                         };
 
@@ -214,7 +215,6 @@ export abstract class Util {
 
                         const topEntry: TopPrototypePPEntry = {
                             ...ppEntry,
-                            displayMods: ModUtil.pcStringToMods(ppEntry.mods),
                             username: playerInfo.username,
                         };
 
@@ -265,6 +265,30 @@ export abstract class Util {
                 .on("complete", () => {
                     resolve(data);
                 });
+        });
+    }
+
+    /**
+     * Checks if a request is requesting prototype data.
+     * 
+     * @param req The request.
+     */
+    static requestIsPrototype(req: Request): boolean {
+        return req.baseUrl.includes("prototype") || req.body.prototype;
+    }
+
+    /**
+     * Reads a file stream and returns it as string.
+     * 
+     * @param stream The stream.
+     */
+    static readFile(stream: ReadStream): Promise<string> {
+        const chunks: Buffer[] = [];
+
+        return new Promise((resolve, reject) => {
+            stream.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
+            stream.on("error", (err) => reject(err));
+            stream.on("end", () => resolve(Buffer.concat(chunks).toString("utf-8")));
         });
     }
 }

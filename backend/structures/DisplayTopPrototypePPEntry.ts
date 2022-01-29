@@ -1,10 +1,10 @@
 import { Mod } from "@rian8337/osu-base";
-import { PPEntry } from "./PPEntry";
+import { TopPrototypePPEntry } from "./TopPrototypePPEntry";
 
 /**
  * Represents a PP entry that will be displayed in a user's profile.
  */
-export interface DisplayPPEntry extends PPEntry {
+export interface DisplayTopPrototypePPEntry extends TopPrototypePPEntry {
     /**
      * Array of converted mods for display purposes.
      */

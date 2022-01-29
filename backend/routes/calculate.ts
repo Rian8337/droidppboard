@@ -1,6 +1,8 @@
+import { Mod, ModUtil, MathUtils, MapStats, Parser, Beatmap, Accuracy, Precision } from "@rian8337/osu-base";
+import { DroidPerformanceCalculator, MapStars, OsuPerformanceCalculator } from "@rian8337/osu-difficulty-calculator";
+import getStrainChart from "@rian8337/osu-strain-graph-generator";
 import express from "express";
 import { UploadedFile } from "express-fileupload";
-import { Accuracy, Beatmap, DroidPerformanceCalculator, MapStars, MapStats, MathUtils, Mod, ModUtil, OsuPerformanceCalculator, Parser, Precision } from "osu-droid";
 import { join } from "path";
 import { Util } from "../utils/Util";
 
@@ -136,10 +138,10 @@ router.post("/", async (req, res) => {
             },
             straingraph: {
                 droid: (
-                    await star.droidStars.getStrainChart(undefined, "#3884ff")
+                    await getStrainChart(star.droidStars, undefined, "#3884ff")
                 )?.toString("base64"),
                 osu: (
-                    await star.pcStars.getStrainChart(undefined, "#38caff")
+                    await getStrainChart(star.pcStars, undefined, "#38caff")
                 )?.toString("base64"),
             },
         },
