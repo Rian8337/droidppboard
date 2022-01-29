@@ -23,6 +23,12 @@ router.get("/", async (req, res) => {
 
     playerInfo.pp.forEach(v => delete v.scoreID);
 
+    const page: number = parseInt(req.url.split('page=')[1]);
+
+    if (!isNaN(page)) {
+        playerInfo.pp = playerInfo.pp.slice(15 * (page - 1), 15 + 15 * (page - 1));
+    }
+
     const response = {
         ...playerInfo,
         pprank: await dbManager.getUserDPPRank(playerInfo.pptotal),
