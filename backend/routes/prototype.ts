@@ -69,6 +69,7 @@ router.get("/profile", async (req, res) => {
         pptotal: playerInfo.pptotal,
         prevpptotal: playerInfo.prevpptotal,
         entries: playerInfo.ppToDisplay(),
+        lastupdate: playerInfo.lastUpdate,
     });
 });
 

@@ -39,7 +39,7 @@ export class PrototypePPCollectionManager extends DatabaseCollectionManager<
 
         this.utilityInstance = <
             DatabaseUtilityConstructor<DatabasePrototypePP, PrototypePP>
-        >new PrototypePP().constructor;
+            >new PrototypePP().constructor;
     }
 
     /**
@@ -68,16 +68,16 @@ export class PrototypePPCollectionManager extends DatabaseCollectionManager<
     ): Promise<PrototypePP[]> {
         const query: Filter<DatabasePrototypePP> = searchQuery
             ? {
-                  $or: [
-                      { uid: parseInt(searchQuery) },
-                      {
-                          username: new RegExp(
-                              Util.convertURIregex(searchQuery),
-                              "i"
-                          ),
-                      },
-                  ],
-              }
+                $or: [
+                    { uid: parseInt(searchQuery) },
+                    {
+                        username: new RegExp(
+                            Util.convertURIregex(searchQuery),
+                            "i"
+                        ),
+                    },
+                ],
+            }
             : {};
 
         const userBind: DatabasePrototypePP[] = await this.collection
@@ -114,6 +114,7 @@ export class PrototypePPCollectionManager extends DatabaseCollectionManager<
                     pp: 1,
                     pptotal: 1,
                     prevpptotal: 1,
+                    lastUpdate: 1,
                 },
             }
         );

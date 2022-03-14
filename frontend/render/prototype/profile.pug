@@ -30,7 +30,11 @@ body
     else
         h2.subtitle Player Profile: #{username}
 
-        h3.description The PP values in this list are under development!
+        h3.description
+            | The PP values in this list are under development!
+            br
+            br
+            | Last Update: #{new Date(lastupdate).toUTCString()}
 
         table
             tr
