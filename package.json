@@ -16,7 +16,7 @@
   "dependencies": {
     "@rian8337/osu-base": "^1.0.4",
     "@rian8337/osu-difficulty-calculator": "^1.0.4",
-    "@rian8337/osu-rebalance-difficulty-calculator": "^1.0.5",
+    "@rian8337/osu-rebalance-difficulty-calculator": "^1.4.12-alpha.0",
     "@rian8337/osu-strain-graph-generator": "^1.0.5",
     "@types/express": "^4.17.13",
     "@types/express-fileupload": "^1.1.7",
