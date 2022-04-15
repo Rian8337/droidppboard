@@ -87,48 +87,37 @@ router.get("/", async (req, res) => {
                     if (isDescendSort) {
                         value = value.substring(1);
                     }
+                    const attributes: PropertyDescriptor = {
+                        value: isDescendSort ? -1 : 1,
+                        writable: true,
+                        configurable: true,
+                        enumerable: true,
+                    };
                     switch (value) {
                         case "beatmapid":
                         case "mapid":
                         case "id":
-                            Object.defineProperty(sort, "mapid", {
-                                value: isDescendSort ? -1 : 1,
-                                writable: true,
-                                configurable: true,
-                                enumerable: true,
-                            });
+                            Object.defineProperty(sort, "mapid", attributes);
                             break;
                         case "beatmapname":
                         case "mapname":
                         case "name":
-                            Object.defineProperty(sort, "mapname", {
-                                value: isDescendSort ? -1 : 1,
-                                writable: true,
-                                configurable: true,
-                                enumerable: true,
-                            });
+                            Object.defineProperty(sort, "mapname", attributes);
                             break;
                         case "cs":
                         case "ar":
                         case "od":
                         case "hp":
                         case "bpm":
-                            Object.defineProperty(sort, `diffstat.${value}`, {
-                                value: isDescendSort ? -1 : 1,
-                                writable: true,
-                                configurable: true,
-                                enumerable: true,
-                            });
+                            Object.defineProperty(sort, `diffstat.${value}`, attributes);
                             break;
                         case "sr":
                         case "star":
                         case "stars":
-                            Object.defineProperty(sort, "diffstat.sr", {
-                                value: isDescendSort ? -1 : 1,
-                                writable: true,
-                                configurable: true,
-                                enumerable: true,
-                            });
+                            Object.defineProperty(sort, "diffstat.sr", attributes);
+                            break;
+                        case "date":
+                            Object.defineProperty(sort, "_id", attributes);
                             break;
                         default:
                             mapNameQuery += finalQuery + " ";
@@ -166,10 +155,11 @@ router.get("/", async (req, res) => {
         });
     }
 
-    // Allow SR and BPM sort to override beatmap title sort
+    // Allow SR, BPM, and date sort to override beatmap title sort
     if (
         sort.hasOwnProperty("diffstat.sr") ||
-        sort.hasOwnProperty("diffstat.bpm")
+        sort.hasOwnProperty("diffstat.bpm") ||
+        sort.hasOwnProperty("_id")
     ) {
         delete sort["mapname"];
     }

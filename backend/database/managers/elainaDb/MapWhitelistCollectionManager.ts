@@ -40,7 +40,7 @@ export class MapWhitelistCollectionManager extends DatabaseCollectionManager<
 
         this.utilityInstance = <
             DatabaseUtilityConstructor<DatabaseMapWhitelist, MapWhitelist>
-        >new MapWhitelist().constructor;
+            >new MapWhitelist().constructor;
     }
 
     /**
@@ -58,7 +58,7 @@ export class MapWhitelistCollectionManager extends DatabaseCollectionManager<
     ): Promise<MapWhitelist[]> {
         const result: DatabaseMapWhitelist[] = await this.collection
             .find(searchQuery, {
-                projection: { _id: 0, mapid: 1, mapname: 1, diffstat: 1 },
+                projection: { _id: 1, mapid: 1, mapname: 1, diffstat: 1 },
             })
             .sort(sort)
             .skip(30 * (page - 1))
