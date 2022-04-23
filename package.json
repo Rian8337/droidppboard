@@ -29,7 +29,7 @@
   "dependencies": {
     "app-database": "file:modules/app-database",
     "app-structures": "file:modules/app-structures",
-    "mongodb": "^4.2.0",
+    "mongodb": "^4.5.0",
     "osu-droid": "file:modules/osu-droid"
   },
   "eslintConfig": {
