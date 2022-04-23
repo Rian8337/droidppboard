@@ -1,71 +1,32 @@
 {
-  "name": "ppboard",
+  "name": "droidppboard",
   "version": "3.0.0",
-  "description": "Experimental leaderboard for Elaina PP Project",
-  "main": "index.js",
+  "description": "Experimental leaderboard for osu!droid performance point",
   "scripts": {
-    "build-packages": "npm run build-app-database && npm run build-app-structures && npm run build-osu-droid",
-    "build-backend": "cd backend && npm install",
-    "build-frontend-windows": "cd frontend && NODE_ENV=development npm install && npm run build-windows && npm prune --production",
-    "build-frontend-linux": "cd frontend && NODE_ENV=development npm install && npm run build-linux && npm prune --production",
-    "heroku-postbuild": "npm run build-backend && npm run build-frontend-linux",
-    "start": "cd backend && npm start",
+    "format-code": "npm run format-code-app-structures && npm run format-code-server && npm run format-code-client",
+    "format-code-app-structures": "npx prettier -w --loglevel=silent \"modules/app-structures/**\"",
+    "format-code-client": "npx prettier -w --loglevel=silent \"client/**\"",
+    "format-code-server": "npx prettier -w --loglevel=silent \"server/**\"",
+    "heroku-prebuild": "cd server && npm install",
+    "heroku-postbuild": "cd client && npm install && npm run build",
+    "start": "cd server && npm start",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "engines": {
-    "node": "16.x"
+  "devDependencies": {
+    "prettier": "^2.6.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Rian8337/droidppboard.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "devDependencies": {
-    "@types/node": "^16.11.11",
-    "@typescript-eslint/eslint-plugin": "^5.4.0",
-    "@typescript-eslint/parser": "^5.4.0",
-    "eslint": "^8.2.0",
-    "eslint-plugin-react": "^7.27.1",
-    "typescript": "^4.5.2"
+  "bugs": {
+    "url": "https://github.com/Rian8337/droidppboard/issues"
   },
-  "dependencies": {
-    "app-database": "file:modules/app-database",
-    "app-structures": "file:modules/app-structures",
-    "mongodb": "^4.5.0",
-    "osu-droid": "file:modules/osu-droid"
-  },
-  "eslintConfig": {
-    "env": {
-      "browser": true,
-      "es2021": true,
-      "node": true
-    },
-    "extends": [
-      "eslint:recommended",
-      "plugin:react/recommended",
-      "plugin:@typescript-eslint/recommended"
-    ],
-    "parser": "@typescript-eslint/parser",
-    "parserOptions": {
-      "ecmaFeatures": {
-        "jsx": true
-      },
-      "ecmaVersion": 2021,
-      "sourceType": "module"
-    },
-    "plugins": [
-      "react",
-      "@typescript-eslint"
-    ],
-    "rules": {
-      "@typescript-eslint/no-empty-function": "off",
-      "@typescript-eslint/no-inferrable-types": "off",
-      "@typescript-eslint/no-non-null-assertion": "off",
-      "prefer-const": "warn",
-      "react/react-in-jsx-scope": "off"
-    },
-    "settings": {
-      "react": {
-        "version": "detect"
-      }
-    }
+  "homepage": "https://github.com/Rian8337/droidppboard#readme",
+  "prettier": {
+    "tabWidth": 4
   }
 }

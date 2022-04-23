@@ -1,0 +1,70 @@
+{
+  "name": "droidppboard",
+  "version": "1.0.0",
+  "description": "Leaderboard for Elaina PP Project",
+  "main": "index.ts",
+  "scripts": {
+    "start": "ts-node ."
+  },
+  "engines": {
+    "node": "16.x"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@rian8337/osu-base": "^1.4.16",
+    "@rian8337/osu-difficulty-calculator": "^1.4.16",
+    "@rian8337/osu-rebalance-difficulty-calculator": "^1.4.16",
+    "@rian8337/osu-strain-graph-generator": "^1.4.16",
+    "@types/cors": "^2.8.12",
+    "@types/express": "^4.17.13",
+    "@types/express-form-data": "^2.0.2",
+    "@types/node": "^17.0.25",
+    "@types/request": "^2.48.8",
+    "app-structures": "file:../modules/app-structures",
+    "canvas": "^2.9.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.0",
+    "express": "^4.17.3",
+    "express-form-data": "^2.0.18",
+    "express-rate-limit": "^6.3.0",
+    "mongodb": "^4.5.0",
+    "request": "^2.88.2",
+    "ts-node": "^10.7.0",
+    "typescript": "^4.6.3"
+  },
+  "devDependencies": {
+    "@typescript-eslint/parser": "^5.20.0",
+    "eslint": "^8.14.0",
+    "prettier": "^2.6.2"
+  },
+  "eslintConfig": {
+    "env": {
+      "browser": true,
+      "es2022": true,
+      "node": true
+    },
+    "extends": [
+      "eslint:recommended",
+      "plugin:@typescript-eslint/recommended"
+    ],
+    "parser": "@typescript-eslint/parser",
+    "parserOptions": {
+      "ecmaVersion": 2022,
+      "sourceType": "module"
+    },
+    "plugins": [
+      "@typescript-eslint"
+    ],
+    "rules": {
+      "@typescript-eslint/no-empty-function": "off",
+      "@typescript-eslint/no-inferrable-types": "off",
+      "@typescript-eslint/no-non-null-assertion": "off",
+      "prefer-const": "warn"
+    }
+  },
+  "prettier": {
+    "tabWidth": 4
+  }
+}

@@ -38,5 +38,5 @@ export interface ICalculationResult {
     readonly strainGraph: Readonly<{
         droid?: string;
         osu?: string;
-    }>
+    }>;
 }
