@@ -63,6 +63,7 @@ export default function Home() {
                 </li>
                 <li>Veno - 15.00$ - ❤️❤️❤️, no homo :3</li>
                 <li>Imagine Blaze - 7.77$ - much appreciated man owo</li>
+                <li>AkazaAkari - 10.00$ - thank you veteran player ❤️</li>
             </ul>
         </motion.div>
     );
