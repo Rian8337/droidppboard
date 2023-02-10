@@ -15,11 +15,13 @@ import { DatabaseManager } from "./database/managers/DatabaseManager";
 
 config();
 
-// Canvas configuration
+//#region App configuration
+
 Util.initCanvas();
 
-// App configuration
 const app = express();
+const ppboardRouter = express.Router();
+const skinsRouter = express.Router();
 
 app.set("trust proxy", 1);
 
@@ -32,40 +34,41 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(resolve(Util.getFrontendPath(), "build")));
 app.use(Util.createRateLimit(12));
 
-app.use(
-    [
-        "/api/ppboard/getleaderboard",
-        "/api/ppboard/prototype/getleaderboard",
-        "/api/ppboard/old/getleaderboard",
-    ],
+app.use("/api/ppboard", ppboardRouter);
+app.use("/api/skins", skinsRouter);
+
+//#endregion
+
+//#region Droid PP endpoints
+
+ppboardRouter.use(
+    ["/getleaderboard", "/prototype/getleaderboard", "old/getleaderboard"],
     getPPLeaderboard
 );
-app.use(
-    [
-        "/api/ppboard/getuserprofile",
-        "/api/ppboard/prototype/getuserprofile",
-        "/api/ppboard/old/getuserprofile",
-    ],
+ppboardRouter.use(
+    ["/getuserprofile", "/prototype/getuserprofile", "/old/getuserprofile"],
     getUserProfile
 );
-app.use("/api/ppboard/getwhitelist", getWhitelist);
-app.use(
-    [
-        "/api/ppboard/gettopplays",
-        "/api/ppboard/prototype/gettopplays",
-        "/api/ppboard/old/gettopplays",
-    ],
+ppboardRouter.use("/getwhitelist", getWhitelist);
+ppboardRouter.use(
+    ["/gettopplays", "/prototype/gettopplays", "/old/gettopplays"],
     getTopPlays
 );
-app.use(
-    [
-        "/api/ppboard/calculatebeatmap",
-        "/api/ppboard/prototype/calculatebeatmap",
-    ],
+ppboardRouter.use(
+    ["/calculatebeatmap", "/prototype/calculatebeatmap"],
     calculateBeatmap
 );
-app.use("/api/skins/search", searchSkins);
-app.use("/api/skins/get", getSkin);
+
+//#endregion
+
+//#region Skins endpoints
+
+skinsRouter.use("/search", searchSkins);
+skinsRouter.use("/get", getSkin);
+
+//#endregion
+
+//#region App launch
 
 app.get("*", (_, res) => {
     res.sendFile(resolve(Util.getFrontendPath(), "build", "index.html"));
@@ -81,3 +84,5 @@ DatabaseManager.init().then(async () => {
 
     app.listen(appPort, () => console.log(`Express running → PORT ${appPort}`));
 });
+
+//#endregion
