@@ -1,5 +1,6 @@
 import Leaderboard from "../components/leaderboard/Leaderboard";
+import { PPModes } from "../interfaces/PPModes";
 
 export default function MainLeaderboard() {
-    return <Leaderboard prototype={false} />;
+    return <Leaderboard mode={PPModes.live} />;
 }

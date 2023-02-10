@@ -2,7 +2,7 @@ import "../../styles/table-beatmap-filter.css";
 
 export default function WhitelistBeatmapFilter() {
     return (
-        <>
+        <div className="beatmap-filter-container">
             <h3 className="beatmap-filter-title">Filtering Beatmaps</h3>
             <table className="beatmap-filter">
                 <tbody>
@@ -109,6 +109,6 @@ export default function WhitelistBeatmapFilter() {
                     </tr>
                 </tbody>
             </table>
-        </>
+        </div>
     );
 }

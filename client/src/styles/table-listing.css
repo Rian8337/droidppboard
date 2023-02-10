@@ -1,6 +1,12 @@
+.table-container {
+    display: flex;
+    justify-content: center;
+}
+
 .listing {
     font: 12px Exo-Medium;
     width: 100%;
+    max-width: 1000px;
 }
 
 .listing,
@@ -25,6 +31,9 @@ tbody td {
 .listing tbody td.assign-left {
     text-align: left;
     padding-left: 10px;
+}
+
+.listing tbody td.clickable:hover {
     cursor: pointer;
 }
 

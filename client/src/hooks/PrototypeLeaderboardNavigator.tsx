@@ -1,9 +1,9 @@
-import { Context, createContext, FC, useState } from "react";
-import { LeaderboardSetting } from "../interfaces/LeaderboardSetting";
+import { createContext, FC, useState } from "react";
+import { TableSetting } from "../interfaces/TableSetting";
 import { IPrototypePP } from "app-structures";
 
-const PrototypeLeaderboardNavigator: Context<LeaderboardSetting<IPrototypePP>> =
-    createContext<LeaderboardSetting<IPrototypePP>>({
+const PrototypeLeaderboardNavigator = createContext<TableSetting<IPrototypePP>>(
+    {
         data: [],
         internalPage: 1,
         currentPage: 1,
@@ -17,7 +17,8 @@ const PrototypeLeaderboardNavigator: Context<LeaderboardSetting<IPrototypePP>> =
         setSearchReady: () => {},
         setEnablePaging: () => {},
         setErrorMessage: () => {},
-    });
+    }
+);
 
 export const PrototypeLeaderboardNavigatorProvider: FC = (
     props: { children?: JSX.Element } = {}

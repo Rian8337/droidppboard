@@ -1,7 +1,7 @@
 import { IPrototypePP } from "app-structures";
 import express from "express";
-import { DatabaseManager } from "../database/managers/DatabaseManager";
-import { Util } from "../Util";
+import { DatabaseManager } from "../../../database/managers/DatabaseManager";
+import { Util } from "../../../utils/Util";
 
 const router: express.Router = express.Router();
 
@@ -12,11 +12,18 @@ router.get("/", async (req, res) => {
         return res.status(404).json({ message: "Player not found!" });
     }
 
-    const isPrototype = Util.requestIsPrototype(req);
+    let dbManager;
 
-    const dbManager = isPrototype
-        ? DatabaseManager.aliceDb.collections.prototypePP
-        : DatabaseManager.elainaDb.collections.userBind;
+    switch (true) {
+        case Util.requestIsPrototype(req):
+            dbManager = DatabaseManager.aliceDb.collections.prototypePP;
+            break;
+        case Util.requestIsOld(req):
+            dbManager = DatabaseManager.aliceDb.collections.playerOldPPProfile;
+            break;
+        default:
+            dbManager = DatabaseManager.elainaDb.collections.userBind;
+    }
 
     const playerInfo = await dbManager.getFromUid(uid);
 
@@ -29,7 +36,7 @@ router.get("/", async (req, res) => {
         pprank: await dbManager.getUserDPPRank(playerInfo.pptotal),
     };
 
-    if (isPrototype) {
+    if (Util.requestIsPrototype(req)) {
         Object.defineProperty(response, "prevpprank", {
             value: await DatabaseManager.elainaDb.collections.userBind.getUserDPPRank(
                 (<IPrototypePP>playerInfo).prevpptotal

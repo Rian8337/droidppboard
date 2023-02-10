@@ -4,17 +4,23 @@ import PlayList from "./PlayList";
 import Head from "./Head";
 import { motion } from "framer-motion";
 import PrototypeDescription from "./PrototypeDescription";
-import { IPrototypePP, IUserBind } from "app-structures";
+import { IOldPPProfile, IPrototypePP, IUserBind } from "app-structures";
 import { Util } from "../Util";
 import "../styles/profile.css";
+import { PPModes } from "../interfaces/PPModes";
+import OldDescription from "./OldDescription";
 
-export default function PlayerProfile(props: { prototype: boolean }) {
+export default function PlayerProfile(props: { mode: PPModes }) {
     const { uid } = useParams();
     const [data, setData] = useState<
-        IUserBind | IPrototypePP | null | undefined
+        IUserBind | IPrototypePP | IOldPPProfile | null | undefined
     >(undefined);
     const [rank, setRank] = useState<number | null>(null);
     const [prevRank, setPrevRank] = useState<number | null>(null);
+    const [weightedAccuracy, setWeightedAccuracy] = useState<number | null>(
+        null
+    );
+    const [lastUpdate, setLastUpdate] = useState<number | null>(null);
     const [errorMessage, setErrorMessage] = useState<string | undefined>(
         undefined
     );
@@ -25,8 +31,12 @@ export default function PlayerProfile(props: { prototype: boolean }) {
         }
 
         fetch(
-            `/api/${
-                props.prototype ? "prototype/" : ""
+            `/api/ppboard/${
+                props.mode === PPModes.prototype
+                    ? "prototype/"
+                    : props.mode === PPModes.old
+                    ? "old/"
+                    : ""
             }getuserprofile?uid=${uid}`
         )
             .then((res) => {
@@ -43,17 +53,28 @@ export default function PlayerProfile(props: { prototype: boolean }) {
                 return res.json();
             })
             .then((rawData) => {
-                if (props.prototype) {
+                if (props.mode === PPModes.prototype) {
                     setPrevRank(rawData.prevpprank);
+                    setLastUpdate(rawData.lastUpdate);
                 }
                 setRank(rawData.pprank);
                 setData(rawData);
+
+                let accSum = 0;
+                let weight = 0;
+
+                for (let i = 0; i < rawData.pp.length; ++i) {
+                    accSum += rawData.pp[i].accuracy * Math.pow(0.95, i);
+                    weight += Math.pow(0.95, i);
+                }
+
+                setWeightedAccuracy(accSum / weight || 0);
             })
             .catch((e: Error) => {
                 setData(null);
                 setErrorMessage(e.message);
             });
-    }, [props.prototype, uid]);
+    }, [props.mode, uid]);
 
     return (
         <motion.div
@@ -66,10 +87,18 @@ export default function PlayerProfile(props: { prototype: boolean }) {
                 <>
                     <Head
                         description={`A player's ${
-                            props.prototype ? "prototype" : ""
+                            props.mode === PPModes.prototype
+                                ? "prototype"
+                                : props.mode === PPModes.old
+                                ? "old"
+                                : ""
                         }profile in Elaina PP Project.`}
                         title={`PP Board - ${
-                            props.prototype ? "Prototype " : ""
+                            props.mode === PPModes.prototype
+                                ? "Prototype "
+                                : props.mode === PPModes.old
+                                ? "Old "
+                                : ""
                         }Player Profile`}
                     />
                     <h2 className="subtitle">
@@ -87,64 +116,109 @@ export default function PlayerProfile(props: { prototype: boolean }) {
                 <>
                     <Head
                         description={`${data.username}'s ${
-                            props.prototype ? "prototype " : ""
+                            props.mode === PPModes.prototype
+                                ? "prototype "
+                                : props.mode === PPModes.old
+                                ? "old "
+                                : ""
                         }profile in Elaina PP Project.`}
                         title={`PP Board - ${data.username}`}
                     />
                     <h2 className="subtitle">
                         Player Profile: {data.username}
                     </h2>
-                    {props.prototype ? <PrototypeDescription /> : null}
+                    {props.mode === PPModes.prototype ? (
+                        <PrototypeDescription />
+                    ) : props.mode === PPModes.old ? (
+                        <OldDescription />
+                    ) : null}
                     <table>
-                        {Util.isPrototype(data) ? (
-                            <tbody>
-                                <tr>
-                                    <th>Live PP</th>
-                                    <td>{data.prevpptotal.toFixed(2)}</td>
-                                </tr>
-                                <tr>
-                                    <th>Local PP</th>
-                                    <td>{data.pptotal.toFixed(2)}</td>
-                                </tr>
-                                <tr>
-                                    <th>PP Diff</th>
-                                    <td>
-                                        {(
-                                            data.pptotal - data.prevpptotal
-                                        ).toFixed(2)}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th>Live PP Rank</th>
-                                    <td>#{prevRank}</td>
-                                </tr>
-                                <tr>
-                                    <th>Local PP Rank</th>
-                                    <td>#{rank}</td>
-                                </tr>
-                                <tr>
-                                    <th>Rank Diff</th>
-                                    <td>
-                                        {(rank! - prevRank!).toLocaleString()}
-                                    </td>
-                                </tr>
-                            </tbody>
-                        ) : (
-                            <tbody>
-                                <tr>
-                                    <th>Total PP</th>
-                                    <td>{data.pptotal.toFixed(2)}</td>
-                                </tr>
-                                <tr>
-                                    <th>PP Rank</th>
-                                    <td>#{rank}</td>
-                                </tr>
-                                <tr>
-                                    <th>Play Count</th>
-                                    <td>{data.playc}</td>
-                                </tr>
-                            </tbody>
-                        )}
+                        <tbody>
+                            {Util.isPrototype(data) ? (
+                                <>
+                                    <tr>
+                                        <th>Live PP</th>
+                                        <td>{data.prevpptotal.toFixed(2)}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Local PP</th>
+                                        <td>{data.pptotal.toFixed(2)}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>PP Diff</th>
+                                        <td>
+                                            {(
+                                                data.pptotal - data.prevpptotal
+                                            ).toFixed(2)}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Live PP Rank</th>
+                                        <td>#{prevRank}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Local PP Rank</th>
+                                        <td>#{rank}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Rank Diff</th>
+                                        <td>
+                                            {(
+                                                rank! - prevRank!
+                                            ).toLocaleString()}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Accuracy</th>
+                                        <td>
+                                            {weightedAccuracy?.toFixed(2) || 0}%
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Last Update</th>
+                                        <td>
+                                            {new Date(
+                                                lastUpdate!
+                                            ).toUTCString()}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Two-handed Scores</th>
+                                        <td>
+                                            {
+                                                data.pp.filter(
+                                                    (p) =>
+                                                        p.twoHandedNoteCount /
+                                                            p.aimNoteCount >
+                                                        0.1
+                                                ).length
+                                            }
+                                        </td>
+                                    </tr>
+                                </>
+                            ) : (
+                                <>
+                                    <tr>
+                                        <th>Total PP</th>
+                                        <td>{data.pptotal.toFixed(2)}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>PP Rank</th>
+                                        <td>#{rank}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Play Count</th>
+                                        <td>{data.playc}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Accuracy</th>
+                                        <td>
+                                            {weightedAccuracy?.toFixed(2) || 0}%
+                                        </td>
+                                    </tr>
+                                </>
+                            )}
+                        </tbody>
                     </table>
                     <PlayList data={data.pp} />
                 </>

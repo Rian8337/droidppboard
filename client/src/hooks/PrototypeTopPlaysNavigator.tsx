@@ -1,17 +1,18 @@
 import { PrototypePPEntry } from "app-structures";
-import { Context, createContext, FC, useState } from "react";
+import { createContext, FC, useState } from "react";
 import { TopPlaysSetting } from "../interfaces/TopPlaysSetting";
 
-const PrototypeTopPlaysNavigator: Context<TopPlaysSetting<PrototypePPEntry>> =
-    createContext<TopPlaysSetting<PrototypePPEntry>>({
-        data: [],
-        query: "",
-        isSearchReady: false,
-        setData: () => {},
-        setQuery: () => {},
-        setSearchReady: () => {},
-        setErrorMessage: () => {},
-    });
+const PrototypeTopPlaysNavigator = createContext<
+    TopPlaysSetting<PrototypePPEntry>
+>({
+    data: [],
+    query: "",
+    isSearchReady: false,
+    setData: () => {},
+    setQuery: () => {},
+    setSearchReady: () => {},
+    setErrorMessage: () => {},
+});
 
 export const PrototypeTopPlaysNavigatorProvider: FC = (
     props: { children?: JSX.Element } = {}

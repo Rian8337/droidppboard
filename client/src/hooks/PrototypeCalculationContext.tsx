@@ -1,14 +1,13 @@
-import { Context, createContext, FC, useState } from "react";
+import { createContext, FC, useState } from "react";
 import { ICalculationParams, ICalculationResult } from "app-structures";
 import { CalculationSetting } from "../interfaces/CalculationSetting";
 
-const PrototypeCalculationContext: Context<CalculationSetting> =
-    createContext<CalculationSetting>({
-        errorMessage: "",
-        setErrorMessage: () => {},
-        setParams: () => {},
-        setResult: () => {},
-    });
+const PrototypeCalculationContext = createContext<CalculationSetting>({
+    errorMessage: "",
+    setErrorMessage: () => {},
+    setParams: () => {},
+    setResult: () => {},
+});
 
 export const PrototypeCalculationContextProvider: FC = (
     props: { children?: JSX.Element } = {}

@@ -22,20 +22,22 @@ export default function SearchBar<T extends SearchBarSetting>(props: {
     }
 
     return (
-        <form onSubmit={onSubmit} style={{ textAlign: "center" }}>
-            <input
-                className="search"
-                type="text"
-                name="query"
-                placeholder={props.searchPlaceholder}
-                disabled={!props.state.isSearchReady}
-            />
-            <input
-                type="submit"
-                className="submit-search"
-                value={props.submitPlaceholder}
-                disabled={!props.state.isSearchReady}
-            />
-        </form>
+        <div className="search-container">
+            <form onSubmit={onSubmit} style={{ textAlign: "center" }}>
+                <input
+                    className="search"
+                    type="text"
+                    name="query"
+                    placeholder={props.searchPlaceholder}
+                    disabled={!props.state.isSearchReady}
+                />
+                <input
+                    type="submit"
+                    className="submit-search"
+                    value={props.submitPlaceholder}
+                    disabled={!props.state.isSearchReady}
+                />
+            </form>
+        </div>
     );
 }

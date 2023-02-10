@@ -1,6 +1,6 @@
-import { Collection, Filter } from "mongodb";
+import { Filter } from "mongodb";
 import { IPrototypePP } from "app-structures";
-import { Util } from "../../../Util";
+import { Util } from "../../../utils/Util";
 import { DatabaseCollectionManager } from "../DatabaseCollectionManager";
 
 /**
@@ -19,13 +19,6 @@ export class PrototypePPCollectionManager extends DatabaseCollectionManager<IPro
             scanDone: true,
             previous_bind: [],
         };
-    }
-
-    /**
-     * @param collection The MongoDB collection.
-     */
-    constructor(collection: Collection<IPrototypePP>) {
-        super(collection);
     }
 
     /**
@@ -95,6 +88,7 @@ export class PrototypePPCollectionManager extends DatabaseCollectionManager<IPro
                     pp: 1,
                     pptotal: 1,
                     prevpptotal: 1,
+                    lastUpdate: 1,
                 },
             }
         );

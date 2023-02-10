@@ -1,9 +1,19 @@
-import { Collection, Filter, FindOptions } from "mongodb";
+import {
+    Collection,
+    Document,
+    Filter,
+    FindOptions,
+    InsertManyResult,
+    OptionalUnlessRequiredId,
+    UpdateFilter,
+    UpdateOptions,
+    UpdateResult,
+} from "mongodb";
 
 /**
  * A MongoDB collection manager.
  */
-export abstract class DatabaseCollectionManager<T> {
+export abstract class DatabaseCollectionManager<T extends Document> {
     /**
      * The collection that this manager is responsible for.
      */
@@ -44,5 +54,53 @@ export abstract class DatabaseCollectionManager<T> {
         options?: FindOptions<T>
     ): Promise<T | null> {
         return this.collection.findOne(filter, options);
+    }
+
+    /**
+     * Updates multiple documents in the collection.
+     *
+     * @param filter The filter used to select the documents to update.
+     * @param query The update operations to be applied to the documents.
+     * @param options Options for the update operation.
+     * @returns Whether the operation succeeded.
+     */
+    updateMany(
+        filter: Filter<T>,
+        query: UpdateFilter<T> | Partial<T>,
+        options: UpdateOptions = {}
+    ): Promise<UpdateResult> {
+        return this.collection.updateMany(filter, query, options);
+    }
+
+    /**
+     * Updates a document in the collection.
+     *
+     * @param filter The filter used to select the document to update.
+     * @param query The update operations to be applied to the document.
+     * @param options Options for the update operation.
+     * @returns An object containing information about the operation.
+     */
+    updateOne(
+        filter: Filter<T>,
+        query: UpdateFilter<T> | Partial<T>,
+        options: UpdateOptions = {}
+    ): Promise<UpdateResult> {
+        return this.collection.updateOne(filter, query, options);
+    }
+
+    /**
+     * Inserts multiple documents into the collection.
+     *
+     * @param docs The part of documents to insert. Each document will be assigned to the default document with `Object.assign()`.
+     */
+    insert(...docs: Partial<T>[]): Promise<InsertManyResult<T>> {
+        return this.collection.insertMany(
+            docs.map(
+                (v) =>
+                    <OptionalUnlessRequiredId<T>>(
+                        Object.assign(this.defaultDocument, v)
+                    )
+            )
+        );
     }
 }

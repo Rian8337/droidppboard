@@ -1,6 +1,6 @@
 import { IUserBind } from "app-structures";
 import { Collection, Filter } from "mongodb";
-import { Util } from "../../../Util";
+import { Util } from "../../../utils/Util";
 import { DatabaseCollectionManager } from "../DatabaseCollectionManager";
 
 /**

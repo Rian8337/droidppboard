@@ -1,12 +1,12 @@
 import express from "express";
-import { Util } from "../Util";
+import { Util } from "../../../utils/Util";
 import { ICalculationResult } from "app-structures";
 import {
     Accuracy,
+    BeatmapDecoder,
     MapStats,
     MathUtils,
     ModUtil,
-    Parser,
     Precision,
 } from "@rian8337/osu-base";
 import { ReadStream } from "fs";
@@ -14,6 +14,7 @@ import {
     MapStars,
     DroidPerformanceCalculator,
     OsuPerformanceCalculator,
+    DifficultyCalculationOptions,
 } from "@rian8337/osu-difficulty-calculator";
 import {
     MapStars as RebalanceMapStars,
@@ -24,7 +25,7 @@ import getStrainChart from "@rian8337/osu-strain-graph-generator";
 
 const router: express.Router = express.Router();
 
-router.use(Util.createRateLimit(2));
+router.use(Util.createRateLimit(1, 5000));
 
 router.post("/", async (req, res) => {
     let osuFile = "";
@@ -41,10 +42,10 @@ router.post("/", async (req, res) => {
                     : file.path
             ).endsWith(".osu")
         ) {
-            return res.status(406).json({ message: "Invalid file uploaded" });
+            return res.status(400).json({ message: "Invalid file uploaded" });
         }
 
-        osuFile = await Util.readFile(file);
+        osuFile = (await Util.readFile(file)).toString("utf-8");
     }
 
     let beatmapId: number | undefined;
@@ -54,7 +55,7 @@ router.post("/", async (req, res) => {
         beatmapId = parseInt(a.at(-1)!);
 
         if (beatmapId <= 0 || isNaN(beatmapId)) {
-            return res.status(406).json({ message: "Invalid beatmap ID" });
+            return res.status(400).json({ message: "Invalid beatmap ID" });
         }
 
         osuFile = await Util.downloadBeatmap(beatmapId);
@@ -62,7 +63,7 @@ router.post("/", async (req, res) => {
 
     if (!osuFile) {
         return res
-            .status(406)
+            .status(400)
             .json({ message: "Please enter a valid beatmap file, link or ID" });
     }
 
@@ -71,7 +72,7 @@ router.post("/", async (req, res) => {
         MathUtils.clamp(parseFloat(req.body.accuracy), 0, 100) || 100;
     const miss = Math.max(0, parseInt(req.body.misses)) || 0;
 
-    const stats: MapStats = new MapStats();
+    const stats = new MapStats();
 
     if (req.body.speedmultiplier) {
         stats.speedMultiplier = MathUtils.clamp(
@@ -88,30 +89,41 @@ router.post("/", async (req, res) => {
 
     const isPrototype = Util.requestIsPrototype(req);
 
-    const star = (
-        isPrototype ? new RebalanceMapStars() : new MapStars()
-    ).calculate({
-        map: new Parser().parse(osuFile, mods).map,
+    let star: MapStars | RebalanceMapStars;
+
+    const parsedBeatmap = new BeatmapDecoder().decode(osuFile, mods).result;
+
+    const options: DifficultyCalculationOptions = {
         mods: mods,
         stats: stats,
-    });
+    };
 
-    if (star.pcStars.total === 0) {
-        return res.status(406).json({
+    try {
+        star = isPrototype
+            ? new RebalanceMapStars(parsedBeatmap, options)
+            : new MapStars(parsedBeatmap, options);
+    } catch {
+        return res.status(400).json({
             message: "Invalid file uploaded or beatmap ID is invalid",
         });
     }
 
-    const map = star.pcStars.map;
-    const { maxCombo } = map;
+    if (star.osu.total === 0) {
+        return res.status(400).json({
+            message: "Invalid file uploaded or beatmap ID is invalid",
+        });
+    }
+
+    const { beatmap } = star.osu;
+    const { maxCombo } = beatmap;
     const combo =
         MathUtils.clamp(parseInt(req.body.combo), 0, maxCombo) || maxCombo;
 
     const modifiedStats: MapStats = new MapStats({
-        cs: map.cs,
-        ar: stats.ar ?? map.ar,
-        od: map.od,
-        hp: map.hp,
+        cs: beatmap.difficulty.cs,
+        ar: stats.ar ?? beatmap.difficulty.ar,
+        od: beatmap.difficulty.od,
+        hp: beatmap.difficulty.hp,
         mods: mods,
         speedMultiplier: stats.speedMultiplier,
         isForceAR: stats.isForceAR,
@@ -119,48 +131,42 @@ router.post("/", async (req, res) => {
 
     const realAcc: Accuracy = new Accuracy({
         percent: accuracy,
-        nobjects: map.objects.length,
+        nobjects: beatmap.hitObjects.objects.length,
     });
 
     const dpp = (
         isPrototype
-            ? new RebalanceDroidPerformanceCalculator()
-            : new DroidPerformanceCalculator()
+            ? new RebalanceDroidPerformanceCalculator(star.droid.attributes)
+            : new DroidPerformanceCalculator(star.droid.attributes)
     ).calculate({
-        //@ts-expect-error: Type checking is wack here
-        stars: star.droidStars,
         combo: combo,
         accPercent: realAcc,
         miss: miss,
-        stats: stats,
     });
 
     const pp = (
         isPrototype
-            ? new RebalanceOsuPerformanceCalculator()
-            : new OsuPerformanceCalculator()
+            ? new RebalanceOsuPerformanceCalculator(star.osu.attributes)
+            : new OsuPerformanceCalculator(star.osu.attributes)
     ).calculate({
-        //@ts-expect-error: Type checking is wack here
-        stars: star.pcStars,
         combo: combo,
         accPercent: realAcc,
         miss: miss,
-        stats: stats,
     });
 
     const response: ICalculationResult = {
         beatmap: {
             id: beatmapId,
-            artist: map.artist,
-            creator: map.creator,
-            title: map.title,
-            version: map.version,
-            maxCombo: map.maxCombo,
+            artist: beatmap.metadata.artist,
+            creator: beatmap.metadata.creator,
+            title: beatmap.metadata.title,
+            version: beatmap.metadata.version,
+            maxCombo: beatmap.maxCombo,
             stats: {
-                cs: map.cs,
-                ar: map.ar!,
-                od: map.od,
-                hp: map.hp,
+                cs: beatmap.difficulty.cs,
+                ar: beatmap.difficulty.ar!,
+                od: beatmap.difficulty.od,
+                hp: beatmap.difficulty.hp,
             },
             modifiedStats: {
                 cs: modifiedStats.cs!,
@@ -176,20 +182,20 @@ router.post("/", async (req, res) => {
         ),
         difficulty: {
             droid: {
-                aim: dpp.stars.aim,
-                speed: dpp.stars.tap,
-                rhythm: dpp.stars.rhythm,
-                flashlight: dpp.stars.flashlight,
-                visual: dpp.stars.visual,
-                total: dpp.stars.total,
+                aim: dpp.difficultyAttributes.aimDifficulty,
+                speed: dpp.difficultyAttributes.tapDifficulty,
+                rhythm: dpp.difficultyAttributes.rhythmDifficulty,
+                flashlight: dpp.difficultyAttributes.flashlightDifficulty,
+                visual: dpp.difficultyAttributes.visualDifficulty,
+                total: dpp.difficultyAttributes.starRating,
             },
             osu: {
-                aim: pp.stars.aim,
-                speed: pp.stars.speed,
+                aim: pp.difficultyAttributes.aimDifficulty,
+                speed: pp.difficultyAttributes.speedDifficulty,
                 rhythm: 0,
-                flashlight: pp.stars.flashlight,
+                flashlight: pp.difficultyAttributes.flashlightDifficulty,
                 visual: 0,
-                total: pp.stars.total,
+                total: pp.difficultyAttributes.starRating,
             },
         },
         performance: {
@@ -213,13 +219,17 @@ router.post("/", async (req, res) => {
         strainGraph: {
             droid: (
                 await getStrainChart(
-                    star.droidStars,
-                    map.beatmapSetId,
+                    star.droid,
+                    beatmap.metadata.beatmapSetId,
                     "#3884ff"
                 )
             )?.toString("base64"),
             osu: (
-                await getStrainChart(star.pcStars, map.beatmapSetId, "#38caff")
+                await getStrainChart(
+                    star.osu,
+                    beatmap.metadata.beatmapSetId,
+                    "#38caff"
+                )
             )?.toString("base64"),
         },
     };

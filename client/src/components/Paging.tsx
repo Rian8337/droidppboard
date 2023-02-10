@@ -41,7 +41,9 @@ export default function Paging<T extends PagingSetting>(props: { state: T }) {
             </form>
             <button
                 className="page-nav"
-                disabled={!props.state.enablePaging || props.state.internalPage === 1}
+                disabled={
+                    !props.state.enablePaging || props.state.internalPage === 1
+                }
                 onClick={(event) => {
                     event.preventDefault();
 

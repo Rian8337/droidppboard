@@ -1,10 +1,10 @@
-import { IUserBind, IPrototypePP } from "app-structures";
+import { IUserBind, IPrototypePP, IOldPPProfile } from "app-structures";
 import { useNavigate } from "react-router-dom";
 import { Util } from "../../Util";
 import "../../styles/table-listing.css";
 
 export default function LeaderboardItem(props: {
-    data: IUserBind | IPrototypePP;
+    data: IUserBind | IPrototypePP | IOldPPProfile;
     page: number;
     index: number;
 }) {
@@ -16,12 +16,16 @@ export default function LeaderboardItem(props: {
             <td>{(props.page - 1) * 50 + props.index + 1}</td>
             <td>{user.uid}</td>
             <td
-                className="assign-left"
+                className="assign-left clickable"
                 onClick={(event) => {
                     event.preventDefault();
                     navigate(
                         `/${
-                            Util.isPrototype(user) ? "prototype/" : ""
+                            Util.isPrototype(user)
+                                ? "prototype/"
+                                : Util.isOld(user)
+                                ? "old/"
+                                : ""
                         }profile/${user.uid}`
                     );
                 }}

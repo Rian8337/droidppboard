@@ -29,10 +29,15 @@ export default function CalculationForm(props: { prototype: boolean }) {
             speedmultiplier: parseFloat(getValue(6)),
         });
 
-        fetch(`/api/${props.prototype ? "prototype/" : ""}calculatebeatmap`, {
-            method: "POST",
-            body: new FormData(event.currentTarget),
-        })
+        fetch(
+            `/api/ppboard/${
+                props.prototype ? "prototype/" : ""
+            }calculatebeatmap`,
+            {
+                method: "POST",
+                body: new FormData(event.currentTarget),
+            }
+        )
             .then(async (res) => {
                 if (res.status === 429) {
                     throw new Error(

@@ -1,23 +1,22 @@
 import { IUserBind } from "app-structures";
-import { Context, createContext, FC, useState } from "react";
-import { LeaderboardSetting } from "../interfaces/LeaderboardSetting";
+import { createContext, FC, useState } from "react";
+import { TableSetting } from "../interfaces/TableSetting";
 
-const MainLeaderboardNavigator: Context<LeaderboardSetting<IUserBind>> =
-    createContext<LeaderboardSetting<IUserBind>>({
-        data: [],
-        internalPage: 1,
-        currentPage: 1,
-        query: "",
-        isSearchReady: false,
-        enablePaging: false,
-        setData: () => {},
-        setInternalPage: () => {},
-        setCurrentPage: () => {},
-        setQuery: () => {},
-        setSearchReady: () => {},
-        setEnablePaging: () => {},
-        setErrorMessage: () => {},
-    });
+const MainLeaderboardNavigator = createContext<TableSetting<IUserBind>>({
+    data: [],
+    internalPage: 1,
+    currentPage: 1,
+    query: "",
+    isSearchReady: false,
+    enablePaging: false,
+    setData: () => {},
+    setInternalPage: () => {},
+    setCurrentPage: () => {},
+    setQuery: () => {},
+    setSearchReady: () => {},
+    setEnablePaging: () => {},
+    setErrorMessage: () => {},
+});
 
 export const MainLeaderboardNavigatorProvider: FC = (
     props: { children?: JSX.Element } = {}

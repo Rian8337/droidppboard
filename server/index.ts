@@ -1,15 +1,16 @@
 import express from "express";
 import cors from "cors";
 import formData from "express-form-data";
-import getLeaderboard from "./routes/get-leaderboard";
-import getUserProfile from "./routes/get-user-profile";
-import getWhitelist from "./routes/get-whitelist";
-import getTopPlays from "./routes/get-top-plays";
-import calculateBeatmap from "./routes/calculate-beatmap";
+import getPPLeaderboard from "./routes/api/ppboard/get-leaderboard";
+import getUserProfile from "./routes/api/ppboard/get-user-profile";
+import getWhitelist from "./routes/api/ppboard/get-whitelist";
+import getTopPlays from "./routes/api/ppboard/get-top-plays";
+import calculateBeatmap from "./routes/api/ppboard/calculate-beatmap";
+import searchSkins from "./routes/api/skins/search-skins";
+import getSkin from "./routes/api/skins/get-skin";
 import { config } from "dotenv";
 import { resolve } from "path";
-import { Util } from "./Util";
-import { MongoClient } from "mongodb";
+import { Util } from "./utils/Util";
 import { DatabaseManager } from "./database/managers/DatabaseManager";
 
 config();
@@ -32,47 +33,51 @@ app.use(express.static(resolve(Util.getFrontendPath(), "build")));
 app.use(Util.createRateLimit(12));
 
 app.use(
-    ["/api/getleaderboard", "/api/prototype/getleaderboard"],
-    getLeaderboard
+    [
+        "/api/ppboard/getleaderboard",
+        "/api/ppboard/prototype/getleaderboard",
+        "/api/ppboard/old/getleaderboard",
+    ],
+    getPPLeaderboard
 );
 app.use(
-    ["/api/getuserprofile", "/api/prototype/getuserprofile"],
+    [
+        "/api/ppboard/getuserprofile",
+        "/api/ppboard/prototype/getuserprofile",
+        "/api/ppboard/old/getuserprofile",
+    ],
     getUserProfile
 );
-app.use("/api/getwhitelist", getWhitelist);
-app.use(["/api/gettopplays", "/api/prototype/gettopplays"], getTopPlays);
+app.use("/api/ppboard/getwhitelist", getWhitelist);
 app.use(
-    ["/api/calculatebeatmap", "/api/prototype/calculatebeatmap"],
+    [
+        "/api/ppboard/gettopplays",
+        "/api/ppboard/prototype/gettopplays",
+        "/api/ppboard/old/gettopplays",
+    ],
+    getTopPlays
+);
+app.use(
+    [
+        "/api/ppboard/calculatebeatmap",
+        "/api/ppboard/prototype/calculatebeatmap",
+    ],
     calculateBeatmap
 );
+app.use("/api/skins/search", searchSkins);
+app.use("/api/skins/get", getSkin);
 
 app.get("*", (_, res) => {
     res.sendFile(resolve(Util.getFrontendPath(), "build", "index.html"));
 });
 
 // Connect to database, then open server
-const elainaDbKey = process.env.ELAINA_DB_KEY!;
-const aliceDbKey = process.env.ALICE_DB_KEY!;
-
-const elainaURI =
-    "mongodb://" +
-    elainaDbKey +
-    "@elainaDb-shard-00-00-r6qx3.mongodb.net:27017,elainaDb-shard-00-01-r6qx3.mongodb.net:27017,elainaDb-shard-00-02-r6qx3.mongodb.net:27017/test?ssl=true&replicaSet=ElainaDB-shard-0&authSource=admin&retryWrites=true";
-const aliceURI =
-    "mongodb+srv://" +
-    aliceDbKey +
-    "@aliceDb-hoexz.gcp.mongodb.net/test?retryWrites=true&w=majority";
-
-const elainaDb = new MongoClient(elainaURI);
-const aliceDb = new MongoClient(aliceURI);
-
-Promise.all([elainaDb.connect(), aliceDb.connect()]).then(() => {
-    DatabaseManager.init(elainaDb.db("ElainaDB"), aliceDb.db("AliceDB"));
-
+DatabaseManager.init().then(async () => {
     Util.refreshTopPP();
     Util.refreshPrototypeTopPP();
+    Util.refreshOldTopPP();
 
-    const port = parseInt(process.env.PORT || "3001");
+    const appPort = parseInt(process.env.PORT || "3001");
 
-    app.listen(port, () => console.log(`Express running → PORT ${port}`));
+    app.listen(appPort, () => console.log(`Express running → PORT ${appPort}`));
 });

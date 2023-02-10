@@ -1,11 +1,4 @@
-import {
-    IPrototypePP,
-    IUserBind,
-    PPEntry,
-    PrototypePPEntry,
-    TopPPEntry,
-    TopPrototypePPEntry,
-} from "app-structures";
+import { TopOldPPEntry, TopPPEntry, TopPrototypePPEntry } from "app-structures";
 import { Request, RequestHandler } from "express";
 import rateLimit from "express-rate-limit";
 import { ModUtil } from "@rian8337/osu-base";
@@ -13,7 +6,7 @@ import { join } from "path";
 import { registerFont } from "canvas";
 import request from "request";
 import { ReadStream } from "fs";
-import { DatabaseManager } from "./database/managers/DatabaseManager";
+import { DatabaseManager } from "../database/managers/DatabaseManager";
 
 /**
  * Comparisons used for searching whitelisted beatmaps.
@@ -27,23 +20,37 @@ export abstract class Util {
     /**
      * List of top plays from all players, mapped by droid mod string that's sorted alphabetically.
      */
-    static readonly topPPList: Map<string, TopPPEntry[]> = new Map();
+    static readonly topPPList = new Map<string, TopPPEntry[]>();
 
     /**
      * List of top prototype plays from all players, mapped by droid mod string that's sorted alphabetically.
      */
-    static readonly topPrototypePPList: Map<string, TopPrototypePPEntry[]> =
-        new Map();
+    static readonly topPrototypePPList = new Map<
+        string,
+        TopPrototypePPEntry[]
+    >();
+
+    /**
+     * List of top old dpp plays from all players, mapped by droid mod string that's sorted alphabetically.
+     */
+    static readonly topOldPPList = new Map<string, TopOldPPEntry[]>();
 
     /**
      * Creates a middleware used for handling excessive API requests.
      *
-     * @param maxRequestPer10Seconds The amount of requests allowed per 10 seconds.
+     * @param maxRequests The amount of requests allowed.
+     * @param windowMs The time to refresh rate limiting. Defaults to 10 seconds.
      */
-    static createRateLimit(maxRequestPer10Seconds: number): RequestHandler {
+    static createRateLimit(
+        maxRequests: number,
+        windowMs: number = 10 * 1000
+    ): RequestHandler {
         return rateLimit({
-            windowMs: 6000,
-            max: maxRequestPer10Seconds,
+            windowMs: windowMs,
+            max: maxRequests,
+            standardHeaders: true,
+            legacyHeaders: false,
+            message: "You have been rate limited. Please try again later.",
         });
     }
 
@@ -64,19 +71,26 @@ export abstract class Util {
     }
 
     /**
-     * Reads a file stream and returns it as string.
+     * Checks if a request is requesting old dpp data.
+     *
+     * @param req The request.
+     */
+    static requestIsOld(req: Request): boolean {
+        return req.baseUrl.includes("old") || req.body.old;
+    }
+
+    /**
+     * Reads a file stream and returns it as a buffer.
      *
      * @param stream The stream.
      */
-    static readFile(stream: ReadStream): Promise<string> {
+    static readFile(stream: ReadStream): Promise<Buffer> {
         const chunks: Buffer[] = [];
 
         return new Promise((resolve, reject) => {
             stream.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
             stream.on("error", (err) => reject(err));
-            stream.on("end", () =>
-                resolve(Buffer.concat(chunks).toString("utf-8"))
-            );
+            stream.on("end", () => resolve(Buffer.concat(chunks)));
         });
     }
 
@@ -167,22 +181,30 @@ export abstract class Util {
 
                 this.topPPList.set("", []).set("-", []);
 
-                for (let i = 0; i < res.length; ++i) {
-                    const bindInfo = res[i];
-
-                    const ppEntries = bindInfo.pp;
+                for (const player of res) {
+                    const ppEntries = player.pp;
 
                     for (const ppEntry of ppEntries) {
                         const topEntry: TopPPEntry = {
                             ...ppEntry,
-                            username: bindInfo.username,
+                            username: player.username,
                         };
 
                         this.topPPList.get("")!.push(topEntry);
 
                         const droidMods =
-                            ModUtil.pcStringToMods(ppEntry.mods)
-                                .map((v) => v.droidString)
+                            [
+                                ...ModUtil.pcStringToMods(ppEntry.mods).reduce(
+                                    (a, v) => {
+                                        if (!v.isApplicableToDroid()) {
+                                            return a;
+                                        }
+
+                                        return a + v.droidString;
+                                    },
+                                    ""
+                                ),
+                            ]
                                 .sort((a, b) => a.localeCompare(b))
                                 .join("") || "-";
 
@@ -214,22 +236,30 @@ export abstract class Util {
 
                 this.topPrototypePPList.set("", []).set("-", []);
 
-                for (let i = 0; i < res.length; ++i) {
-                    const playerInfo = res[i];
-
-                    const ppEntries = playerInfo.pp;
+                for (const player of res) {
+                    const ppEntries = player.pp;
 
                     for (const ppEntry of ppEntries) {
                         const topEntry: TopPrototypePPEntry = {
                             ...ppEntry,
-                            username: playerInfo.username,
+                            username: player.username,
                         };
 
                         this.topPrototypePPList.get("")!.push(topEntry);
 
                         const droidMods =
-                            ModUtil.pcStringToMods(ppEntry.mods)
-                                .map((v) => v.droidString)
+                            [
+                                ...ModUtil.pcStringToMods(ppEntry.mods).reduce(
+                                    (a, v) => {
+                                        if (!v.isApplicableToDroid()) {
+                                            return a;
+                                        }
+
+                                        return a + v.droidString;
+                                    },
+                                    ""
+                                ),
+                            ]
                                 .sort((a, b) => a.localeCompare(b))
                                 .join("") || "-";
 
@@ -243,6 +273,61 @@ export abstract class Util {
                 }
 
                 for (const plays of this.topPrototypePPList.values()) {
+                    plays.sort((a, b) => {
+                        return b.pp - a.pp;
+                    });
+
+                    plays.splice(100);
+                }
+            });
+    }
+
+    static refreshOldTopPP(): void {
+        setTimeout(() => this.refreshOldTopPP(), 1800 * 1000);
+
+        DatabaseManager.aliceDb.collections.playerOldPPProfile
+            .get({}, { projection: { _id: 0, username: 1, pp: 1 } })
+            .then((res) => {
+                this.topOldPPList.clear();
+
+                this.topOldPPList.set("", []).set("-", []);
+
+                for (const player of res) {
+                    const ppEntries = player.pp;
+
+                    for (const ppEntry of ppEntries) {
+                        const topEntry: TopOldPPEntry = {
+                            ...ppEntry,
+                            username: player.username,
+                        };
+
+                        this.topOldPPList.get("")!.push(topEntry);
+
+                        const droidMods =
+                            [
+                                ...ModUtil.pcStringToMods(ppEntry.mods).reduce(
+                                    (a, v) => {
+                                        if (!v.isApplicableToDroid()) {
+                                            return a;
+                                        }
+
+                                        return a + v.droidString;
+                                    },
+                                    ""
+                                ),
+                            ]
+                                .sort((a, b) => a.localeCompare(b))
+                                .join("") || "-";
+
+                        const playList = this.topOldPPList.get(droidMods) ?? [];
+
+                        playList.push(topEntry);
+
+                        this.topOldPPList.set(droidMods, playList);
+                    }
+                }
+
+                for (const plays of this.topOldPPList.values()) {
                     plays.sort((a, b) => {
                         return b.pp - a.pp;
                     });

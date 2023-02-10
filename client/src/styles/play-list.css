@@ -1,12 +1,18 @@
+.play-list-container {
+    display: flex;
+    justify-content: center;
+}
+
 .play-list {
-    position: relative;
-    right: 27.5px;
+    padding-inline-start: 0;
+    margin-block-start: 0;
+    margin-block-end: 0;
 }
 
 .play-item {
     width: 100%;
+    max-width: 1000px;
     font: 14px Exo-Bold;
-    padding: 8px;
     margin-top: 4px;
     list-style-type: none;
     border: 1px solid pink;
@@ -17,9 +23,13 @@
     border-bottom-right-radius: 5px;
 }
 
+.play-item-container {
+    padding: 8px;
+    padding-bottom: 5px;
+}
+
 .play-item p.title {
     margin: 0;
-    padding: 0;
     white-space: normal;
     width: 100%;
 }

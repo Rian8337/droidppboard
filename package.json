@@ -3,7 +3,7 @@
   "version": "3.0.0",
   "description": "Experimental leaderboard for osu!droid performance point",
   "scripts": {
-    "format-code": "npm run format-code-app-structures && npm run format-code-server && npm run format-code-client",
+    "format-code": "npm run format-code-app-structures & npm run format-code-server & npm run format-code-client",
     "format-code-app-structures": "npx prettier -w --loglevel=silent \"modules/app-structures/**\"",
     "format-code-client": "npx prettier -w --loglevel=silent \"client/**\"",
     "format-code-server": "npx prettier -w --loglevel=silent \"server/**\"",
@@ -11,6 +11,9 @@
     "heroku-postbuild": "cd client && npm install && npm run build",
     "start": "cd server && npm start",
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "engines": {
+    "node": "18.x"
   },
   "devDependencies": {
     "prettier": "^2.6.2"
@@ -20,8 +23,8 @@
     "url": "git+https://github.com/Rian8337/droidppboard.git"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Rian8337",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/Rian8337/droidppboard/issues"
   },

@@ -1,8 +1,9 @@
+/* eslint-disable no-prototype-builtins */
 import express from "express";
-import { Comparison, Util } from "../Util";
+import { Comparison, Util } from "../../../utils/Util";
 import { Filter, Sort } from "mongodb";
 import { IMapWhitelist } from "app-structures";
-import { DatabaseManager } from "../database/managers/DatabaseManager";
+import { DatabaseManager } from "../../../database/managers/DatabaseManager";
 
 const router: express.Router = express.Router();
 

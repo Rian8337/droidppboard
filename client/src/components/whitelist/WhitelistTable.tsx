@@ -16,7 +16,7 @@ export default function WhitelistTable() {
 
         const debounce: NodeJS.Timeout = setTimeout(() => {
             fetch(
-                `/api/getwhitelist?page=${ctx.internalPage}${
+                `/api/ppboard/getwhitelist?page=${ctx.internalPage}${
                     ctx.query ? `&query=${ctx.query}` : ""
                 }`
             )
@@ -79,6 +79,7 @@ export default function WhitelistTable() {
                     })}
                 </tbody>
             </table>
+            <Paging state={ctx} />
             <hr />
             <WhitelistBeatmapFilter />
         </>

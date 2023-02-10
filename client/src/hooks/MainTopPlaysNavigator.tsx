@@ -1,10 +1,8 @@
 import { PPEntry } from "app-structures";
-import { Context, createContext, FC, useState } from "react";
+import { createContext, FC, useState } from "react";
 import { TopPlaysSetting } from "../interfaces/TopPlaysSetting";
 
-const MainTopPlaysNavigator: Context<TopPlaysSetting<PPEntry>> = createContext<
-    TopPlaysSetting<PPEntry>
->({
+const MainTopPlaysNavigator = createContext<TopPlaysSetting<PPEntry>>({
     data: [],
     query: "",
     isSearchReady: false,

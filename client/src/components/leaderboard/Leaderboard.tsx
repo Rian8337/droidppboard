@@ -2,24 +2,33 @@ import LeaderboardTable from "./LeaderboardTable";
 import SearchBar from "../SearchBar";
 import Head from "../Head";
 import { motion } from "framer-motion";
-import { LeaderboardSetting } from "../../interfaces/LeaderboardSetting";
 import Paging from "../Paging";
 import PrototypeDescription from "../PrototypeDescription";
 import { useContext } from "react";
 import PrototypeLeaderboardNavigator from "../../hooks/PrototypeLeaderboardNavigator";
 import MainLeaderboardNavigator from "../../hooks/MainLeaderboardNavigator";
-import { IPrototypePP, IUserBind } from "app-structures";
+import OldLeaderboardNavigator from "../../hooks/OldLeaderboardNavigator";
 import "../../styles/main.css";
+import { PPModes } from "../../interfaces/PPModes";
+import { LeaderboardSettings } from "../../interfaces/LeaderboardSettings";
+import OldDescription from "../OldDescription";
 
-export default function Leaderboard(props: { prototype: boolean }) {
-    let ctx: LeaderboardSetting<IUserBind> | LeaderboardSetting<IPrototypePP>;
+export default function Leaderboard(props: { mode: PPModes }) {
+    let ctx: LeaderboardSettings;
 
-    if (props.prototype) {
-        // eslint-disable-next-line react-hooks/rules-of-hooks
-        ctx = useContext(PrototypeLeaderboardNavigator);
-    } else {
-        // eslint-disable-next-line react-hooks/rules-of-hooks
-        ctx = useContext(MainLeaderboardNavigator);
+    switch (props.mode) {
+        case PPModes.live:
+            // eslint-disable-next-line react-hooks/rules-of-hooks
+            ctx = useContext(MainLeaderboardNavigator);
+            break;
+        case PPModes.prototype:
+            // eslint-disable-next-line react-hooks/rules-of-hooks
+            ctx = useContext(PrototypeLeaderboardNavigator);
+            break;
+        case PPModes.old:
+            // eslint-disable-next-line react-hooks/rules-of-hooks
+            ctx = useContext(OldLeaderboardNavigator);
+            break;
     }
 
     return (
@@ -32,13 +41,27 @@ export default function Leaderboard(props: { prototype: boolean }) {
             <Head
                 description="View the rankings of Elaina PP Project."
                 title={`PP Board - ${
-                    props.prototype ? "Prototype " : ""
+                    props.mode === PPModes.prototype
+                        ? "Prototype "
+                        : props.mode === PPModes.old
+                        ? "Old "
+                        : ""
                 }Leaderboard`}
             />
             <h2 className="subtitle">
-                Official {props.prototype ? "Prototype" : ""} Player Leaderboard
+                Official{" "}
+                {props.mode === PPModes.prototype
+                    ? "Prototype"
+                    : props.mode === PPModes.old
+                    ? "Old"
+                    : ""}{" "}
+                Player Leaderboard
             </h2>
-            {props.prototype ? <PrototypeDescription /> : null}
+            {props.mode === PPModes.prototype ? (
+                <PrototypeDescription />
+            ) : props.mode === PPModes.old ? (
+                <OldDescription />
+            ) : null}
             <h3 className="description">
                 Click/tap on a player&apos;s name to visit their profile page.
             </h3>
@@ -49,6 +72,7 @@ export default function Leaderboard(props: { prototype: boolean }) {
             />
             <Paging state={ctx} />
             <LeaderboardTable {...props} />
+            {ctx.data.length > 0 && <Paging state={ctx} />}
         </motion.div>
     );
 }

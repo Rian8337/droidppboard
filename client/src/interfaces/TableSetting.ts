@@ -2,7 +2,7 @@ import { ErrorSetting } from "./ErrorSetting";
 import { PagingSetting } from "./PagingSetting";
 import { SearchBarSetting } from "./SearchBarSetting";
 
-export interface LeaderboardSetting<T>
+export interface TableSetting<T>
     extends PagingSetting,
         SearchBarSetting,
         ErrorSetting {

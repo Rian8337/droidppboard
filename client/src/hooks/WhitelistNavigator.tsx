@@ -1,23 +1,22 @@
 import { IMapWhitelist } from "app-structures";
-import { Context, createContext, FC, useState } from "react";
+import { createContext, FC, useState } from "react";
 import { WhitelistSetting } from "../interfaces/WhitelistSetting";
 
-const WhitelistNavigator: Context<WhitelistSetting> =
-    createContext<WhitelistSetting>({
-        data: [],
-        internalPage: 1,
-        currentPage: 1,
-        query: "",
-        isSearchReady: false,
-        enablePaging: false,
-        setData: () => {},
-        setInternalPage: () => {},
-        setCurrentPage: () => {},
-        setQuery: () => {},
-        setSearchReady: () => {},
-        setEnablePaging: () => {},
-        setErrorMessage: () => {},
-    });
+const WhitelistNavigator = createContext<WhitelistSetting>({
+    data: [],
+    internalPage: 1,
+    currentPage: 1,
+    query: "",
+    isSearchReady: false,
+    enablePaging: false,
+    setData: () => {},
+    setInternalPage: () => {},
+    setCurrentPage: () => {},
+    setQuery: () => {},
+    setSearchReady: () => {},
+    setEnablePaging: () => {},
+    setErrorMessage: () => {},
+});
 
 export const WhitelistNavigatorProvider: FC = (
     props: { children?: JSX.Element } = {}

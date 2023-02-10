@@ -1,4 +1,4 @@
 import { IMapWhitelist } from "app-structures";
-import { LeaderboardSetting } from "./LeaderboardSetting";
+import { TableSetting } from "./TableSetting";
 
-export type WhitelistSetting = LeaderboardSetting<IMapWhitelist>;
+export type WhitelistSetting = TableSetting<IMapWhitelist>;
