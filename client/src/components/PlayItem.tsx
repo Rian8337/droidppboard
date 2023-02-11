@@ -84,9 +84,19 @@ export default function PlayItem(props: { data: Entry; index: number }) {
                 {isPrototype(play) ? (
                     <>
                         <p className="play-info">
-                            OD {play.overallDifficulty.toFixed(2)} |{" "}
+                            {typeof play.overallDifficulty === "number" ? (
+                                <>OD {play.overallDifficulty.toFixed(2)}</>
+                            ) : (
+                                <></>
+                            )}
                             {typeof play.calculatedUnstableRate === "number" ? (
                                 <>
+                                    {typeof play.overallDifficulty ===
+                                    "number" ? (
+                                        <> | </>
+                                    ) : (
+                                        <></>
+                                    )}
                                     {play.calculatedUnstableRate.toFixed(2)}{" "}
                                     calculated UR |{" "}
                                 </>
@@ -117,10 +127,18 @@ export default function PlayItem(props: { data: Entry; index: number }) {
                             {play.twoHandedNoteCount / play.aimNoteCount > 0.1
                                 ? ", assumed two handed"
                                 : ""}
-                            {play.sliderCheesePenalized
-                                ? ", slider cheese penalized"
-                                : ""}
                         </p>
+                        {typeof play.aimSliderCheesePenalty === "number" &&
+                        play.aimSliderCheesePenalty > 1 ? (
+                            <p className="play-info">
+                                Slider cheese penalties:{" "}
+                                {play.aimSliderCheesePenalty.toFixed(2)} aim,{" "}
+                                {play.visualSliderCheesePenalty.toFixed(2)}{" "}
+                                visual
+                            </p>
+                        ) : (
+                            ""
+                        )}
                     </>
                 ) : (
                     <></>
