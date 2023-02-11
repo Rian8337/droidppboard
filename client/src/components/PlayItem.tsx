@@ -128,17 +128,11 @@ export default function PlayItem(props: { data: Entry; index: number }) {
                                 ? ", assumed two handed"
                                 : ""}
                         </p>
-                        {typeof play.aimSliderCheesePenalty === "number" &&
-                        play.aimSliderCheesePenalty > 1 ? (
-                            <p className="play-info">
-                                Slider cheese penalties:{" "}
-                                {play.aimSliderCheesePenalty.toFixed(2)} aim,{" "}
-                                {play.visualSliderCheesePenalty.toFixed(2)}{" "}
-                                visual
-                            </p>
-                        ) : (
-                            ""
-                        )}
+                        <p className="play-info">
+                            Slider cheese penalties:{" "}
+                            {play.aimSliderCheesePenalty.toFixed(2)} aim,{" "}
+                            {play.visualSliderCheesePenalty.toFixed(2)} visual
+                        </p>
                     </>
                 ) : (
                     <></>
