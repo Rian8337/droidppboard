@@ -91,13 +91,13 @@ export default function PlayItem(props: { data: Entry; index: number }) {
                                     | {play.calculatedUnstableRate.toFixed(
                                         2
                                     )}{" "}
-                                    calculated UR |{" "}
+                                    calculated UR
                                 </>
                             ) : (
                                 <></>
                             )}
-                            {play.estimatedUnstableRate.toFixed(2)} estimated UR
-                            |{" "}
+                            | {play.estimatedUnstableRate.toFixed(2)} estimated
+                            UR |{" "}
                             {typeof play.estimatedSpeedUnstableRate === "number"
                                 ? play.estimatedSpeedUnstableRate.toFixed(2)
                                 : Infinity}{" "}
