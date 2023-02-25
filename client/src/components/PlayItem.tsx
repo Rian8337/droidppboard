@@ -127,14 +127,14 @@ export default function PlayItem(props: { data: Entry; index: number }) {
                             {play.newTap} tap, {play.newAccuracy} accuracy,{" "}
                             {play.newVisual} visual)
                         </p>
-                        <p className="play-info">
+                        {/* <p className="play-info">
                             {play.aimNoteCount.toFixed(2)} aim note count,{" "}
                             {play.twoHandedNoteCount.toFixed(2)} two-handed note
                             count
                             {play.twoHandedNoteCount / play.aimNoteCount > 0.1
                                 ? ", assumed two handed"
                                 : ""}
-                        </p>
+                        </p> */}
                         <p className="play-info">
                             Slider cheese penalties:{" "}
                             {play.aimSliderCheesePenalty.toFixed(2)} aim,{" "}
