@@ -84,20 +84,13 @@ export default function PlayItem(props: { data: Entry; index: number }) {
                 {isPrototype(play) ? (
                     <>
                         <p className="play-info">
-                            {typeof play.overallDifficulty === "number" ? (
-                                <>OD {play.overallDifficulty.toFixed(2)}</>
-                            ) : (
-                                <></>
-                            )}
+                            OD {play.overallDifficulty.toFixed(2)}
                             {typeof play.calculatedUnstableRate === "number" ? (
                                 <>
-                                    {typeof play.overallDifficulty ===
-                                    "number" ? (
-                                        <> | </>
-                                    ) : (
-                                        <></>
-                                    )}
-                                    {play.calculatedUnstableRate.toFixed(2)}{" "}
+                                    {" "}
+                                    | {play.calculatedUnstableRate.toFixed(
+                                        2
+                                    )}{" "}
                                     calculated UR |{" "}
                                 </>
                             ) : (
@@ -109,6 +102,20 @@ export default function PlayItem(props: { data: Entry; index: number }) {
                                 ? play.estimatedSpeedUnstableRate.toFixed(2)
                                 : Infinity}{" "}
                             estimated speed UR
+                            {typeof play.speedNoteCount === "number" ? (
+                                <>
+                                    {typeof play.estimatedSpeedUnstableRate ===
+                                    "number" ? (
+                                        <> | </>
+                                    ) : (
+                                        <></>
+                                    )}
+                                    {play.speedNoteCount.toFixed(2)} speed note
+                                    count
+                                </>
+                            ) : (
+                                <></>
+                            )}
                         </p>
                         <p className="play-info">
                             <b>Old</b>: {play.prevPP} pp ({play.prevAim} aim,{" "}
