@@ -95,7 +95,7 @@ export default function PlayItem(props: { data: Entry; index: number }) {
                                 </>
                             ) : (
                                 <></>
-                            )}
+                            )}{" "}
                             | {play.estimatedUnstableRate.toFixed(2)} estimated
                             UR |{" "}
                             {typeof play.estimatedSpeedUnstableRate === "number"
