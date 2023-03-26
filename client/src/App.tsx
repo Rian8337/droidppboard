@@ -3,7 +3,7 @@ import { AnimatePresence } from "framer-motion";
 import Footer from "./components/Footer";
 import Head from "./components/Head";
 import Header from "./components/Header";
-import Menu from "./components/Menu";
+import Menu from "./components/menu/Menu";
 import Home from "./pages/Home";
 import Whitelist from "./pages/Whitelist";
 import MainLeaderboard from "./pages/MainLeaderboard";
