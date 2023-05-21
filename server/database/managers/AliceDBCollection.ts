@@ -1,5 +1,4 @@
 import { Db } from "mongodb";
-import { OldPPProfileCollectionManager } from "./aliceDb/OldPPProfileCollectionManager";
 import { PlayerSkinCollectionManager } from "./aliceDb/PlayerSkinCollectionManager";
 import { PrototypePPCollectionManager } from "./aliceDb/PrototypePPCollectionManager";
 
@@ -13,11 +12,6 @@ export class AliceDBCollection {
     readonly prototypePP: PrototypePPCollectionManager;
 
     /**
-     * The database collection for players' old dpp profiles.
-     */
-    readonly playerOldPPProfile: OldPPProfileCollectionManager;
-
-    /**
      * The database collection for player skins.
      */
     readonly playerSkins: PlayerSkinCollectionManager;
@@ -28,9 +22,6 @@ export class AliceDBCollection {
     constructor(aliceDb: Db) {
         this.prototypePP = new PrototypePPCollectionManager(
             aliceDb.collection("prototypepp")
-        );
-        this.playerOldPPProfile = new OldPPProfileCollectionManager(
-            aliceDb.collection("playeroldpp")
         );
         this.playerSkins = new PlayerSkinCollectionManager(
             aliceDb.collection("playerskins")

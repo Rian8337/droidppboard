@@ -1,10 +1,10 @@
-import { IUserBind, IPrototypePP, IOldPPProfile } from "app-structures";
+import { IUserBind, IPrototypePP } from "app-structures";
 import { useNavigate } from "react-router-dom";
 import { Util } from "../../Util";
 import "../../styles/table-listing.css";
 
 export default function LeaderboardItem(props: {
-    data: IUserBind | IPrototypePP | IOldPPProfile;
+    data: IUserBind | IPrototypePP;
     page: number;
     index: number;
 }) {
@@ -21,11 +21,7 @@ export default function LeaderboardItem(props: {
                     event.preventDefault();
                     navigate(
                         `/${
-                            Util.isPrototype(user)
-                                ? "prototype/"
-                                : Util.isOld(user)
-                                ? "old/"
-                                : ""
+                            Util.isPrototype(user) ? "prototype/" : ""
                         }profile/${user.uid}`
                     );
                 }}

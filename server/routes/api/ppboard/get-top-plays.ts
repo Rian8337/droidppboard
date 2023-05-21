@@ -22,18 +22,9 @@ router.get("/", async (req, res) => {
                   .join("") || ""
             : "-";
 
-    let data;
-
-    switch (true) {
-        case Util.requestIsPrototype(req):
-            data = Util.topPrototypePPList;
-            break;
-        case Util.requestIsOld(req):
-            data = Util.topOldPPList;
-            break;
-        default:
-            data = Util.topPPList;
-    }
+    const data = Util.requestIsPrototype(req)
+        ? Util.topPrototypePPList
+        : Util.topPPList;
 
     res.json(data.get(droidMod) ?? []);
 });

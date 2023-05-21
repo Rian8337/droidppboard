@@ -1,8 +1,6 @@
 import {
-    OldPPEntry,
     PPEntry,
     PrototypePPEntry,
-    TopOldPPEntry,
     TopPPEntry,
     TopPrototypePPEntry,
 } from "app-structures";
@@ -10,13 +8,7 @@ import PlayItem from "./PlayItem";
 import "../styles/play-list.css";
 
 export default function PlayList(props: {
-    data:
-        | OldPPEntry[]
-        | PPEntry[]
-        | PrototypePPEntry[]
-        | TopOldPPEntry[]
-        | TopPPEntry[]
-        | TopPrototypePPEntry[];
+    data: PPEntry[] | PrototypePPEntry[] | TopPPEntry[] | TopPrototypePPEntry[];
 }) {
     const { data } = props;
 

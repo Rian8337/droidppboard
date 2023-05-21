@@ -8,7 +8,6 @@ import { IPrototypePP, IUserBind } from "app-structures";
 import "../../styles/table-listing.css";
 import { PPModes } from "../../interfaces/PPModes";
 import { LeaderboardSettings } from "../../interfaces/LeaderboardSettings";
-import OldLeaderboardNavigator from "../../hooks/OldLeaderboardNavigator";
 
 export default function LeaderboardTable(props: { mode: PPModes }) {
     let ctx: LeaderboardSettings;
@@ -22,10 +21,6 @@ export default function LeaderboardTable(props: { mode: PPModes }) {
             // eslint-disable-next-line react-hooks/rules-of-hooks
             ctx = useContext(PrototypeLeaderboardNavigator);
             break;
-        case PPModes.old:
-            // eslint-disable-next-line react-hooks/rules-of-hooks
-            ctx = useContext(OldLeaderboardNavigator);
-            break;
     }
 
     useEffect(() => {
@@ -34,11 +29,7 @@ export default function LeaderboardTable(props: { mode: PPModes }) {
 
         fetch(
             `/api/ppboard/${
-                props.mode === PPModes.prototype
-                    ? "prototype/"
-                    : props.mode === PPModes.old
-                    ? "old/"
-                    : ""
+                props.mode === PPModes.prototype ? "prototype/" : ""
             }getleaderboard?page=${ctx.internalPage}${
                 ctx.query ? `&query=${ctx.query}` : ""
             }`
@@ -126,9 +117,9 @@ export default function LeaderboardTable(props: { mode: PPModes }) {
                     {ctx.data.map((v, i) => {
                         return (
                             <LeaderboardItem
-                                key={`${
-                                    Util.isOld(v) ? v.discordId : v.discordid
-                                }:${(ctx.currentPage - 1) * 50 + i + 1}`}
+                                key={`${v.discordid}:${
+                                    (ctx.currentPage - 1) * 50 + i + 1
+                                }`}
                                 data={v}
                                 page={ctx.currentPage}
                                 index={i}

@@ -4,16 +4,15 @@ import PlayList from "./PlayList";
 import Head from "./Head";
 import { motion } from "framer-motion";
 import PrototypeDescription from "./PrototypeDescription";
-import { IOldPPProfile, IPrototypePP, IUserBind } from "app-structures";
+import { IPrototypePP, IUserBind } from "app-structures";
 import { Util } from "../Util";
 import "../styles/profile.css";
 import { PPModes } from "../interfaces/PPModes";
-import OldDescription from "./OldDescription";
 
 export default function PlayerProfile(props: { mode: PPModes }) {
     const { uid } = useParams();
     const [data, setData] = useState<
-        IUserBind | IPrototypePP | IOldPPProfile | null | undefined
+        IUserBind | IPrototypePP | null | undefined
     >(undefined);
     const [rank, setRank] = useState<number | null>(null);
     const [prevRank, setPrevRank] = useState<number | null>(null);
@@ -32,11 +31,7 @@ export default function PlayerProfile(props: { mode: PPModes }) {
 
         fetch(
             `/api/ppboard/${
-                props.mode === PPModes.prototype
-                    ? "prototype/"
-                    : props.mode === PPModes.old
-                    ? "old/"
-                    : ""
+                props.mode === PPModes.prototype ? "prototype/" : ""
             }getuserprofile?uid=${uid}`
         )
             .then((res) => {
@@ -87,18 +82,10 @@ export default function PlayerProfile(props: { mode: PPModes }) {
                 <>
                     <Head
                         description={`A player's ${
-                            props.mode === PPModes.prototype
-                                ? "prototype"
-                                : props.mode === PPModes.old
-                                ? "old"
-                                : ""
+                            props.mode === PPModes.prototype ? "prototype" : ""
                         }profile in Elaina PP Project.`}
                         title={`PP Board - ${
-                            props.mode === PPModes.prototype
-                                ? "Prototype "
-                                : props.mode === PPModes.old
-                                ? "Old "
-                                : ""
+                            props.mode === PPModes.prototype ? "Prototype " : ""
                         }Player Profile`}
                     />
                     <h2 className="subtitle">
@@ -116,11 +103,7 @@ export default function PlayerProfile(props: { mode: PPModes }) {
                 <>
                     <Head
                         description={`${data.username}'s ${
-                            props.mode === PPModes.prototype
-                                ? "prototype "
-                                : props.mode === PPModes.old
-                                ? "old "
-                                : ""
+                            props.mode === PPModes.prototype ? "prototype " : ""
                         }profile in Elaina PP Project.`}
                         title={`PP Board - ${data.username}`}
                     />
@@ -129,8 +112,6 @@ export default function PlayerProfile(props: { mode: PPModes }) {
                     </h2>
                     {props.mode === PPModes.prototype ? (
                         <PrototypeDescription />
-                    ) : props.mode === PPModes.old ? (
-                        <OldDescription />
                     ) : null}
                     <table>
                         <tbody>

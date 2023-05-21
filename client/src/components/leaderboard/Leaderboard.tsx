@@ -7,11 +7,9 @@ import PrototypeDescription from "../PrototypeDescription";
 import { useContext } from "react";
 import PrototypeLeaderboardNavigator from "../../hooks/PrototypeLeaderboardNavigator";
 import MainLeaderboardNavigator from "../../hooks/MainLeaderboardNavigator";
-import OldLeaderboardNavigator from "../../hooks/OldLeaderboardNavigator";
 import "../../styles/main.css";
 import { PPModes } from "../../interfaces/PPModes";
 import { LeaderboardSettings } from "../../interfaces/LeaderboardSettings";
-import OldDescription from "../OldDescription";
 
 export default function Leaderboard(props: { mode: PPModes }) {
     let ctx: LeaderboardSettings;
@@ -25,10 +23,6 @@ export default function Leaderboard(props: { mode: PPModes }) {
             // eslint-disable-next-line react-hooks/rules-of-hooks
             ctx = useContext(PrototypeLeaderboardNavigator);
             break;
-        case PPModes.old:
-            // eslint-disable-next-line react-hooks/rules-of-hooks
-            ctx = useContext(OldLeaderboardNavigator);
-            break;
     }
 
     return (
@@ -41,27 +35,14 @@ export default function Leaderboard(props: { mode: PPModes }) {
             <Head
                 description="View the rankings of Elaina PP Project."
                 title={`PP Board - ${
-                    props.mode === PPModes.prototype
-                        ? "Prototype "
-                        : props.mode === PPModes.old
-                        ? "Old "
-                        : ""
+                    props.mode === PPModes.prototype ? "Prototype " : ""
                 }Leaderboard`}
             />
             <h2 className="subtitle">
-                Official{" "}
-                {props.mode === PPModes.prototype
-                    ? "Prototype"
-                    : props.mode === PPModes.old
-                    ? "Old"
-                    : ""}{" "}
+                Official {props.mode === PPModes.prototype ? "Prototype" : ""}{" "}
                 Player Leaderboard
             </h2>
-            {props.mode === PPModes.prototype ? (
-                <PrototypeDescription />
-            ) : props.mode === PPModes.old ? (
-                <OldDescription />
-            ) : null}
+            {props.mode === PPModes.prototype ? <PrototypeDescription /> : null}
             <h3 className="description">
                 Click/tap on a player&apos;s name to visit their profile page.
             </h3>

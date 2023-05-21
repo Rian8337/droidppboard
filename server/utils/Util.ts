@@ -1,4 +1,4 @@
-import { TopOldPPEntry, TopPPEntry, TopPrototypePPEntry } from "app-structures";
+import { TopPPEntry, TopPrototypePPEntry } from "app-structures";
 import { Request, RequestHandler } from "express";
 import rateLimit from "express-rate-limit";
 import { ModUtil } from "@rian8337/osu-base";
@@ -29,11 +29,6 @@ export abstract class Util {
         string,
         TopPrototypePPEntry[]
     >();
-
-    /**
-     * List of top old dpp plays from all players, mapped by droid mod string that's sorted alphabetically.
-     */
-    static readonly topOldPPList = new Map<string, TopOldPPEntry[]>();
 
     /**
      * Creates a middleware used for handling excessive API requests.
@@ -68,15 +63,6 @@ export abstract class Util {
      */
     static requestIsPrototype(req: Request): boolean {
         return req.baseUrl.includes("prototype") || req.body.prototype;
-    }
-
-    /**
-     * Checks if a request is requesting old dpp data.
-     *
-     * @param req The request.
-     */
-    static requestIsOld(req: Request): boolean {
-        return req.baseUrl.includes("old") || req.body.old;
     }
 
     /**
@@ -273,61 +259,6 @@ export abstract class Util {
                 }
 
                 for (const plays of this.topPrototypePPList.values()) {
-                    plays.sort((a, b) => {
-                        return b.pp - a.pp;
-                    });
-
-                    plays.splice(100);
-                }
-            });
-    }
-
-    static refreshOldTopPP(): void {
-        setTimeout(() => this.refreshOldTopPP(), 1800 * 1000);
-
-        DatabaseManager.aliceDb.collections.playerOldPPProfile
-            .get({}, { projection: { _id: 0, username: 1, pp: 1 } })
-            .then((res) => {
-                this.topOldPPList.clear();
-
-                this.topOldPPList.set("", []).set("-", []);
-
-                for (const player of res) {
-                    const ppEntries = player.pp;
-
-                    for (const ppEntry of ppEntries) {
-                        const topEntry: TopOldPPEntry = {
-                            ...ppEntry,
-                            username: player.username,
-                        };
-
-                        this.topOldPPList.get("")!.push(topEntry);
-
-                        const droidMods =
-                            [
-                                ...ModUtil.pcStringToMods(ppEntry.mods).reduce(
-                                    (a, v) => {
-                                        if (!v.isApplicableToDroid()) {
-                                            return a;
-                                        }
-
-                                        return a + v.droidString;
-                                    },
-                                    ""
-                                ),
-                            ]
-                                .sort((a, b) => a.localeCompare(b))
-                                .join("") || "-";
-
-                        const playList = this.topOldPPList.get(droidMods) ?? [];
-
-                        playList.push(topEntry);
-
-                        this.topOldPPList.set(droidMods, playList);
-                    }
-                }
-
-                for (const plays of this.topOldPPList.values()) {
                     plays.sort((a, b) => {
                         return b.pp - a.pp;
                     });

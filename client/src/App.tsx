@@ -15,9 +15,6 @@ import PrototypePlayerProfile from "./pages/PrototypePlayerProfile";
 import PrototypeTopPlays from "./pages/PrototypeTopPlays";
 import PrototypeCalculateBeatmap from "./pages/PrototypeCalculateBeatmap";
 import ScrollToTop from "./components/ScrollToTop";
-import OldLeaderboard from "./pages/OldLeaderboard";
-import OldPlayerProfile from "./pages/OldPlayerProfile";
-import OldTopPlays from "./pages/OldTopPlays";
 import SkinList from "./pages/SkinList";
 import SkinPreview from "./pages/SkinPreview";
 
@@ -65,15 +62,6 @@ function App() {
                         path="/prototype/calculate"
                         element={<PrototypeCalculateBeatmap />}
                     />
-                    <Route
-                        path="/old/leaderboard"
-                        element={<OldLeaderboard />}
-                    />
-                    <Route
-                        path="/old/profile/:uid"
-                        element={<OldPlayerProfile />}
-                    />
-                    <Route path="/old/top-plays" element={<OldTopPlays />} />
                     <Route path="/skin/list" element={<SkinList />} />
                     <Route
                         path="/skin/:discordid/:name"

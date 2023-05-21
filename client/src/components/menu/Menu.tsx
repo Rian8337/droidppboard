@@ -22,8 +22,6 @@ export default function Menu() {
                     path="/prototype/calculate"
                     label="Calculate Beatmap Prototype PP"
                 />
-                <MenuItem path="/old/leaderboard" label="Old PP Leaderboard" />
-                <MenuItem path="/old/top-plays" label="Old PP Top Plays" />
                 <MenuItem path="/skin/list" label="Player Skins" />
             </nav>
         </div>

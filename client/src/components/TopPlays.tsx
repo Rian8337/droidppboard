@@ -6,11 +6,9 @@ import SearchBar from "./SearchBar";
 import PrototypeDescription from "./PrototypeDescription";
 import PrototypeTopPlaysNavigator from "../hooks/PrototypeTopPlaysNavigator";
 import MainTopPlaysNavigator from "../hooks/MainTopPlaysNavigator";
-import OldTopPlaysNavigator from "../hooks/OldTopPlaysNavigator";
 import { Util } from "../Util";
 import { TopPlaysSettings } from "../interfaces/TopPlaysSettings";
 import { PPModes } from "../interfaces/PPModes";
-import OldDescription from "./OldDescription";
 
 export default function TopPlays(props: { mode: PPModes }) {
     let ctx: TopPlaysSettings;
@@ -24,10 +22,6 @@ export default function TopPlays(props: { mode: PPModes }) {
             // eslint-disable-next-line react-hooks/rules-of-hooks
             ctx = useContext(PrototypeTopPlaysNavigator);
             break;
-        case PPModes.old:
-            // eslint-disable-next-line react-hooks/rules-of-hooks
-            ctx = useContext(OldTopPlaysNavigator);
-            break;
     }
 
     useEffect(() => {
@@ -40,11 +34,7 @@ export default function TopPlays(props: { mode: PPModes }) {
         const debounce = setTimeout(() => {
             fetch(
                 `/api/ppboard/${
-                    props.mode === PPModes.prototype
-                        ? "prototype/"
-                        : props.mode === PPModes.old
-                        ? "old/"
-                        : ""
+                    props.mode === PPModes.prototype ? "prototype/" : ""
                 }gettopplays${
                     modCombinations ? `?mods=${modCombinations}` : ""
                 }`
@@ -83,18 +73,10 @@ export default function TopPlays(props: { mode: PPModes }) {
         >
             <Head
                 description={`${
-                    props.mode === PPModes.prototype
-                        ? "Prototype "
-                        : props.mode === PPModes.old
-                        ? "Old "
-                        : ""
+                    props.mode === PPModes.prototype ? "Prototype " : ""
                 }Top PP plays in Elaina PP Project.`}
                 title={`PP Board - ${
-                    props.mode === PPModes.prototype
-                        ? "Prototype "
-                        : props.mode === PPModes.old
-                        ? "Old "
-                        : ""
+                    props.mode === PPModes.prototype ? "Prototype " : ""
                 }Top Plays`}
             />
             {ctx.data.length === 0 ? (
@@ -106,16 +88,10 @@ export default function TopPlays(props: { mode: PPModes }) {
             ) : (
                 <>
                     <h2 className="subtitle">{`Top PP ${
-                        props.mode === PPModes.prototype
-                            ? "Prototype "
-                            : props.mode === PPModes.old
-                            ? "Old "
-                            : ""
+                        props.mode === PPModes.prototype ? "Prototype " : ""
                     }Plays`}</h2>
                     {props.mode === PPModes.prototype ? (
                         <PrototypeDescription />
-                    ) : props.mode === PPModes.old ? (
-                        <OldDescription />
                     ) : null}
                 </>
             )}

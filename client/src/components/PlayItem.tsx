@@ -1,21 +1,13 @@
 import {
-    OldPPEntry,
     PPEntry,
     PrototypePPEntry,
-    TopOldPPEntry,
     TopPPEntry,
     TopPrototypePPEntry,
 } from "app-structures";
 import "../styles/play-list.css";
 import { Util } from "../Util";
 
-type Entry =
-    | OldPPEntry
-    | PPEntry
-    | PrototypePPEntry
-    | TopOldPPEntry
-    | TopPPEntry
-    | TopPrototypePPEntry;
+type Entry = PPEntry | PrototypePPEntry | TopPPEntry | TopPrototypePPEntry;
 
 const isPrototype = (play: Entry): play is PrototypePPEntry => {
     return "prevPP" in play;

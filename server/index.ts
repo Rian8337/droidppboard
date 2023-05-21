@@ -78,7 +78,6 @@ app.get("*", (_, res) => {
 DatabaseManager.init().then(async () => {
     Util.refreshTopPP();
     Util.refreshPrototypeTopPP();
-    Util.refreshOldTopPP();
 
     const appPort = parseInt(process.env.PORT || "3001");
 

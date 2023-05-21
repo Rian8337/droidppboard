@@ -2,8 +2,6 @@ import { FC } from "react";
 import { MainCalculationContextProvider } from "./MainCalculationContext";
 import { MainLeaderboardNavigatorProvider } from "./MainLeaderboardNavigator";
 import { MainTopPlaysNavigatorProvider } from "./MainTopPlaysNavigator";
-import { OldLeaderboardNavigatorProvider } from "./OldLeaderboardNavigator";
-import { OldTopPlaysNavigatorProvider } from "./OldTopPlaysNavigator";
 import { PrototypeCalculationContextProvider } from "./PrototypeCalculationContext";
 import { PrototypeLeaderboardNavigatorProvider } from "./PrototypeLeaderboardNavigator";
 import { PrototypeTopPlaysNavigatorProvider } from "./PrototypeTopPlaysNavigator";
@@ -21,10 +19,8 @@ const compose =
 export const Providers = compose(
     MainLeaderboardNavigatorProvider,
     PrototypeLeaderboardNavigatorProvider,
-    OldLeaderboardNavigatorProvider,
     MainTopPlaysNavigatorProvider,
     PrototypeTopPlaysNavigatorProvider,
-    OldTopPlaysNavigatorProvider,
     MainCalculationContextProvider,
     PrototypeCalculationContextProvider,
     WhitelistNavigatorProvider,

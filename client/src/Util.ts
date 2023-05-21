@@ -1,8 +1,8 @@
-import { IOldPPProfile, IPrototypePP, IUserBind } from "app-structures";
+import { IPrototypePP, IUserBind } from "app-structures";
 
-type PPProfileArray = IUserBind[] | IPrototypePP[] | IOldPPProfile[];
+type PPProfileArray = IUserBind[] | IPrototypePP[];
 
-type PPProfile = IUserBind | IPrototypePP | IOldPPProfile;
+type PPProfile = IUserBind | IPrototypePP;
 
 type PPProfiles = PPProfile | PPProfileArray;
 
@@ -27,26 +27,6 @@ export abstract class Util {
             return "prevpptotal" in data[0];
         } else {
             return "prevpptotal" in data;
-        }
-    }
-
-    /**
-     * Checks if data received from backend is an old dpp data or not.
-     *
-     * @param data The data.
-     */
-    static isOld(data: PPProfileArray): data is IOldPPProfile[];
-    /**
-     * Checks if data received from backend is an old dpp data or not.
-     *
-     * @param data The data.
-     */
-    static isOld(data: PPProfile): data is IOldPPProfile;
-    static isOld(data: PPProfiles) {
-        if (Array.isArray(data)) {
-            return "discordId" in data[0];
-        } else {
-            return "discordId" in data;
         }
     }
 
