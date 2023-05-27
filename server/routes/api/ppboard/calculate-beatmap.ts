@@ -7,21 +7,22 @@ import {
     MapStats,
     MathUtils,
     ModUtil,
+    Modes,
     Precision,
 } from "@rian8337/osu-base";
 import { ReadStream } from "fs";
 import {
-    MapStars,
-    DroidPerformanceCalculator,
-    OsuPerformanceCalculator,
-    DifficultyCalculationOptions,
+    DroidDifficultyAttributes,
+    OsuDifficultyAttributes,
 } from "@rian8337/osu-difficulty-calculator";
 import {
-    MapStars as RebalanceMapStars,
-    DroidPerformanceCalculator as RebalanceDroidPerformanceCalculator,
-    OsuPerformanceCalculator as RebalanceOsuPerformanceCalculator,
+    DroidDifficultyAttributes as RebalanceDroidDifficultyAttributes,
+    OsuDifficultyAttributes as RebalanceOsuDifficultyAttributes,
 } from "@rian8337/osu-rebalance-difficulty-calculator";
-import getStrainChart from "@rian8337/osu-strain-graph-generator";
+import { CompleteCalculationAttributes } from "../../../structures/difficultyattributes/CompleteCalculationAttributes";
+import { DroidPerformanceAttributes } from "../../../structures/difficultyattributes/DroidPerformanceAttributes";
+import { RebalanceDroidPerformanceAttributes } from "../../../structures/difficultyattributes/RebalanceDroidPerformanceAttributes";
+import { OsuPerformanceAttributes } from "../../../structures/difficultyattributes/OsuPerformanceAttributes";
 
 const router: express.Router = express.Router();
 
@@ -88,42 +89,17 @@ router.post("/", async (req, res) => {
     }
 
     const isPrototype = Util.requestIsPrototype(req);
-
-    let star: MapStars | RebalanceMapStars;
-
     const parsedBeatmap = new BeatmapDecoder().decode(osuFile, mods).result;
 
-    const options: DifficultyCalculationOptions = {
-        mods: mods,
-        stats: stats,
-    };
-
-    try {
-        star = isPrototype
-            ? new RebalanceMapStars(parsedBeatmap, options)
-            : new MapStars(parsedBeatmap, options);
-    } catch {
-        return res.status(400).json({
-            message: "Invalid file uploaded or beatmap ID is invalid",
-        });
-    }
-
-    if (star.osu.total === 0) {
-        return res.status(400).json({
-            message: "Invalid file uploaded or beatmap ID is invalid",
-        });
-    }
-
-    const { beatmap } = star.osu;
-    const { maxCombo } = beatmap;
+    const { maxCombo } = parsedBeatmap;
     const combo =
         MathUtils.clamp(parseInt(req.body.combo), 0, maxCombo) || maxCombo;
 
     const modifiedStats: MapStats = new MapStats({
-        cs: beatmap.difficulty.cs,
-        ar: stats.ar ?? beatmap.difficulty.ar,
-        od: beatmap.difficulty.od,
-        hp: beatmap.difficulty.hp,
+        cs: parsedBeatmap.difficulty.cs,
+        ar: stats.ar ?? parsedBeatmap.difficulty.ar,
+        od: parsedBeatmap.difficulty.od,
+        hp: parsedBeatmap.difficulty.hp,
         mods: mods,
         speedMultiplier: stats.speedMultiplier,
         isForceAR: stats.isForceAR,
@@ -131,42 +107,88 @@ router.post("/", async (req, res) => {
 
     const realAcc: Accuracy = new Accuracy({
         percent: accuracy,
-        nobjects: beatmap.hitObjects.objects.length,
+        nobjects: parsedBeatmap.hitObjects.objects.length,
+        nmiss: miss,
     });
 
-    const dpp = (
-        isPrototype
-            ? new RebalanceDroidPerformanceCalculator(star.droid.attributes)
-            : new DroidPerformanceCalculator(star.droid.attributes)
-    ).calculate({
-        combo: combo,
-        accPercent: realAcc,
-        miss: miss,
-    });
+    const formData = new FormData();
+    formData.set("file", new Blob([osuFile]));
+    formData.set("key", process.env.DROID_SERVER_INTERNAL_KEY!);
+    formData.set("gamemode", Modes.droid);
+    formData.set("calculationmethod", isPrototype ? "1" : "0");
+    formData.set(
+        "mods",
+        mods.reduce((a, v) => a + v.acronym, "")
+    );
+    formData.set("customspeedmultiplier", stats.speedMultiplier.toString());
 
-    const pp = (
-        isPrototype
-            ? new RebalanceOsuPerformanceCalculator(star.osu.attributes)
-            : new OsuPerformanceCalculator(star.osu.attributes)
-    ).calculate({
-        combo: combo,
-        accPercent: realAcc,
-        miss: miss,
-    });
+    if (stats.isForceAR && stats.ar !== undefined) {
+        formData.set("forcear", stats.ar.toString());
+    }
+
+    formData.set("n300", realAcc.n300.toString());
+    formData.set("n100", realAcc.n100.toString());
+    formData.set("n50", realAcc.n50.toString());
+    formData.set("nmiss", realAcc.nmiss.toString());
+    formData.set("maxcombo", combo.toString());
+
+    const url = new URL(
+        "https://droidpp.osudroid.moe/api/dpp/processor/calculate-beatmap-file"
+    );
+
+    const droidAttribs: CompleteCalculationAttributes<
+        DroidDifficultyAttributes | RebalanceDroidDifficultyAttributes,
+        DroidPerformanceAttributes | RebalanceDroidPerformanceAttributes
+    > | null = await fetch(url, { method: "POST", body: formData })
+        .then((res) => {
+            if (!res.ok) {
+                return null;
+            }
+
+            return res.json();
+        })
+        .catch(() => null);
+
+    if (!droidAttribs) {
+        return res.status(400).json({
+            message: "Could not contact the processing server",
+        });
+    }
+
+    formData.set("gamemode", Modes.osu);
+
+    const osuAttribs: CompleteCalculationAttributes<
+        OsuDifficultyAttributes | RebalanceOsuDifficultyAttributes,
+        OsuPerformanceAttributes
+    > | null = await fetch(url, { method: "POST", body: formData })
+        .then((res) => {
+            if (!res.ok) {
+                return null;
+            }
+
+            return res.json();
+        })
+        .catch(() => null);
+
+    if (!osuAttribs) {
+        return res.status(400).json({
+            message: "Could not contact the processing server",
+        });
+    }
 
     const response: ICalculationResult = {
         beatmap: {
             id: beatmapId,
-            artist: beatmap.metadata.artist,
-            creator: beatmap.metadata.creator,
-            title: beatmap.metadata.title,
-            version: beatmap.metadata.version,
-            maxCombo: beatmap.maxCombo,
+            artist: parsedBeatmap.metadata.artist,
+            creator: parsedBeatmap.metadata.creator,
+            title: parsedBeatmap.metadata.title,
+            version: parsedBeatmap.metadata.version,
+            maxCombo: parsedBeatmap.maxCombo,
             stats: {
-                cs: beatmap.difficulty.cs,
-                ar: beatmap.difficulty.ar!,
-                od: beatmap.difficulty.od,
-                hp: beatmap.difficulty.hp,
+                cs: parsedBeatmap.difficulty.cs,
+                ar: parsedBeatmap.difficulty.ar!,
+                od: parsedBeatmap.difficulty.od,
+                hp: parsedBeatmap.difficulty.hp,
             },
             modifiedStats: {
                 cs: modifiedStats.cs!,
@@ -182,55 +204,39 @@ router.post("/", async (req, res) => {
         ),
         difficulty: {
             droid: {
-                aim: dpp.difficultyAttributes.aimDifficulty,
-                speed: dpp.difficultyAttributes.tapDifficulty,
-                rhythm: dpp.difficultyAttributes.rhythmDifficulty,
-                flashlight: dpp.difficultyAttributes.flashlightDifficulty,
-                visual: dpp.difficultyAttributes.visualDifficulty,
-                total: dpp.difficultyAttributes.starRating,
+                aim: droidAttribs.difficulty.aimDifficulty,
+                speed: droidAttribs.difficulty.tapDifficulty,
+                rhythm: droidAttribs.difficulty.rhythmDifficulty,
+                flashlight: droidAttribs.difficulty.flashlightDifficulty,
+                visual: droidAttribs.difficulty.visualDifficulty,
+                total: droidAttribs.difficulty.starRating,
             },
             osu: {
-                aim: pp.difficultyAttributes.aimDifficulty,
-                speed: pp.difficultyAttributes.speedDifficulty,
+                aim: osuAttribs.difficulty.aimDifficulty,
+                speed: osuAttribs.difficulty.speedDifficulty,
                 rhythm: 0,
-                flashlight: pp.difficultyAttributes.flashlightDifficulty,
+                flashlight: osuAttribs.difficulty.flashlightDifficulty,
                 visual: 0,
-                total: pp.difficultyAttributes.starRating,
+                total: osuAttribs.difficulty.starRating,
             },
         },
         performance: {
             droid: {
-                aim: dpp.aim,
-                speed: dpp.tap,
-                accuracy: dpp.accuracy,
-                flashlight: dpp.flashlight,
-                visual: dpp.visual,
-                total: dpp.total,
+                aim: droidAttribs.performance.aim,
+                speed: droidAttribs.performance.tap,
+                accuracy: droidAttribs.performance.accuracy,
+                flashlight: droidAttribs.performance.flashlight,
+                visual: droidAttribs.performance.visual,
+                total: droidAttribs.performance.total,
             },
             osu: {
-                aim: pp.aim,
-                speed: pp.speed,
-                accuracy: pp.accuracy,
-                flashlight: pp.flashlight,
+                aim: osuAttribs.performance.aim,
+                speed: osuAttribs.performance.speed,
+                accuracy: osuAttribs.performance.accuracy,
+                flashlight: osuAttribs.performance.flashlight,
                 visual: 0,
-                total: pp.total,
+                total: osuAttribs.performance.total,
             },
-        },
-        strainGraph: {
-            droid: (
-                await getStrainChart(
-                    star.droid,
-                    beatmap.metadata.beatmapSetId,
-                    "#3884ff"
-                )
-            )?.toString("base64"),
-            osu: (
-                await getStrainChart(
-                    star.osu,
-                    beatmap.metadata.beatmapSetId,
-                    "#38caff"
-                )
-            )?.toString("base64"),
         },
     };
 

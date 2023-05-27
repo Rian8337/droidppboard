@@ -34,9 +34,4 @@ export interface ICalculationResult {
         droid: PerformanceCalculationResult;
         osu: PerformanceCalculationResult;
     }>;
-
-    readonly strainGraph: Readonly<{
-        droid?: string;
-        osu?: string;
-    }>;
 }
