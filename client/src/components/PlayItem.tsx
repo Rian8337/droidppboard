@@ -72,6 +72,13 @@ export default function PlayItem(props: { data: Entry; index: number }) {
                     ) : (
                         <>{play.miss} ❌</>
                     )}
+                    {play.speedMultiplier ? (
+                        <>
+                            {" "}
+                            | x{play.speedMultiplier.toFixed(2)} speed
+                            multiplier
+                        </>
+                    ) : null}
                 </p>
                 {isPrototype(play) ? (
                     <>
@@ -106,17 +113,11 @@ export default function PlayItem(props: { data: Entry; index: number }) {
                             {play.newTap} tap, {play.newAccuracy} accuracy,{" "}
                             {play.newVisual} visual)
                         </p>
-                        {/* <p className="play-info">
-                            {play.aimNoteCount.toFixed(2)} aim note count,{" "}
-                            {play.twoHandedNoteCount.toFixed(2)} two-handed note
-                            count
-                            {play.twoHandedNoteCount / play.aimNoteCount > 0.1
-                                ? ", assumed two handed"
-                                : ""}
-                        </p> */}
                         <p className="play-info">
                             Slider cheese penalties:{" "}
                             {play.aimSliderCheesePenalty.toFixed(2)} aim,{" "}
+                            {play.flashlightSliderCheesePenalty.toFixed(2)}{" "}
+                            flashlight,{" "}
                             {play.visualSliderCheesePenalty.toFixed(2)} visual
                         </p>
                     </>
