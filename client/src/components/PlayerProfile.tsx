@@ -163,19 +163,6 @@ export default function PlayerProfile(props: { mode: PPModes }) {
                                             ).toUTCString()}
                                         </td>
                                     </tr>
-                                    <tr>
-                                        <th>Two-handed Scores</th>
-                                        <td>
-                                            {
-                                                data.pp.filter(
-                                                    (p) =>
-                                                        p.twoHandedNoteCount /
-                                                            p.aimNoteCount >
-                                                        0.1
-                                                ).length
-                                            }
-                                        </td>
-                                    </tr>
                                 </>
                             ) : (
                                 <>
