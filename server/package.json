@@ -20,8 +20,7 @@
     "@types/cors": "^2.8.12",
     "@types/express": "^4.17.13",
     "@types/express-form-data": "^2.0.2",
-    "@types/node": "^18.15.10",
-    "@types/request": "^2.48.8",
+    "@types/node": "^20.4.9",
     "app-structures": "file:../modules/app-structures",
     "canvas": "^2.9.1",
     "cors": "^2.8.5",
@@ -30,15 +29,14 @@
     "express-form-data": "^2.0.18",
     "express-rate-limit": "^6.3.0",
     "mongodb": "^5.0.1",
-    "request": "^2.88.2",
     "ts-node": "^10.7.0",
     "typescript": "^5.0.2"
   },
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^5.21.0",
-    "@typescript-eslint/parser": "^5.20.0",
+    "@typescript-eslint/eslint-plugin": "^6.3.0",
+    "@typescript-eslint/parser": "^6.3.0",
     "eslint": "^8.14.0",
-    "prettier": "^2.6.2"
+    "prettier": "^3.0.1"
   },
   "eslintConfig": {
     "env": {

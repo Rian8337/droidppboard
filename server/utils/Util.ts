@@ -4,7 +4,6 @@ import rateLimit from "express-rate-limit";
 import { ModUtil } from "@rian8337/osu-base";
 import { join } from "path";
 import { registerFont } from "canvas";
-import request from "request";
 import { ReadStream } from "fs";
 import { DatabaseManager } from "../database/managers/DatabaseManager";
 
@@ -273,19 +272,13 @@ export abstract class Util {
      *
      * @param beatmapId The ID of the beatmap to download.
      */
-    static downloadBeatmap(beatmapId: number): Promise<string> {
-        return new Promise((resolve) => {
-            let data = "";
+    static async downloadBeatmap(beatmapId: number): Promise<string> {
+        try {
+            const res = await fetch(`https://osu.ppy.sh/osu/${beatmapId}`);
 
-            request(`https://osu.ppy.sh/osu/${beatmapId}`, {
-                encoding: "utf-8",
-            })
-                .on("data", (chunk) => {
-                    data += chunk;
-                })
-                .on("complete", () => {
-                    resolve(data);
-                });
-        });
+            return res.text();
+        } catch {
+            return "";
+        }
     }
 }
