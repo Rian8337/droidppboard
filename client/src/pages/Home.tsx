@@ -43,8 +43,8 @@ export default function Home() {
                 </li>
             </ul>
             <p>
-                You can PM me through Discord (Rian8337#0021) if you want to
-                donate with different mean
+                You can PM me through Discord (@rian8337) if you want to donate
+                with different mean
             </p>
             <hr />
             <h3>Benefits</h3>
