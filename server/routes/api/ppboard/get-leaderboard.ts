@@ -4,6 +4,8 @@ import { Util } from "../../../utils/Util";
 
 const router: express.Router = express.Router();
 
+router.use(Util.createRateLimit(8));
+
 router.get("/", async (req, res) => {
     const page = Math.max(1, parseInt(req.url.split("page=")[1]) || 1);
     const searchQuery = req.url.split("query=")[1];

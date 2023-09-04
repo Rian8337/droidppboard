@@ -4,6 +4,8 @@ import { Util } from "../../../utils/Util";
 
 const router: express.Router = express.Router();
 
+router.use(Util.createRateLimit(8));
+
 router.get("/", async (req, res) => {
     const mod = req.url.split("mods=")[1] || "";
 

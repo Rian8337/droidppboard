@@ -7,10 +7,12 @@ import { DatabaseManager } from "../../../database/managers/DatabaseManager";
 
 const router: express.Router = express.Router();
 
+router.use(Util.createRateLimit(8));
+
 router.get("/", async (req, res) => {
     const page = Math.max(1, parseInt(req.url.split("page=")[1]) || 1);
     const query = Util.convertURI(
-        req.url.split("query=")[1] || ""
+        req.url.split("query=")[1] || "",
     ).toLowerCase();
 
     const mapQuery: Filter<IMapWhitelist> = {};
@@ -45,13 +47,13 @@ router.get("/", async (req, res) => {
                                 writable: true,
                                 configurable: true,
                                 enumerable: true,
-                            }
+                            },
                         );
                     } else {
                         Object.defineProperty(mapQuery, propertyName, {
                             value: Util.getComparisonObject(
                                 comparison,
-                                parseFloat(value)
+                                parseFloat(value),
                             ),
                             writable: true,
                             configurable: true,
@@ -71,13 +73,13 @@ router.get("/", async (req, res) => {
                                 writable: true,
                                 configurable: true,
                                 enumerable: true,
-                            }
+                            },
                         );
                     } else {
                         Object.defineProperty(mapQuery, "diffstat.sr", {
                             value: Util.getComparisonObject(
                                 comparison,
-                                parseFloat(value)
+                                parseFloat(value),
                             ),
                             writable: true,
                             configurable: true,
@@ -115,7 +117,7 @@ router.get("/", async (req, res) => {
                             Object.defineProperty(
                                 sort,
                                 `diffstat.${value}`,
-                                attributes
+                                attributes,
                             );
                             break;
                         case "sr":
@@ -124,7 +126,7 @@ router.get("/", async (req, res) => {
                             Object.defineProperty(
                                 sort,
                                 "diffstat.sr",
-                                attributes
+                                attributes,
                             );
                             break;
                         case "date":
@@ -180,8 +182,8 @@ router.get("/", async (req, res) => {
         await DatabaseManager.elainaDb.collections.mapWhitelist.getWhitelistedBeatmaps(
             page,
             mapQuery,
-            sort
-        )
+            sort,
+        ),
     );
 });
 
