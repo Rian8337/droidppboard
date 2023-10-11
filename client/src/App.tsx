@@ -17,6 +17,7 @@ import PrototypeCalculateBeatmap from "./pages/PrototypeCalculateBeatmap";
 import ScrollToTop from "./components/ScrollToTop";
 import SkinList from "./pages/SkinList";
 import SkinPreview from "./pages/SkinPreview";
+import MatchHistory from "./pages/MatchHistory";
 
 function App() {
     const location = useLocation();
@@ -61,6 +62,10 @@ function App() {
                     <Route
                         path="/prototype/calculate"
                         element={<PrototypeCalculateBeatmap />}
+                    />
+                    <Route
+                        path="/match_history/:matchid"
+                        element={<MatchHistory/>}
                     />
                     <Route path="/skin/list" element={<SkinList />} />
                     <Route
