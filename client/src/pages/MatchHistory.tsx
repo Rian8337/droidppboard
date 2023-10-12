@@ -85,7 +85,7 @@ function convertModString(modstring: string) {
                 mods.push("FL")
                 break
             case "x":
-                speedMultiplier = parseFloat(modstring.substring(i + 1, modstring.indexOf("ar")))
+                speedMultiplier = parseFloat(modstring.substring(i + 1, modstring.indexOf("ar") !== -1 ? modstring.indexOf("ar") : modstring.length))
                 i += speedMultiplier.toString().length
                 break
             case "a":
