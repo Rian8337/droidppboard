@@ -62,6 +62,11 @@ export interface PrototypePPEntry extends PPEntry {
     estimatedSpeedUnstableRate: number;
 
     /**
+     * The adjusted speed unstable rate of the score. Used to penalize for vibro.
+     */
+    adjustedSpeedUnstableRate: number;
+
+    /**
      * The evaluated overall difficulty of the score.
      */
     overallDifficulty: number;
@@ -80,6 +85,16 @@ export interface PrototypePPEntry extends PPEntry {
      * The amount of meh hits achieved in the score.
      */
     hit50: number;
+
+    /**
+     * The tap penalty in live.
+     */
+    liveTapPenalty: number;
+
+    /**
+     * The tap penalty in rebalance.
+     */
+    rebalanceTapPenalty: number;
 
     /**
      * The aim slider cheese penalty of the score.

@@ -101,7 +101,12 @@ export default function PlayItem(props: { data: Entry; index: number }) {
                                 ? play.estimatedSpeedUnstableRate.toFixed(2)
                                 : Infinity}{" "}
                             estimated speed UR |{" "}
-                            {play.speedNoteCount.toFixed(2)} speed note count
+                            {(
+                                play.adjustedSpeedUnstableRate ??
+                                play.estimatedSpeedUnstableRate
+                            )?.toFixed(2) ?? Infinity}{" "}
+                            adjusted speed UR | {play.speedNoteCount.toFixed(2)}{" "}
+                            speed note count
                         </p>
                         <p className="play-info">
                             <b>Old</b>: {play.prevPP} pp ({play.prevAim} aim,{" "}
@@ -112,6 +117,11 @@ export default function PlayItem(props: { data: Entry; index: number }) {
                             <b>New</b>: {play.pp} pp ({play.newAim} aim,{" "}
                             {play.newTap} tap, {play.newAccuracy} accuracy,{" "}
                             {play.newVisual} visual)
+                        </p>
+                        <p className="play-info">
+                            Tap penalties:{" "}
+                            {(play.liveTapPenalty ?? 1).toFixed(2)} old,{" "}
+                            {(play.rebalanceTapPenalty ?? 1).toFixed(2)} new
                         </p>
                         <p className="play-info">
                             Slider cheese penalties:{" "}
