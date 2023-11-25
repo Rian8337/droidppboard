@@ -13,9 +13,6 @@
   "engines": {
     "node": "18.x"
   },
-  "devDependencies": {
-    "prettier": "^2.6.2"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Rian8337/droidppboard.git"
@@ -29,5 +26,10 @@
   "homepage": "https://github.com/Rian8337/droidppboard#readme",
   "prettier": {
     "tabWidth": 4
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^6.12.0",
+    "@typescript-eslint/parser": "^6.12.0",
+    "prettier": "^3.1.0"
   }
 }
