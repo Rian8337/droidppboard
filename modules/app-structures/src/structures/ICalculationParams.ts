@@ -5,5 +5,7 @@ export interface ICalculationParams {
     readonly combo?: number;
     readonly misses: number;
     readonly speedmultiplier: number;
+    readonly forcecs?: number;
     readonly forcear?: number;
+    readonly forceod?: number;
 }

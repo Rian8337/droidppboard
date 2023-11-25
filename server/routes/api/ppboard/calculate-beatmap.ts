@@ -79,13 +79,23 @@ router.post("/", async (req, res) => {
         stats.speedMultiplier = MathUtils.clamp(
             parseFloat(req.body.speedmultiplier) || 1,
             0.5,
-            2
+            2,
         );
+    }
+
+    if (req.body.forcecs) {
+        stats.cs = MathUtils.clamp(parseFloat(req.body.forcecs), 0, 11);
+        stats.forceCS = !isNaN(stats.cs);
     }
 
     if (req.body.forcear) {
         stats.ar = MathUtils.clamp(parseFloat(req.body.forcear), 0, 12.5);
-        stats.isForceAR = !isNaN(stats.ar);
+        stats.forceAR = !isNaN(stats.ar);
+    }
+
+    if (req.body.forceod) {
+        stats.od = MathUtils.clamp(parseFloat(req.body.forceod), 0, 12.5);
+        stats.forceOD = !isNaN(stats.od);
     }
 
     const isPrototype = Util.requestIsPrototype(req);
@@ -96,13 +106,16 @@ router.post("/", async (req, res) => {
         MathUtils.clamp(parseInt(req.body.combo), 0, maxCombo) || maxCombo;
 
     const modifiedStats: MapStats = new MapStats({
-        cs: parsedBeatmap.difficulty.cs,
+        cs: stats.cs ?? parsedBeatmap.difficulty.cs,
         ar: stats.ar ?? parsedBeatmap.difficulty.ar,
-        od: parsedBeatmap.difficulty.od,
-        hp: parsedBeatmap.difficulty.hp,
+        od: stats.od ?? parsedBeatmap.difficulty.od,
+        hp: stats.hp ?? parsedBeatmap.difficulty.hp,
         mods: mods,
         speedMultiplier: stats.speedMultiplier,
-        isForceAR: stats.isForceAR,
+        forceCS: stats.forceCS,
+        forceAR: stats.forceAR,
+        forceOD: stats.forceOD,
+        forceHP: stats.forceHP,
     }).calculate();
 
     const realAcc: Accuracy = new Accuracy({
@@ -118,12 +131,18 @@ router.post("/", async (req, res) => {
     formData.set("calculationmethod", isPrototype ? "1" : "0");
     formData.set(
         "mods",
-        mods.reduce((a, v) => a + v.acronym, "")
+        mods.reduce((a, v) => a + v.acronym, ""),
     );
     formData.set("customspeedmultiplier", stats.speedMultiplier.toString());
 
-    if (stats.isForceAR && stats.ar !== undefined) {
+    if (stats.forceCS && stats.cs !== undefined) {
+        formData.set("forcecs", stats.cs.toString());
+    }
+    if (stats.forceAR && stats.ar !== undefined) {
         formData.set("forcear", stats.ar.toString());
+    }
+    if (stats.forceOD && stats.od !== undefined) {
+        formData.set("forceod", stats.od.toString());
     }
 
     formData.set("n300", realAcc.n300.toString());
@@ -133,7 +152,7 @@ router.post("/", async (req, res) => {
     formData.set("maxcombo", combo.toString());
 
     const url = new URL(
-        "https://droidpp.osudroid.moe/api/dpp/processor/calculate-beatmap-file"
+        "https://droidpp.osudroid.moe/api/dpp/processor/calculate-beatmap-file",
     );
 
     const droidAttribs: CompleteCalculationAttributes<
@@ -200,7 +219,7 @@ router.post("/", async (req, res) => {
         estimated: !Precision.almostEqualsNumber(
             accuracy / 100,
             realAcc.value(),
-            1e-4
+            1e-4,
         ),
         difficulty: {
             droid: {

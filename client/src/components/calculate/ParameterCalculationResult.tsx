@@ -88,6 +88,14 @@ export default function ParameterCalculationResult(props: {
                     </td>
                 </tr>
                 <tr>
+                    <th>Force CS</th>
+                    <td>
+                        {params.forcecs
+                            ? `CS: ${Math.max(0, Math.min(params.forcecs, 11))}`
+                            : "None"}
+                    </td>
+                </tr>
+                <tr>
                     <th>Force AR</th>
                     <td>
                         {params.forcear
@@ -95,6 +103,14 @@ export default function ParameterCalculationResult(props: {
                                   0,
                                   Math.min(params.forcear, 12.5)
                               )}`
+                            : "None"}
+                    </td>
+                </tr>
+                <tr>
+                    <th>Force OD</th>
+                    <td>
+                        {params.forceod
+                            ? `OD: ${Math.max(0, Math.min(params.forceod, 11))}`
                             : "None"}
                     </td>
                 </tr>

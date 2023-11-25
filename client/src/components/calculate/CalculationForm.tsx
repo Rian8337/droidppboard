@@ -21,12 +21,14 @@ export default function CalculationForm(props: { prototype: boolean }) {
 
         ctx.setParams({
             beatmaplink: getValue(1),
+            mods: getValue(2),
             accuracy: parseFloat(getValue(3)),
             combo: parseInt(getValue(4)),
-            forcear: parseFloat(getValue(7)),
             misses: parseInt(getValue(5)),
-            mods: getValue(2),
             speedmultiplier: parseFloat(getValue(6)),
+            forcecs: parseFloat(getValue(7)),
+            forcear: parseFloat(getValue(8)),
+            forceod: parseFloat(getValue(9)),
         });
 
         fetch(
@@ -168,12 +170,28 @@ export default function CalculationForm(props: { prototype: boolean }) {
                 defaultValue={ctx.params?.speedmultiplier || ""}
             />
             <br />
+            <label htmlFor="forcecs">
+                <p>Force CS</p>
+                Optional, range from 0 to 11. Defaults to none.
+                <br />
+                If specified, sets the beatmap&apos;s CS to the specified value
+                ignoring any effect from mods.
+            </label>
+            <br />
+            <input
+                className="parameter"
+                type="text"
+                name="forcecs"
+                placeholder="Insert force CS..."
+                defaultValue={ctx.params?.forcecs || ""}
+            />
+            <br />
             <label htmlFor="forcear">
                 <p>Force AR</p>
                 Optional, range from 0 to 12.5. Defaults to none.
                 <br />
                 If specified, sets the beatmap&apos;s AR to the specified value
-                ignoring any effect from mods.
+                ignoring any effect from mods and speed multiplier.
             </label>
             <br />
             <input
@@ -182,6 +200,22 @@ export default function CalculationForm(props: { prototype: boolean }) {
                 name="forcear"
                 placeholder="Insert force AR..."
                 defaultValue={ctx.params?.forcear || ""}
+            />
+            <br />
+            <label htmlFor="forceod">
+                <p>Force OD</p>
+                Optional, range from 0 to 11. Defaults to none.
+                <br />
+                If specified, sets the beatmap&apos;s OD to the specified value
+                ignoring any effect from mods and speed multiplier.
+            </label>
+            <br />
+            <input
+                className="parameter"
+                type="text"
+                name="forcear"
+                placeholder="Insert force OD..."
+                defaultValue={ctx.params?.forceod || ""}
             />
             <br />
             <input
