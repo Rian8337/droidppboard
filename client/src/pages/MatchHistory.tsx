@@ -172,10 +172,11 @@ export default function MatchHistory() {
                 }
 
                 setMatchHistory(data);
-                setLoading(false);
             })
             .catch((err) => {
                 setError(err.message);
+            })
+            .finally(() => {
                 setLoading(false);
             });
     }, [matchid]);
