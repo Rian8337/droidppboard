@@ -62,11 +62,6 @@ export interface PrototypePPEntry extends PPEntry {
     estimatedSpeedUnstableRate: number;
 
     /**
-     * The adjusted speed unstable rate of the score. Used to penalize for vibro.
-     */
-    adjustedSpeedUnstableRate: number;
-
-    /**
      * The evaluated overall difficulty of the score.
      */
     overallDifficulty: number;
@@ -117,4 +112,9 @@ export interface PrototypePPEntry extends PPEntry {
      * Related to tap difficulty.
      */
     speedNoteCount: number;
+
+    /**
+     * The average BPM of this score.
+     */
+    averageBPM: number;
 }
