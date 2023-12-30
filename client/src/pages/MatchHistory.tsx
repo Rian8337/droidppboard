@@ -98,32 +98,34 @@ function convertModString(modstring: string) {
     }
 
     // process custom stats and speed multiplier
-    const customStats: string[] = [];
-    for (const s of customStatsString) {
-        if (!s) {
-            continue;
+    if (customStatsString) {
+        const customStats: string[] = [];
+        for (const s of customStatsString) {
+            if (!s) {
+                continue;
+            }
+
+            switch (true) {
+                // Forced stats
+                case s.startsWith("CS"):
+                case s.startsWith("AR"):
+                case s.startsWith("OD"):
+                case s.startsWith("HP"):
+                // FL follow delay
+                // eslint-disable-next-line no-fallthrough
+                case s.startsWith("FLD"):
+                    customStats.push(s);
+                    break;
+                // Speed multiplier
+                case s.startsWith("x"):
+                    customStats.push(`${s.replace("x", "")}x`);
+                    break;
+            }
         }
 
-        switch (true) {
-            // Forced stats
-            case s.startsWith("CS"):
-            case s.startsWith("AR"):
-            case s.startsWith("OD"):
-            case s.startsWith("HP"):
-            // FL follow delay
-            // eslint-disable-next-line no-fallthrough
-            case s.startsWith("FLD"):
-                customStats.push(s);
-                break;
-            // Speed multiplier
-            case s.startsWith("x"):
-                customStats.push(`${s.replace("x", "")}x`);
-                break;
+        if (customStats.length > 0) {
+            finalStr += ` (${customStats.join(", ")})`;
         }
-    }
-
-    if (customStats.length > 0) {
-        finalStr += ` (${customStats.join(", ")})`;
     }
 
     return finalStr;
@@ -140,7 +142,15 @@ export default function MatchHistory() {
         fetch(
             `https://droidpp.osudroid.moe/api/tournament/getrooms_history?id=${matchid}`
         )
-            .then((res) => res.json())
+            .then((res) => {
+                if (!res.ok) {
+                    throw new Error(
+                        "Unable to load the match history of this room."
+                    );
+                }
+
+                return res.json();
+            })
             .then((data: MatchSessionHistory[]) => {
                 // reorganized the score order if team mode is team vs (first blue team, then blue team members, then red team, then red team members)
                 for (const session of data) {
