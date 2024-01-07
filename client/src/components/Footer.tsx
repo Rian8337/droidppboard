@@ -4,7 +4,7 @@ export default function Footer() {
     return (
         <footer>
             <p>osu!droid Elaina PP Project Site</p>
-            <p>&copy; 2023 Rian8337</p>
+            <p>&copy; 2024 Rian8337</p>
             <DiscordServer />
         </footer>
     );
