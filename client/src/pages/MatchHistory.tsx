@@ -15,9 +15,9 @@ interface MatchSessionHistory extends MultiplayerSession {
     scores: MultiplayerScore[];
 }
 
-const TeamMode = ["Head to Head", "Team VS"];
+const TeamMode = ["Head to Head", "Team VS"] as const;
 
-const WinCondition = ["Score", "Accuracy", "Combo", "Score V2"];
+const WinCondition = ["Score", "Accuracy", "Combo", "Score V2"] as const;
 
 // function to format a string to a number with commas
 function formatNumber(num: number) {
