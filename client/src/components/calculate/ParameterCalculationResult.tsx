@@ -5,7 +5,6 @@ import { Util } from "../../Util";
 export default function ParameterCalculationResult(props: {
     params: ICalculationParams;
     beatmap: ICalculationResult["beatmap"];
-    estimated: boolean;
 }) {
     const { beatmap, params } = props;
     const modifiedStats: string[] = [];
@@ -101,10 +100,6 @@ export default function ParameterCalculationResult(props: {
                 <tr>
                     <th>Forced Statistics</th>
                     <td>{modifiedStats.join(" ") || "None"}</td>
-                </tr>
-                <tr>
-                    <th>Estimated</th>
-                    <td>{props.estimated ? "Yes" : "No"}</td>
                 </tr>
             </tbody>
         </table>

@@ -1,14 +1,16 @@
-import express from "express";
+import { Router } from "express";
 import { Util } from "../../../utils/Util";
 import { ICalculationResult } from "app-structures";
 import {
     Accuracy,
     BeatmapDecoder,
-    MapStats,
+    DifficultyStatisticsCalculatorOptions,
     MathUtils,
+    Mod,
+    ModDifficultyAdjust,
     ModUtil,
     Modes,
-    Precision,
+    calculateOsuDifficultyStatistics,
 } from "@rian8337/osu-base";
 import { ReadStream } from "fs";
 import {
@@ -24,7 +26,7 @@ import { DroidPerformanceAttributes } from "../../../structures/difficultyattrib
 import { RebalanceDroidPerformanceAttributes } from "../../../structures/difficultyattributes/RebalanceDroidPerformanceAttributes";
 import { OsuPerformanceAttributes } from "../../../structures/difficultyattributes/OsuPerformanceAttributes";
 
-const router: express.Router = express.Router();
+const router = Router();
 
 router.use(Util.createRateLimit(1, 5000));
 
@@ -73,56 +75,49 @@ router.post("/", async (req, res) => {
         MathUtils.clamp(parseFloat(req.body.accuracy), 0, 100) || 100;
     const miss = Math.max(0, parseInt(req.body.misses)) || 0;
 
-    const stats = new MapStats();
+    let difficultyAdjustMod: ModDifficultyAdjust | undefined;
 
-    if (req.body.speedmultiplier) {
-        stats.speedMultiplier = MathUtils.clamp(
-            parseFloat(req.body.speedmultiplier) || 1,
-            0.5,
-            2,
-        );
-    }
+    if (
+        [req.body.forcecs, req.body.forcear, req.body.forceod].some(
+            (v) => v !== undefined,
+        )
+    ) {
+        difficultyAdjustMod = new ModDifficultyAdjust({
+            cs: MathUtils.clamp(parseFloat(req.body.forcecs), 0, 15),
+            ar: MathUtils.clamp(parseFloat(req.body.forcear), 0, 12.5),
+            od: MathUtils.clamp(parseFloat(req.body.forceod), 0, 12.5),
+        });
 
-    if (req.body.forcecs) {
-        stats.cs = MathUtils.clamp(parseFloat(req.body.forcecs), 0, 11);
-        stats.forceCS = !isNaN(stats.cs);
-    }
-
-    if (req.body.forcear) {
-        stats.ar = MathUtils.clamp(parseFloat(req.body.forcear), 0, 12.5);
-        stats.forceAR = !isNaN(stats.ar);
-    }
-
-    if (req.body.forceod) {
-        stats.od = MathUtils.clamp(parseFloat(req.body.forceod), 0, 12.5);
-        stats.forceOD = !isNaN(stats.od);
+        mods.push(difficultyAdjustMod);
     }
 
     const isPrototype = Util.requestIsPrototype(req);
-    const parsedBeatmap = new BeatmapDecoder().decode(osuFile, mods).result;
+    const parsedBeatmap = new BeatmapDecoder().decode(osuFile).result;
 
     const { maxCombo } = parsedBeatmap;
     const combo =
         MathUtils.clamp(parseInt(req.body.combo), 0, maxCombo) || maxCombo;
 
-    const modifiedStats: MapStats = new MapStats({
-        cs: stats.cs ?? parsedBeatmap.difficulty.cs,
-        ar: stats.ar ?? parsedBeatmap.difficulty.ar,
-        od: stats.od ?? parsedBeatmap.difficulty.od,
-        hp: stats.hp ?? parsedBeatmap.difficulty.hp,
+    const difficultyStatisticsOptions: DifficultyStatisticsCalculatorOptions<
+        number,
+        number,
+        number,
+        number,
+        Mod[],
+        number
+    > = {
+        circleSize: parsedBeatmap.difficulty.cs,
+        approachRate:
+            parsedBeatmap.difficulty.ar ?? parsedBeatmap.difficulty.od,
+        overallDifficulty: parsedBeatmap.difficulty.od,
+        healthDrain: parsedBeatmap.difficulty.hp,
         mods: mods,
-        speedMultiplier: stats.speedMultiplier,
-        forceCS: stats.forceCS,
-        forceAR: stats.forceAR,
-        forceOD: stats.forceOD,
-        forceHP: stats.forceHP,
-    }).calculate();
-
-    const realAcc: Accuracy = new Accuracy({
-        percent: accuracy,
-        nobjects: parsedBeatmap.hitObjects.objects.length,
-        nmiss: miss,
-    });
+        customSpeedMultiplier: MathUtils.clamp(
+            parseFloat(req.body.speedmultiplier) || 1,
+            0.5,
+            2,
+        ),
+    };
 
     const formData = new FormData();
     formData.set("file", new Blob([osuFile]));
@@ -133,17 +128,26 @@ router.post("/", async (req, res) => {
         "mods",
         mods.reduce((a, v) => a + v.acronym, ""),
     );
-    formData.set("customspeedmultiplier", stats.speedMultiplier.toString());
+    formData.set(
+        "customspeedmultiplier",
+        difficultyStatisticsOptions.customSpeedMultiplier.toString(),
+    );
 
-    if (stats.forceCS && stats.cs !== undefined) {
-        formData.set("forcecs", stats.cs.toString());
+    if (difficultyAdjustMod?.cs !== undefined) {
+        formData.set("forcecs", difficultyAdjustMod.cs.toString());
     }
-    if (stats.forceAR && stats.ar !== undefined) {
-        formData.set("forcear", stats.ar.toString());
+    if (difficultyAdjustMod?.ar !== undefined) {
+        formData.set("forcear", difficultyAdjustMod.ar.toString());
     }
-    if (stats.forceOD && stats.od !== undefined) {
-        formData.set("forceod", stats.od.toString());
+    if (difficultyAdjustMod?.od !== undefined) {
+        formData.set("forceod", difficultyAdjustMod.od.toString());
     }
+
+    const realAcc = new Accuracy({
+        percent: accuracy,
+        nobjects: parsedBeatmap.hitObjects.objects.length,
+        nmiss: miss,
+    });
 
     formData.set("n300", realAcc.n300.toString());
     formData.set("n100", realAcc.n100.toString());
@@ -195,6 +199,10 @@ router.post("/", async (req, res) => {
         });
     }
 
+    const difficultyStatistics = calculateOsuDifficultyStatistics(
+        difficultyStatisticsOptions,
+    );
+
     const response: ICalculationResult = {
         beatmap: {
             id: beatmapId,
@@ -210,17 +218,12 @@ router.post("/", async (req, res) => {
                 hp: parsedBeatmap.difficulty.hp,
             },
             modifiedStats: {
-                cs: modifiedStats.cs!,
-                ar: modifiedStats.ar!,
-                od: modifiedStats.od!,
-                hp: modifiedStats.hp!,
+                cs: difficultyStatistics.circleSize,
+                ar: difficultyStatistics.approachRate,
+                od: difficultyStatistics.overallDifficulty,
+                hp: difficultyStatistics.healthDrain,
             },
         },
-        estimated: !Precision.almostEqualsNumber(
-            accuracy / 100,
-            realAcc.value(),
-            1e-4,
-        ),
         difficulty: {
             droid: {
                 aim: droidAttribs.difficulty.aimDifficulty,

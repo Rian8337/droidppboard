@@ -22,11 +22,7 @@ export default function CalculationResult(props: {
             <h4>Calculation Result</h4>
             <BeatmapCalculationResult beatmap={beatmap} />
             <br />
-            <ParameterCalculationResult
-                params={params}
-                beatmap={beatmap}
-                estimated={result.estimated}
-            />
+            <ParameterCalculationResult params={params} beatmap={beatmap} />
             <br />
             <DifficultyCalculationResult difficulty={difficulty} />
             <br />

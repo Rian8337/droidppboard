@@ -23,8 +23,6 @@ export interface ICalculationResult {
         }>;
     }>;
 
-    readonly estimated: boolean;
-
     readonly difficulty: Readonly<{
         droid: DifficultyCalculationResult;
         osu: DifficultyCalculationResult;
