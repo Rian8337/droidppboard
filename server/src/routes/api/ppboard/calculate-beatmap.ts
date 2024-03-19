@@ -79,7 +79,7 @@ router.post("/", async (req, res) => {
 
     if (
         [req.body.forcecs, req.body.forcear, req.body.forceod].some(
-            (v) => v !== undefined,
+            (v) => typeof v === "string" && v.length > 0,
         )
     ) {
         difficultyAdjustMod = new ModDifficultyAdjust({
@@ -163,13 +163,7 @@ router.post("/", async (req, res) => {
         DroidDifficultyAttributes | RebalanceDroidDifficultyAttributes,
         DroidPerformanceAttributes | RebalanceDroidPerformanceAttributes
     > | null = await fetch(url, { method: "POST", body: formData })
-        .then((res) => {
-            if (!res.ok) {
-                return null;
-            }
-
-            return res.json();
-        })
+        .then((res) => (res.ok ? res.json() : null))
         .catch(() => null);
 
     if (!droidAttribs) {
@@ -184,13 +178,7 @@ router.post("/", async (req, res) => {
         OsuDifficultyAttributes | RebalanceOsuDifficultyAttributes,
         OsuPerformanceAttributes
     > | null = await fetch(url, { method: "POST", body: formData })
-        .then((res) => {
-            if (!res.ok) {
-                return null;
-            }
-
-            return res.json();
-        })
+        .then((res) => (res.ok ? res.json() : null))
         .catch(() => null);
 
     if (!osuAttribs) {

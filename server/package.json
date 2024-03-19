@@ -3,9 +3,10 @@
   "private": true,
   "version": "1.0.0",
   "description": "Leaderboard for Elaina PP Project",
-  "main": "index.ts",
+  "main": "dist/index.js",
   "scripts": {
-    "start": "ts-node ."
+    "build": "tsc",
+    "start": "node ."
   },
   "engines": {
     "node": ">=18.x"
@@ -29,7 +30,6 @@
     "express-form-data": "^2.0.18",
     "express-rate-limit": "^7.1.4",
     "mongodb": "^6.3.0",
-    "ts-node": "^10.7.0",
     "typescript": "^5.0.2"
   },
   "devDependencies": {
