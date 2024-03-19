@@ -213,7 +213,7 @@ export default function CalculationForm(props: { prototype: boolean }) {
             <input
                 className="parameter"
                 type="text"
-                name="forcear"
+                name="forceod"
                 placeholder="Insert force OD..."
                 defaultValue={ctx.params?.forceod || ""}
             />
