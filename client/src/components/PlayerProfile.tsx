@@ -111,7 +111,10 @@ export default function PlayerProfile(props: { mode: PPModes }) {
                         Player Profile: {data.username}
                     </h2>
                     {props.mode === PPModes.prototype ? (
-                        <PrototypeDescription />
+                        <>
+                            <PrototypeDescription />
+                            <hr />
+                        </>
                     ) : null}
                     <table>
                         <tbody>

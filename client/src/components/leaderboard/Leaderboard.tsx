@@ -42,7 +42,12 @@ export default function Leaderboard(props: { mode: PPModes }) {
                 Official {props.mode === PPModes.prototype ? "Prototype" : ""}{" "}
                 Player Leaderboard
             </h2>
-            {props.mode === PPModes.prototype ? <PrototypeDescription /> : null}
+            {props.mode === PPModes.prototype ? (
+                <>
+                    <PrototypeDescription />
+                    <hr />
+                </>
+            ) : null}
             <h3 className="description">
                 Click/tap on a player&apos;s name to visit their profile page.
             </h3>

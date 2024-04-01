@@ -91,7 +91,10 @@ export default function TopPlays(props: { mode: PPModes }) {
                         props.mode === PPModes.prototype ? "Prototype " : ""
                     }Plays`}</h2>
                     {props.mode === PPModes.prototype ? (
-                        <PrototypeDescription />
+                        <>
+                            <PrototypeDescription />
+                            <hr />
+                        </>
                     ) : null}
                 </>
             )}

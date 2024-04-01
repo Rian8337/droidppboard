@@ -61,6 +61,8 @@ a:visited {
 .prototype-description {
     text-align: center;
     font: 15px Exo-Bold;
+    max-width: 1000px;
+    margin: 0 auto;
 }
 
 h3.description {
