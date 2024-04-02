@@ -1,4 +1,4 @@
-import { IPrototypePP, IUserBind } from "app-structures";
+import { IInGamePP, IPrototypePP, IUserBind } from "app-structures";
 import { TableSetting } from "./TableSetting";
 
 /**
@@ -6,4 +6,5 @@ import { TableSetting } from "./TableSetting";
  */
 export type LeaderboardSettings =
     | TableSetting<IUserBind>
-    | TableSetting<IPrototypePP>;
+    | TableSetting<IPrototypePP>
+    | TableSetting<IInGamePP>;

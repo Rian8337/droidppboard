@@ -4,4 +4,5 @@
 export enum PPModes {
     live,
     prototype,
+    inGame,
 }

@@ -1,8 +1,8 @@
-import { IPrototypePP, IUserBind } from "app-structures";
+import { IInGamePP, IPrototypePP, IUserBind } from "app-structures";
 
-type PPProfileArray = IUserBind[] | IPrototypePP[];
+type PPProfileArray = IUserBind[] | IPrototypePP[] | IInGamePP[];
 
-type PPProfile = IUserBind | IPrototypePP;
+type PPProfile = IUserBind | IPrototypePP | IInGamePP;
 
 type PPProfiles = PPProfile | PPProfileArray;
 
@@ -27,6 +27,28 @@ export abstract class Util {
             return "prevpptotal" in data[0];
         } else {
             return "prevpptotal" in data;
+        }
+    }
+
+    /**
+     * Checks if data received from backend is an in-game data or not.
+     *
+     * @param data The data.
+     */
+    static isInGame(data: PPProfileArray): data is IInGamePP[];
+
+    /**
+     * Checks if data received from backend is an in-game data or not.
+     *
+     * @param data The data.
+     */
+    static isInGame(data: PPProfile): data is IInGamePP;
+
+    static isInGame(data: PPProfiles) {
+        if (Array.isArray(data)) {
+            return "playc" in data[0] && "prevpptotal" in data[0];
+        } else {
+            return "playc" in data && "prevpptotal" in data;
         }
     }
 

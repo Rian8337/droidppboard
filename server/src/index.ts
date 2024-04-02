@@ -42,21 +42,21 @@ app.use("/api/skins", skinsRouter);
 //#region Droid PP endpoints
 
 ppboardRouter.use(
-    ["/getleaderboard", "/prototype/getleaderboard", "old/getleaderboard"],
-    getPPLeaderboard
+    ["/getleaderboard", "/prototype/getleaderboard", "/ingame/getleaderboard"],
+    getPPLeaderboard,
 );
 ppboardRouter.use(
-    ["/getuserprofile", "/prototype/getuserprofile", "/old/getuserprofile"],
-    getUserProfile
+    ["/getuserprofile", "/prototype/getuserprofile", "/ingame/getuserprofile"],
+    getUserProfile,
 );
 ppboardRouter.use("/getwhitelist", getWhitelist);
 ppboardRouter.use(
-    ["/gettopplays", "/prototype/gettopplays", "/old/gettopplays"],
-    getTopPlays
+    ["/gettopplays", "/prototype/gettopplays", "/ingame/gettopplays"],
+    getTopPlays,
 );
 ppboardRouter.use(
     ["/calculatebeatmap", "/prototype/calculatebeatmap"],
-    calculateBeatmap
+    calculateBeatmap,
 );
 
 //#endregion
@@ -78,6 +78,7 @@ app.get("*", (_, res) => {
 DatabaseManager.init().then(async () => {
     Util.refreshTopPP();
     Util.refreshPrototypeTopPP();
+    Util.refreshInGameTopPP();
 
     const appPort = parseInt(process.env.PORT || "3001");
 

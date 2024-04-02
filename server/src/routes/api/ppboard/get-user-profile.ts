@@ -1,4 +1,4 @@
-import { IPrototypePP } from "app-structures";
+import { IInGamePP, IPrototypePP } from "app-structures";
 import express from "express";
 import { DatabaseManager } from "../../../database/managers/DatabaseManager";
 import { Util } from "../../../utils/Util";
@@ -14,9 +14,11 @@ router.get("/", async (req, res) => {
         return res.status(404).json({ message: "Player not found!" });
     }
 
-    const dbManager = Util.requestIsPrototype(req)
-        ? DatabaseManager.aliceDb.collections.prototypePP
-        : DatabaseManager.elainaDb.collections.userBind;
+    const dbManager = Util.requestIsInGame(req)
+        ? DatabaseManager.aliceDb.collections.inGamePP
+        : Util.requestIsPrototype(req)
+          ? DatabaseManager.aliceDb.collections.prototypePP
+          : DatabaseManager.elainaDb.collections.userBind;
 
     const playerInfo = await dbManager.getFromUid(uid);
 
@@ -29,10 +31,10 @@ router.get("/", async (req, res) => {
         pprank: await dbManager.getUserDPPRank(playerInfo.pptotal),
     };
 
-    if (Util.requestIsPrototype(req)) {
+    if (Util.requestIsInGame(req) || Util.requestIsPrototype(req)) {
         Object.defineProperty(response, "prevpprank", {
             value: await DatabaseManager.elainaDb.collections.userBind.getUserDPPRank(
-                (<IPrototypePP>playerInfo).prevpptotal,
+                (<IPrototypePP | IInGamePP>playerInfo).prevpptotal,
             ),
             writable: true,
             configurable: true,

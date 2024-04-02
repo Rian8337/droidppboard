@@ -4,15 +4,16 @@ import PlayList from "./PlayList";
 import Head from "./Head";
 import { motion } from "framer-motion";
 import PrototypeDescription from "./PrototypeDescription";
-import { IPrototypePP, IUserBind } from "app-structures";
+import { IInGamePP, IPrototypePP, IUserBind } from "app-structures";
 import { Util } from "../Util";
 import "../styles/profile.css";
 import { PPModes } from "../interfaces/PPModes";
+import InGameDescription from "./InGameDescription";
 
 export default function PlayerProfile(props: { mode: PPModes }) {
     const { uid } = useParams();
     const [data, setData] = useState<
-        IUserBind | IPrototypePP | null | undefined
+        IUserBind | IPrototypePP | IInGamePP | null | undefined
     >(undefined);
     const [rank, setRank] = useState<number | null>(null);
     const [prevRank, setPrevRank] = useState<number | null>(null);
@@ -29,11 +30,18 @@ export default function PlayerProfile(props: { mode: PPModes }) {
             return setData(null);
         }
 
-        fetch(
-            `/api/ppboard/${
-                props.mode === PPModes.prototype ? "prototype/" : ""
-            }getuserprofile?uid=${uid}`
-        )
+        let subpath = "";
+
+        switch (props.mode) {
+            case PPModes.prototype:
+                subpath = "prototype/";
+                break;
+            case PPModes.inGame:
+                subpath = "ingame/";
+                break;
+        }
+
+        fetch(`/api/ppboard/${subpath}getuserprofile?uid=${uid}`)
             .then((res) => {
                 if (res.status === 429) {
                     throw new Error(
@@ -48,7 +56,7 @@ export default function PlayerProfile(props: { mode: PPModes }) {
                 return res.json();
             })
             .then((rawData) => {
-                if (props.mode === PPModes.prototype) {
+                if (props.mode !== PPModes.live) {
                     setPrevRank(rawData.prevpprank);
                     setLastUpdate(rawData.lastUpdate);
                 }
@@ -82,10 +90,18 @@ export default function PlayerProfile(props: { mode: PPModes }) {
                 <>
                     <Head
                         description={`A player's ${
-                            props.mode === PPModes.prototype ? "prototype" : ""
+                            props.mode === PPModes.inGame
+                                ? "in-game"
+                                : props.mode === PPModes.prototype
+                                ? "prototype"
+                                : ""
                         }profile in Elaina PP Project.`}
                         title={`PP Board - ${
-                            props.mode === PPModes.prototype ? "Prototype " : ""
+                            props.mode === PPModes.inGame
+                                ? "In-Game "
+                                : props.mode === PPModes.prototype
+                                ? "Prototype "
+                                : ""
                         }Player Profile`}
                     />
                     <h2 className="subtitle">
@@ -103,14 +119,23 @@ export default function PlayerProfile(props: { mode: PPModes }) {
                 <>
                     <Head
                         description={`${data.username}'s ${
-                            props.mode === PPModes.prototype ? "prototype " : ""
+                            props.mode === PPModes.inGame
+                                ? "in-game "
+                                : props.mode === PPModes.prototype
+                                ? "prototype "
+                                : ""
                         }profile in Elaina PP Project.`}
                         title={`PP Board - ${data.username}`}
                     />
                     <h2 className="subtitle">
                         Player Profile: {data.username}
                     </h2>
-                    {props.mode === PPModes.prototype ? (
+                    {props.mode === PPModes.inGame ? (
+                        <>
+                            <InGameDescription />
+                            <hr />
+                        </>
+                    ) : props.mode === PPModes.prototype ? (
                         <>
                             <PrototypeDescription />
                             <hr />
@@ -118,7 +143,7 @@ export default function PlayerProfile(props: { mode: PPModes }) {
                     ) : null}
                     <table>
                         <tbody>
-                            {Util.isPrototype(data) ? (
+                            {Util.isInGame(data) || Util.isPrototype(data) ? (
                                 <>
                                     <tr>
                                         <th>Live PP</th>

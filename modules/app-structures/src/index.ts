@@ -1,5 +1,6 @@
 export * from "./structures/ICalculationParams";
 export * from "./structures/ICalculationResult";
+export * from "./aliceDb/IInGamePP";
 export * from "./elainaDb/IMapBlacklist";
 export * from "./elainaDb/IMapWhitelist";
 export * from "./aliceDb/IPlayerSkin";

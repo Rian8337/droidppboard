@@ -24,9 +24,11 @@ router.get("/", async (req, res) => {
                   .join("") || ""
             : "-";
 
-    const data = Util.requestIsPrototype(req)
-        ? Util.topPrototypePPList
-        : Util.topPPList;
+    const data = Util.requestIsInGame(req)
+        ? Util.topInGamePPList
+        : Util.requestIsPrototype(req)
+          ? Util.topPrototypePPList
+          : Util.topPPList;
 
     res.json(data.get(droidMod) ?? []);
 });

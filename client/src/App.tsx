@@ -18,6 +18,9 @@ import ScrollToTop from "./components/ScrollToTop";
 import SkinList from "./pages/SkinList";
 import SkinPreview from "./pages/SkinPreview";
 import MatchHistory from "./pages/MatchHistory";
+import InGameLeaderboard from "./pages/InGameLeaderboard";
+import InGamePlayerProfile from "./pages/InGamePlayerProfile";
+import InGameTopPlays from "./pages/InGameTopPlays";
 
 function App() {
     const location = useLocation();
@@ -63,9 +66,22 @@ function App() {
                         path="/prototype/calculate"
                         element={<PrototypeCalculateBeatmap />}
                     />
+                    <Route path="/ingame" element={<InGameLeaderboard />} />
+                    <Route
+                        path="/ingame/leaderboard"
+                        element={<InGameLeaderboard />}
+                    />
+                    <Route
+                        path="/ingame/profile/:uid"
+                        element={<InGamePlayerProfile />}
+                    />
+                    <Route
+                        path="/ingame/top-plays"
+                        element={<InGameTopPlays />}
+                    />
                     <Route
                         path="/match_history/:matchid"
-                        element={<MatchHistory/>}
+                        element={<MatchHistory />}
                     />
                     <Route path="/skin/list" element={<SkinList />} />
                     <Route

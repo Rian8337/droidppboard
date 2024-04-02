@@ -4,10 +4,11 @@ import { Util } from "../../Util";
 import { TableSetting } from "../../interfaces/TableSetting";
 import MainLeaderboardNavigator from "../../hooks/MainLeaderboardNavigator";
 import PrototypeLeaderboardNavigator from "../../hooks/PrototypeLeaderboardNavigator";
-import { IPrototypePP, IUserBind } from "app-structures";
+import { IInGamePP, IPrototypePP, IUserBind } from "app-structures";
 import "../../styles/table-listing.css";
 import { PPModes } from "../../interfaces/PPModes";
 import { LeaderboardSettings } from "../../interfaces/LeaderboardSettings";
+import InGameLeaderboardNavigator from "../../hooks/InGameLeaderboardNavigator";
 
 export default function LeaderboardTable(props: { mode: PPModes }) {
     let ctx: LeaderboardSettings;
@@ -21,16 +22,29 @@ export default function LeaderboardTable(props: { mode: PPModes }) {
             // eslint-disable-next-line react-hooks/rules-of-hooks
             ctx = useContext(PrototypeLeaderboardNavigator);
             break;
+        case PPModes.inGame:
+            // eslint-disable-next-line react-hooks/rules-of-hooks
+            ctx = useContext(InGameLeaderboardNavigator);
+            break;
     }
 
     useEffect(() => {
         ctx.setEnablePaging(false);
         ctx.setSearchReady(false);
 
+        let subpath = "";
+
+        switch (props.mode) {
+            case PPModes.prototype:
+                subpath = "prototype/";
+                break;
+            case PPModes.inGame:
+                subpath = "ingame/";
+                break;
+        }
+
         fetch(
-            `/api/ppboard/${
-                props.mode === PPModes.prototype ? "prototype/" : ""
-            }getleaderboard?page=${ctx.internalPage}${
+            `/api/ppboard/${subpath}getleaderboard?page=${ctx.internalPage}${
                 ctx.query ? `&query=${ctx.query}` : ""
             }`
         )
@@ -43,9 +57,13 @@ export default function LeaderboardTable(props: { mode: PPModes }) {
 
                 return res.json();
             })
-            .then((rawData: IUserBind[] | IPrototypePP[]) => {
+            .then((rawData: IUserBind[] | IPrototypePP[] | IInGamePP[]) => {
                 if (rawData.length > 0) {
-                    if (Util.isPrototype(rawData)) {
+                    if (Util.isInGame(rawData)) {
+                        (ctx as unknown as TableSetting<IInGamePP>).setData(
+                            rawData as IInGamePP[]
+                        );
+                    } else if (Util.isPrototype(rawData)) {
                         (ctx as unknown as TableSetting<IPrototypePP>).setData(
                             rawData as IPrototypePP[]
                         );
@@ -99,18 +117,16 @@ export default function LeaderboardTable(props: { mode: PPModes }) {
                             Username
                         </th>
                         <th style={{ width: "20%" }}>
-                            {props.mode === PPModes.prototype
-                                ? "Live PP"
-                                : "Play Count"}
+                            {props.mode === PPModes.live
+                                ? "Play Count"
+                                : "Live PP"}
                         </th>
                         <th style={{ width: "20%" }}>
-                            {props.mode === PPModes.prototype
-                                ? "Local PP"
-                                : "PP"}
+                            {props.mode === PPModes.live ? "PP" : "Local PP"}
                         </th>
-                        {props.mode === PPModes.prototype ? (
+                        {props.mode === PPModes.live ? null : (
                             <th style={{ width: "17.5%" }}>Diff</th>
-                        ) : null}
+                        )}
                     </tr>
                 </thead>
                 <tbody>

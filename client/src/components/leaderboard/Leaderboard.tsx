@@ -10,6 +10,8 @@ import MainLeaderboardNavigator from "../../hooks/MainLeaderboardNavigator";
 import "../../styles/main.css";
 import { PPModes } from "../../interfaces/PPModes";
 import { LeaderboardSettings } from "../../interfaces/LeaderboardSettings";
+import InGameLeaderboardNavigator from "../../hooks/InGameLeaderboardNavigator";
+import InGameDescription from "../InGameDescription";
 
 export default function Leaderboard(props: { mode: PPModes }) {
     let ctx: LeaderboardSettings;
@@ -23,6 +25,10 @@ export default function Leaderboard(props: { mode: PPModes }) {
             // eslint-disable-next-line react-hooks/rules-of-hooks
             ctx = useContext(PrototypeLeaderboardNavigator);
             break;
+        case PPModes.inGame:
+            // eslint-disable-next-line react-hooks/rules-of-hooks
+            ctx = useContext(InGameLeaderboardNavigator);
+            break;
     }
 
     return (
@@ -35,14 +41,28 @@ export default function Leaderboard(props: { mode: PPModes }) {
             <Head
                 description="View the rankings of Elaina PP Project."
                 title={`PP Board - ${
-                    props.mode === PPModes.prototype ? "Prototype " : ""
+                    props.mode === PPModes.inGame
+                        ? "In-Game "
+                        : props.mode === PPModes.prototype
+                        ? "Prototype "
+                        : ""
                 }Leaderboard`}
             />
             <h2 className="subtitle">
-                Official {props.mode === PPModes.prototype ? "Prototype" : ""}{" "}
+                Official{" "}
+                {props.mode === PPModes.inGame
+                    ? "In-Game"
+                    : props.mode === PPModes.prototype
+                    ? "Prototype"
+                    : ""}{" "}
                 Player Leaderboard
             </h2>
-            {props.mode === PPModes.prototype ? (
+            {props.mode === PPModes.inGame ? (
+                <>
+                    <InGameDescription />
+                    <hr />
+                </>
+            ) : props.mode === PPModes.prototype ? (
                 <>
                     <PrototypeDescription />
                     <hr />

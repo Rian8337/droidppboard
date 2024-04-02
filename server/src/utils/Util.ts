@@ -30,6 +30,11 @@ export abstract class Util {
     >();
 
     /**
+     * List of top in-game plays from all players, mapped by droid mod string that's sorted alphabetically.
+     */
+    static readonly topInGamePPList = new Map<string, TopPPEntry[]>();
+
+    /**
      * Creates a middleware used for handling excessive API requests.
      *
      * @param maxRequests The amount of requests allowed.
@@ -37,7 +42,7 @@ export abstract class Util {
      */
     static createRateLimit(
         maxRequests: number,
-        windowMs: number = 10 * 1000
+        windowMs: number = 10 * 1000,
     ): RequestHandler {
         return rateLimit({
             windowMs: windowMs,
@@ -65,6 +70,15 @@ export abstract class Util {
     }
 
     /**
+     * Checks if a request is requesting in-game data.
+     *
+     * @param req The request.
+     */
+    static requestIsInGame(req: Request): boolean {
+        return req.baseUrl.includes("ingame") || req.body.ingame;
+    }
+
+    /**
      * Reads a file stream and returns it as a buffer.
      *
      * @param stream The stream.
@@ -82,15 +96,15 @@ export abstract class Util {
     static initCanvas(): void {
         registerFont(
             join(this.getFrontendPath(), "src", "fonts", "Exo-Medium.ttf"),
-            { family: "Exo" }
+            { family: "Exo" },
         );
         registerFont(
             join(this.getFrontendPath(), "src", "fonts", "Exo-SemiBold.ttf"),
-            { family: "Exo", style: "SemiBold" }
+            { family: "Exo", style: "SemiBold" },
         );
         registerFont(
             join(this.getFrontendPath(), "src", "fonts", "Exo-Bold.ttf"),
-            { family: "Exo", style: "Bold" }
+            { family: "Exo", style: "Bold" },
         );
     }
 
@@ -187,7 +201,7 @@ export abstract class Util {
 
                                         return a + v.droidString;
                                     },
-                                    ""
+                                    "",
                                 ),
                             ]
                                 .sort((a, b) => a.localeCompare(b))
@@ -202,9 +216,7 @@ export abstract class Util {
                 }
 
                 for (const [, plays] of this.topPPList) {
-                    plays.sort((a, b) => {
-                        return b.pp - a.pp;
-                    });
+                    plays.sort((a, b) => b.pp - a.pp);
 
                     plays.splice(100);
                 }
@@ -242,7 +254,7 @@ export abstract class Util {
 
                                         return a + v.droidString;
                                     },
-                                    ""
+                                    "",
                                 ),
                             ]
                                 .sort((a, b) => a.localeCompare(b))
@@ -258,9 +270,61 @@ export abstract class Util {
                 }
 
                 for (const plays of this.topPrototypePPList.values()) {
-                    plays.sort((a, b) => {
-                        return b.pp - a.pp;
-                    });
+                    plays.sort((a, b) => b.pp - a.pp);
+
+                    plays.splice(100);
+                }
+            });
+    }
+
+    static refreshInGameTopPP(): void {
+        setTimeout(() => this.refreshInGameTopPP(), 1800 * 1000);
+
+        DatabaseManager.aliceDb.collections.inGamePP
+            .get({}, { projection: { _id: 0, username: 1, pp: 1 } })
+            .then((res) => {
+                this.topInGamePPList.clear();
+
+                this.topInGamePPList.set("", []).set("-", []);
+
+                for (const player of res) {
+                    const ppEntries = player.pp;
+
+                    for (const ppEntry of ppEntries) {
+                        const topEntry: TopPPEntry = {
+                            ...ppEntry,
+                            username: player.username,
+                        };
+
+                        this.topInGamePPList.get("")!.push(topEntry);
+
+                        const droidMods =
+                            [
+                                ...ModUtil.pcStringToMods(ppEntry.mods).reduce(
+                                    (a, v) => {
+                                        if (!v.isApplicableToDroid()) {
+                                            return a;
+                                        }
+
+                                        return a + v.droidString;
+                                    },
+                                    "",
+                                ),
+                            ]
+                                .sort((a, b) => a.localeCompare(b))
+                                .join("") || "-";
+
+                        const playList =
+                            this.topInGamePPList.get(droidMods) ?? [];
+
+                        playList.push(topEntry);
+
+                        this.topInGamePPList.set(droidMods, playList);
+                    }
+                }
+
+                for (const plays of this.topInGamePPList.values()) {
+                    plays.sort((a, b) => b.pp - a.pp);
 
                     plays.splice(100);
                 }
