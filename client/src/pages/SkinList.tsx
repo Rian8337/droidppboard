@@ -25,9 +25,22 @@ export default function SkinList() {
             <h3 className="prototype-description">
                 This page is out of scope of this website. However, it was made
                 so that the skin command in{" "}
-                <a href="https://github.com/Rian8337/Alice">Alice</a> has a more
-                meaningful feature and as a response to the{" "}
-                <a href="https://tsukushi.site">old skin site</a> dying.
+                <a
+                    href="https://github.com/Rian8337/Alice"
+                    target="_blank"
+                    rel="noreferrer"
+                >
+                    Alice
+                </a>{" "}
+                has a more meaningful feature and as a response to the{" "}
+                <a
+                    href="https://tsukushi.site"
+                    target="_blank"
+                    rel="noreferrer"
+                >
+                    old skin site
+                </a>{" "}
+                dying.
             </h3>
             <h3 className="description">
                 Click/tap on a skin&apos;s name to visit its preview page.
