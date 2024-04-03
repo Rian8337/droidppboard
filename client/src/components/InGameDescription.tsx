@@ -13,6 +13,10 @@ export default function InGameDescription() {
             calculated using Chimu&apos;s beatmap listing. There will be
             differences in availability of beatmaps, which will affect the
             amount of beatmaps that award pp.
+            <br />
+            <br />
+            Please note that the live and local pp values are not final until
+            this message is removed.
         </div>
     );
 }
