@@ -83,9 +83,15 @@ router.post("/", async (req, res) => {
         )
     ) {
         difficultyAdjustMod = new ModDifficultyAdjust({
-            cs: MathUtils.clamp(parseFloat(req.body.forcecs), 0, 15),
-            ar: MathUtils.clamp(parseFloat(req.body.forcear), 0, 12.5),
-            od: MathUtils.clamp(parseFloat(req.body.forceod), 0, 12.5),
+            cs:
+                MathUtils.clamp(parseFloat(req.body.forcecs), 0, 15) ||
+                undefined,
+            ar:
+                MathUtils.clamp(parseFloat(req.body.forcear), 0, 12.5) ||
+                undefined,
+            od:
+                MathUtils.clamp(parseFloat(req.body.forceod), 0, 12.5) ||
+                undefined,
         });
 
         mods.push(difficultyAdjustMod);
