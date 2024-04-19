@@ -10,8 +10,8 @@ export default function InGameDescription() {
             <br />
             It is important to remember that this is calculated using
             osu!&apos;s beatmap listing, whereas the final version will be
-            calculated using Chimu&apos;s beatmap listing. There will be
-            differences in availability of beatmaps, which will affect the
+            calculated using a beatmap mirror&apos;s beatmap listing. There will
+            be differences in availability of beatmaps, which will affect the
             amount of beatmaps that award pp.
         </div>
     );

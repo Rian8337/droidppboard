@@ -13,7 +13,7 @@ export default function PrototypeDescription() {
                     target="_blank"
                     rel="noreferrer"
                 >
-                    yeahbennou's touchscreen rework
+                    High OD and slider distance reading nerf
                 </a>
             </div>
         </>
