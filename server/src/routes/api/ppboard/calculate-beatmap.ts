@@ -156,7 +156,7 @@ router.post("/", async (req, res) => {
     formData.set("maxcombo", combo.toString());
 
     const url = new URL(
-        "https://droidpp.osudroid.moe/api/dpp/processor/calculate-beatmap-file",
+        "http://localhost:3006/api/dpp/processor/calculate-beatmap-file",
     );
 
     const droidAttribs: CompleteCalculationAttributes<
