@@ -35,9 +35,10 @@ hr {
 .top-banner {
     font: 20px Exo-Bold;
     text-align: center;
-    background-image: url(https://osu.ppy.sh/images/headers/profile-covers/c4.jpg);
+    background-image: url(../icons/header.png);
     background-position: center center;
     padding: 10px;
+    color: black;
 }
 
 a:link {
