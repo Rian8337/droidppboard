@@ -291,8 +291,6 @@ export abstract class Util {
                         plays.splice(100);
                     }
                 }
-
-                console.log("Done");
             });
     }
 
