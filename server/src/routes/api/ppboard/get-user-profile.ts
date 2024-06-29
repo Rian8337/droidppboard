@@ -3,12 +3,19 @@ import express from "express";
 import { DatabaseManager } from "../../../database/managers/DatabaseManager";
 import { Util } from "../../../utils/Util";
 
-const router: express.Router = express.Router();
+const router = express.Router();
 
 router.use(Util.createRateLimit(8));
 
-router.get("/", async (req, res) => {
-    const uid = parseInt(req.url.split("uid=")[1]);
+router.get<
+    "/",
+    unknown,
+    unknown,
+    unknown,
+    Partial<{ uid: string; type: string }>
+>("/", async (req, res) => {
+    const uid = parseInt(req.query.uid ?? "");
+    const type = req.query.type ?? "overall";
 
     if (isNaN(uid)) {
         return res.status(404).json({ message: "Player not found!" });
@@ -28,7 +35,7 @@ router.get("/", async (req, res) => {
 
     const response = {
         ...playerInfo,
-        pprank: await dbManager.getUserDPPRank(playerInfo.pptotal),
+        pprank: await dbManager.getUserDPPRank(playerInfo.pptotal, type),
     };
 
     if (Util.requestIsInGame(req) || Util.requestIsPrototype(req)) {

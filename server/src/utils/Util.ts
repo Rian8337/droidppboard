@@ -22,11 +22,12 @@ export abstract class Util {
     static readonly topPPList = new Map<string, TopPPEntry[]>();
 
     /**
-     * List of top prototype plays from all players, mapped by droid mod string that's sorted alphabetically.
+     * List of top prototype plays from all players, mapped by rework type, and each map inside the
+     * rework type mapped by droid mod string that's sorted alphabetically.
      */
     static readonly topPrototypePPList = new Map<
         string,
-        TopPrototypePPEntry[]
+        Map<string, TopPrototypePPEntry[]>
     >();
 
     /**
@@ -65,7 +66,7 @@ export abstract class Util {
      *
      * @param req The request.
      */
-    static requestIsPrototype(req: Request): boolean {
+    static requestIsPrototype(req: Request<unknown>): boolean {
         return req.baseUrl.includes("prototype") || req.body.prototype;
     }
 
@@ -74,7 +75,7 @@ export abstract class Util {
      *
      * @param req The request.
      */
-    static requestIsInGame(req: Request): boolean {
+    static requestIsInGame(req: Request<unknown>): boolean {
         return req.baseUrl.includes("ingame") || req.body.ingame;
     }
 
@@ -224,17 +225,32 @@ export abstract class Util {
     }
 
     static refreshPrototypeTopPP(): void {
-        setTimeout(() => this.refreshPrototypeTopPP(), 600 * 1000);
+        setTimeout(() => this.refreshPrototypeTopPP(), 900 * 1000);
 
+        // Prototype pp is different as there are multiple rework types.
         DatabaseManager.aliceDb.collections.prototypePP
-            .get({}, { projection: { _id: 0, username: 1, pp: 1 } })
+            .get(
+                {},
+                { projection: { _id: 0, username: 1, pp: 1, reworkType: 1 } },
+            )
             .then((res) => {
                 this.topPrototypePPList.clear();
 
-                this.topPrototypePPList.set("", []).set("-", []);
-
                 for (const player of res) {
                     const ppEntries = player.pp;
+
+                    if (!this.topPrototypePPList.has(player.reworkType)) {
+                        this.topPrototypePPList.set(
+                            player.reworkType,
+                            new Map<string, TopPrototypePPEntry[]>()
+                                .set("", [])
+                                .set("-", []),
+                        );
+                    }
+
+                    const reworkTypeMap = this.topPrototypePPList.get(
+                        player.reworkType,
+                    )!;
 
                     for (const ppEntry of ppEntries) {
                         const topEntry: TopPrototypePPEntry = {
@@ -242,7 +258,7 @@ export abstract class Util {
                             username: player.username,
                         };
 
-                        this.topPrototypePPList.get("")!.push(topEntry);
+                        reworkTypeMap.get("")!.push(topEntry);
 
                         const droidMods =
                             [
@@ -260,20 +276,23 @@ export abstract class Util {
                                 .sort((a, b) => a.localeCompare(b))
                                 .join("") || "-";
 
-                        const playList =
-                            this.topPrototypePPList.get(droidMods) ?? [];
+                        const playList = reworkTypeMap.get(droidMods) ?? [];
 
                         playList.push(topEntry);
 
-                        this.topPrototypePPList.set(droidMods, playList);
+                        reworkTypeMap.set(droidMods, playList);
                     }
                 }
 
-                for (const plays of this.topPrototypePPList.values()) {
-                    plays.sort((a, b) => b.pp - a.pp);
+                for (const rework of this.topPrototypePPList.values()) {
+                    for (const plays of rework.values()) {
+                        plays.sort((a, b) => b.pp - a.pp);
 
-                    plays.splice(100);
+                        plays.splice(100);
+                    }
                 }
+
+                console.log("Done");
             });
     }
 

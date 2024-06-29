@@ -12,6 +12,7 @@ import { PPModes } from "../../interfaces/PPModes";
 import { LeaderboardSettings } from "../../interfaces/LeaderboardSettings";
 import InGameLeaderboardNavigator from "../../hooks/InGameLeaderboardNavigator";
 import InGameDescription from "../InGameDescription";
+import PrototypeSelector from "../PrototypeSelector";
 
 export default function Leaderboard(props: { mode: PPModes }) {
     let ctx: LeaderboardSettings;
@@ -65,6 +66,8 @@ export default function Leaderboard(props: { mode: PPModes }) {
             ) : props.mode === PPModes.prototype ? (
                 <>
                     <PrototypeDescription />
+                    <br />
+                    <PrototypeSelector />
                     <hr />
                 </>
             ) : null}

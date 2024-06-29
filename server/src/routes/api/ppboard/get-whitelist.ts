@@ -5,15 +5,19 @@ import { Filter, Sort } from "mongodb";
 import { IMapWhitelist } from "app-structures";
 import { DatabaseManager } from "../../../database/managers/DatabaseManager";
 
-const router: express.Router = express.Router();
+const router = express.Router();
 
 router.use(Util.createRateLimit(8));
 
-router.get("/", async (req, res) => {
-    const page = Math.max(1, parseInt(req.url.split("page=")[1]) || 1);
-    const query = Util.convertURI(
-        req.url.split("query=")[1] || "",
-    ).toLowerCase();
+router.get<
+    "/",
+    unknown,
+    unknown,
+    unknown,
+    Partial<{ page: string; query: string }>
+>("/", async (req, res) => {
+    const page = Math.max(1, parseInt(req.query.page ?? "") || 1);
+    const query = Util.convertURI(req.query.query ?? "").toLowerCase();
 
     const mapQuery: Filter<IMapWhitelist> = {};
     const sort: Sort = {};
@@ -23,11 +27,11 @@ router.get("/", async (req, res) => {
         const comparisonRegex = /[<=>]{1,2}/;
         const finalQueries = query.split(/\s+/g);
         for (const finalQuery of finalQueries) {
-            const split: string[] = finalQuery.split(comparisonRegex, 2);
-            const key: string = split[0];
-            let value: string = split[1];
+            const split = finalQuery.split(comparisonRegex, 2);
+            const key = split[0];
+            let value = split[1];
 
-            const comparison: Comparison = <Comparison>(
+            const comparison = <Comparison>(
                 (comparisonRegex.exec(finalQuery) ?? ["="])[0]
             );
             switch (key) {
@@ -37,7 +41,7 @@ router.get("/", async (req, res) => {
                 case "hp":
                 case "sr":
                 case "bpm": {
-                    const propertyName: string = `diffstat.${key}`;
+                    const propertyName = `diffstat.${key}`;
                     if (propertyName in mapQuery) {
                         Object.defineProperty(
                             mapQuery[propertyName as keyof typeof mapQuery],
@@ -88,7 +92,7 @@ router.get("/", async (req, res) => {
                     }
                     break;
                 case "sort": {
-                    const isDescendSort: boolean = value.startsWith("-");
+                    const isDescendSort = value.startsWith("-");
                     if (isDescendSort) {
                         value = value.substring(1);
                     }
@@ -143,7 +147,7 @@ router.get("/", async (req, res) => {
         }
 
         if (mapNameQuery) {
-            const regexQuery: RegExp[] = mapNameQuery
+            const regexQuery = mapNameQuery
                 .trim()
                 .split(/\s+/g)
                 .map((v) => {

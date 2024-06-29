@@ -52,4 +52,9 @@ export interface IPrototypePP {
      * Whether this prototype entry has been calculated against the latest changes.
      */
     scanDone: boolean;
+
+    /**
+     * The type of rework the profile is in.
+     */
+    reworkType: string;
 }

@@ -14,6 +14,7 @@ export class PrototypePPCollectionManager extends DatabaseCollectionManager<IPro
             pp: [],
             pptotal: 0,
             prevpptotal: 0,
+            reworkType: "overall",
             uid: 0,
             username: "",
             scanDone: true,
@@ -25,11 +26,13 @@ export class PrototypePPCollectionManager extends DatabaseCollectionManager<IPro
      * Gets the dpp rank of a specified dpp value.
      *
      * @param totalPP The total PP.
+     * @param reworkType The rework type.
      */
-    async getUserDPPRank(totalPP: number): Promise<number> {
+    async getUserDPPRank(totalPP: number, reworkType: string): Promise<number> {
         return (
             (await this.collection.countDocuments({
                 pptotal: { $gt: totalPP },
+                reworkType: reworkType,
             })) + 1
         );
     }
@@ -38,23 +41,31 @@ export class PrototypePPCollectionManager extends DatabaseCollectionManager<IPro
      * Searches for players to display in leaderboard.
      *
      * @param page The page to display.
+     * @param reworkType The rework type.
      * @param searchQuery The player search query, if any.
      * @returns The players, up to 50 players.
      */
-    searchPlayers(page: number, searchQuery?: string): Promise<IPrototypePP[]> {
+    searchPlayers(
+        page: number,
+        reworkType: string,
+        searchQuery?: string,
+    ): Promise<IPrototypePP[]> {
         const query: Filter<IPrototypePP> = searchQuery
             ? {
+                  reworkType: reworkType,
                   $or: [
                       { uid: parseInt(searchQuery) },
                       {
                           username: new RegExp(
                               Util.convertURIregex(searchQuery),
-                              "i"
+                              "i",
                           ),
                       },
                   ],
               }
-            : {};
+            : {
+                  reworkType: reworkType,
+              };
 
         return this.collection
             .find(query, {
@@ -90,7 +101,7 @@ export class PrototypePPCollectionManager extends DatabaseCollectionManager<IPro
                     prevpptotal: 1,
                     lastUpdate: 1,
                 },
-            }
+            },
         );
     }
 }

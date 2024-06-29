@@ -9,6 +9,7 @@ import { WhitelistNavigatorProvider } from "./WhitelistNavigator";
 import { SkinListNavigatorProvider } from "./SkinListNavigator";
 import { InGameLeaderboardNavigatorProvider } from "./InGameLeaderboardNavigator";
 import { InGameTopPlaysNavigatorProvider } from "./InGameTopPlaysNavigator";
+import { PrototypeSelectorNavigatorProvider } from "./PrototypeSelectorNavigator";
 
 const compose =
     (...components: FC<Record<string, unknown>>[]) =>
@@ -22,6 +23,7 @@ export const Providers = compose(
     MainLeaderboardNavigatorProvider,
     InGameLeaderboardNavigatorProvider,
     PrototypeLeaderboardNavigatorProvider,
+    PrototypeSelectorNavigatorProvider,
     MainTopPlaysNavigatorProvider,
     InGameTopPlaysNavigatorProvider,
     PrototypeTopPlaysNavigatorProvider,

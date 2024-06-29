@@ -1,13 +1,25 @@
 import express from "express";
 import { ModUtil } from "@rian8337/osu-base";
 import { Util } from "../../../utils/Util";
+import { DatabaseManager } from "../../../database/managers/DatabaseManager";
+import {
+    PrototypeLeaderboardResponse,
+    TopPrototypePPEntry,
+} from "app-structures";
 
-const router: express.Router = express.Router();
+const router = express.Router();
 
 router.use(Util.createRateLimit(8));
 
-router.get("/", async (req, res) => {
-    const mod = req.url.split("mods=")[1] || "";
+router.get<
+    "/",
+    unknown,
+    unknown,
+    unknown,
+    Partial<{ mods: string; type: string }>
+>("/", async (req, res) => {
+    const mod = req.query.mods ?? "";
+    const type = req.query.type ?? "overall";
 
     const droidMod =
         mod.toLowerCase() !== "nm"
@@ -24,13 +36,28 @@ router.get("/", async (req, res) => {
                   .join("") || ""
             : "-";
 
-    const data = Util.requestIsInGame(req)
-        ? Util.topInGamePPList
-        : Util.requestIsPrototype(req)
-          ? Util.topPrototypePPList
-          : Util.topPPList;
+    if (Util.requestIsInGame(req)) {
+        return res.json(Util.topInGamePPList.get(droidMod) ?? []);
+    }
 
-    res.json(data.get(droidMod) ?? []);
+    if (Util.requestIsPrototype(req)) {
+        const reworks =
+            await DatabaseManager.aliceDb.collections.prototypePPType.get(
+                {},
+                { projection: { _id: 0 } },
+            );
+        const currentRework = reworks.find((r) => r.type === type);
+
+        const response: PrototypeLeaderboardResponse<TopPrototypePPEntry> = {
+            reworks: reworks,
+            currentRework: currentRework,
+            data: Util.topPrototypePPList.get(type)?.get(droidMod) ?? [],
+        };
+
+        return res.json(response);
+    }
+
+    res.json(Util.topPPList.get(droidMod) ?? []);
 });
 
 export default router;

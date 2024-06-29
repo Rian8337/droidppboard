@@ -4,33 +4,40 @@ import { Util } from "../../Util";
 import { TableSetting } from "../../interfaces/TableSetting";
 import MainLeaderboardNavigator from "../../hooks/MainLeaderboardNavigator";
 import PrototypeLeaderboardNavigator from "../../hooks/PrototypeLeaderboardNavigator";
-import { IInGamePP, IPrototypePP, IUserBind } from "app-structures";
+import {
+    IInGamePP,
+    IPrototypePP,
+    IUserBind,
+    PrototypeLeaderboardResponse,
+} from "app-structures";
 import "../../styles/table-listing.css";
 import { PPModes } from "../../interfaces/PPModes";
 import { LeaderboardSettings } from "../../interfaces/LeaderboardSettings";
 import InGameLeaderboardNavigator from "../../hooks/InGameLeaderboardNavigator";
+import PrototypeSelectorNavigator from "../../hooks/PrototypeSelectorNavigator";
 
 export default function LeaderboardTable(props: { mode: PPModes }) {
-    let ctx: LeaderboardSettings;
+    let leaderboardCtx: LeaderboardSettings;
+    const prototypeSelectorCtx = useContext(PrototypeSelectorNavigator);
 
     switch (props.mode) {
         case PPModes.live:
             // eslint-disable-next-line react-hooks/rules-of-hooks
-            ctx = useContext(MainLeaderboardNavigator);
+            leaderboardCtx = useContext(MainLeaderboardNavigator);
             break;
         case PPModes.prototype:
             // eslint-disable-next-line react-hooks/rules-of-hooks
-            ctx = useContext(PrototypeLeaderboardNavigator);
+            leaderboardCtx = useContext(PrototypeLeaderboardNavigator);
             break;
         case PPModes.inGame:
             // eslint-disable-next-line react-hooks/rules-of-hooks
-            ctx = useContext(InGameLeaderboardNavigator);
+            leaderboardCtx = useContext(InGameLeaderboardNavigator);
             break;
     }
 
     useEffect(() => {
-        ctx.setEnablePaging(false);
-        ctx.setSearchReady(false);
+        leaderboardCtx.setEnablePaging(false);
+        leaderboardCtx.setSearchReady(false);
 
         let subpath = "";
 
@@ -43,10 +50,20 @@ export default function LeaderboardTable(props: { mode: PPModes }) {
                 break;
         }
 
+        const searchParams = new URLSearchParams();
+
+        searchParams.set("page", leaderboardCtx.internalPage.toString());
+
+        if (leaderboardCtx.query) {
+            searchParams.set("query", leaderboardCtx.query);
+        }
+
+        if (prototypeSelectorCtx.currentRework) {
+            searchParams.set("type", prototypeSelectorCtx.currentRework.type);
+        }
+
         fetch(
-            `/api/ppboard/${subpath}getleaderboard?page=${ctx.internalPage}${
-                ctx.query ? `&query=${ctx.query}` : ""
-            }`
+            `/api/ppboard/${subpath}getleaderboard?${searchParams.toString()}`
         )
             .then((res) => {
                 if (res.status === 429) {
@@ -57,47 +74,66 @@ export default function LeaderboardTable(props: { mode: PPModes }) {
 
                 return res.json();
             })
-            .then((rawData: IUserBind[] | IPrototypePP[] | IInGamePP[]) => {
-                if (rawData.length > 0) {
-                    if (Util.isInGame(rawData)) {
-                        (ctx as unknown as TableSetting<IInGamePP>).setData(
-                            rawData as IInGamePP[]
-                        );
-                    } else if (Util.isPrototype(rawData)) {
-                        (ctx as unknown as TableSetting<IPrototypePP>).setData(
-                            rawData as IPrototypePP[]
-                        );
+            .then(
+                (
+                    rawData:
+                        | IUserBind[]
+                        | PrototypeLeaderboardResponse<IPrototypePP>
+                        | IInGamePP[]
+                ) => {
+                    console.log(rawData);
+
+                    if (Array.isArray(rawData)) {
+                        if (Util.isInGame(rawData)) {
+                            (
+                                leaderboardCtx as unknown as TableSetting<IInGamePP>
+                            ).setData(rawData as IInGamePP[]);
+                        } else {
+                            (
+                                leaderboardCtx as unknown as TableSetting<IUserBind>
+                            ).setData(rawData as IUserBind[]);
+                        }
                     } else {
-                        (ctx as unknown as TableSetting<IUserBind>).setData(
-                            rawData as IUserBind[]
+                        (
+                            leaderboardCtx as unknown as TableSetting<IPrototypePP>
+                        ).setData(rawData.data);
+
+                        prototypeSelectorCtx.setReworks(rawData.reworks);
+                        prototypeSelectorCtx.setCurrentRework(
+                            rawData.currentRework
                         );
                     }
-                } else {
-                    ctx.setData([]);
+
+                    leaderboardCtx.setCurrentPage(leaderboardCtx.internalPage);
                 }
-                ctx.setCurrentPage(ctx.internalPage);
-            })
+            )
             .catch((e: Error) => {
-                ctx.setData([]);
-                ctx.setErrorMessage(e.message);
+                leaderboardCtx.setData([]);
+                leaderboardCtx.setErrorMessage(e.message);
             })
             .finally(() => {
-                ctx.setEnablePaging(true);
-                ctx.setSearchReady(true);
+                leaderboardCtx.setEnablePaging(true);
+                leaderboardCtx.setSearchReady(true);
             });
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [ctx.internalPage, ctx.query]);
+    }, [
+        leaderboardCtx.internalPage,
+        leaderboardCtx.query,
+        prototypeSelectorCtx.currentRework?.type,
+    ]);
 
-    return ctx.data.length === 0 ? (
+    return leaderboardCtx.data.length === 0 ? (
         <>
             <h2 className="subtitle">
-                {ctx.isSearchReady || ctx.errorMessage
+                {leaderboardCtx.isSearchReady || leaderboardCtx.errorMessage
                     ? "No players found!"
                     : "Loading players..."}
             </h2>
-            {ctx.errorMessage ? (
-                <h3 className="error-message">Error: {ctx.errorMessage}.</h3>
+            {leaderboardCtx.errorMessage ? (
+                <h3 className="error-message">
+                    Error: {leaderboardCtx.errorMessage}.
+                </h3>
             ) : null}
         </>
     ) : (
@@ -109,7 +145,9 @@ export default function LeaderboardTable(props: { mode: PPModes }) {
                         <th style={{ width: "15%" }}>UID</th>
                         <th
                             style={{
-                                width: Util.isPrototype(ctx.data as IUserBind[])
+                                width: Util.isPrototype(
+                                    leaderboardCtx.data as IUserBind[]
+                                )
                                     ? "22.5%"
                                     : "40%",
                             }}
@@ -130,14 +168,16 @@ export default function LeaderboardTable(props: { mode: PPModes }) {
                     </tr>
                 </thead>
                 <tbody>
-                    {ctx.data.map((v, i) => {
+                    {leaderboardCtx.data.map((v, i) => {
                         return (
                             <LeaderboardItem
                                 key={`${v.discordid}:${
-                                    (ctx.currentPage - 1) * 50 + i + 1
+                                    (leaderboardCtx.currentPage - 1) * 50 +
+                                    i +
+                                    1
                                 }`}
                                 data={v}
-                                page={ctx.currentPage}
+                                page={leaderboardCtx.currentPage}
                                 index={i}
                             />
                         );

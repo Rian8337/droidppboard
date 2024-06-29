@@ -11,26 +11,36 @@ import { TopPlaysSettings } from "../interfaces/TopPlaysSettings";
 import { PPModes } from "../interfaces/PPModes";
 import InGameTopPlaysNavigator from "../hooks/InGameTopPlaysNavigator";
 import InGameDescription from "./InGameDescription";
+import PrototypeSelectorNavigator from "../hooks/PrototypeSelectorNavigator";
+import PrototypeSelector from "./PrototypeSelector";
+import {
+    PPEntry,
+    PrototypeLeaderboardResponse,
+    PrototypePPEntry,
+    TopPrototypePPEntry,
+} from "app-structures";
+import { TopPlaysSetting } from "../interfaces/TopPlaysSetting";
 
 export default function TopPlays(props: { mode: PPModes }) {
-    let ctx: TopPlaysSettings;
+    let topPlayCtx: TopPlaysSettings;
+    const prototypeSelectorCtx = useContext(PrototypeSelectorNavigator);
 
     switch (props.mode) {
         case PPModes.live:
             // eslint-disable-next-line react-hooks/rules-of-hooks
-            ctx = useContext(MainTopPlaysNavigator);
+            topPlayCtx = useContext(MainTopPlaysNavigator);
             break;
         case PPModes.prototype:
             // eslint-disable-next-line react-hooks/rules-of-hooks
-            ctx = useContext(PrototypeTopPlaysNavigator);
+            topPlayCtx = useContext(PrototypeTopPlaysNavigator);
             break;
         case PPModes.inGame:
             // eslint-disable-next-line react-hooks/rules-of-hooks
-            ctx = useContext(InGameTopPlaysNavigator);
+            topPlayCtx = useContext(InGameTopPlaysNavigator);
     }
 
     useEffect(() => {
-        const modCombinations = Util.parseMods(ctx.query);
+        const modCombinations = Util.parseMods(topPlayCtx.query);
 
         if (modCombinations?.length === 0) {
             return;
@@ -47,11 +57,19 @@ export default function TopPlays(props: { mode: PPModes }) {
                 break;
         }
 
+        const searchParams = new URLSearchParams();
+
+        if (modCombinations) {
+            searchParams.set("mods", modCombinations.join(""));
+        }
+
+        if (prototypeSelectorCtx.currentRework) {
+            searchParams.set("type", prototypeSelectorCtx.currentRework.type);
+        }
+
         const debounce = setTimeout(() => {
             fetch(
-                `/api/ppboard/${subpath}gettopplays${
-                    modCombinations ? `?mods=${modCombinations}` : ""
-                }`
+                `/api/ppboard/${subpath}gettopplays?${searchParams.toString()}`
             )
                 .then((res) => {
                     if (res.status === 429) {
@@ -62,21 +80,42 @@ export default function TopPlays(props: { mode: PPModes }) {
 
                     return res.json();
                 })
-                .then((rawData) => {
-                    ctx.setData(rawData);
-                })
+                .then(
+                    (
+                        rawData:
+                            | PPEntry[]
+                            | PrototypeLeaderboardResponse<TopPrototypePPEntry>
+                    ) => {
+                        if (Array.isArray(rawData)) {
+                            (topPlayCtx as TopPlaysSetting<PPEntry>).setData(
+                                rawData
+                            );
+                        } else {
+                            console.log(rawData);
+
+                            prototypeSelectorCtx.setReworks(rawData.reworks);
+                            prototypeSelectorCtx.setCurrentRework(
+                                rawData.currentRework
+                            );
+
+                            (
+                                topPlayCtx as TopPlaysSetting<PrototypePPEntry>
+                            ).setData(rawData.data);
+                        }
+                    }
+                )
                 .catch((e: Error) => {
-                    ctx.setData([]);
-                    ctx.setErrorMessage(e.message);
+                    topPlayCtx.setData([]);
+                    topPlayCtx.setErrorMessage(e.message);
                 })
                 .finally(() => {
-                    ctx.setSearchReady(true);
+                    topPlayCtx.setSearchReady(true);
                 });
         }, 500);
 
         return () => clearTimeout(debounce);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [ctx.query]);
+    }, [topPlayCtx.query, prototypeSelectorCtx.currentRework?.type]);
 
     return (
         <motion.div
@@ -103,45 +142,50 @@ export default function TopPlays(props: { mode: PPModes }) {
                         : ""
                 }Top Plays`}
             />
-            {ctx.data.length === 0 ? (
+
+            <h2 className="subtitle">{`Top PP ${
+                props.mode === PPModes.inGame
+                    ? "In-Game "
+                    : props.mode === PPModes.prototype
+                    ? "Prototype "
+                    : ""
+            }Plays`}</h2>
+            {props.mode === PPModes.inGame ? (
+                <>
+                    <InGameDescription />
+                    <hr />
+                </>
+            ) : props.mode === PPModes.prototype ? (
+                <>
+                    <PrototypeDescription />
+                    <br />
+                    <PrototypeSelector />
+                    <hr />
+                </>
+            ) : null}
+
+            {topPlayCtx.data.length === 0 ? (
                 <h2 className="subtitle">
-                    {ctx.isSearchReady || ctx.errorMessage
+                    {topPlayCtx.isSearchReady || topPlayCtx.errorMessage
                         ? "No data found!"
                         : "Loading play data..."}
                 </h2>
-            ) : (
-                <>
-                    <h2 className="subtitle">{`Top PP ${
-                        props.mode === PPModes.inGame
-                            ? "In-Game "
-                            : props.mode === PPModes.prototype
-                            ? "Prototype "
-                            : ""
-                    }Plays`}</h2>
-                    {props.mode === PPModes.inGame ? (
-                        <>
-                            <InGameDescription />
-                            <hr />
-                        </>
-                    ) : props.mode === PPModes.prototype ? (
-                        <>
-                            <PrototypeDescription />
-                            <hr />
-                        </>
-                    ) : null}
-                </>
-            )}
-            {ctx.errorMessage ? (
-                <h3 className="error-message">Error: {ctx.errorMessage}.</h3>
             ) : null}
-            {ctx.isSearchReady ? (
+            {topPlayCtx.errorMessage ? (
+                <h3 className="error-message">
+                    Error: {topPlayCtx.errorMessage}.
+                </h3>
+            ) : null}
+            {topPlayCtx.isSearchReady ? (
                 <SearchBar
-                    state={ctx}
+                    state={topPlayCtx}
                     searchPlaceholder="Filter mods..."
                     submitPlaceholder="Filter"
                 />
             ) : null}
-            {ctx.data.length > 0 ? <PlayList data={ctx.data} /> : null}
+            {topPlayCtx.data.length > 0 ? (
+                <PlayList data={topPlayCtx.data} />
+            ) : null}
             <div style={{ textAlign: "center" }}>
                 Top PP will be updated every{" "}
                 {props.mode === PPModes.prototype ? 10 : 30} minutes. If you do

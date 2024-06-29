@@ -5,16 +5,6 @@ export default function PrototypeDescription() {
         <>
             <div className="prototype-description">
                 The PP values in this list are under development!
-                <br />
-                <br />
-                Current work:{" "}
-                <a
-                    href="https://github.com/Rian8337/osu-droid-module/tree/yeahbennou-touch-sr"
-                    target="_blank"
-                    rel="noreferrer"
-                >
-                    High OD and slider distance reading nerf
-                </a>
             </div>
         </>
     );
