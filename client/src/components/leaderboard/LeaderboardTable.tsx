@@ -84,8 +84,6 @@ export default function LeaderboardTable(props: { mode: PPModes }) {
                         | PrototypeLeaderboardResponse<IPrototypePP>
                         | IInGamePP[]
                 ) => {
-                    console.log(rawData);
-
                     if (Array.isArray(rawData)) {
                         if (Util.isInGame(rawData)) {
                             (
