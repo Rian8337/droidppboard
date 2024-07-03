@@ -30,8 +30,15 @@ export default function PlayerProfile(props: { mode: PPModes }) {
     );
 
     useEffect(() => {
+        setData(undefined);
+        setErrorMessage(undefined);
+        setRank(null);
+        setPrevRank(null);
+        setWeightedAccuracy(null);
+        setLastUpdate(null);
+
         if (uid === undefined || isNaN(parseInt(uid || ""))) {
-            return setData(null);
+            return;
         }
 
         let subpath = "";
@@ -73,28 +80,41 @@ export default function PlayerProfile(props: { mode: PPModes }) {
                 return res.json();
             })
             .then((rawData) => {
+                let playData =
+                    props.mode === PPModes.prototype ? rawData.data : rawData;
+
+                console.log(playData);
+
                 if (props.mode !== PPModes.live) {
-                    setPrevRank(rawData.prevpprank);
-                    setLastUpdate(rawData.lastUpdate);
+                    setPrevRank(playData.prevpprank);
+                    setLastUpdate(playData.lastUpdate);
                 }
-                setRank(rawData.pprank);
-                setData(rawData);
+                setRank(playData.pprank);
+                setData(playData);
 
                 let accSum = 0;
                 let weight = 0;
 
-                for (let i = 0; i < rawData.pp.length; ++i) {
-                    accSum += rawData.pp[i].accuracy * Math.pow(0.95, i);
+                for (let i = 0; i < playData.pp.length; ++i) {
+                    accSum += playData.pp[i].accuracy * Math.pow(0.95, i);
                     weight += Math.pow(0.95, i);
                 }
 
                 setWeightedAccuracy(accSum / weight || 0);
+
+                if (props.mode === PPModes.prototype) {
+                    prototypeSelectorCtx.setReworks(rawData.reworks);
+                    prototypeSelectorCtx.setCurrentRework(
+                        rawData.currentRework
+                    );
+                }
             })
             .catch((e: Error) => {
                 setData(null);
                 setErrorMessage(e.message);
             });
-    }, [props.mode, prototypeSelectorCtx.currentRework, uid]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [props.mode, prototypeSelectorCtx.currentRework?.type, uid]);
 
     return (
         <motion.div
@@ -103,63 +123,64 @@ export default function PlayerProfile(props: { mode: PPModes }) {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.25 }}
         >
-            {!data ? (
-                <>
-                    <Head
-                        description={`A player's ${
-                            props.mode === PPModes.inGame
-                                ? "in-game"
-                                : props.mode === PPModes.prototype
-                                ? "prototype"
-                                : ""
-                        }profile in Elaina PP Project.`}
-                        title={`PP Board - ${
-                            props.mode === PPModes.inGame
-                                ? "In-Game "
-                                : props.mode === PPModes.prototype
-                                ? "Prototype "
-                                : ""
-                        }Player Profile`}
-                    />
-                    <h2 className="subtitle">
-                        {data === undefined
-                            ? "Loading player data..."
-                            : "Player not found!"}
-                    </h2>
-                    {errorMessage ? (
-                        <h3 className="error-message">
-                            Error: {errorMessage}.
-                        </h3>
-                    ) : null}
-                </>
+            {data ? (
+                <Head
+                    description={`${data.username}'s ${
+                        props.mode === PPModes.inGame
+                            ? "in-game "
+                            : props.mode === PPModes.prototype
+                            ? "prototype "
+                            : ""
+                    }profile in Elaina PP Project.`}
+                    title={`PP Board - ${data.username}`}
+                />
             ) : (
+                <Head
+                    description={`A player's ${
+                        props.mode === PPModes.inGame
+                            ? "in-game"
+                            : props.mode === PPModes.prototype
+                            ? "prototype"
+                            : ""
+                    }profile in Elaina PP Project.`}
+                    title={`PP Board - ${
+                        props.mode === PPModes.inGame
+                            ? "In-Game "
+                            : props.mode === PPModes.prototype
+                            ? "Prototype "
+                            : ""
+                    }Player Profile`}
+                />
+            )}
+
+            <h2 className="subtitle">
+                {data === undefined
+                    ? "Loading player data..."
+                    : data === null
+                    ? "Player not found!"
+                    : `Player Profile: ${data.username}`}
+            </h2>
+
+            {props.mode === PPModes.inGame ? (
                 <>
-                    <Head
-                        description={`${data.username}'s ${
-                            props.mode === PPModes.inGame
-                                ? "in-game "
-                                : props.mode === PPModes.prototype
-                                ? "prototype "
-                                : ""
-                        }profile in Elaina PP Project.`}
-                        title={`PP Board - ${data.username}`}
-                    />
-                    <h2 className="subtitle">
-                        Player Profile: {data.username}
-                    </h2>
-                    {props.mode === PPModes.inGame ? (
-                        <>
-                            <InGameDescription />
-                            <hr />
-                        </>
-                    ) : props.mode === PPModes.prototype ? (
-                        <>
-                            <PrototypeDescription />
-                            <br />
-                            <PrototypeSelector />
-                            <hr />
-                        </>
-                    ) : null}
+                    <InGameDescription />
+                    <hr />
+                </>
+            ) : props.mode === PPModes.prototype ? (
+                <>
+                    <PrototypeDescription />
+                    <br />
+                    <PrototypeSelector />
+                    <hr />
+                </>
+            ) : null}
+
+            {errorMessage ? (
+                <h3 className="error-message">Error: {errorMessage}.</h3>
+            ) : null}
+
+            {data && data.pp.length > 0 ? (
+                <>
                     <table>
                         <tbody>
                             {Util.isInGame(data) || Util.isPrototype(data) ? (
@@ -236,6 +257,14 @@ export default function PlayerProfile(props: { mode: PPModes }) {
                         </tbody>
                     </table>
                     <PlayList data={data.pp} />
+                </>
+            ) : (
+                <>
+                    {data ? (
+                        <h3 className="subtitle">
+                            No scores found. Please check again later.
+                        </h3>
+                    ) : null}
                 </>
             )}
         </motion.div>

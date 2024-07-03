@@ -71,7 +71,7 @@ router.get<
                 );
     }
 
-    const response = {
+    let response: object = {
         ...playerInfo,
         pprank: ppRank,
     };
@@ -85,6 +85,22 @@ router.get<
             configurable: true,
             enumerable: true,
         });
+    }
+
+    if (Util.requestIsPrototype(req)) {
+        const availableReworks =
+            await DatabaseManager.aliceDb.collections.prototypePPType.get(
+                {},
+                { projection: { _id: 0 } },
+            );
+
+        response = {
+            reworks: availableReworks,
+            currentRework: availableReworks.find(
+                (rework) => rework.type === reworkType,
+            ),
+            data: response,
+        };
     }
 
     res.json(response);
