@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { useParams } from "react-router";
 import PlayList from "./PlayList";
 import Head from "./Head";
@@ -9,8 +9,11 @@ import { Util } from "../Util";
 import "../styles/profile.css";
 import { PPModes } from "../interfaces/PPModes";
 import InGameDescription from "./InGameDescription";
+import PrototypeSelectorNavigator from "../hooks/PrototypeSelectorNavigator";
 
 export default function PlayerProfile(props: { mode: PPModes }) {
+    const prototypeSelectorCtx = useContext(PrototypeSelectorNavigator);
+
     const { uid } = useParams();
     const [data, setData] = useState<
         IUserBind | IPrototypePP | IInGamePP | null | undefined
@@ -26,7 +29,7 @@ export default function PlayerProfile(props: { mode: PPModes }) {
     );
 
     useEffect(() => {
-        if (isNaN(parseInt(uid || ""))) {
+        if (uid === undefined || isNaN(parseInt(uid || ""))) {
             return setData(null);
         }
 
@@ -41,7 +44,20 @@ export default function PlayerProfile(props: { mode: PPModes }) {
                 break;
         }
 
-        fetch(`/api/ppboard/${subpath}getuserprofile?uid=${uid}`)
+        const searchParams = new URLSearchParams();
+
+        searchParams.set("uid", uid);
+
+        if (
+            props.mode === PPModes.prototype &&
+            prototypeSelectorCtx.currentRework
+        ) {
+            searchParams.set("type", prototypeSelectorCtx.currentRework.type);
+        }
+
+        fetch(
+            `/api/ppboard/${subpath}getuserprofile?${searchParams.toString()}`
+        )
             .then((res) => {
                 if (res.status === 429) {
                     throw new Error(
@@ -77,7 +93,7 @@ export default function PlayerProfile(props: { mode: PPModes }) {
                 setData(null);
                 setErrorMessage(e.message);
             });
-    }, [props.mode, uid]);
+    }, [props.mode, prototypeSelectorCtx.currentRework, uid]);
 
     return (
         <motion.div

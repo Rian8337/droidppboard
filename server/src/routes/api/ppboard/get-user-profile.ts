@@ -1,4 +1,4 @@
-import { IInGamePP, IPrototypePP } from "app-structures";
+import { IInGamePP, IPrototypePP, IUserBind } from "app-structures";
 import express from "express";
 import { DatabaseManager } from "../../../database/managers/DatabaseManager";
 import { Util } from "../../../utils/Util";
@@ -15,27 +15,65 @@ router.get<
     Partial<{ uid: string; type: string }>
 >("/", async (req, res) => {
     const uid = parseInt(req.query.uid ?? "");
-    const type = req.query.type ?? "overall";
+    const reworkType = req.query.type ?? "overall";
 
     if (isNaN(uid)) {
         return res.status(404).json({ message: "Player not found!" });
     }
 
-    const dbManager = Util.requestIsInGame(req)
-        ? DatabaseManager.aliceDb.collections.inGamePP
-        : Util.requestIsPrototype(req)
-          ? DatabaseManager.aliceDb.collections.prototypePP
-          : DatabaseManager.elainaDb.collections.userBind;
+    let playerInfo: IPrototypePP | IInGamePP | IUserBind | null = null;
 
-    const playerInfo = await dbManager.getFromUid(uid);
+    switch (true) {
+        case Util.requestIsInGame(req):
+            playerInfo =
+                await DatabaseManager.aliceDb.collections.inGamePP.getFromUid(
+                    uid,
+                );
+            break;
+        case Util.requestIsPrototype(req):
+            playerInfo =
+                await DatabaseManager.aliceDb.collections.prototypePP.getFromUid(
+                    uid,
+                    reworkType,
+                );
+            break;
+        default:
+            playerInfo =
+                await DatabaseManager.elainaDb.collections.userBind.getFromUid(
+                    uid,
+                );
+    }
 
     if (!playerInfo) {
         return res.status(404).json({ message: "Player not found!" });
     }
 
+    let ppRank = 0;
+
+    switch (true) {
+        case Util.requestIsInGame(req):
+            ppRank =
+                await DatabaseManager.aliceDb.collections.inGamePP.getUserDPPRank(
+                    playerInfo.pptotal,
+                );
+            break;
+        case Util.requestIsPrototype(req):
+            ppRank =
+                await DatabaseManager.aliceDb.collections.prototypePP.getUserDPPRank(
+                    playerInfo.pptotal,
+                    reworkType,
+                );
+            break;
+        default:
+            ppRank =
+                await DatabaseManager.elainaDb.collections.userBind.getUserDPPRank(
+                    playerInfo.pptotal,
+                );
+    }
+
     const response = {
         ...playerInfo,
-        pprank: await dbManager.getUserDPPRank(playerInfo.pptotal, type),
+        pprank: ppRank,
     };
 
     if (Util.requestIsInGame(req) || Util.requestIsPrototype(req)) {

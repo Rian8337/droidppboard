@@ -58,7 +58,10 @@ export default function LeaderboardTable(props: { mode: PPModes }) {
             searchParams.set("query", leaderboardCtx.query);
         }
 
-        if (prototypeSelectorCtx.currentRework) {
+        if (
+            props.mode === PPModes.prototype &&
+            prototypeSelectorCtx.currentRework?.type
+        ) {
             searchParams.set("type", prototypeSelectorCtx.currentRework.type);
         }
 

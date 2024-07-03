@@ -87,10 +87,11 @@ export class PrototypePPCollectionManager extends DatabaseCollectionManager<IPro
      * Gets the bind information of an osu!droid account from its uid.
      *
      * @param uid The uid of the osu!droid account.
+     * @param reworkType The rework type.
      */
-    getFromUid(uid: number): Promise<IPrototypePP | null> {
+    getFromUid(uid: number, reworkType: string): Promise<IPrototypePP | null> {
         return this.getOne(
-            { previous_bind: { $all: [uid] } },
+            { previous_bind: { $all: [uid] }, reworkType: reworkType },
             {
                 projection: {
                     _id: 0,
