@@ -15,12 +15,12 @@ router.get<
     Partial<{
         page: string;
         reworkType: string;
-        searchQuery: string;
+        query: string;
         type: string;
     }>
 >("/", async (req, res) => {
     const page = Math.max(1, parseInt(req.query.page || "1") || 1);
-    const searchQuery = req.query.searchQuery ?? "";
+    const searchQuery = req.query.query ?? "";
 
     if (Util.requestIsInGame(req)) {
         return res.json(
