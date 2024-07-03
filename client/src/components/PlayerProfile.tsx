@@ -10,6 +10,7 @@ import "../styles/profile.css";
 import { PPModes } from "../interfaces/PPModes";
 import InGameDescription from "./InGameDescription";
 import PrototypeSelectorNavigator from "../hooks/PrototypeSelectorNavigator";
+import PrototypeSelector from "./PrototypeSelector";
 
 export default function PlayerProfile(props: { mode: PPModes }) {
     const prototypeSelectorCtx = useContext(PrototypeSelectorNavigator);
@@ -154,6 +155,8 @@ export default function PlayerProfile(props: { mode: PPModes }) {
                     ) : props.mode === PPModes.prototype ? (
                         <>
                             <PrototypeDescription />
+                            <br />
+                            <PrototypeSelector />
                             <hr />
                         </>
                     ) : null}
