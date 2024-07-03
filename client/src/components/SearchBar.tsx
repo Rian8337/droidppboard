@@ -28,6 +28,7 @@ export default function SearchBar<T extends SearchBarSetting>(props: {
                     className="search"
                     type="text"
                     name="query"
+                    defaultValue={props.state.query}
                     placeholder={props.searchPlaceholder}
                     disabled={!props.state.isSearchReady}
                 />
