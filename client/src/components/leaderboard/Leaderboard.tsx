@@ -49,6 +49,7 @@ export default function Leaderboard(props: { mode: PPModes }) {
                         : ""
                 }Leaderboard`}
             />
+
             <h2 className="subtitle">
                 Official{" "}
                 {props.mode === PPModes.inGame
@@ -58,6 +59,7 @@ export default function Leaderboard(props: { mode: PPModes }) {
                     : ""}{" "}
                 Player Leaderboard
             </h2>
+
             {props.mode === PPModes.inGame ? (
                 <>
                     <InGameDescription />
@@ -71,16 +73,21 @@ export default function Leaderboard(props: { mode: PPModes }) {
                     <hr />
                 </>
             ) : null}
+
             <h3 className="description">
                 Click/tap on a player&apos;s name to visit their profile page.
             </h3>
+
             <SearchBar
                 state={ctx}
                 searchPlaceholder="Search players..."
                 submitPlaceholder="Search"
             />
+
             <Paging state={ctx} />
+
             <LeaderboardTable {...props} />
+
             {ctx.data.length > 0 && <Paging state={ctx} />}
         </motion.div>
     );

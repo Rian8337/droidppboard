@@ -11,6 +11,7 @@ const PrototypeSelectorNavigator = createContext({
     currentRework: defaultRework as IPrototypePPType | undefined,
     setReworks: (reworks: readonly IPrototypePPType[]) => {},
     setCurrentRework: (rework: IPrototypePPType | undefined) => {},
+    setCurrentReworkToUnknown: (type: string) => {},
 });
 
 export function PrototypeSelectorNavigatorProvider(props: PropsWithChildren) {
@@ -24,7 +25,22 @@ export function PrototypeSelectorNavigatorProvider(props: PropsWithChildren) {
     };
 
     const modifyCurrentRework = (rework?: IPrototypePPType) => {
+        if (currentRework?.type === rework?.type) {
+            return;
+        }
+
         setCurrentRework(rework);
+    };
+
+    const modifyCurrentReworkToUnknown = (type: string) => {
+        if (currentRework?.type === type) {
+            return;
+        }
+
+        setCurrentRework({
+            name: "Unknown",
+            type,
+        });
     };
 
     return (
@@ -34,6 +50,7 @@ export function PrototypeSelectorNavigatorProvider(props: PropsWithChildren) {
                 currentRework,
                 setReworks: modifyReworks,
                 setCurrentRework: modifyCurrentRework,
+                setCurrentReworkToUnknown: modifyCurrentReworkToUnknown,
             }}
         >
             {props.children}

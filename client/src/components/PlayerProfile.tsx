@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, useRef } from "react";
 import { useParams } from "react-router";
 import PlayList from "./PlayList";
 import Head from "./Head";
@@ -14,8 +14,11 @@ import PrototypeSelector from "./PrototypeSelector";
 
 export default function PlayerProfile(props: { mode: PPModes }) {
     const prototypeSelectorCtx = useContext(PrototypeSelectorNavigator);
+    const params = useParams();
+    const { uid, type } = params;
 
-    const { uid } = useParams();
+    const typeRef = useRef(type);
+
     const [data, setData] = useState<
         IUserBind | IPrototypePP | IInGamePP | null | undefined
     >(undefined);
@@ -30,16 +33,30 @@ export default function PlayerProfile(props: { mode: PPModes }) {
     );
 
     useEffect(() => {
+        if (uid === undefined || isNaN(parseInt(uid || ""))) {
+            return;
+        }
+
+        // Special case when the user loads this page with a type in the URL.
+        if (
+            props.mode === PPModes.prototype &&
+            typeRef.current &&
+            typeRef.current !== prototypeSelectorCtx.currentRework?.type
+        ) {
+            prototypeSelectorCtx.setCurrentReworkToUnknown(typeRef.current);
+
+            // Invalidate the ref so that we don't keep setting the rework to unknown.
+            typeRef.current = undefined;
+
+            return;
+        }
+
         setData(undefined);
         setErrorMessage(undefined);
         setRank(null);
         setPrevRank(null);
         setWeightedAccuracy(null);
         setLastUpdate(null);
-
-        if (uid === undefined || isNaN(parseInt(uid || ""))) {
-            return;
-        }
 
         let subpath = "";
 
@@ -53,6 +70,7 @@ export default function PlayerProfile(props: { mode: PPModes }) {
         }
 
         const searchParams = new URLSearchParams();
+        const controller = new AbortController();
 
         searchParams.set("uid", uid);
 
@@ -64,7 +82,8 @@ export default function PlayerProfile(props: { mode: PPModes }) {
         }
 
         fetch(
-            `/api/ppboard/${subpath}getuserprofile?${searchParams.toString()}`
+            `/api/ppboard/${subpath}getuserprofile?${searchParams.toString()}`,
+            { signal: controller.signal }
         )
             .then((res) => {
                 if (res.status === 429) {
@@ -82,8 +101,6 @@ export default function PlayerProfile(props: { mode: PPModes }) {
             .then((rawData) => {
                 let playData =
                     props.mode === PPModes.prototype ? rawData.data : rawData;
-
-                console.log(playData);
 
                 if (props.mode !== PPModes.live) {
                     setPrevRank(playData.prevpprank);
@@ -104,15 +121,22 @@ export default function PlayerProfile(props: { mode: PPModes }) {
 
                 if (props.mode === PPModes.prototype) {
                     prototypeSelectorCtx.setReworks(rawData.reworks);
+
                     prototypeSelectorCtx.setCurrentRework(
                         rawData.currentRework
                     );
                 }
             })
             .catch((e: Error) => {
+                if (e.name === "AbortError") {
+                    return;
+                }
+
                 setData(null);
                 setErrorMessage(e.message);
             });
+
+        return () => controller.abort();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [props.mode, prototypeSelectorCtx.currentRework?.type, uid]);
 

@@ -47,19 +47,19 @@ function App() {
                         element={<MainCalculateBeatmap />}
                     />
                     <Route
-                        path="/prototype"
+                        path="/prototype/:type"
                         element={<PrototypeLeaderboard />}
                     />
                     <Route
-                        path="/prototype/leaderboard"
+                        path="/prototype/leaderboard/:type"
                         element={<PrototypeLeaderboard />}
                     />
                     <Route
-                        path="/prototype/profile/:uid"
+                        path="/prototype/profile/:uid/:type"
                         element={<PrototypePlayerProfile />}
                     />
                     <Route
-                        path="/prototype/top-plays"
+                        path="/prototype/top-plays/:type"
                         element={<PrototypeTopPlays />}
                     />
                     <Route

@@ -2,12 +2,15 @@ import { IUserBind, IPrototypePP, IInGamePP } from "app-structures";
 import { Link } from "react-router-dom";
 import { Util } from "../../Util";
 import "../../styles/table-listing.css";
+import PrototypeSelectorNavigator from "../../hooks/PrototypeSelectorNavigator";
+import { useContext } from "react";
 
 export default function LeaderboardItem(props: {
     data: IUserBind | IPrototypePP | IInGamePP;
     page: number;
     index: number;
 }) {
+    const prototypeSelectorCtx = useContext(PrototypeSelectorNavigator);
     const user = props.data;
 
     return (
@@ -22,7 +25,11 @@ export default function LeaderboardItem(props: {
                             : Util.isPrototype(user)
                             ? "prototype/"
                             : ""
-                    }profile/${user.uid}`}
+                    }profile/${user.uid}${
+                        prototypeSelectorCtx.currentRework?.type
+                            ? `/${prototypeSelectorCtx.currentRework.type}`
+                            : ""
+                    }`}
                 >
                     {user.username}
                 </Link>

@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useRef } from "react";
 import Head from "./Head";
 import PlayList from "./PlayList";
 import SearchBar from "./SearchBar";
@@ -20,10 +20,14 @@ import {
     TopPrototypePPEntry,
 } from "app-structures";
 import { TopPlaysSetting } from "../interfaces/TopPlaysSetting";
+import { useParams } from "react-router-dom";
 
 export default function TopPlays(props: { mode: PPModes }) {
     let topPlayCtx: TopPlaysSettings;
     const prototypeSelectorCtx = useContext(PrototypeSelectorNavigator);
+    const { type } = useParams();
+
+    const typeRef = useRef(type);
 
     switch (props.mode) {
         case PPModes.live:
@@ -42,9 +46,27 @@ export default function TopPlays(props: { mode: PPModes }) {
     useEffect(() => {
         const modCombinations = Util.parseMods(topPlayCtx.query);
 
-        if (modCombinations?.length === 0) {
+        if (modCombinations === null && topPlayCtx.query) {
             return;
         }
+
+        // Special case when the user loads this page with a type in the URL.
+        if (
+            props.mode === PPModes.prototype &&
+            typeRef.current &&
+            typeRef.current !== prototypeSelectorCtx.currentRework?.type
+        ) {
+            prototypeSelectorCtx.setCurrentReworkToUnknown(typeRef.current);
+
+            // Invalidate the ref so that we don't keep setting the rework to unknown.
+            typeRef.current = undefined;
+
+            return;
+        }
+
+        topPlayCtx.setData(undefined);
+        topPlayCtx.setErrorMessage(undefined);
+        topPlayCtx.setSearchReady(false);
 
         let subpath = "";
 
@@ -91,8 +113,6 @@ export default function TopPlays(props: { mode: PPModes }) {
                                 rawData
                             );
                         } else {
-                            console.log(rawData);
-
                             prototypeSelectorCtx.setReworks(rawData.reworks);
                             prototypeSelectorCtx.setCurrentRework(
                                 rawData.currentRework
@@ -105,7 +125,6 @@ export default function TopPlays(props: { mode: PPModes }) {
                     }
                 )
                 .catch((e: Error) => {
-                    topPlayCtx.setData([]);
                     topPlayCtx.setErrorMessage(e.message);
                 })
                 .finally(() => {
@@ -150,6 +169,7 @@ export default function TopPlays(props: { mode: PPModes }) {
                     ? "Prototype "
                     : ""
             }Plays`}</h2>
+
             {props.mode === PPModes.inGame ? (
                 <>
                     <InGameDescription />

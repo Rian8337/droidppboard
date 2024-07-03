@@ -1,4 +1,4 @@
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useRef } from "react";
 import LeaderboardItem from "./LeaderboardItem";
 import { Util } from "../../Util";
 import { TableSetting } from "../../interfaces/TableSetting";
@@ -15,10 +15,14 @@ import { PPModes } from "../../interfaces/PPModes";
 import { LeaderboardSettings } from "../../interfaces/LeaderboardSettings";
 import InGameLeaderboardNavigator from "../../hooks/InGameLeaderboardNavigator";
 import PrototypeSelectorNavigator from "../../hooks/PrototypeSelectorNavigator";
+import { useParams } from "react-router-dom";
 
 export default function LeaderboardTable(props: { mode: PPModes }) {
     let leaderboardCtx: LeaderboardSettings;
     const prototypeSelectorCtx = useContext(PrototypeSelectorNavigator);
+    const { type } = useParams();
+
+    const typeRef = useRef(type);
 
     switch (props.mode) {
         case PPModes.live:
@@ -36,6 +40,22 @@ export default function LeaderboardTable(props: { mode: PPModes }) {
     }
 
     useEffect(() => {
+        // Special case when the user loads this page with a type in the URL.
+        if (
+            props.mode === PPModes.prototype &&
+            typeRef.current &&
+            typeRef.current !== prototypeSelectorCtx.currentRework?.type
+        ) {
+            prototypeSelectorCtx.setCurrentReworkToUnknown(typeRef.current);
+
+            // Invalidate the ref so that we don't keep setting the rework to unknown.
+            typeRef.current = undefined;
+
+            return;
+        }
+
+        leaderboardCtx.setData(undefined);
+        leaderboardCtx.setErrorMessage(undefined);
         leaderboardCtx.setEnablePaging(false);
         leaderboardCtx.setSearchReady(false);
 
@@ -51,6 +71,7 @@ export default function LeaderboardTable(props: { mode: PPModes }) {
         }
 
         const searchParams = new URLSearchParams();
+        const controller = new AbortController();
 
         searchParams.set("page", leaderboardCtx.internalPage.toString());
 
@@ -66,7 +87,8 @@ export default function LeaderboardTable(props: { mode: PPModes }) {
         }
 
         fetch(
-            `/api/ppboard/${subpath}getleaderboard?${searchParams.toString()}`
+            `/api/ppboard/${subpath}getleaderboard?${searchParams.toString()}`,
+            { signal: controller.signal }
         )
             .then((res) => {
                 if (res.status === 429) {
@@ -109,7 +131,10 @@ export default function LeaderboardTable(props: { mode: PPModes }) {
                 }
             )
             .catch((e: Error) => {
-                leaderboardCtx.setData([]);
+                if (e.name === "AbortError") {
+                    return;
+                }
+
                 leaderboardCtx.setErrorMessage(e.message);
             })
             .finally(() => {
@@ -117,6 +142,7 @@ export default function LeaderboardTable(props: { mode: PPModes }) {
                 leaderboardCtx.setSearchReady(true);
             });
 
+        return () => controller.abort();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
         leaderboardCtx.internalPage,
