@@ -207,10 +207,8 @@ export default function TopPlays(props: { mode: PPModes }) {
                 <PlayList data={topPlayCtx.data} />
             ) : null}
             <div style={{ textAlign: "center" }}>
-                Top PP will be updated every{" "}
-                {props.mode === PPModes.prototype ? 10 : 30} minutes. If you do
-                not see any play, please reload the page after{" "}
-                {props.mode === PPModes.prototype ? "1-2" : "5-10"} minutes.
+                Top PP will be updated every 30 minutes. If you do not see any
+                play, please reload the page after 5-10 minutes.
             </div>
         </motion.div>
     );

@@ -178,8 +178,7 @@ export abstract class Util {
             .get({}, { projection: { _id: 0, username: 1, pp: 1 } })
             .then((res) => {
                 this.topPPList.clear();
-
-                this.topPPList.set("", []).set("-", []);
+                this.topPPList.set("", []);
 
                 for (const player of res) {
                     const ppEntries = player.pp;
@@ -225,7 +224,7 @@ export abstract class Util {
     }
 
     static refreshPrototypeTopPP(): void {
-        setTimeout(() => this.refreshPrototypeTopPP(), 900 * 1000);
+        setTimeout(() => this.refreshPrototypeTopPP(), 1800 * 1000);
 
         // Prototype pp is different as there are multiple rework types.
         DatabaseManager.aliceDb.collections.prototypePP
@@ -242,9 +241,10 @@ export abstract class Util {
                     if (!this.topPrototypePPList.has(player.reworkType)) {
                         this.topPrototypePPList.set(
                             player.reworkType,
-                            new Map<string, TopPrototypePPEntry[]>()
-                                .set("", [])
-                                .set("-", []),
+                            new Map<string, TopPrototypePPEntry[]>().set(
+                                "",
+                                [],
+                            ),
                         );
                     }
 
@@ -301,7 +301,6 @@ export abstract class Util {
             .get({}, { projection: { _id: 0, username: 1, pp: 1 } })
             .then((res) => {
                 this.topInGamePPList.clear();
-
                 this.topInGamePPList.set("", []).set("-", []);
 
                 for (const player of res) {
