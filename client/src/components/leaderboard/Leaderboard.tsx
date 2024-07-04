@@ -3,7 +3,7 @@ import SearchBar from "../SearchBar";
 import Head from "../Head";
 import { motion } from "framer-motion";
 import Paging from "../Paging";
-import PrototypeDescription from "../PrototypeDescription";
+import PrototypeDisclaimer from "../PrototypeDisclaimer";
 import { useContext } from "react";
 import PrototypeLeaderboardNavigator from "../../hooks/PrototypeLeaderboardNavigator";
 import MainLeaderboardNavigator from "../../hooks/MainLeaderboardNavigator";
@@ -13,6 +13,7 @@ import { LeaderboardSettings } from "../../interfaces/LeaderboardSettings";
 import InGameLeaderboardNavigator from "../../hooks/InGameLeaderboardNavigator";
 import InGameDescription from "../InGameDescription";
 import PrototypeSelector from "../PrototypeSelector";
+import PrototypeDescription from "../PrototypeDescription";
 
 export default function Leaderboard(props: { mode: PPModes }) {
     let ctx: LeaderboardSettings;
@@ -67,9 +68,12 @@ export default function Leaderboard(props: { mode: PPModes }) {
                 </>
             ) : props.mode === PPModes.prototype ? (
                 <>
-                    <PrototypeDescription />
+                    <PrototypeDisclaimer />
                     <br />
                     <PrototypeSelector />
+                    <br />
+                    <PrototypeDescription />
+                    <br />
                     <hr />
                 </>
             ) : null}

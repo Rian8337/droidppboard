@@ -36,14 +36,19 @@ router.get<
         const availableReworks =
             await DatabaseManager.aliceDb.collections.prototypePPType.get(
                 {},
+                { projection: { _id: 0, name: 1, type: 1 } },
+            );
+        const currentRework =
+            await DatabaseManager.aliceDb.collections.prototypePPType.getOne(
+                {
+                    type: type,
+                },
                 { projection: { _id: 0 } },
             );
 
         const response: PrototypeLeaderboardResponse<IPrototypePP> = {
             reworks: availableReworks,
-            currentRework: availableReworks.find(
-                (rework) => rework.type === type,
-            ),
+            currentRework: currentRework ?? undefined,
             data: await DatabaseManager.aliceDb.collections.prototypePP.searchPlayers(
                 page,
                 type,

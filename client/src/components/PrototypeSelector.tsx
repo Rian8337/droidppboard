@@ -27,7 +27,7 @@ export default function PrototypeSelector() {
             <h4>Current Rework</h4>
             <select
                 className="search"
-                value={prototypeSelectorCtx.currentRework?.type ?? "overall"}
+                value={prototypeSelectorCtx.currentRework?.type ?? "unknown"}
                 onChange={changeRework}
             >
                 {prototypeSelectorCtx.reworks.map((rework) => (

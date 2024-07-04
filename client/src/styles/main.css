@@ -59,9 +59,15 @@ a:visited {
     text-align: center;
 }
 
-.prototype-description {
+.prototype-disclaimer {
     text-align: center;
     font: 15px Exo-Bold;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.prototype-description {
+    font: 15px Exo-Medium;
     max-width: 1000px;
     margin: 0 auto;
 }

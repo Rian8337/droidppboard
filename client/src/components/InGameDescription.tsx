@@ -2,7 +2,7 @@ import "../styles/main.css";
 
 export default function InGameDescription() {
     return (
-        <div className="prototype-description">
+        <div className="prototype-disclaimer">
             What you are seeing is the to-be in-game pp in osu!droid version
             1.7.3, which only includes ranked and approved beatmaps, but counts
             up to top 100 scores instead of top 75.

@@ -2,44 +2,44 @@ import { IPrototypePPType } from "app-structures";
 import { PropsWithChildren, useState, createContext } from "react";
 
 const defaultRework: IPrototypePPType = {
-    name: "Overall",
-    type: "overall",
+    name: "Unknown",
+    type: "unknown",
+    description: "Loading rework...",
 };
 
 const PrototypeSelectorNavigator = createContext({
-    reworks: [defaultRework] as readonly IPrototypePPType[],
+    reworks: [defaultRework] as readonly Pick<
+        IPrototypePPType,
+        "name" | "type"
+    >[],
     currentRework: defaultRework as IPrototypePPType | undefined,
     setReworks: (reworks: readonly IPrototypePPType[]) => {},
     setCurrentRework: (rework: IPrototypePPType | undefined) => {},
-    setCurrentReworkToUnknown: (type: string) => {},
+    resetCurrentRework: (type: string) => {},
 });
 
 export function PrototypeSelectorNavigatorProvider(props: PropsWithChildren) {
-    const [reworks, setReworks] = useState<readonly IPrototypePPType[]>([]);
+    const [reworks, setReworks] = useState<
+        readonly Pick<IPrototypePPType, "name" | "type">[]
+    >([]);
     const [currentRework, setCurrentRework] = useState<
         IPrototypePPType | undefined
     >(defaultRework);
 
-    const modifyReworks = (reworks: readonly IPrototypePPType[] = []) => {
+    const modifyReworks = (
+        reworks: readonly Pick<IPrototypePPType, "name" | "type">[] = []
+    ) => {
         setReworks(() => reworks);
     };
 
     const modifyCurrentRework = (rework?: IPrototypePPType) => {
-        if (currentRework?.type === rework?.type) {
-            return;
-        }
-
         setCurrentRework(rework);
     };
 
-    const modifyCurrentReworkToUnknown = (type: string) => {
-        if (currentRework?.type === type) {
-            return;
-        }
-
+    const resetCurrentRework = (type: string) => {
         setCurrentRework({
-            name: "Unknown",
-            type,
+            ...defaultRework,
+            type: type,
         });
     };
 
@@ -50,7 +50,7 @@ export function PrototypeSelectorNavigatorProvider(props: PropsWithChildren) {
                 currentRework,
                 setReworks: modifyReworks,
                 setCurrentRework: modifyCurrentRework,
-                setCurrentReworkToUnknown: modifyCurrentReworkToUnknown,
+                resetCurrentRework: resetCurrentRework,
             }}
         >
             {props.children}

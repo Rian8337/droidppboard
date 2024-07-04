@@ -46,7 +46,7 @@ export default function LeaderboardTable(props: { mode: PPModes }) {
             typeRef.current &&
             typeRef.current !== prototypeSelectorCtx.currentRework?.type
         ) {
-            prototypeSelectorCtx.setCurrentReworkToUnknown(typeRef.current);
+            prototypeSelectorCtx.resetCurrentRework(typeRef.current);
 
             // Invalidate the ref so that we don't keep setting the rework to unknown.
             typeRef.current = undefined;
@@ -154,7 +154,7 @@ export default function LeaderboardTable(props: { mode: PPModes }) {
         <>
             <h2 className="subtitle">
                 {leaderboardCtx.isSearchReady || leaderboardCtx.errorMessage
-                    ? "No players found!"
+                    ? "No players found! Please try again later."
                     : "Loading players..."}
             </h2>
             {leaderboardCtx.errorMessage ? (

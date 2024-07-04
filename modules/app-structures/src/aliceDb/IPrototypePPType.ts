@@ -11,4 +11,9 @@ export interface IPrototypePPType {
      * The name of the rework.
      */
     readonly name: string;
+
+    /**
+     * The description of the rework.
+     */
+    readonly description: string;
 }

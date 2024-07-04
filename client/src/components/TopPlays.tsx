@@ -3,7 +3,7 @@ import { useContext, useEffect, useRef } from "react";
 import Head from "./Head";
 import PlayList from "./PlayList";
 import SearchBar from "./SearchBar";
-import PrototypeDescription from "./PrototypeDescription";
+import PrototypeDisclaimer from "./PrototypeDisclaimer";
 import PrototypeTopPlaysNavigator from "../hooks/PrototypeTopPlaysNavigator";
 import MainTopPlaysNavigator from "../hooks/MainTopPlaysNavigator";
 import { Util } from "../Util";
@@ -21,6 +21,7 @@ import {
 } from "app-structures";
 import { TopPlaysSetting } from "../interfaces/TopPlaysSetting";
 import { useParams } from "react-router-dom";
+import PrototypeDescription from "./PrototypeDescription";
 
 export default function TopPlays(props: { mode: PPModes }) {
     let topPlayCtx: TopPlaysSettings;
@@ -56,7 +57,7 @@ export default function TopPlays(props: { mode: PPModes }) {
             typeRef.current &&
             typeRef.current !== prototypeSelectorCtx.currentRework?.type
         ) {
-            prototypeSelectorCtx.setCurrentReworkToUnknown(typeRef.current);
+            prototypeSelectorCtx.resetCurrentRework(typeRef.current);
 
             // Invalidate the ref so that we don't keep setting the rework to unknown.
             typeRef.current = undefined;
@@ -85,7 +86,10 @@ export default function TopPlays(props: { mode: PPModes }) {
             searchParams.set("mods", modCombinations.join(""));
         }
 
-        if (prototypeSelectorCtx.currentRework) {
+        if (
+            props.mode === PPModes.prototype &&
+            prototypeSelectorCtx.currentRework
+        ) {
             searchParams.set("type", prototypeSelectorCtx.currentRework.type);
         }
 
@@ -177,9 +181,12 @@ export default function TopPlays(props: { mode: PPModes }) {
                 </>
             ) : props.mode === PPModes.prototype ? (
                 <>
-                    <PrototypeDescription />
+                    <PrototypeDisclaimer />
                     <br />
                     <PrototypeSelector />
+                    <br />
+                    <PrototypeDescription />
+                    <br />
                     <hr />
                 </>
             ) : null}
@@ -187,8 +194,8 @@ export default function TopPlays(props: { mode: PPModes }) {
             {topPlayCtx.data.length === 0 ? (
                 <h2 className="subtitle">
                     {topPlayCtx.isSearchReady || topPlayCtx.errorMessage
-                        ? "No data found!"
-                        : "Loading play data..."}
+                        ? "No scores found! Please try again later."
+                        : "Loading scores..."}
                 </h2>
             ) : null}
             {topPlayCtx.errorMessage ? (

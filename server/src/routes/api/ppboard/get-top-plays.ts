@@ -44,13 +44,19 @@ router.get<
         const reworks =
             await DatabaseManager.aliceDb.collections.prototypePPType.get(
                 {},
+                { projection: { _id: 0, name: 1, type: 1 } },
+            );
+        const currentRework =
+            await DatabaseManager.aliceDb.collections.prototypePPType.getOne(
+                {
+                    type: type,
+                },
                 { projection: { _id: 0 } },
             );
-        const currentRework = reworks.find((r) => r.type === type);
 
         const response: PrototypeLeaderboardResponse<TopPrototypePPEntry> = {
             reworks: reworks,
-            currentRework: currentRework,
+            currentRework: currentRework ?? undefined,
             data: Util.topPrototypePPList.get(type)?.get(droidMod) ?? [],
         };
 

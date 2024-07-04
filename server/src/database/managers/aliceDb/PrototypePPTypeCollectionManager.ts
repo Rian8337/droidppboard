@@ -9,6 +9,7 @@ export class PrototypePPTypeCollectionManager extends DatabaseCollectionManager<
         return {
             name: "",
             type: "",
+            description: "",
         };
     }
 }

@@ -3,7 +3,7 @@ import CalculationForm from "./CalculationForm";
 import CalculationResult from "./CalculationResult";
 import Head from "../Head";
 import { CalculationSetting } from "../../interfaces/CalculationSetting";
-import PrototypeDescription from "../PrototypeDescription";
+import PrototypeDisclaimer from "../PrototypeDisclaimer";
 import { useContext } from "react";
 import PrototypeCalculationContext from "../../hooks/PrototypeCalculationContext";
 import MainCalculationContext from "../../hooks/MainCalculationContext";
@@ -33,7 +33,7 @@ export default function CalculateBeatmap(props: { prototype: boolean }) {
             <h2 className="subtitle">
                 Calculate Beatmap {props.prototype ? "Prototype " : ""}PP
             </h2>
-            {props.prototype ? <PrototypeDescription /> : null}
+            {props.prototype ? <PrototypeDisclaimer /> : null}
             <h4>Calculation Form</h4>
             <CalculationForm {...props} />
             {ctx.errorMessage ? (

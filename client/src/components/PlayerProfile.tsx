@@ -3,7 +3,7 @@ import { useParams } from "react-router";
 import PlayList from "./PlayList";
 import Head from "./Head";
 import { motion } from "framer-motion";
-import PrototypeDescription from "./PrototypeDescription";
+import PrototypeDisclaimer from "./PrototypeDisclaimer";
 import { IInGamePP, IPrototypePP, IUserBind } from "app-structures";
 import { Util } from "../Util";
 import "../styles/profile.css";
@@ -11,6 +11,7 @@ import { PPModes } from "../interfaces/PPModes";
 import InGameDescription from "./InGameDescription";
 import PrototypeSelectorNavigator from "../hooks/PrototypeSelectorNavigator";
 import PrototypeSelector from "./PrototypeSelector";
+import PrototypeDescription from "./PrototypeDescription";
 
 export default function PlayerProfile(props: { mode: PPModes }) {
     const prototypeSelectorCtx = useContext(PrototypeSelectorNavigator);
@@ -43,7 +44,7 @@ export default function PlayerProfile(props: { mode: PPModes }) {
             typeRef.current &&
             typeRef.current !== prototypeSelectorCtx.currentRework?.type
         ) {
-            prototypeSelectorCtx.setCurrentReworkToUnknown(typeRef.current);
+            prototypeSelectorCtx.resetCurrentRework(typeRef.current);
 
             // Invalidate the ref so that we don't keep setting the rework to unknown.
             typeRef.current = undefined;
@@ -179,7 +180,7 @@ export default function PlayerProfile(props: { mode: PPModes }) {
 
             <h2 className="subtitle">
                 {data === undefined
-                    ? "Loading player data..."
+                    ? "Loading player information..."
                     : data === null
                     ? "Player not found!"
                     : `Player Profile: ${data.username}`}
@@ -192,9 +193,12 @@ export default function PlayerProfile(props: { mode: PPModes }) {
                 </>
             ) : props.mode === PPModes.prototype ? (
                 <>
-                    <PrototypeDescription />
+                    <PrototypeDisclaimer />
                     <br />
                     <PrototypeSelector />
+                    <br />
+                    <PrototypeDescription />
+                    <br />
                     <hr />
                 </>
             ) : null}
