@@ -3,7 +3,7 @@ import { PropsWithChildren, useState, createContext } from "react";
 
 const defaultRework: IPrototypePPType = {
     name: "Unknown",
-    type: "unknown",
+    type: "overall",
     description: "Loading rework...",
 };
 
