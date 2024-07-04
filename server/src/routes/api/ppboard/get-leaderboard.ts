@@ -5,7 +5,7 @@ import { IPrototypePP, PrototypeLeaderboardResponse } from "app-structures";
 
 const router = express.Router();
 
-router.use(Util.createRateLimit(8));
+router.use(Util.createRateLimit(5));
 
 router.get<
     "/",
