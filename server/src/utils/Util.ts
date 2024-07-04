@@ -172,8 +172,6 @@ export abstract class Util {
     }
 
     static refreshTopPP(): void {
-        setTimeout(() => this.refreshTopPP(), 1800 * 1000);
-
         DatabaseManager.elainaDb.collections.userBind
             .get({}, { projection: { _id: 0, username: 1, pp: 1 } })
             .then((res) => {
@@ -220,12 +218,13 @@ export abstract class Util {
 
                     plays.splice(100);
                 }
+            })
+            .finally(() => {
+                setTimeout(() => this.refreshTopPP(), 1800 * 1000);
             });
     }
 
     static refreshPrototypeTopPP(): void {
-        setTimeout(() => this.refreshPrototypeTopPP(), 1800 * 1000);
-
         // Prototype pp is different as there are multiple rework types.
         DatabaseManager.aliceDb.collections.prototypePP
             .get(
@@ -291,12 +290,13 @@ export abstract class Util {
                         plays.splice(100);
                     }
                 }
+            })
+            .finally(() => {
+                setTimeout(() => this.refreshPrototypeTopPP(), 1800 * 1000);
             });
     }
 
     static refreshInGameTopPP(): void {
-        setTimeout(() => this.refreshInGameTopPP(), 1800 * 1000);
-
         DatabaseManager.aliceDb.collections.inGamePP
             .get({}, { projection: { _id: 0, username: 1, pp: 1 } })
             .then((res) => {
@@ -344,6 +344,9 @@ export abstract class Util {
 
                     plays.splice(100);
                 }
+            })
+            .finally(() => {
+                setTimeout(() => this.refreshInGameTopPP(), 1800 * 1000);
             });
     }
 
