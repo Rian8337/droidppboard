@@ -184,9 +184,7 @@ export default function TopPlays(props: { mode: PPModes }) {
                     <PrototypeDisclaimer />
                     <br />
                     <PrototypeSelector />
-                    <br />
                     <PrototypeDescription />
-                    <br />
                     <hr />
                 </>
             ) : null}

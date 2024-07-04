@@ -71,9 +71,7 @@ export default function Leaderboard(props: { mode: PPModes }) {
                     <PrototypeDisclaimer />
                     <br />
                     <PrototypeSelector />
-                    <br />
                     <PrototypeDescription />
-                    <br />
                     <hr />
                 </>
             ) : null}

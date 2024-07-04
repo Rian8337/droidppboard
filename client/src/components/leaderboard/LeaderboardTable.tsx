@@ -125,6 +125,10 @@ export default function LeaderboardTable(props: { mode: PPModes }) {
                         prototypeSelectorCtx.setCurrentRework(
                             rawData.currentRework
                         );
+
+                        console.log(
+                            rawData.currentRework?.description.split("\n")
+                        );
                     }
 
                     leaderboardCtx.setCurrentPage(leaderboardCtx.internalPage);

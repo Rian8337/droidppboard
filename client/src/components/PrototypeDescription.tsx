@@ -11,7 +11,11 @@ export default function PrototypeDescription() {
 
     return (
         <div className="prototype-description">
-            {prototypeSelectorCtx.currentRework.description}
+            {prototypeSelectorCtx.currentRework.description
+                .split("\n")
+                .map((v, i) => (
+                    <p key={`prototype-description-${i}`}>{v}</p>
+                ))}
         </div>
     );
 }

@@ -196,9 +196,7 @@ export default function PlayerProfile(props: { mode: PPModes }) {
                     <PrototypeDisclaimer />
                     <br />
                     <PrototypeSelector />
-                    <br />
                     <PrototypeDescription />
-                    <br />
                     <hr />
                 </>
             ) : null}
