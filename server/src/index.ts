@@ -25,7 +25,13 @@ const skinsRouter = express.Router();
 
 app.set("trust proxy", 1);
 
-app.use(cors());
+app.use(
+    cors({
+        // Allow local requests and the website to access the API
+        origin: ["https://droidpp.osudroid.moe", "http://localhost:3000"],
+    }),
+);
+
 app.use(formData.parse({ maxFilesSize: 1000000 }));
 app.use(formData.format());
 app.use(formData.stream());
