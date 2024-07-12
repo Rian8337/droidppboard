@@ -203,7 +203,10 @@ export default function PlayerProfile(props: { mode: PPModes }) {
                     <hr />
                 </>
             ) : props.mode === PPModes.prototype ? (
-                <PrototypeSelector />
+                <>
+                    <PrototypeSelector />
+                    <PrototypeDescription />
+                </>
             ) : null}
 
             {errorMessage ? (
