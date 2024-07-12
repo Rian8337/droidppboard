@@ -186,17 +186,20 @@ export default function PlayerProfile(props: { mode: PPModes }) {
                     : `Player Profile: ${data.username}`}
             </h2>
 
-            {props.mode === PPModes.inGame ? (
+            {data !== null &&
+            data !== undefined &&
+            props.mode !== PPModes.live ? (
                 <>
-                    <InGameDescription />
-                    <hr />
-                </>
-            ) : props.mode === PPModes.prototype ? (
-                <>
-                    <PrototypeDisclaimer />
-                    <br />
-                    <PrototypeSelector />
-                    <PrototypeDescription />
+                    {props.mode === PPModes.inGame ? (
+                        <InGameDescription />
+                    ) : props.mode === PPModes.prototype ? (
+                        <>
+                            <PrototypeDisclaimer />
+                            <br />
+                            <PrototypeSelector />
+                            <PrototypeDescription />
+                        </>
+                    ) : null}
                     <hr />
                 </>
             ) : null}
