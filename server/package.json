@@ -18,12 +18,7 @@
     "@rian8337/osu-base": "^4.0.0-beta.6",
     "@rian8337/osu-difficulty-calculator": "^4.0.0-beta.6",
     "@rian8337/osu-rebalance-difficulty-calculator": "^4.0.0-beta.6",
-    "@types/cors": "^2.8.12",
-    "@types/express": "^4.17.13",
-    "@types/express-form-data": "^2.0.2",
-    "@types/node": "^20.4.9",
     "app-structures": "file:../modules/app-structures",
-    "canvas": "^2.9.1",
     "cors": "^2.8.5",
     "dotenv": "^16.0.0",
     "express": "^4.17.3",
@@ -33,6 +28,10 @@
     "typescript": "^5.0.2"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/express-form-data": "^2.0.5",
+    "@types/node": "^20.14.10",
     "@typescript-eslint/eslint-plugin": "^7.1.0",
     "@typescript-eslint/parser": "^7.1.0",
     "eslint": "^8.14.0",
