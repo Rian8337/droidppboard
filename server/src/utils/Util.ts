@@ -3,7 +3,6 @@ import { Request, RequestHandler } from "express";
 import rateLimit from "express-rate-limit";
 import { ModUtil } from "@rian8337/osu-base";
 import { join } from "path";
-import { registerFont } from "canvas";
 import { ReadStream } from "fs";
 import { DatabaseManager } from "../database/managers/DatabaseManager";
 
@@ -92,21 +91,6 @@ export abstract class Util {
             stream.on("error", (err) => reject(err));
             stream.on("end", () => resolve(Buffer.concat(chunks)));
         });
-    }
-
-    static initCanvas(): void {
-        registerFont(
-            join(this.getFrontendPath(), "src", "fonts", "Exo-Medium.ttf"),
-            { family: "Exo" },
-        );
-        registerFont(
-            join(this.getFrontendPath(), "src", "fonts", "Exo-SemiBold.ttf"),
-            { family: "Exo", style: "SemiBold" },
-        );
-        registerFont(
-            join(this.getFrontendPath(), "src", "fonts", "Exo-Bold.ttf"),
-            { family: "Exo", style: "Bold" },
-        );
     }
 
     static convertURI(input: string): string {

@@ -17,8 +17,6 @@ config();
 
 //#region App configuration
 
-Util.initCanvas();
-
 const app = express();
 const ppboardRouter = express.Router();
 const skinsRouter = express.Router();
