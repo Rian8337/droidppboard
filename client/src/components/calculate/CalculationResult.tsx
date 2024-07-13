@@ -4,13 +4,14 @@ import BeatmapCalculationResult from "./BeatmapCalculationResult";
 import DifficultyCalculationResult from "./DifficultyCalculationResult";
 import ParameterCalculationResult from "./ParameterCalculationResult";
 import PerformanceCalculationResult from "./PerformanceCalculationResult";
+import StrainGraphCalculationResult from "./StrainGraphCalculationResult";
 
 export default function CalculationResult(props: {
     params: ICalculationParams;
     result: ICalculationResult;
 }) {
     const { params, result } = props;
-    const { beatmap, difficulty, performance } = result;
+    const { beatmap, difficulty, performance, strainGraph } = result;
 
     return (
         <motion.div
@@ -27,6 +28,8 @@ export default function CalculationResult(props: {
             <DifficultyCalculationResult difficulty={difficulty} />
             <br />
             <PerformanceCalculationResult performance={performance} />
+            <br />
+            <StrainGraphCalculationResult strainGraph={strainGraph} />
         </motion.div>
     );
 }

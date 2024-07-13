@@ -32,4 +32,9 @@ export interface ICalculationResult {
         droid: PerformanceCalculationResult;
         osu: PerformanceCalculationResult;
     }>;
+
+    readonly strainGraph: Readonly<{
+        droid: ReadonlyArray<number>;
+        osu: ReadonlyArray<number>;
+    }>;
 }
