@@ -27,6 +27,7 @@ export default function LeaderboardItem(props: {
                             : ""
                     }profile/${user.uid}${
                         Util.isPrototype(user) &&
+                        !Util.isInGame(user) &&
                         prototypeSelectorCtx.currentRework?.type
                             ? `/${prototypeSelectorCtx.currentRework.type}`
                             : ""
