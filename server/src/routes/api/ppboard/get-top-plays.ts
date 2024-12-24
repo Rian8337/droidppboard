@@ -36,34 +36,26 @@ router.get<
                   .join("") || ""
             : "-";
 
-    if (Util.requestIsInGame(req)) {
-        return res.json(Util.topInGamePPList.get(droidMod) ?? []);
-    }
+    const reworks =
+        await DatabaseManager.aliceDb.collections.prototypePPType.get(
+            {},
+            { projection: { _id: 0, name: 1, type: 1 } },
+        );
+    const currentRework =
+        await DatabaseManager.aliceDb.collections.prototypePPType.getOne(
+            {
+                type: type,
+            },
+            { projection: { _id: 0 } },
+        );
 
-    if (Util.requestIsPrototype(req)) {
-        const reworks =
-            await DatabaseManager.aliceDb.collections.prototypePPType.get(
-                {},
-                { projection: { _id: 0, name: 1, type: 1 } },
-            );
-        const currentRework =
-            await DatabaseManager.aliceDb.collections.prototypePPType.getOne(
-                {
-                    type: type,
-                },
-                { projection: { _id: 0 } },
-            );
+    const response: PrototypeLeaderboardResponse<TopPrototypePPEntry> = {
+        reworks: reworks,
+        currentRework: currentRework ?? undefined,
+        data: Util.topPrototypePPList.get(type)?.get(droidMod) ?? [],
+    };
 
-        const response: PrototypeLeaderboardResponse<TopPrototypePPEntry> = {
-            reworks: reworks,
-            currentRework: currentRework ?? undefined,
-            data: Util.topPrototypePPList.get(type)?.get(droidMod) ?? [],
-        };
-
-        return res.json(response);
-    }
-
-    res.json(Util.topPPList.get(droidMod) ?? []);
+    res.json(response);
 });
 
 export default router;

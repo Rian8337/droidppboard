@@ -1,4 +1,4 @@
-import { TopPPEntry, TopPrototypePPEntry } from "app-structures";
+import { TopPrototypePPEntry } from "app-structures";
 import { Request, RequestHandler } from "express";
 import rateLimit from "express-rate-limit";
 import { ModUtil } from "@rian8337/osu-base";
@@ -16,11 +16,6 @@ export type Comparison = "<=" | "<" | "=" | ">" | ">=";
  */
 export abstract class Util {
     /**
-     * List of top plays from all players, mapped by droid mod string that's sorted alphabetically.
-     */
-    static readonly topPPList = new Map<string, TopPPEntry[]>();
-
-    /**
      * List of top prototype plays from all players, mapped by rework type, and each map inside the
      * rework type mapped by droid mod string that's sorted alphabetically.
      */
@@ -28,11 +23,6 @@ export abstract class Util {
         string,
         Map<string, TopPrototypePPEntry[]>
     >();
-
-    /**
-     * List of top in-game plays from all players, mapped by droid mod string that's sorted alphabetically.
-     */
-    static readonly topInGamePPList = new Map<string, TopPPEntry[]>();
 
     /**
      * Creates a middleware used for handling excessive API requests.
@@ -67,15 +57,6 @@ export abstract class Util {
      */
     static requestIsPrototype(req: Request<unknown>): boolean {
         return req.baseUrl.includes("prototype") || req.body.prototype;
-    }
-
-    /**
-     * Checks if a request is requesting in-game data.
-     *
-     * @param req The request.
-     */
-    static requestIsInGame(req: Request<unknown>): boolean {
-        return req.baseUrl.includes("ingame") || req.body.ingame;
     }
 
     /**
@@ -155,59 +136,6 @@ export abstract class Util {
         });
     }
 
-    static refreshTopPP(): void {
-        DatabaseManager.elainaDb.collections.userBind
-            .get({}, { projection: { _id: 0, username: 1, pp: 1 } })
-            .then((res) => {
-                this.topPPList.clear();
-                this.topPPList.set("", []);
-
-                for (const player of res) {
-                    const ppEntries = player.pp;
-
-                    for (const ppEntry of ppEntries) {
-                        const topEntry: TopPPEntry = {
-                            ...ppEntry,
-                            username: player.username,
-                        };
-
-                        this.topPPList.get("")!.push(topEntry);
-
-                        const droidMods =
-                            [
-                                ...ModUtil.pcStringToMods(ppEntry.mods).reduce(
-                                    (a, v) => {
-                                        if (!v.isApplicableToDroid()) {
-                                            return a;
-                                        }
-
-                                        return a + v.droidString;
-                                    },
-                                    "",
-                                ),
-                            ]
-                                .sort((a, b) => a.localeCompare(b))
-                                .join("") || "-";
-
-                        const playList = this.topPPList.get(droidMods) ?? [];
-
-                        playList.push(topEntry);
-
-                        this.topPPList.set(droidMods, playList);
-                    }
-                }
-
-                for (const [, plays] of this.topPPList) {
-                    plays.sort((a, b) => b.pp - a.pp);
-
-                    plays.splice(100);
-                }
-            })
-            .finally(() => {
-                setTimeout(() => this.refreshTopPP(), 1800 * 1000);
-            });
-    }
-
     static refreshPrototypeTopPP(): void {
         // Prototype pp is different as there are multiple rework types.
         DatabaseManager.aliceDb.collections.prototypePP
@@ -277,60 +205,6 @@ export abstract class Util {
             })
             .finally(() => {
                 setTimeout(() => this.refreshPrototypeTopPP(), 1800 * 1000);
-            });
-    }
-
-    static refreshInGameTopPP(): void {
-        DatabaseManager.aliceDb.collections.inGamePP
-            .get({}, { projection: { _id: 0, username: 1, pp: 1 } })
-            .then((res) => {
-                this.topInGamePPList.clear();
-                this.topInGamePPList.set("", []).set("-", []);
-
-                for (const player of res) {
-                    const ppEntries = player.pp;
-
-                    for (const ppEntry of ppEntries) {
-                        const topEntry: TopPPEntry = {
-                            ...ppEntry,
-                            username: player.username,
-                        };
-
-                        this.topInGamePPList.get("")!.push(topEntry);
-
-                        const droidMods =
-                            [
-                                ...ModUtil.pcStringToMods(ppEntry.mods).reduce(
-                                    (a, v) => {
-                                        if (!v.isApplicableToDroid()) {
-                                            return a;
-                                        }
-
-                                        return a + v.droidString;
-                                    },
-                                    "",
-                                ),
-                            ]
-                                .sort((a, b) => a.localeCompare(b))
-                                .join("") || "-";
-
-                        const playList =
-                            this.topInGamePPList.get(droidMods) ?? [];
-
-                        playList.push(topEntry);
-
-                        this.topInGamePPList.set(droidMods, playList);
-                    }
-                }
-
-                for (const plays of this.topInGamePPList.values()) {
-                    plays.sort((a, b) => b.pp - a.pp);
-
-                    plays.splice(100);
-                }
-            })
-            .finally(() => {
-                setTimeout(() => this.refreshInGameTopPP(), 1800 * 1000);
             });
     }
 

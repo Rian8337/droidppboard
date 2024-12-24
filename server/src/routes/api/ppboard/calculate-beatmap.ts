@@ -4,13 +4,11 @@ import { ICalculationResult } from "app-structures";
 import {
     Accuracy,
     BeatmapDecoder,
-    DifficultyStatisticsCalculatorOptions,
+    BeatmapDifficulty,
     MathUtils,
-    Mod,
     ModDifficultyAdjust,
     ModUtil,
     Modes,
-    calculateOsuDifficultyStatistics,
 } from "@rian8337/osu-base";
 import { ReadStream } from "fs";
 import {
@@ -39,13 +37,7 @@ router.post("/", async (req, res) => {
         //@ts-expect-error: Bad typings
         const file: ReadStream = req.files.beatmapfile;
 
-        if (
-            !(
-                file.path instanceof Buffer
-                    ? file.path.toString("utf-8")
-                    : file.path
-            ).endsWith(".osu")
-        ) {
+        if (!file.path.toString("utf-8").endsWith(".osu")) {
             return res.status(400).json({ message: "Invalid file uploaded" });
         }
 
@@ -105,26 +97,20 @@ router.post("/", async (req, res) => {
     const combo =
         MathUtils.clamp(parseInt(req.body.combo), 0, maxCombo) || maxCombo;
 
-    const difficultyStatisticsOptions: DifficultyStatisticsCalculatorOptions<
-        number,
-        number,
-        number,
-        number,
-        Mod[],
-        number
-    > = {
-        circleSize: parsedBeatmap.difficulty.cs,
-        approachRate:
-            parsedBeatmap.difficulty.ar ?? parsedBeatmap.difficulty.od,
-        overallDifficulty: parsedBeatmap.difficulty.od,
-        healthDrain: parsedBeatmap.difficulty.hp,
-        mods: mods,
-        customSpeedMultiplier: MathUtils.clamp(
-            parseFloat(req.body.speedmultiplier) || 1,
-            0.5,
-            2,
-        ),
-    };
+    const customSpeedMultiplier = MathUtils.clamp(
+        parseFloat(req.body.speedmultiplier) || 1,
+        0.5,
+        2,
+    );
+    const beatmapDifficulty = new BeatmapDifficulty(parsedBeatmap.difficulty);
+
+    ModUtil.applyModsToBeatmapDifficulty(
+        beatmapDifficulty,
+        Modes.droid,
+        mods,
+        customSpeedMultiplier,
+        true,
+    );
 
     const formData = new FormData();
     formData.set("file", new Blob([osuFile]));
@@ -135,10 +121,7 @@ router.post("/", async (req, res) => {
         "mods",
         mods.reduce((a, v) => a + v.acronym, ""),
     );
-    formData.set(
-        "customspeedmultiplier",
-        difficultyStatisticsOptions.customSpeedMultiplier.toString(),
-    );
+    formData.set("customspeedmultiplier", customSpeedMultiplier.toString());
 
     if (difficultyAdjustMod?.cs !== undefined) {
         formData.set("forcecs", difficultyAdjustMod.cs.toString());
@@ -198,10 +181,6 @@ router.post("/", async (req, res) => {
         });
     }
 
-    const difficultyStatistics = calculateOsuDifficultyStatistics(
-        difficultyStatisticsOptions,
-    );
-
     const response: ICalculationResult = {
         beatmap: {
             id: beatmapId,
@@ -217,10 +196,10 @@ router.post("/", async (req, res) => {
                 hp: parsedBeatmap.difficulty.hp,
             },
             modifiedStats: {
-                cs: difficultyStatistics.circleSize,
-                ar: difficultyStatistics.approachRate,
-                od: difficultyStatistics.overallDifficulty,
-                hp: difficultyStatistics.healthDrain,
+                cs: beatmapDifficulty.cs,
+                ar: beatmapDifficulty.ar,
+                od: beatmapDifficulty.od,
+                hp: beatmapDifficulty.hp,
             },
         },
         difficulty: {

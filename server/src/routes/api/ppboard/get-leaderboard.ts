@@ -22,49 +22,31 @@ router.get<
     const page = Math.max(1, parseInt(req.query.page || "1") || 1);
     const searchQuery = req.query.query ?? "";
 
-    if (Util.requestIsInGame(req)) {
-        return res.json(
-            await DatabaseManager.aliceDb.collections.inGamePP.searchPlayers(
-                page,
-                searchQuery,
-            ),
+    const type = req.query.type ?? "overall";
+    const availableReworks =
+        await DatabaseManager.aliceDb.collections.prototypePPType.get(
+            {},
+            { projection: { _id: 0, name: 1, type: 1 } },
         );
-    }
+    const currentRework =
+        await DatabaseManager.aliceDb.collections.prototypePPType.getOne(
+            {
+                type: type,
+            },
+            { projection: { _id: 0 } },
+        );
 
-    if (Util.requestIsPrototype(req)) {
-        const type = req.query.type ?? "overall";
-        const availableReworks =
-            await DatabaseManager.aliceDb.collections.prototypePPType.get(
-                {},
-                { projection: { _id: 0, name: 1, type: 1 } },
-            );
-        const currentRework =
-            await DatabaseManager.aliceDb.collections.prototypePPType.getOne(
-                {
-                    type: type,
-                },
-                { projection: { _id: 0 } },
-            );
-
-        const response: PrototypeLeaderboardResponse<IPrototypePP> = {
-            reworks: availableReworks,
-            currentRework: currentRework ?? undefined,
-            data: await DatabaseManager.aliceDb.collections.prototypePP.searchPlayers(
-                page,
-                type,
-                searchQuery,
-            ),
-        };
-
-        return res.json(response);
-    }
-
-    res.json(
-        await DatabaseManager.elainaDb.collections.userBind.searchPlayers(
+    const response: PrototypeLeaderboardResponse<IPrototypePP> = {
+        reworks: availableReworks,
+        currentRework: currentRework ?? undefined,
+        data: await DatabaseManager.aliceDb.collections.prototypePP.searchPlayers(
             page,
+            type,
             searchQuery,
         ),
-    );
+    };
+
+    res.json(response);
 });
 
 export default router;
