@@ -4,27 +4,20 @@ import PlayList from "./PlayList";
 import Head from "./Head";
 import { motion } from "framer-motion";
 import PrototypeDisclaimer from "./PrototypeDisclaimer";
-import { IInGamePP, IPrototypePP, IUserBind } from "app-structures";
-import { Util } from "../Util";
+import { IPrototypePP } from "app-structures";
 import "../styles/profile.css";
-import { PPModes } from "../interfaces/PPModes";
-import InGameDescription from "./InGameDescription";
 import PrototypeSelectorNavigator from "../hooks/PrototypeSelectorNavigator";
 import PrototypeSelector from "./PrototypeSelector";
 import PrototypeDescription from "./PrototypeDescription";
 
-export default function PlayerProfile(props: { mode: PPModes }) {
+export default function PlayerProfile() {
     const prototypeSelectorCtx = useContext(PrototypeSelectorNavigator);
     const params = useParams();
     const { uid, type } = params;
 
     const typeRef = useRef(type);
 
-    const [data, setData] = useState<
-        IUserBind | IPrototypePP | IInGamePP | null | undefined
-    >(undefined);
-    const [rank, setRank] = useState<number | null>(null);
-    const [prevRank, setPrevRank] = useState<number | null>(null);
+    const [data, setData] = useState<IPrototypePP | null | undefined>();
     const [weightedAccuracy, setWeightedAccuracy] = useState<number | null>(
         null
     );
@@ -40,7 +33,6 @@ export default function PlayerProfile(props: { mode: PPModes }) {
 
         // Special case when the user loads this page with a type in the URL.
         if (
-            props.mode === PPModes.prototype &&
             typeRef.current &&
             typeRef.current !== prototypeSelectorCtx.currentRework?.type
         ) {
@@ -54,36 +46,20 @@ export default function PlayerProfile(props: { mode: PPModes }) {
 
         setData(undefined);
         setErrorMessage(undefined);
-        setRank(null);
-        setPrevRank(null);
         setWeightedAccuracy(null);
         setLastUpdate(null);
-
-        let subpath = "";
-
-        switch (props.mode) {
-            case PPModes.prototype:
-                subpath = "prototype/";
-                break;
-            case PPModes.inGame:
-                subpath = "ingame/";
-                break;
-        }
 
         const searchParams = new URLSearchParams();
         const controller = new AbortController();
 
         searchParams.set("uid", uid);
 
-        if (
-            props.mode === PPModes.prototype &&
-            prototypeSelectorCtx.currentRework
-        ) {
+        if (prototypeSelectorCtx.currentRework) {
             searchParams.set("type", prototypeSelectorCtx.currentRework.type);
         }
 
         fetch(
-            `/api/ppboard/${subpath}getuserprofile?${searchParams.toString()}`,
+            `/api/ppboard/prototype/getuserprofile?${searchParams.toString()}`,
             { signal: controller.signal }
         )
             .then((res) => {
@@ -100,14 +76,9 @@ export default function PlayerProfile(props: { mode: PPModes }) {
                 return res.json();
             })
             .then((rawData) => {
-                let playData =
-                    props.mode === PPModes.prototype ? rawData.data : rawData;
+                let playData = rawData.data;
 
-                if (props.mode !== PPModes.live) {
-                    setPrevRank(playData.prevpprank);
-                    setLastUpdate(playData.lastUpdate);
-                }
-                setRank(playData.pprank);
+                setLastUpdate(playData.lastUpdate);
                 setData(playData);
 
                 let accSum = 0;
@@ -120,13 +91,8 @@ export default function PlayerProfile(props: { mode: PPModes }) {
 
                 setWeightedAccuracy(accSum / weight || 0);
 
-                if (props.mode === PPModes.prototype) {
-                    prototypeSelectorCtx.setReworks(rawData.reworks);
-
-                    prototypeSelectorCtx.setCurrentRework(
-                        rawData.currentRework
-                    );
-                }
+                prototypeSelectorCtx.setReworks(rawData.reworks);
+                prototypeSelectorCtx.setCurrentRework(rawData.currentRework);
             })
             .catch((e: Error) => {
                 if (e.name === "AbortError") {
@@ -139,7 +105,7 @@ export default function PlayerProfile(props: { mode: PPModes }) {
 
         return () => controller.abort();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [props.mode, prototypeSelectorCtx.currentRework?.type, uid]);
+    }, [prototypeSelectorCtx.currentRework?.type, uid]);
 
     return (
         <motion.div
@@ -150,31 +116,13 @@ export default function PlayerProfile(props: { mode: PPModes }) {
         >
             {data ? (
                 <Head
-                    description={`${data.username}'s ${
-                        props.mode === PPModes.inGame
-                            ? "in-game "
-                            : props.mode === PPModes.prototype
-                            ? "prototype "
-                            : ""
-                    }profile in Elaina PP Project.`}
+                    description={`${data.username}'s prototype profile in Elaina PP Project.`}
                     title={`PP Board - ${data.username}`}
                 />
             ) : (
                 <Head
-                    description={`A player's ${
-                        props.mode === PPModes.inGame
-                            ? "in-game"
-                            : props.mode === PPModes.prototype
-                            ? "prototype"
-                            : ""
-                    }profile in Elaina PP Project.`}
-                    title={`PP Board - ${
-                        props.mode === PPModes.inGame
-                            ? "In-Game "
-                            : props.mode === PPModes.prototype
-                            ? "Prototype "
-                            : ""
-                    }Player Profile`}
+                    description="A player's prototype profile in Elaina PP Project."
+                    title="PP Board - Prototype Player Profile"
                 />
             )}
 
@@ -186,26 +134,13 @@ export default function PlayerProfile(props: { mode: PPModes }) {
                     : `Player Profile: ${data.username}`}
             </h2>
 
-            {data !== null &&
-            data !== undefined &&
-            props.mode !== PPModes.live ? (
+            {data ? (
                 <>
-                    {props.mode === PPModes.inGame ? (
-                        <InGameDescription />
-                    ) : props.mode === PPModes.prototype ? (
-                        <>
-                            <PrototypeDisclaimer />
-                            <br />
-                            <PrototypeSelector />
-                            <PrototypeDescription />
-                        </>
-                    ) : null}
-                    <hr />
-                </>
-            ) : props.mode === PPModes.prototype ? (
-                <>
+                    <PrototypeDisclaimer />
+                    <br />
                     <PrototypeSelector />
                     <PrototypeDescription />
+                    <hr />
                 </>
             ) : null}
 
@@ -217,77 +152,30 @@ export default function PlayerProfile(props: { mode: PPModes }) {
                 <>
                     <table>
                         <tbody>
-                            {Util.isInGame(data) || Util.isPrototype(data) ? (
-                                <>
-                                    <tr>
-                                        <th>Live PP</th>
-                                        <td>{data.prevpptotal.toFixed(2)}</td>
-                                    </tr>
-                                    <tr>
-                                        <th>Local PP</th>
-                                        <td>{data.pptotal.toFixed(2)}</td>
-                                    </tr>
-                                    <tr>
-                                        <th>PP Diff</th>
-                                        <td>
-                                            {(
-                                                data.pptotal - data.prevpptotal
-                                            ).toFixed(2)}
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>Live PP Rank</th>
-                                        <td>#{prevRank}</td>
-                                    </tr>
-                                    <tr>
-                                        <th>Local PP Rank</th>
-                                        <td>#{rank}</td>
-                                    </tr>
-                                    <tr>
-                                        <th>Rank Diff</th>
-                                        <td>
-                                            {(
-                                                rank! - prevRank!
-                                            ).toLocaleString()}
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>Accuracy</th>
-                                        <td>
-                                            {weightedAccuracy?.toFixed(2) || 0}%
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>Last Update</th>
-                                        <td>
-                                            {new Date(
-                                                lastUpdate!
-                                            ).toUTCString()}
-                                        </td>
-                                    </tr>
-                                </>
-                            ) : (
-                                <>
-                                    <tr>
-                                        <th>Total PP</th>
-                                        <td>{data.pptotal.toFixed(2)}</td>
-                                    </tr>
-                                    <tr>
-                                        <th>PP Rank</th>
-                                        <td>#{rank}</td>
-                                    </tr>
-                                    <tr>
-                                        <th>Play Count</th>
-                                        <td>{data.playc}</td>
-                                    </tr>
-                                    <tr>
-                                        <th>Accuracy</th>
-                                        <td>
-                                            {weightedAccuracy?.toFixed(2) || 0}%
-                                        </td>
-                                    </tr>
-                                </>
-                            )}
+                            <tr>
+                                <th>Live PP</th>
+                                <td>{data.prevpptotal.toFixed(2)}</td>
+                            </tr>
+                            <tr>
+                                <th>Local PP</th>
+                                <td>{data.pptotal.toFixed(2)}</td>
+                            </tr>
+                            <tr>
+                                <th>PP Diff</th>
+                                <td>
+                                    {(data.pptotal - data.prevpptotal).toFixed(
+                                        2
+                                    )}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Accuracy</th>
+                                <td>{weightedAccuracy?.toFixed(2) || 0}%</td>
+                            </tr>
+                            <tr>
+                                <th>Last Update</th>
+                                <td>{new Date(lastUpdate!).toUTCString()}</td>
+                            </tr>
                         </tbody>
                     </table>
                     <PlayList data={data.pp} />

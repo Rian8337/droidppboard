@@ -1,12 +1,11 @@
-import { IUserBind, IPrototypePP, IInGamePP } from "app-structures";
+import { IPrototypePP } from "app-structures";
 import { Link } from "react-router-dom";
-import { Util } from "../../Util";
 import "../../styles/table-listing.css";
 import PrototypeSelectorNavigator from "../../hooks/PrototypeSelectorNavigator";
 import { useContext } from "react";
 
 export default function LeaderboardItem(props: {
-    data: IUserBind | IPrototypePP | IInGamePP;
+    data: IPrototypePP;
     page: number;
     index: number;
 }) {
@@ -19,15 +18,7 @@ export default function LeaderboardItem(props: {
             <td>{user.uid}</td>
             <td className="assign-left clickable">
                 <Link
-                    to={`/${
-                        Util.isInGame(user)
-                            ? "ingame/"
-                            : Util.isPrototype(user)
-                            ? "prototype/"
-                            : ""
-                    }profile/${user.uid}${
-                        Util.isPrototype(user) &&
-                        !Util.isInGame(user) &&
+                    to={`/prototype/profile/${user.uid}${
                         prototypeSelectorCtx.currentRework?.type
                             ? `/${prototypeSelectorCtx.currentRework.type}`
                             : ""
@@ -36,15 +27,9 @@ export default function LeaderboardItem(props: {
                     {user.username}
                 </Link>
             </td>
-            <td>
-                {Util.isPrototype(user) || Util.isInGame(user)
-                    ? user.prevpptotal.toFixed(2)
-                    : user.playc}
-            </td>
+            <td>{user.prevpptotal.toFixed(2)}</td>
             <td>{user.pptotal.toFixed(2)}</td>
-            {Util.isPrototype(user) || Util.isInGame(user) ? (
-                <td>{(user.pptotal - user.prevpptotal).toFixed(2)}</td>
-            ) : null}
+            <td>{(user.pptotal - user.prevpptotal).toFixed(2)}</td>
         </tr>
     );
 }

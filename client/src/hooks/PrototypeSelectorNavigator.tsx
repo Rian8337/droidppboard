@@ -22,6 +22,7 @@ export function PrototypeSelectorNavigatorProvider(props: PropsWithChildren) {
     const [reworks, setReworks] = useState<
         readonly Pick<IPrototypePPType, "name" | "type">[]
     >([]);
+
     const [currentRework, setCurrentRework] = useState<
         IPrototypePPType | undefined
     >(defaultRework);

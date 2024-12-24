@@ -11,9 +11,7 @@ export default function Menu() {
         <div className="main-menu">
             <nav>
                 <MenuItem path="/" label="Home" />
-                <MenuItem path="/leaderboard" label="Leaderboard" />
                 <MenuItem path="/whitelist" label="Whitelist" />
-                <MenuItem path="/top-plays" label="Top Plays" />
                 <MenuItem path="/calculate" label="Calculate Beatmap PP" />
                 <MenuItem
                     path={`/prototype/leaderboard/${reworkType}`}
@@ -27,12 +25,6 @@ export default function Menu() {
                     path="/prototype/calculate"
                     label="Calculate Beatmap Prototype PP"
                 />
-                <MenuItem
-                    path="/ingame/leaderboard"
-                    label="In-Game Leaderboard"
-                />
-                <MenuItem path="/ingame/top-plays" label="In-Game Top Plays" />
-                <MenuItem path="/skin/list" label="Player Skins" />
             </nav>
         </div>
     );

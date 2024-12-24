@@ -6,32 +6,12 @@ import Paging from "../Paging";
 import PrototypeDisclaimer from "../PrototypeDisclaimer";
 import { useContext } from "react";
 import PrototypeLeaderboardNavigator from "../../hooks/PrototypeLeaderboardNavigator";
-import MainLeaderboardNavigator from "../../hooks/MainLeaderboardNavigator";
 import "../../styles/main.css";
-import { PPModes } from "../../interfaces/PPModes";
-import { LeaderboardSettings } from "../../interfaces/LeaderboardSettings";
-import InGameLeaderboardNavigator from "../../hooks/InGameLeaderboardNavigator";
-import InGameDescription from "../InGameDescription";
 import PrototypeSelector from "../PrototypeSelector";
 import PrototypeDescription from "../PrototypeDescription";
 
-export default function Leaderboard(props: { mode: PPModes }) {
-    let ctx: LeaderboardSettings;
-
-    switch (props.mode) {
-        case PPModes.live:
-            // eslint-disable-next-line react-hooks/rules-of-hooks
-            ctx = useContext(MainLeaderboardNavigator);
-            break;
-        case PPModes.prototype:
-            // eslint-disable-next-line react-hooks/rules-of-hooks
-            ctx = useContext(PrototypeLeaderboardNavigator);
-            break;
-        case PPModes.inGame:
-            // eslint-disable-next-line react-hooks/rules-of-hooks
-            ctx = useContext(InGameLeaderboardNavigator);
-            break;
-    }
+export default function Leaderboard() {
+    const ctx = useContext(PrototypeLeaderboardNavigator);
 
     return (
         <motion.div
@@ -41,40 +21,17 @@ export default function Leaderboard(props: { mode: PPModes }) {
             transition={{ duration: 0.25 }}
         >
             <Head
-                description="View the rankings of Elaina PP Project."
-                title={`PP Board - ${
-                    props.mode === PPModes.inGame
-                        ? "In-Game "
-                        : props.mode === PPModes.prototype
-                        ? "Prototype "
-                        : ""
-                }Leaderboard`}
+                description="View the rankings of Prototype Droid PP."
+                title="PP Board - Prototype Leaderboard"
             />
 
-            <h2 className="subtitle">
-                Official{" "}
-                {props.mode === PPModes.inGame
-                    ? "In-Game"
-                    : props.mode === PPModes.prototype
-                    ? "Prototype"
-                    : ""}{" "}
-                Player Leaderboard
-            </h2>
+            <h2 className="subtitle">Official Prototype Player Leaderboard</h2>
 
-            {props.mode === PPModes.inGame ? (
-                <>
-                    <InGameDescription />
-                    <hr />
-                </>
-            ) : props.mode === PPModes.prototype ? (
-                <>
-                    <PrototypeDisclaimer />
-                    <br />
-                    <PrototypeSelector />
-                    <PrototypeDescription />
-                    <hr />
-                </>
-            ) : null}
+            <PrototypeDisclaimer />
+            <br />
+            <PrototypeSelector />
+            <PrototypeDescription />
+            <hr />
 
             <h3 className="description">
                 Click/tap on a player&apos;s name to visit their profile page.
@@ -88,7 +45,7 @@ export default function Leaderboard(props: { mode: PPModes }) {
 
             <Paging state={ctx} />
 
-            <LeaderboardTable {...props} />
+            <LeaderboardTable />
 
             {ctx.data.length > 0 && <Paging state={ctx} />}
         </motion.div>
