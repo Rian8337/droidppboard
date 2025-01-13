@@ -350,29 +350,31 @@ export default function MatchHistory() {
             {loading && <p>Loading...</p>}
             {error && <p>{error}</p>}
 
-            <table>
-                <thead>
-                    <tr>
-                        <th>Player</th>
-                        <th>Match Cost</th>
-                    </tr>
-                </thead>
+            {matchCosts.length > 0 && (
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Player</th>
+                            <th>Match Cost</th>
+                        </tr>
+                    </thead>
 
-                <tbody>
-                    {matchCosts.map(([player, cost]) => {
-                        if (cost === 0) {
-                            return null;
-                        }
+                    <tbody>
+                        {matchCosts.map(([player, cost]) => {
+                            if (cost === 0) {
+                                return null;
+                            }
 
-                        return (
-                            <tr key={player}>
-                                <td>{player}</td>
-                                <td>{cost.toFixed(2)}</td>
-                            </tr>
-                        );
-                    })}
-                </tbody>
-            </table>
+                            return (
+                                <tr key={player}>
+                                    <td>{player}</td>
+                                    <td>{cost.toFixed(2)}</td>
+                                </tr>
+                            );
+                        })}
+                    </tbody>
+                </table>
+            )}
 
             <hr />
             <div>{matchHistory.length > 0 && renderHistory}</div>
