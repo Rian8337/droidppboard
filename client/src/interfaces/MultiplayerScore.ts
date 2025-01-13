@@ -27,37 +27,37 @@ export interface MultiplayerScore {
     /**
      * The (numeric) score of this score.
      */
-    readonly score: number;
+    readonly score: string;
 
     /**
      * The accuracy of this score.
      */
-    readonly accuracy: number;
+    readonly accuracy: string;
 
     /**
      * The number of 300s of this score.
      */
-    readonly hit300: number;
+    readonly hit300: string;
 
     /**
      * The number of 100s of this score.
      */
-    readonly hit100: number;
+    readonly hit100: string;
 
     /**
      * The number of 50s of this score.
      */
-    readonly hit50: number;
+    readonly hit50: string;
 
     /**
      * The number of misses of this score.
      */
-    readonly hit0: number;
+    readonly hit0: string;
 
     /**
      * The max combo of this score.
      */
-    readonly max_combo: number;
+    readonly max_combo: string;
 
     /**
      * Whether this user is alive.
