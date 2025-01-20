@@ -23,7 +23,18 @@ export default function Whitelist() {
             />
             <h2 className="subtitle">Whitelisted Beatmaps</h2>
             <h3 className="description">
-                Click/tap on a beatmap&apos;s name to visit its osu!page.
+                <p>
+                    The whitelist system is an artifact of the osu!droid PP
+                    Project before osu!droid version 1.8.
+                </p>
+
+                <p>
+                    Historically, all whitelisted beatmaps were able to give pp.
+                    Treat this as the system's own &quot;approved beatmaps&quot;
+                    list back then.
+                </p>
+
+                <p>Click/tap on a beatmap&apos;s name to visit its osu!page.</p>
             </h3>
             <SearchBar
                 state={ctx}
