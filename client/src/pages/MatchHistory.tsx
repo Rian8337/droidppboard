@@ -4,6 +4,8 @@ import { MultiplayerScore } from "../interfaces/MultiplayerScore";
 import { MultiplayerSession } from "../interfaces/MultiplayerSession";
 import { MultiplayerTeamMode } from "../interfaces/MultiplayerTeamMode";
 import { MultiplayerTeam } from "../interfaces/MultiplayerTeam";
+import Head from "../components/Head";
+import { motion } from "framer-motion";
 
 /**
  * Represents a match session.
@@ -344,7 +346,22 @@ export default function MatchHistory() {
     });
 
     return (
-        <div style={{ width: "70%", marginLeft: "auto", marginRight: "auto" }}>
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            style={{
+                width: "70%",
+                marginLeft: "auto",
+                marginRight: "auto",
+            }}
+        >
+            <Head
+                description={`Match history of room ${matchid}.`}
+                title={`PP Board - Match History - ${matchid}`}
+            />
+
             <h1>Match History (Room ID: {matchid})</h1>
 
             {loading && <p>Loading...</p>}
@@ -378,6 +395,6 @@ export default function MatchHistory() {
 
             <hr />
             <div>{matchHistory.length > 0 && renderHistory}</div>
-        </div>
+        </motion.div>
     );
 }
