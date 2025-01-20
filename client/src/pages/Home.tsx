@@ -14,9 +14,8 @@ export default function Home() {
         >
             <h3>About</h3>
             <p>
-                This is one of my fun project for our small osu!droid Discord
-                community. If you like it consider to support this poor college
-                student uwu
+                This is the center testing ground for the osu!droid PP Project.
+                If you like it consider to support this poor college student uwu
             </p>
             <hr />
             <h3>Relevant Links</h3>
