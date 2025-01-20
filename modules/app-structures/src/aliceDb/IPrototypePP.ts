@@ -5,11 +5,6 @@ import { PrototypePPEntry } from "../structures/PrototypePPEntry";
  */
 export interface IPrototypePP {
     /**
-     * The Discord ID binded to the osu!droid account.
-     */
-    discordid: string;
-
-    /**
      * The epoch time at which the account is last
      * recalculated, in milliseconds.
      */

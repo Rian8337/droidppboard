@@ -121,7 +121,7 @@ export default function LeaderboardTable() {
                     {leaderboardCtx.data.map((v, i) => {
                         return (
                             <LeaderboardItem
-                                key={`${v.discordid}:${
+                                key={`${v.uid}:${
                                     (leaderboardCtx.currentPage - 1) * 50 +
                                     i +
                                     1
