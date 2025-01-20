@@ -116,12 +116,12 @@ export default function PlayerProfile() {
         >
             {data ? (
                 <Head
-                    description={`${data.username}'s prototype profile in Elaina PP Project.`}
+                    description={`${data.username}'s prototype profile in osu!droid PP Project.`}
                     title={`PP Board - ${data.username}`}
                 />
             ) : (
                 <Head
-                    description="A player's prototype profile in Elaina PP Project."
+                    description="A player's prototype profile in osu!droid PP Project."
                     title="PP Board - Prototype Player Profile"
                 />
             )}

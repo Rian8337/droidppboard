@@ -9,7 +9,7 @@ export default function Head(
                 name="description"
                 content={
                     props?.description ??
-                    "Home of the osu!droid Elaina PP Project site."
+                    "Home of the osu!droid PP Project site."
                 }
             />
             <title>{props?.title ?? "PP Board - Home"}</title>

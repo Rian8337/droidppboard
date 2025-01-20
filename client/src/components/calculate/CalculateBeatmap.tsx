@@ -25,7 +25,7 @@ export default function CalculateBeatmap(props: { prototype: boolean }) {
             <Head
                 description={`Calculate a beatmap with respect to ${
                     props.prototype ? "the prototype version of " : ""
-                }Elaina PP Project.`}
+                }osu!droid PP Project.`}
                 title={`PP Board - Calculate Beatmap ${
                     props.prototype ? "Prototype " : ""
                 }PP`}

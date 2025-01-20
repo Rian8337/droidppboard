@@ -18,7 +18,7 @@ export default function Whitelist() {
             transition={{ duration: 0.25 }}
         >
             <Head
-                description="List of whitelisted beatmaps in Elaina PP Project."
+                description="List of whitelisted beatmaps in osu!droid PP Project."
                 title="PP Board - Whitelist"
             />
             <h2 className="subtitle">Whitelisted Beatmaps</h2>
