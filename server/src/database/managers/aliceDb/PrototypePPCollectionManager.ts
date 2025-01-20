@@ -18,7 +18,6 @@ export class PrototypePPCollectionManager extends DatabaseCollectionManager<IPro
             uid: 0,
             username: "",
             scanDone: true,
-            previous_bind: [],
         };
     }
 
@@ -91,7 +90,7 @@ export class PrototypePPCollectionManager extends DatabaseCollectionManager<IPro
      */
     getFromUid(uid: number, reworkType: string): Promise<IPrototypePP | null> {
         return this.getOne(
-            { previous_bind: { $all: [uid] }, reworkType: reworkType },
+            { uid: uid, reworkType: reworkType },
             {
                 projection: {
                     _id: 0,
