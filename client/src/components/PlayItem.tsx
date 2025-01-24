@@ -100,7 +100,8 @@ export default function PlayItem(props: { data: Entry; index: number }) {
                             {typeof play.estimatedSpeedUnstableRate === "number"
                                 ? play.estimatedSpeedUnstableRate.toFixed(2)
                                 : Infinity}{" "}
-                            estimated speed UR |{" "}
+                            estimated speed UR | {play.averageBPM.toFixed(2)}{" "}
+                            calculated average BPM |{" "}
                             {play.speedNoteCount.toFixed(2)} speed note count
                         </p>
                         <p className="play-info">

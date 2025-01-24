@@ -115,4 +115,9 @@ export interface PrototypePPEntry extends PPEntry {
      * Related to tap difficulty.
      */
     speedNoteCount: number;
+
+    /**
+     * The average BPM of this score.
+     */
+    averageBPM: number;
 }
