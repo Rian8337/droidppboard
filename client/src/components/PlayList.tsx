@@ -57,79 +57,124 @@ export default function PlayList(props: {
 
     switch (sortMode) {
         case PlayListSortMode.liveAscending:
-            data.sort((a, b) => a.prevPP - b.prevPP);
-            break;
-
         case PlayListSortMode.liveDescending:
-            data.sort((a, b) => b.prevPP - a.prevPP);
+            data.sort((a, b) => {
+                if (a.prevPP === b.prevPP) {
+                    return a.rank - b.rank;
+                }
+
+                return sortMode === PlayListSortMode.liveAscending
+                    ? a.prevPP - b.prevPP
+                    : b.prevPP - a.prevPP;
+            });
             break;
 
         case PlayListSortMode.localAscending:
-            data.sort((a, b) => a.pp - b.pp);
-            break;
-
         case PlayListSortMode.localDescending:
-            data.sort((a, b) => b.pp - a.pp);
+            data.sort((a, b) => {
+                if (a.pp === b.pp) {
+                    return a.rank - b.rank;
+                }
+
+                return sortMode === PlayListSortMode.localAscending
+                    ? a.pp - b.pp
+                    : b.pp - a.pp;
+            });
             break;
 
         case PlayListSortMode.diffAscending:
-            data.sort((a, b) => a.pp - a.prevPP - (b.pp - b.prevPP));
-            break;
-
         case PlayListSortMode.diffDescending:
-            data.sort((a, b) => b.pp - b.prevPP - (a.pp - a.prevPP));
+            data.sort((a, b) => {
+                const diffA = a.pp - a.prevPP;
+                const diffB = b.pp - b.prevPP;
+
+                if (diffA === diffB) {
+                    return a.rank - b.rank;
+                }
+
+                return sortMode === PlayListSortMode.diffAscending
+                    ? diffA - diffB
+                    : diffB - diffA;
+            });
             break;
 
         case PlayListSortMode.rateAscending:
-            data.sort(
-                (a, b) => (a.speedMultiplier ?? 1) - (b.speedMultiplier ?? 1)
-            );
-            break;
-
         case PlayListSortMode.rateDescending:
-            data.sort(
-                (a, b) => (b.speedMultiplier ?? 1) - (a.speedMultiplier ?? 1)
-            );
+            data.sort((a, b) => {
+                const rateA = a.speedMultiplier ?? 1;
+                const rateB = b.speedMultiplier ?? 1;
+
+                if (rateA === rateB) {
+                    return a.rank - b.rank;
+                }
+
+                return sortMode === PlayListSortMode.rateAscending
+                    ? rateA - rateB
+                    : rateB - rateA;
+            });
             break;
 
         case PlayListSortMode.accuracyAscending:
-            data.sort((a, b) => a.accuracy - b.accuracy);
-            break;
-
         case PlayListSortMode.accuracyDescending:
-            data.sort((a, b) => b.accuracy - a.accuracy);
+            data.sort((a, b) => {
+                if (a.accuracy === b.accuracy) {
+                    return a.rank - b.rank;
+                }
+
+                return sortMode === PlayListSortMode.accuracyAscending
+                    ? a.accuracy - b.accuracy
+                    : b.accuracy - a.accuracy;
+            });
             break;
 
         case PlayListSortMode.comboAscending:
-            data.sort((a, b) => a.combo - b.combo);
-            break;
-
         case PlayListSortMode.comboDescending:
-            data.sort((a, b) => b.combo - a.combo);
+            data.sort((a, b) => {
+                if (a.combo === b.combo) {
+                    return a.rank - b.rank;
+                }
+
+                return a.combo - b.combo;
+            });
             break;
 
         case PlayListSortMode.hit100Ascending:
-            data.sort((a, b) => a.hit100 - b.hit100);
-            break;
-
         case PlayListSortMode.hit100Descending:
-            data.sort((a, b) => b.hit100 - a.hit100);
+            data.sort((a, b) => {
+                if (a.hit100 === b.hit100) {
+                    return a.rank - b.rank;
+                }
+
+                return sortMode === PlayListSortMode.hit100Ascending
+                    ? a.hit100 - b.hit100
+                    : b.hit100 - a.hit100;
+            });
             break;
 
         case PlayListSortMode.hit50Ascending:
-            data.sort((a, b) => a.hit50 - b.hit50);
-            break;
-
         case PlayListSortMode.hit50Descending:
-            data.sort((a, b) => b.hit50 - a.hit50);
+            data.sort((a, b) => {
+                if (a.hit50 === b.hit50) {
+                    return a.rank - b.rank;
+                }
+
+                return sortMode === PlayListSortMode.hit50Ascending
+                    ? a.hit50 - b.hit50
+                    : b.hit50 - a.hit50;
+            });
             break;
 
         case PlayListSortMode.missAscending:
-            data.sort((a, b) => a.miss - b.miss);
-            break;
-
         case PlayListSortMode.missDescending:
-            data.sort((a, b) => b.miss - a.miss);
+            data.sort((a, b) => {
+                if (a.miss === b.miss) {
+                    return a.rank - b.rank;
+                }
+
+                return sortMode === PlayListSortMode.missAscending
+                    ? a.miss - b.miss
+                    : b.miss - a.miss;
+            });
             break;
     }
 
