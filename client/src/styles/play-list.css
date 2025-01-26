@@ -1,7 +1,7 @@
 .play-list-container {
     width: max(1000px, 100%);
-    overflow-x: auto;
-    overflow-y: auto;
+    overflow-x: scroll;
+    overflow-y: scroll;
     max-height: 60vh;
 }
 
