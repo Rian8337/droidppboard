@@ -127,13 +127,11 @@ export default function TopPlays() {
                 </h3>
             ) : null}
 
-            {topPlayCtx.isSearchReady ? (
-                <SearchBar
-                    state={topPlayCtx}
-                    searchPlaceholder="Filter mods..."
-                    submitPlaceholder="Filter"
-                />
-            ) : null}
+            <SearchBar
+                state={topPlayCtx}
+                searchPlaceholder="Filter mods..."
+                submitPlaceholder="Filter"
+            />
 
             {topPlayCtx.data.length > 0 ? (
                 <PlayList data={topPlayCtx.data} />
