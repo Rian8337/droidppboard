@@ -1,12 +1,12 @@
 .play-list-container {
-    width: max(1000px, 100%);
-    overflow-x: scroll;
-    overflow-y: scroll;
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: auto;
     max-height: 60vh;
 }
 
 .play-list-table {
-    width: 100%;
+    max-width: 100%;
     margin: 0;
 }
 

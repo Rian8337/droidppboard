@@ -44,12 +44,13 @@ export default function PlayList(props: {
                     }
                 }}
             >
-                {name}
-                {sortMode === ascendSort ? (
-                    <b> ↑</b>
-                ) : sortMode === descendSort ? (
-                    <b> ↓</b>
-                ) : null}
+                {`${name}${
+                    sortMode === ascendSort
+                        ? " ↑"
+                        : sortMode === descendSort
+                        ? " ↓"
+                        : ""
+                }`}
             </th>
         );
     };
@@ -139,14 +140,14 @@ export default function PlayList(props: {
                     <tr>
                         {generateHead(
                             "Rank",
-                            4,
+                            5,
                             PlayListSortMode.localAscending,
                             PlayListSortMode.localDescending
                         )}
 
                         {topEntries && generateHead("Player", 10)}
 
-                        {generateHead("Beatmap Name", 46)}
+                        {generateHead("Beatmap Name", 45)}
 
                         {generateHead(
                             "Live",
