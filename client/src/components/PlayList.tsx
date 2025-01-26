@@ -192,7 +192,7 @@ export default function PlayList(props: {
 
                         {topEntries && generateHead("Player", 10)}
 
-                        {generateHead("Beatmap Name", 45)}
+                        {generateHead("Beatmap Name", 50)}
 
                         {generateHead(
                             "Live",
@@ -244,21 +244,21 @@ export default function PlayList(props: {
                             <>
                                 {generateHead(
                                     "100",
-                                    5,
+                                    3,
                                     PlayListSortMode.hit100Ascending,
                                     PlayListSortMode.hit100Descending
                                 )}
 
                                 {generateHead(
                                     "50",
-                                    5,
+                                    3,
                                     PlayListSortMode.hit50Ascending,
                                     PlayListSortMode.hit50Descending
                                 )}
 
                                 {generateHead(
                                     "Miss",
-                                    5,
+                                    4,
                                     PlayListSortMode.missAscending,
                                     PlayListSortMode.missDescending
                                 )}
