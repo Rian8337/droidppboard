@@ -1,87 +1,23 @@
 .play-list-container {
-    display: flex;
-    justify-content: center;
+    width: max(1000px, 100%);
+    overflow-x: auto;
+    overflow-y: auto;
+    max-height: 60vh;
 }
 
-.play-list {
-    padding-inline-start: 0;
-    margin-block-start: 0;
-    margin-block-end: 0;
-}
-
-.play-item {
+.play-list-table {
     width: 100%;
-    max-width: 1000px;
-    font: 14px Exo-Bold;
-    margin-top: 4px;
-    list-style-type: none;
-    border: 1px solid pink;
-    border-bottom: 5px solid pink;
-    border-top-left-radius: 5px;
-    border-top-right-radius: 5px;
-    border-bottom-left-radius: 5px;
-    border-bottom-right-radius: 5px;
-}
-
-.play-item-container {
-    padding: 8px;
-    padding-bottom: 5px;
-}
-
-.play-item p.title {
     margin: 0;
-    white-space: normal;
-    width: 100%;
 }
 
-.play-item span.title-note {
-    font: 11px Exo-Medium;
+.play-list-table > thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background-color: rgb(22, 22, 22);
 }
 
-.play-item p.play-info {
-    font: 12px Exo-Medium;
-}
-
-.play-item p.pp-without-description {
-    position: relative;
-    float: right;
-    bottom: 33px;
-    max-width: calc(100% - 10px);
-    font: 15px Exo-Bold;
-}
-
-.play-item p.pp-with-description {
-    position: relative;
-    float: right;
-    bottom: 50px;
-    max-width: calc(100% - 10px);
-    font: 15px Exo-Bold;
-}
-
-.play-item p.pp-description {
-    clear: both;
-    position: relative;
-    float: right;
-    bottom: 75px;
-    max-width: calc(100% - 10px);
-    font: 11px Exo-Medium;
-}
-
-.play-item .mod-list {
-    text-align: left;
-    position: relative;
-    max-width: 50%;
-    overflow: auto;
-}
-
-.mod-image {
-    width: 33px;
-    height: 21px;
-}
-
-.play-item .prototype-mod-list {
-    text-align: left;
-    position: relative;
-    max-width: 40%;
-    overflow: auto;
+.play-item > td {
+    padding-top: 1em;
+    padding-bottom: 1em;
 }
