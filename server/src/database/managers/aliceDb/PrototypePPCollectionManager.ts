@@ -9,7 +9,6 @@ import { DatabaseCollectionManager } from "../DatabaseCollectionManager";
 export class PrototypePPCollectionManager extends DatabaseCollectionManager<IPrototypePP> {
     override get defaultDocument(): IPrototypePP {
         return {
-            discordid: "",
             lastUpdate: Date.now(),
             pp: [],
             pptotal: 0,
