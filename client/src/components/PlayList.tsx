@@ -192,7 +192,7 @@ export default function PlayList(props: {
 
                         {topEntries && generateHead("Player", 10)}
 
-                        {generateHead("Beatmap Name", 50)}
+                        {generateHead("Beatmap Name", topEntries ? 50 : 55)}
 
                         {generateHead(
                             "Live",
