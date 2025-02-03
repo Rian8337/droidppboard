@@ -217,6 +217,7 @@ export default function CalculationForm(props: { prototype: boolean }) {
                 placeholder="Insert force OD..."
                 defaultValue={ctx.params?.forceod || ""}
             />
+            <input type="hidden" name="generatestrainchart" value="1" />
             <br />
             <input
                 className="submit"
