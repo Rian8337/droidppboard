@@ -27,7 +27,7 @@ import { DPPProcessorCalculationResponse } from "../../../structures/difficultya
 
 const router = Router();
 
-router.use(Util.createRateLimit(1, 5000));
+router.use(Util.createRateLimit(5, 1000));
 
 router.post("/", async (req, res) => {
     let osuFile = "";
@@ -122,6 +122,10 @@ router.post("/", async (req, res) => {
         mods.reduce((a, v) => a + v.acronym, ""),
     );
     formData.set("customspeedmultiplier", customSpeedMultiplier.toString());
+
+    if (req.body.generatestrainchart) {
+        formData.set("generatestrainchart", "1");
+    }
 
     if (difficultyAdjustMod?.cs !== undefined) {
         formData.set("forcecs", difficultyAdjustMod.cs.toString());
