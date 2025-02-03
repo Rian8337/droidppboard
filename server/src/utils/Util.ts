@@ -215,7 +215,9 @@ export abstract class Util {
      */
     static async downloadBeatmap(beatmapId: number): Promise<string> {
         try {
-            const res = await fetch(`https://osu.ppy.sh/osu/${beatmapId}`);
+            const res = await fetch(
+                `http://localhost:3017/api/beatmap/getbeatmapfile?key=${process.env.DROID_SERVER_INTERNAL_KEY}?id=${beatmapId}`,
+            );
 
             return res.text();
         } catch {
