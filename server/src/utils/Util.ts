@@ -216,8 +216,12 @@ export abstract class Util {
     static async downloadBeatmap(beatmapId: number): Promise<string> {
         try {
             const res = await fetch(
-                `http://localhost:3017/api/beatmap/getbeatmapfile?key=${process.env.DROID_SERVER_INTERNAL_KEY}?id=${beatmapId}`,
+                `http://localhost:3017/api/beatmap/getbeatmapfile?key=${process.env.DROID_SERVER_INTERNAL_KEY}&id=${beatmapId}`,
             );
+
+            if (!res.ok) {
+                return "";
+            }
 
             return res.text();
         } catch {
