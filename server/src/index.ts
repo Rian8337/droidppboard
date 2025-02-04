@@ -12,8 +12,15 @@ import { config } from "dotenv";
 import { resolve } from "path";
 import { Util } from "./utils/Util";
 import { DatabaseManager } from "./database/managers/DatabaseManager";
+import {
+    DroidAPIRequestBuilder,
+    OsuAPIRequestBuilder,
+} from "@rian8337/osu-base";
 
 config();
+
+DroidAPIRequestBuilder.setAPIKey(process.env.DROID_API_KEY!);
+OsuAPIRequestBuilder.setAPIKey(process.env.OSU_API_KEY!);
 
 //#region App configuration
 
