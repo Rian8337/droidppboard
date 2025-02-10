@@ -134,7 +134,9 @@ export default function PlayList(props: {
                     return a.rank - b.rank;
                 }
 
-                return a.combo - b.combo;
+                return sortMode === PlayListSortMode.comboAscending
+                    ? a.combo - b.combo
+                    : b.combo - a.combo;
             });
             break;
 
