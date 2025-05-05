@@ -6,6 +6,7 @@ import {
     BeatmapDecoder,
     BeatmapDifficulty,
     MathUtils,
+    ModCustomSpeed,
     ModDifficultyAdjust,
     ModUtil,
     Modes,
@@ -68,26 +69,24 @@ router.post("/", async (req, res) => {
         MathUtils.clamp(parseFloat(req.body.accuracy), 0, 100) || 100;
     const miss = Math.max(0, parseInt(req.body.misses)) || 0;
 
-    let difficultyAdjustMod: ModDifficultyAdjust | undefined;
-
     if (
         [req.body.forcecs, req.body.forcear, req.body.forceod].some(
             (v) => typeof v === "string" && v.length > 0,
         )
     ) {
-        difficultyAdjustMod = new ModDifficultyAdjust({
-            cs:
-                MathUtils.clamp(parseFloat(req.body.forcecs), 0, 15) ||
-                undefined,
-            ar:
-                MathUtils.clamp(parseFloat(req.body.forcear), 0, 12.5) ||
-                undefined,
-            od:
-                MathUtils.clamp(parseFloat(req.body.forceod), 0, 12.5) ||
-                undefined,
-        });
-
-        mods.push(difficultyAdjustMod);
+        mods.set(
+            new ModDifficultyAdjust({
+                cs:
+                    MathUtils.clamp(parseFloat(req.body.forcecs), 0, 15) ||
+                    undefined,
+                ar:
+                    MathUtils.clamp(parseFloat(req.body.forcear), 0, 12.5) ||
+                    undefined,
+                od:
+                    MathUtils.clamp(parseFloat(req.body.forceod), 0, 12.5) ||
+                    undefined,
+            }),
+        );
     }
 
     const isPrototype = Util.requestIsPrototype(req);
@@ -102,13 +101,17 @@ router.post("/", async (req, res) => {
         0.5,
         2,
     );
+
+    if (customSpeedMultiplier !== 1) {
+        mods.set(new ModCustomSpeed(customSpeedMultiplier));
+    }
+
     const beatmapDifficulty = new BeatmapDifficulty(parsedBeatmap.difficulty);
 
     ModUtil.applyModsToBeatmapDifficulty(
         beatmapDifficulty,
         Modes.droid,
         mods,
-        customSpeedMultiplier,
         true,
     );
 
@@ -117,24 +120,10 @@ router.post("/", async (req, res) => {
     formData.set("key", process.env.DROID_SERVER_INTERNAL_KEY!);
     formData.set("gamemode", Modes.droid);
     formData.set("calculationmethod", isPrototype ? "1" : "0");
-    formData.set(
-        "mods",
-        mods.reduce((a, v) => a + v.acronym, ""),
-    );
-    formData.set("customspeedmultiplier", customSpeedMultiplier.toString());
+    formData.set("mods", JSON.stringify(mods.serializeMods()));
 
     if (req.body.generatestrainchart) {
         formData.set("generatestrainchart", "1");
-    }
-
-    if (difficultyAdjustMod?.cs !== undefined) {
-        formData.set("forcecs", difficultyAdjustMod.cs.toString());
-    }
-    if (difficultyAdjustMod?.ar !== undefined) {
-        formData.set("forcear", difficultyAdjustMod.ar.toString());
-    }
-    if (difficultyAdjustMod?.od !== undefined) {
-        formData.set("forceod", difficultyAdjustMod.od.toString());
     }
 
     const realAcc = new Accuracy({

@@ -1,3 +1,5 @@
+import { SerializedMod } from "./SerializedMod";
+
 /**
  * Represents a droid performance points (dpp) entry.
  */
@@ -25,7 +27,7 @@ export interface PPEntry {
     /**
      * The modifications that are applied in the score.
      */
-    mods: string;
+    mods: SerializedMod[];
 
     /**
      * The accuracy achieved in the score.

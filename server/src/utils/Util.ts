@@ -171,27 +171,28 @@ export abstract class Util {
 
                         reworkTypeMap.get("")!.push(topEntry);
 
-                        const droidMods =
-                            [
-                                ...ModUtil.pcStringToMods(ppEntry.mods).reduce(
-                                    (a, v) => {
-                                        if (!v.isApplicableToDroid()) {
-                                            return a;
-                                        }
+                        const convertedMods = ModUtil.deserializeMods(
+                            topEntry.mods,
+                        );
 
-                                        return a + v.droidString;
-                                    },
-                                    "",
-                                ),
-                            ]
+                        const droidMods: string[] = [];
+
+                        for (const mod of convertedMods.values()) {
+                            if (mod.isApplicableToDroid()) {
+                                droidMods.push(mod.acronym);
+                            }
+                        }
+
+                        const modString =
+                            droidMods
                                 .sort((a, b) => a.localeCompare(b))
                                 .join("") || "-";
 
-                        const playList = reworkTypeMap.get(droidMods) ?? [];
+                        const playList = reworkTypeMap.get(modString) ?? [];
 
                         playList.push(topEntry);
 
-                        reworkTypeMap.set(droidMods, playList);
+                        reworkTypeMap.set(modString, playList);
                     }
                 }
 

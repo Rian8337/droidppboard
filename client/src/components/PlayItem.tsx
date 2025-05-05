@@ -24,7 +24,7 @@ export default function PlayItem(props: {
             <td>{data.prevPP.toFixed(2)}</td>
             <td>{data.pp.toFixed(2)}</td>
             <td>{(data.pp - data.prevPP).toFixed(2)}</td>
-            <td>{data.mods || "NM"}</td>
+            <td>{data.mods.map((m) => m.acronym).join("")}</td>
             <td>{data.speedMultiplier ?? 1}</td>
             <td>{data.accuracy}</td>
             <td>{data.combo}</td>

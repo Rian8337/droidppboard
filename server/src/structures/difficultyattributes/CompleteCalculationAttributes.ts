@@ -1,4 +1,4 @@
-import { CacheableDifficultyAttributes } from "./CacheableDifficultyAttributes";
+import { CacheableDifficultyAttributes } from "@rian8337/osu-difficulty-calculator";
 import { PerformanceAttributes } from "./PerformanceAttributes";
 import { RawDifficultyAttributes } from "./RawDifficultyAttributes";
 
@@ -7,7 +7,7 @@ import { RawDifficultyAttributes } from "./RawDifficultyAttributes";
  */
 export interface CompleteCalculationAttributes<
     TDiffAttr extends RawDifficultyAttributes,
-    TPerfAttr extends PerformanceAttributes
+    TPerfAttr extends PerformanceAttributes,
 > {
     /**
      * The difficulty attributes.
