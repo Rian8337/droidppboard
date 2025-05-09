@@ -21,37 +21,21 @@ router.get<
     const mod = req.query.mods ?? "";
     const type = req.query.type ?? "overall";
 
-    const convertedMods = ModUtil.pcStringToMods(
-        mod.toLowerCase() !== "nm" ? mod : "",
-    );
-    const droidMods: string[] = [];
-
-    for (const mod of convertedMods.values()) {
-        if (mod.isApplicableToDroid()) {
-            droidMods.push(mod.acronym);
-        }
-    }
-
-    const modString =
-        droidMods.sort((a, b) => a.localeCompare(b)).join("") || "-";
+    const convertedMods =
+        mod.length > 0 && mod.toLowerCase() !== "nm"
+            ? ModUtil.pcStringToMods(mod)
+            : undefined;
 
     const reworks =
         await DatabaseManager.aliceDb.collections.prototypePPType.get(
             {},
             { projection: { _id: 0, name: 1, type: 1 } },
         );
-    const currentRework =
-        await DatabaseManager.aliceDb.collections.prototypePPType.getOne(
-            {
-                type: type,
-            },
-            { projection: { _id: 0 } },
-        );
 
     const response: PrototypeLeaderboardResponse<TopPrototypePPEntry> = {
         reworks: reworks,
-        currentRework: currentRework ?? undefined,
-        data: Util.topPrototypePPList.get(type)?.get(modString) ?? [],
+        currentRework: reworks.find((r) => r.type === type),
+        data: Util.getTopPrototypePP(type, convertedMods) ?? [],
     };
 
     res.json(response);

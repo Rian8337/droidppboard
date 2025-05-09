@@ -8,7 +8,6 @@ export * from "./structures/PPEntry";
 export * from "./structures/PrototypeLeaderboardResponse";
 export * from "./structures/PrototypePPEntry";
 export * from "./structures/RecalculationProgress";
-export * from "./structures/SerializedMod";
 export * from "./structures/SkinPreview";
 export * from "./structures/SkinPreviewData";
 export * from "./structures/SkinPreviewType";

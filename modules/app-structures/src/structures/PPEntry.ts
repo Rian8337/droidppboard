@@ -1,4 +1,4 @@
-import { SerializedMod } from "./SerializedMod";
+import { SerializedMod } from "@rian8337/osu-base";
 
 /**
  * Represents a droid performance points (dpp) entry.
@@ -43,29 +43,4 @@ export interface PPEntry {
      * The ID of the score inside osu!droid game database.
      */
     scoreID?: number;
-
-    /**
-     * The force CS used in the score.
-     */
-    forceCS?: number;
-
-    /**
-     * The force AR used in the score.
-     */
-    forceAR?: number;
-
-    /**
-     * The force OD used in the score.
-     */
-    forceOD?: number;
-
-    /**
-     * The force HP used in the score.
-     */
-    forceHP?: number;
-
-    /**
-     * The custom speed multiplier used in the score.
-     */
-    speedMultiplier?: number;
 }

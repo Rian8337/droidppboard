@@ -82,6 +82,58 @@ export default function PlayList(props: {
             });
             break;
 
+        case PlayListSortMode.aimPPAscending:
+        case PlayListSortMode.aimPPDescending:
+            data.sort((a, b) => {
+                if (a.newAim === b.newAim) {
+                    return a.rank - b.rank;
+                }
+
+                return sortMode === PlayListSortMode.aimPPAscending
+                    ? a.newAim - b.newAim
+                    : b.newAim - a.newAim;
+            });
+            break;
+
+        case PlayListSortMode.tapPPAscending:
+        case PlayListSortMode.tapPPDescending:
+            data.sort((a, b) => {
+                if (a.newTap === b.newTap) {
+                    return a.rank - b.rank;
+                }
+
+                return sortMode === PlayListSortMode.tapPPAscending
+                    ? a.newTap - b.newTap
+                    : b.newTap - a.newTap;
+            });
+            break;
+
+        case PlayListSortMode.accPPAscending:
+        case PlayListSortMode.accPPDescending:
+            data.sort((a, b) => {
+                if (a.newAccuracy === b.newAccuracy) {
+                    return a.rank - b.rank;
+                }
+
+                return sortMode === PlayListSortMode.accPPAscending
+                    ? a.newAccuracy - b.newAccuracy
+                    : b.newAccuracy - a.newAccuracy;
+            });
+            break;
+
+        case PlayListSortMode.visualPPAscending:
+        case PlayListSortMode.visualPPDescending:
+            data.sort((a, b) => {
+                if (a.newVisual === b.newVisual) {
+                    return a.rank - b.rank;
+                }
+
+                return sortMode === PlayListSortMode.visualPPAscending
+                    ? a.newVisual - b.newVisual
+                    : b.newVisual - a.newVisual;
+            });
+            break;
+
         case PlayListSortMode.diffAscending:
         case PlayListSortMode.diffDescending:
             data.sort((a, b) => {
@@ -95,22 +147,6 @@ export default function PlayList(props: {
                 return sortMode === PlayListSortMode.diffAscending
                     ? diffA - diffB
                     : diffB - diffA;
-            });
-            break;
-
-        case PlayListSortMode.rateAscending:
-        case PlayListSortMode.rateDescending:
-            data.sort((a, b) => {
-                const rateA = a.speedMultiplier ?? 1;
-                const rateB = b.speedMultiplier ?? 1;
-
-                if (rateA === rateB) {
-                    return a.rank - b.rank;
-                }
-
-                return sortMode === PlayListSortMode.rateAscending
-                    ? rateA - rateB
-                    : rateB - rateA;
             });
             break;
 
@@ -194,7 +230,7 @@ export default function PlayList(props: {
 
                         {topEntries && generateHead("Player", 10)}
 
-                        {generateHead("Beatmap Name", topEntries ? 50 : 55)}
+                        {generateHead("Beatmap Name", topEntries ? 30 : 35)}
 
                         {generateHead(
                             "Live",
@@ -211,20 +247,41 @@ export default function PlayList(props: {
                         )}
 
                         {generateHead(
+                            "Aim pp",
+                            5,
+                            PlayListSortMode.aimPPAscending,
+                            PlayListSortMode.aimPPDescending
+                        )}
+
+                        {generateHead(
+                            "Tap pp",
+                            5,
+                            PlayListSortMode.tapPPAscending,
+                            PlayListSortMode.tapPPDescending
+                        )}
+
+                        {generateHead(
+                            "Acc pp",
+                            5,
+                            PlayListSortMode.accPPAscending,
+                            PlayListSortMode.accPPDescending
+                        )}
+
+                        {generateHead(
+                            "Vis pp",
+                            5,
+                            PlayListSortMode.visualPPAscending,
+                            PlayListSortMode.visualPPDescending
+                        )}
+
+                        {generateHead(
                             "Diff.",
                             4,
                             PlayListSortMode.diffAscending,
                             PlayListSortMode.diffDescending
                         )}
 
-                        {generateHead("Mods", 5)}
-
-                        {generateHead(
-                            "Rate",
-                            5,
-                            PlayListSortMode.rateAscending,
-                            PlayListSortMode.rateDescending
-                        )}
+                        {generateHead("Mods", 10)}
 
                         {generateHead(
                             "Accuracy",

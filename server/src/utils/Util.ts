@@ -1,7 +1,7 @@
 import { TopPrototypePPEntry } from "app-structures";
 import { Request, RequestHandler } from "express";
 import rateLimit from "express-rate-limit";
-import { ModUtil } from "@rian8337/osu-base";
+import { ModMap, ModUtil } from "@rian8337/osu-base";
 import { join } from "path";
 import { ReadStream } from "fs";
 import { DatabaseManager } from "../database/managers/DatabaseManager";
@@ -16,12 +16,17 @@ export type Comparison = "<=" | "<" | "=" | ">" | ">=";
  */
 export abstract class Util {
     /**
+     * List of all top prototype plays from all players, regardless of rework type.
+     */
+    static readonly allTopEntries: TopPrototypePPEntry[] = [];
+
+    /**
      * List of top prototype plays from all players, mapped by rework type, and each map inside the
      * rework type mapped by droid mod string that's sorted alphabetically.
      */
-    static readonly topPrototypePPList = new Map<
+    private static readonly topPrototypePPList = new Map<
         string,
-        Map<string, TopPrototypePPEntry[]>
+        Map<ModMap, TopPrototypePPEntry[]>
     >();
 
     /**
@@ -152,10 +157,7 @@ export abstract class Util {
                     if (!this.topPrototypePPList.has(player.reworkType)) {
                         this.topPrototypePPList.set(
                             player.reworkType,
-                            new Map<string, TopPrototypePPEntry[]>().set(
-                                "",
-                                [],
-                            ),
+                            new Map<ModMap, TopPrototypePPEntry[]>(),
                         );
                     }
 
@@ -169,32 +171,28 @@ export abstract class Util {
                             username: player.username,
                         };
 
-                        reworkTypeMap.get("")!.push(topEntry);
+                        this.allTopEntries.push(topEntry);
 
                         const convertedMods = ModUtil.deserializeMods(
                             topEntry.mods,
                         );
 
-                        const droidMods: string[] = [];
+                        let entries = this.getTopPrototypePP(
+                            player.reworkType,
+                            convertedMods,
+                        );
 
-                        for (const mod of convertedMods.values()) {
-                            if (mod.isApplicableToDroid()) {
-                                droidMods.push(mod.acronym);
-                            }
+                        if (entries === null) {
+                            entries = [];
+                            reworkTypeMap.set(convertedMods, entries);
                         }
 
-                        const modString =
-                            droidMods
-                                .sort((a, b) => a.localeCompare(b))
-                                .join("") || "-";
-
-                        const playList = reworkTypeMap.get(modString) ?? [];
-
-                        playList.push(topEntry);
-
-                        reworkTypeMap.set(modString, playList);
+                        entries.push(topEntry);
                     }
                 }
+
+                this.allTopEntries.sort((a, b) => b.pp - a.pp);
+                this.allTopEntries.splice(100);
 
                 for (const rework of this.topPrototypePPList.values()) {
                     for (const plays of rework.values()) {
@@ -207,6 +205,29 @@ export abstract class Util {
             .finally(() => {
                 setTimeout(() => this.refreshPrototypeTopPP(), 1800 * 1000);
             });
+    }
+
+    static getTopPrototypePP(
+        type: string,
+        mods?: ModMap,
+    ): TopPrototypePPEntry[] | null {
+        if (!mods) {
+            return this.allTopEntries;
+        }
+
+        const rework = this.topPrototypePPList.get(type);
+
+        if (!rework) {
+            return [];
+        }
+
+        for (const [map, entries] of rework) {
+            if (map.equals(mods)) {
+                return entries;
+            }
+        }
+
+        return null;
     }
 
     /**
