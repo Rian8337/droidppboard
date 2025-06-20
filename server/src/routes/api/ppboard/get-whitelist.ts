@@ -179,6 +179,7 @@ router.get<
         sort.hasOwnProperty("diffstat.bpm") ||
         sort.hasOwnProperty("_id")
     ) {
+        //@ts-expect-error: Unneeded property
         delete sort["mapname"];
     }
 
