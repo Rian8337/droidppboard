@@ -48,8 +48,7 @@ export default function PlayItem(props: {
             <td>{(data.pp - data.prevPP).toFixed(2)}</td>
             <td>
                 {ModUtil.modsToOrderedString(
-                    ModUtil.deserializeMods(data.mods),
-                    false
+                    ModUtil.deserializeMods(data.mods)
                 )}
             </td>
             <td>{data.accuracy}</td>
