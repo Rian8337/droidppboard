@@ -1,3 +1,4 @@
+import { SerializedMod } from "@rian8337/osu-base";
 import { MultiplayerTeam } from "./MultiplayerTeam";
 
 /**
@@ -72,5 +73,5 @@ export interface MultiplayerScore {
     /**
      * The play mod of this score.
      */
-    readonly play_mod: string;
+    readonly play_mod: SerializedMod[];
 }

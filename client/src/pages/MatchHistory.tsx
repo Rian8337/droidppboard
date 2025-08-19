@@ -6,6 +6,7 @@ import { MultiplayerTeamMode } from "../interfaces/MultiplayerTeamMode";
 import { MultiplayerTeam } from "../interfaces/MultiplayerTeam";
 import Head from "../components/Head";
 import { motion } from "framer-motion";
+import { ModUtil } from "@rian8337/osu-base";
 
 /**
  * Represents a match session.
@@ -24,113 +25,6 @@ const WinCondition = ["Score", "Accuracy", "Combo", "Score V2"] as const;
 // function to format a string to a number with commas
 function formatNumber(num: number | string) {
     return num.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,");
-}
-
-// convert modstring to mod array
-// r = HR
-// h = HD
-// e = EZ
-// d = DT
-// n = NC
-// t = HT
-// v = V2
-// s = PR
-// m = SC
-// l = RE
-// f = PF
-// u = SD
-// i = FL
-// x = RX
-// p = AP
-// speed multiplier and force ar splitted by | , speed multiplier start with x and force ar start with ar
-// example: rd|x1.1,AR10.3 -> HRDT, x1.1, AR10.3
-function convertModString(modstring: string) {
-    const [droidMods, customStatsString]: string[] = modstring.split("|");
-    let finalStr = "";
-
-    // convert mods
-    for (const m of droidMods) {
-        switch (m) {
-            case "r":
-                finalStr += "HR";
-                break;
-            case "h":
-                finalStr += "HD";
-                break;
-            case "e":
-                finalStr += "EZ";
-                break;
-            case "d":
-                finalStr += "DT";
-                break;
-            case "n":
-                finalStr += "NC";
-                break;
-            case "t":
-                finalStr += "HT";
-                break;
-            case "v":
-                finalStr += "V2";
-                break;
-            case "s":
-                finalStr += "PR";
-                break;
-            case "m":
-                finalStr += "SC";
-                break;
-            case "l":
-                finalStr += "RE";
-                break;
-            case "f":
-                finalStr += "PF";
-                break;
-            case "u":
-                finalStr += "SD";
-                break;
-            case "i":
-                finalStr += "FL";
-                break;
-            case "x":
-                finalStr += "RX";
-                break;
-            case "p":
-                finalStr += "AP";
-                break;
-        }
-    }
-
-    // process custom stats and speed multiplier
-    if (customStatsString) {
-        const customStats: string[] = [];
-        for (const s of customStatsString) {
-            if (!s) {
-                continue;
-            }
-
-            switch (true) {
-                // Forced stats
-                case s.startsWith("CS"):
-                case s.startsWith("AR"):
-                case s.startsWith("OD"):
-                case s.startsWith("HP"):
-                // FL follow delay
-                // eslint-disable-next-line no-fallthrough
-                case s.startsWith("FLD"):
-                    customStats.push(s);
-                    break;
-                // Speed multiplier
-                case s.startsWith("x"):
-                    customStats.push(`${s.replace("x", "")}x`);
-                    break;
-            }
-        }
-
-        if (customStats.length > 0) {
-            finalStr += ` (${customStats.join(", ")})`;
-        }
-    }
-
-    return finalStr;
 }
 
 export default function MatchHistory() {
@@ -296,7 +190,9 @@ export default function MatchHistory() {
                                 {score.is_alive ? "" : "(FAILED)"}
                             </td>
                             <td style={{ width: "10%" }}>
-                                {convertModString(score.play_mod)}
+                                {ModUtil.modsToOrderedString(
+                                    ModUtil.deserializeMods(score.play_mod)
+                                )}
                             </td>
                             <td
                                 style={{
