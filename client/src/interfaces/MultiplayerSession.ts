@@ -44,9 +44,4 @@ export interface MultiplayerSession {
      * Whether the remove slider lock setting was enabled.
      */
     readonly remove_slider_lock: boolean;
-
-    /**
-     * Whether players were allowed to place more than three cursors at once during gameplay.
-     */
-    readonly extra_three_cursors: boolean;
 }

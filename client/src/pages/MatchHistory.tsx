@@ -227,9 +227,7 @@ export default function MatchHistory() {
                 <p>
                     {TeamMode[session.team_mode] || "Unknown"} - Win Condition:{" "}
                     {WinCondition[session.win_condition] || "Unknown"} - Remove
-                    Slider Lock: {session.remove_slider_lock ? "Yes" : "No"} -
-                    Allow more than three cursors:{" "}
-                    {session.extra_three_cursors ? "Yes" : "No"}
+                    Slider Lock: {session.remove_slider_lock ? "Yes" : "No"}
                 </p>
                 <p>Played at: {new Date(session.start_time).toString()}</p>
                 <hr></hr>
