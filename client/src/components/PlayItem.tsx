@@ -52,7 +52,7 @@ export default function PlayItem(props: {
                     ModUtil.deserializeMods(data.mods)
                 )}
             </td>
-            <td>{data.accuracy}</td>
+            <td>{data.accuracy.toFixed(2)}</td>
             <td>{data.combo}</td>
 
             {topEntry ? (

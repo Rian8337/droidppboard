@@ -4,7 +4,6 @@ import {
     ModMap,
     ModPrecise,
     ModUtil,
-    OsuHitWindow,
     PreciseDroidHitWindow,
 } from "@rian8337/osu-base";
 import { PrototypePPEntry, TopPrototypePPEntry } from "app-structures";
@@ -18,6 +17,36 @@ const areTopEntries = (
 ): data is TopPrototypePPEntry[] => {
     return (data[0] as TopPrototypePPEntry).username !== undefined;
 };
+
+function DetailedEntryRow(props: {
+    name: string;
+    value: JSX.Element | number | string;
+}) {
+    return (
+        <tr>
+            <th>{props.name}</th>
+            <td>{props.value}</td>
+        </tr>
+    );
+}
+
+function DetailedEntryPrevNewRow(props: {
+    name: string;
+    prevValue: number;
+    newValue: number;
+}) {
+    return (
+        <DetailedEntryRow
+            name={props.name}
+            value={
+                <>
+                    {props.prevValue.toFixed(2)} → {props.newValue.toFixed(2)} (
+                    {(props.newValue - props.prevValue).toFixed(2)})
+                </>
+            }
+        />
+    );
+}
 
 export default function PlayList(props: {
     data: PrototypePPEntry[] | TopPrototypePPEntry[];
@@ -244,31 +273,19 @@ export default function PlayList(props: {
         return ModUtil.calculateRateWithMods(mods.values());
     }, [detailedEntry, mods]);
 
-    const overallDifficulty = useMemo(() => {
-        if (!detailedEntry) {
-            return 5;
-        }
-
-        const greatWindow = new OsuHitWindow(detailedEntry.overallDifficulty)
-            .greatWindow;
-
-        return (
-            mods.has(ModPrecise) ? PreciseDroidHitWindow : DroidHitWindow
-        ).greatWindowToOD(greatWindow);
-    }, [detailedEntry, mods]);
-
     const hitWindow = useMemo(() => {
         if (!detailedEntry) {
             return new DroidHitWindow();
         }
 
+        const { overallDifficulty } = detailedEntry;
         const isPrecise = mods.has(ModPrecise);
 
-        const greatWindow =
-            (isPrecise
-                ? new PreciseDroidHitWindow(overallDifficulty)
-                : new DroidHitWindow(overallDifficulty)
-            ).greatWindow * clockRate;
+        const hitWindow = isPrecise
+            ? new PreciseDroidHitWindow(overallDifficulty)
+            : new DroidHitWindow(overallDifficulty);
+
+        const greatWindow = hitWindow.greatWindow * clockRate;
 
         if (isPrecise) {
             return new PreciseDroidHitWindow(
@@ -279,7 +296,7 @@ export default function PlayList(props: {
                 DroidHitWindow.greatWindowToOD(greatWindow)
             );
         }
-    }, [detailedEntry, mods, overallDifficulty, clockRate]);
+    }, [detailedEntry, mods, clockRate]);
 
     return (
         <>
@@ -412,142 +429,189 @@ export default function PlayList(props: {
                     </h3>
                     <table>
                         <tbody>
-                            <tr>
-                                <th>Total pp</th>
-                                <td>
-                                    {detailedEntry.prevPP.toFixed(2)} →{" "}
-                                    {detailedEntry.pp.toFixed(2)} (
-                                    {(
-                                        detailedEntry.pp - detailedEntry.prevPP
-                                    ).toFixed(2)}
-                                    )
-                                </td>
-                            </tr>
-                            <tr>
-                                <th>Aim pp</th>
-                                <td>
-                                    {detailedEntry.prevAim.toFixed(2)} →{" "}
-                                    {detailedEntry.newAim.toFixed(2)} (
-                                    {(
-                                        detailedEntry.newAim -
-                                        detailedEntry.prevAim
-                                    ).toFixed(2)}
-                                    )
-                                </td>
-                            </tr>
-                            <tr>
-                                <th>Tap pp</th>
-                                <td>
-                                    {detailedEntry.prevTap.toFixed(2)} →{" "}
-                                    {detailedEntry.newTap.toFixed(2)} (
-                                    {(
-                                        detailedEntry.newTap -
-                                        detailedEntry.prevTap
-                                    ).toFixed(2)}
-                                    )
-                                </td>
-                            </tr>
-                            <tr>
-                                <th>Accuracy pp</th>
-                                <td>
-                                    {detailedEntry.prevAccuracy.toFixed(2)} →{" "}
-                                    {detailedEntry.newAccuracy.toFixed(2)} (
-                                    {(
-                                        detailedEntry.newAccuracy -
-                                        detailedEntry.prevAccuracy
-                                    ).toFixed(2)}
-                                    )
-                                </td>
-                            </tr>
-                            <tr>
-                                <th>Visual pp</th>
-                                <td>
-                                    {detailedEntry.prevVisual.toFixed(2)} →{" "}
-                                    {detailedEntry.newVisual.toFixed(2)} (
-                                    {(
-                                        detailedEntry.newVisual -
-                                        detailedEntry.prevVisual
-                                    ).toFixed(2)}
-                                    )
-                                </td>
-                            </tr>
-                            <tr>
-                                <th>Mods</th>
-                                <td>{ModUtil.modsToOrderedString(mods)}</td>
-                            </tr>
-                            <tr>
-                                <th>Combo</th>
-                                <td>{detailedEntry.combo}</td>
-                            </tr>
-                            <tr>
-                                <th>Accuracy</th>
-                                <td>
-                                    {detailedEntry.accuracy}% (
-                                    {detailedEntry.hit300}/
-                                    {detailedEntry.hit100}/{detailedEntry.hit50}
-                                    /{detailedEntry.miss})
-                                </td>
-                            </tr>
-                            <tr>
-                                <th>Overall Difficulty</th>
-                                <td>{overallDifficulty.toFixed(2)}</td>
-                            </tr>
-                            <tr>
-                                <th>Hit Windows</th>
-                                <td>
-                                    <span style={{ color: "#66ccff" }}>
-                                        <b>Great (300):</b> ±
-                                        {(
-                                            hitWindow.greatWindow / clockRate
-                                        ).toFixed(2)}
-                                        ms
-                                    </span>
-                                    <br />
-                                    <span style={{ color: "#88b300" }}>
-                                        <b>Ok (100):</b> ±
-                                        {(
-                                            hitWindow.okWindow / clockRate
-                                        ).toFixed(2)}
-                                        ms
-                                    </span>
-                                    <br />
-                                    <span style={{ color: "#ffcc22" }}>
-                                        <b>Meh (50):</b> ±
-                                        {(
-                                            hitWindow.mehWindow / clockRate
-                                        ).toFixed(2)}
-                                        ms
-                                    </span>
-                                    <br />
-                                    <span style={{ color: "#ed1121" }}>
-                                        <b>Miss:</b> ±
-                                        {(
-                                            HitWindow.missWindow / clockRate
-                                        ).toFixed(2)}
-                                        ms
-                                    </span>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th>Estimated Unstable Rate</th>
-                                <td>
-                                    {detailedEntry.estimatedUnstableRate.toFixed(
-                                        2
-                                    )}
-                                </td>
-                            </tr>
-                            <tr>
-                                <th>Estimated Speed Unstable Rate</th>
-                                <td>
-                                    {detailedEntry.estimatedSpeedUnstableRate.toFixed(
-                                        2
-                                    )}
-                                </td>
-                            </tr>
-                            <tr>
-                                <th>Speed Note Count</th>
-                                <td>{detailedEntry.speedNoteCount}</td>
-                            </tr>
+                            <DetailedEntryRow
+                                name="Mods"
+                                value={ModUtil.modsToOrderedString(mods)}
+                            />
+
+                            <DetailedEntryRow
+                                name="Combo"
+                                value={`${detailedEntry.combo}/${detailedEntry.maxCombo}`}
+                            />
+
+                            <DetailedEntryRow
+                                name="Accuracy"
+                                value={`${detailedEntry.accuracy.toFixed(
+                                    2
+                                )}% (${detailedEntry.hit300}/${
+                                    detailedEntry.hit100
+                                }/${detailedEntry.hit50}/${
+                                    detailedEntry.miss
+                                })`}
+                            />
+
+                            <DetailedEntryRow
+                                name="Difficulty Statistics"
+                                value={
+                                    <>
+                                        CS:{" "}
+                                        {detailedEntry.circleSize.toFixed(2)}
+                                        <br />
+                                        AR:{" "}
+                                        {detailedEntry.approachRate.toFixed(2)}
+                                        <br />
+                                        OD:{" "}
+                                        {detailedEntry.overallDifficulty.toFixed(
+                                            2
+                                        )}
+                                    </>
+                                }
+                            />
+
+                            <DetailedEntryPrevNewRow
+                                name="Star Rating"
+                                prevValue={detailedEntry.prevStarRating}
+                                newValue={detailedEntry.newStarRating}
+                            />
+
+                            <DetailedEntryPrevNewRow
+                                name="Aim Difficulty"
+                                prevValue={detailedEntry.prevAimDifficulty}
+                                newValue={detailedEntry.newAimDifficulty}
+                            />
+
+                            <DetailedEntryPrevNewRow
+                                name="Tap Difficulty"
+                                prevValue={detailedEntry.prevTapDifficulty}
+                                newValue={detailedEntry.newTapDifficulty}
+                            />
+
+                            <DetailedEntryPrevNewRow
+                                name="Rhythm Difficulty"
+                                prevValue={detailedEntry.prevRhythmDifficulty}
+                                newValue={detailedEntry.newRhythmDifficulty}
+                            />
+
+                            <DetailedEntryPrevNewRow
+                                name="Flashlight Difficulty"
+                                prevValue={
+                                    detailedEntry.prevFlashlightDifficulty
+                                }
+                                newValue={detailedEntry.newFlashlightDifficulty}
+                            />
+
+                            <DetailedEntryPrevNewRow
+                                name="Visual Difficulty"
+                                prevValue={detailedEntry.prevVisualDifficulty}
+                                newValue={detailedEntry.newVisualDifficulty}
+                            />
+
+                            <DetailedEntryPrevNewRow
+                                name="Total pp"
+                                prevValue={detailedEntry.prevPP}
+                                newValue={detailedEntry.pp}
+                            />
+
+                            <DetailedEntryPrevNewRow
+                                name="Aim pp"
+                                prevValue={detailedEntry.prevAim}
+                                newValue={detailedEntry.newAim}
+                            />
+
+                            <DetailedEntryPrevNewRow
+                                name="Tap pp"
+                                prevValue={detailedEntry.prevTap}
+                                newValue={detailedEntry.newTap}
+                            />
+
+                            <DetailedEntryPrevNewRow
+                                name="Accuracy pp"
+                                prevValue={detailedEntry.prevAccuracy}
+                                newValue={detailedEntry.newAccuracy}
+                            />
+
+                            <DetailedEntryPrevNewRow
+                                name="Flashlight pp"
+                                prevValue={detailedEntry.prevFlashlight}
+                                newValue={detailedEntry.newFlashlight}
+                            />
+
+                            <DetailedEntryPrevNewRow
+                                name="Visual pp"
+                                prevValue={detailedEntry.prevVisual}
+                                newValue={detailedEntry.newVisual}
+                            />
+
+                            <DetailedEntryRow
+                                name="Hit Windows"
+                                value={
+                                    <>
+                                        <span style={{ color: "#66ccff" }}>
+                                            <b>Great (300):</b> ±
+                                            {(
+                                                hitWindow.greatWindow /
+                                                clockRate
+                                            ).toFixed(2)}
+                                            ms
+                                        </span>
+                                        <br />
+                                        <span style={{ color: "#88b300" }}>
+                                            <b>Ok (100):</b> ±
+                                            {(
+                                                hitWindow.okWindow / clockRate
+                                            ).toFixed(2)}
+                                            ms
+                                        </span>
+                                        <br />
+                                        <span style={{ color: "#ffcc22" }}>
+                                            <b>Meh (50):</b> ±
+                                            {(
+                                                hitWindow.mehWindow / clockRate
+                                            ).toFixed(2)}
+                                            ms
+                                        </span>
+                                        <br />
+                                        <span style={{ color: "#ed1121" }}>
+                                            <b>Miss:</b> ±
+                                            {(
+                                                HitWindow.missWindow / clockRate
+                                            ).toFixed(2)}
+                                            ms
+                                        </span>
+                                    </>
+                                }
+                            />
+
+                            <DetailedEntryRow
+                                name="Estimated Unstable Rate"
+                                value={detailedEntry.estimatedUnstableRate.toFixed(
+                                    2
+                                )}
+                            />
+
+                            <DetailedEntryRow
+                                name="Estimated Speed Unstable Rate"
+                                value={detailedEntry.estimatedSpeedUnstableRate.toFixed(
+                                    2
+                                )}
+                            />
+
+                            <DetailedEntryRow
+                                name="Speed Note Count"
+                                value={detailedEntry.speedNoteCount}
+                            />
+
+                            <DetailedEntryRow
+                                name="Tap Penalty"
+                                value={
+                                    <>
+                                        Live: {detailedEntry.liveTapPenalty}
+                                        <br />
+                                        Local:{" "}
+                                        {detailedEntry.rebalanceTapPenalty}
+                                    </>
+                                }
+                            />
                         </tbody>
                     </table>
                 </>
