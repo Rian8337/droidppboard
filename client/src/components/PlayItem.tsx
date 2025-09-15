@@ -25,12 +25,13 @@ function IndividualPPCell(props: { prevPP: number; newPP: number }) {
 export default function PlayItem(props: {
     data: (PrototypePPEntry | TopPrototypePPEntry) & { rank: number };
     index: number;
+    onClick?: React.MouseEventHandler<HTMLTableRowElement>;
 }) {
-    const { data } = props;
+    const { data, onClick } = props;
     const topEntry = isTopEntry(data);
 
     return (
-        <tr className="play-item">
+        <tr className="play-item" onClick={onClick}>
             <td>{data.rank}</td>
 
             {topEntry && <td style={{ textAlign: "left" }}>{data.username}</td>}

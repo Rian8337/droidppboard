@@ -1,5 +1,14 @@
+import {
+    DroidHitWindow,
+    HitWindow,
+    ModMap,
+    ModPrecise,
+    ModUtil,
+    OsuHitWindow,
+    PreciseDroidHitWindow,
+} from "@rian8337/osu-base";
 import { PrototypePPEntry, TopPrototypePPEntry } from "app-structures";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { PlayListSortMode } from "../interfaces/PlayListSortMode";
 import "../styles/play-list.css";
 import PlayItem from "./PlayItem";
@@ -21,6 +30,9 @@ export default function PlayList(props: {
     });
 
     const [sortMode, setSortMode] = useState(PlayListSortMode.localDescending);
+    const [detailedEntry, setDetailedEntry] = useState<
+        (typeof data)[number] | null
+    >(null);
     const topEntries = areTopEntries(data);
 
     const generateHead = (
@@ -216,121 +228,330 @@ export default function PlayList(props: {
             break;
     }
 
+    const mods = useMemo(() => {
+        if (!detailedEntry) {
+            return new ModMap();
+        }
+
+        return ModUtil.deserializeMods(detailedEntry.mods);
+    }, [detailedEntry]);
+
+    const clockRate = useMemo(() => {
+        if (!detailedEntry) {
+            return 1;
+        }
+
+        return ModUtil.calculateRateWithMods(mods.values());
+    }, [detailedEntry, mods]);
+
+    const overallDifficulty = useMemo(() => {
+        if (!detailedEntry) {
+            return 5;
+        }
+
+        const greatWindow = new OsuHitWindow(detailedEntry.overallDifficulty)
+            .greatWindow;
+
+        return (
+            mods.has(ModPrecise) ? PreciseDroidHitWindow : DroidHitWindow
+        ).greatWindowToOD(greatWindow);
+    }, [detailedEntry, mods]);
+
+    const hitWindow = useMemo(() => {
+        if (!detailedEntry) {
+            return new DroidHitWindow();
+        }
+
+        const isPrecise = mods.has(ModPrecise);
+
+        const greatWindow =
+            (isPrecise
+                ? new PreciseDroidHitWindow(overallDifficulty)
+                : new DroidHitWindow(overallDifficulty)
+            ).greatWindow * clockRate;
+
+        if (isPrecise) {
+            return new PreciseDroidHitWindow(
+                PreciseDroidHitWindow.greatWindowToOD(greatWindow)
+            );
+        } else {
+            return new DroidHitWindow(
+                DroidHitWindow.greatWindowToOD(greatWindow)
+            );
+        }
+    }, [detailedEntry, mods, overallDifficulty, clockRate]);
+
     return (
-        <div className="play-list-container">
-            <table className="play-list-table">
-                <thead>
-                    <tr>
-                        {generateHead(
-                            "Rank",
-                            5,
-                            PlayListSortMode.localAscending,
-                            PlayListSortMode.localDescending
-                        )}
+        <>
+            <div className="play-list-container">
+                <table className="play-list-table">
+                    <thead>
+                        <tr>
+                            {generateHead(
+                                "Rank",
+                                5,
+                                PlayListSortMode.localAscending,
+                                PlayListSortMode.localDescending
+                            )}
 
-                        {topEntries && generateHead("Player", 10)}
+                            {topEntries && generateHead("Player", 10)}
 
-                        {generateHead("Beatmap Name", topEntries ? 30 : 35)}
+                            {generateHead("Beatmap Name", topEntries ? 30 : 35)}
 
-                        {generateHead(
-                            "Live",
-                            5,
-                            PlayListSortMode.liveAscending,
-                            PlayListSortMode.liveDescending
-                        )}
+                            {generateHead(
+                                "Live",
+                                5,
+                                PlayListSortMode.liveAscending,
+                                PlayListSortMode.liveDescending
+                            )}
 
-                        {generateHead(
-                            "Local",
-                            5,
-                            PlayListSortMode.localAscending,
-                            PlayListSortMode.localDescending
-                        )}
+                            {generateHead(
+                                "Local",
+                                5,
+                                PlayListSortMode.localAscending,
+                                PlayListSortMode.localDescending
+                            )}
 
-                        {generateHead(
-                            "Aim pp",
-                            5,
-                            PlayListSortMode.aimPPAscending,
-                            PlayListSortMode.aimPPDescending
-                        )}
+                            {generateHead(
+                                "Aim pp",
+                                5,
+                                PlayListSortMode.aimPPAscending,
+                                PlayListSortMode.aimPPDescending
+                            )}
 
-                        {generateHead(
-                            "Tap pp",
-                            5,
-                            PlayListSortMode.tapPPAscending,
-                            PlayListSortMode.tapPPDescending
-                        )}
+                            {generateHead(
+                                "Tap pp",
+                                5,
+                                PlayListSortMode.tapPPAscending,
+                                PlayListSortMode.tapPPDescending
+                            )}
 
-                        {generateHead(
-                            "Acc pp",
-                            5,
-                            PlayListSortMode.accPPAscending,
-                            PlayListSortMode.accPPDescending
-                        )}
+                            {generateHead(
+                                "Acc pp",
+                                5,
+                                PlayListSortMode.accPPAscending,
+                                PlayListSortMode.accPPDescending
+                            )}
 
-                        {generateHead(
-                            "Vis pp",
-                            5,
-                            PlayListSortMode.visualPPAscending,
-                            PlayListSortMode.visualPPDescending
-                        )}
+                            {generateHead(
+                                "Vis pp",
+                                5,
+                                PlayListSortMode.visualPPAscending,
+                                PlayListSortMode.visualPPDescending
+                            )}
 
-                        {generateHead(
-                            "Diff.",
-                            4,
-                            PlayListSortMode.diffAscending,
-                            PlayListSortMode.diffDescending
-                        )}
+                            {generateHead(
+                                "Diff.",
+                                4,
+                                PlayListSortMode.diffAscending,
+                                PlayListSortMode.diffDescending
+                            )}
 
-                        {generateHead("Mods", 10)}
+                            {generateHead("Mods", 10)}
 
-                        {generateHead(
-                            "Accuracy",
-                            6,
-                            PlayListSortMode.accuracyAscending,
-                            PlayListSortMode.accuracyDescending
-                        )}
+                            {generateHead(
+                                "Accuracy",
+                                6,
+                                PlayListSortMode.accuracyAscending,
+                                PlayListSortMode.accuracyDescending
+                            )}
 
-                        {generateHead(
-                            "Combo",
-                            5,
-                            PlayListSortMode.comboAscending,
-                            PlayListSortMode.comboDescending
-                        )}
+                            {generateHead(
+                                "Combo",
+                                5,
+                                PlayListSortMode.comboAscending,
+                                PlayListSortMode.comboDescending
+                            )}
 
-                        {topEntries ? (
-                            generateHead("100/50/0", 5)
-                        ) : (
-                            <>
-                                {generateHead(
-                                    "100",
-                                    3,
-                                    PlayListSortMode.hit100Ascending,
-                                    PlayListSortMode.hit100Descending
-                                )}
+                            {topEntries ? (
+                                generateHead("100/50/0", 5)
+                            ) : (
+                                <>
+                                    {generateHead(
+                                        "100",
+                                        3,
+                                        PlayListSortMode.hit100Ascending,
+                                        PlayListSortMode.hit100Descending
+                                    )}
 
-                                {generateHead(
-                                    "50",
-                                    3,
-                                    PlayListSortMode.hit50Ascending,
-                                    PlayListSortMode.hit50Descending
-                                )}
+                                    {generateHead(
+                                        "50",
+                                        3,
+                                        PlayListSortMode.hit50Ascending,
+                                        PlayListSortMode.hit50Descending
+                                    )}
 
-                                {generateHead(
-                                    "Miss",
-                                    4,
-                                    PlayListSortMode.missAscending,
-                                    PlayListSortMode.missDescending
-                                )}
-                            </>
-                        )}
-                    </tr>
-                </thead>
-                <tbody>
-                    {data.map((play, index) => (
-                        <PlayItem key={index} data={play} index={index} />
-                    ))}
-                </tbody>
-            </table>
-        </div>
+                                    {generateHead(
+                                        "Miss",
+                                        4,
+                                        PlayListSortMode.missAscending,
+                                        PlayListSortMode.missDescending
+                                    )}
+                                </>
+                            )}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {data.map((play, index) => (
+                            <PlayItem
+                                key={index}
+                                data={play}
+                                index={index}
+                                onClick={() => setDetailedEntry(play)}
+                            />
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+
+            {detailedEntry !== null ? (
+                <>
+                    <hr />
+                    <h3 className="subtitle">
+                        #{detailedEntry.rank}: {detailedEntry.title}
+                    </h3>
+                    <table>
+                        <tbody>
+                            <tr>
+                                <th>Total pp</th>
+                                <td>
+                                    {detailedEntry.prevPP.toFixed(2)} →{" "}
+                                    {detailedEntry.pp.toFixed(2)} (
+                                    {(
+                                        detailedEntry.pp - detailedEntry.prevPP
+                                    ).toFixed(2)}
+                                    )
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Aim pp</th>
+                                <td>
+                                    {detailedEntry.prevAim.toFixed(2)} →{" "}
+                                    {detailedEntry.newAim.toFixed(2)} (
+                                    {(
+                                        detailedEntry.newAim -
+                                        detailedEntry.prevAim
+                                    ).toFixed(2)}
+                                    )
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Tap pp</th>
+                                <td>
+                                    {detailedEntry.prevTap.toFixed(2)} →{" "}
+                                    {detailedEntry.newTap.toFixed(2)} (
+                                    {(
+                                        detailedEntry.newTap -
+                                        detailedEntry.prevTap
+                                    ).toFixed(2)}
+                                    )
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Accuracy pp</th>
+                                <td>
+                                    {detailedEntry.prevAccuracy.toFixed(2)} →{" "}
+                                    {detailedEntry.newAccuracy.toFixed(2)} (
+                                    {(
+                                        detailedEntry.newAccuracy -
+                                        detailedEntry.prevAccuracy
+                                    ).toFixed(2)}
+                                    )
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Visual pp</th>
+                                <td>
+                                    {detailedEntry.prevVisual.toFixed(2)} →{" "}
+                                    {detailedEntry.newVisual.toFixed(2)} (
+                                    {(
+                                        detailedEntry.newVisual -
+                                        detailedEntry.prevVisual
+                                    ).toFixed(2)}
+                                    )
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Mods</th>
+                                <td>{ModUtil.modsToOrderedString(mods)}</td>
+                            </tr>
+                            <tr>
+                                <th>Combo</th>
+                                <td>{detailedEntry.combo}</td>
+                            </tr>
+                            <tr>
+                                <th>Accuracy</th>
+                                <td>
+                                    {detailedEntry.accuracy}% (
+                                    {detailedEntry.hit300}/
+                                    {detailedEntry.hit100}/{detailedEntry.hit50}
+                                    /{detailedEntry.miss})
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Overall Difficulty</th>
+                                <td>{overallDifficulty.toFixed(2)}</td>
+                            </tr>
+                            <tr>
+                                <th>Hit Windows</th>
+                                <td>
+                                    <span style={{ color: "#66ccff" }}>
+                                        <b>Great (300):</b> ±
+                                        {(
+                                            hitWindow.greatWindow / clockRate
+                                        ).toFixed(2)}
+                                        ms
+                                    </span>
+                                    <br />
+                                    <span style={{ color: "#88b300" }}>
+                                        <b>Ok (100):</b> ±
+                                        {(
+                                            hitWindow.okWindow / clockRate
+                                        ).toFixed(2)}
+                                        ms
+                                    </span>
+                                    <br />
+                                    <span style={{ color: "#ffcc22" }}>
+                                        <b>Meh (50):</b> ±
+                                        {(
+                                            hitWindow.mehWindow / clockRate
+                                        ).toFixed(2)}
+                                        ms
+                                    </span>
+                                    <br />
+                                    <span style={{ color: "#ed1121" }}>
+                                        <b>Miss:</b> ±
+                                        {(
+                                            HitWindow.missWindow / clockRate
+                                        ).toFixed(2)}
+                                        ms
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Estimated Unstable Rate</th>
+                                <td>
+                                    {detailedEntry.estimatedUnstableRate.toFixed(
+                                        2
+                                    )}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Estimated Speed Unstable Rate</th>
+                                <td>
+                                    {detailedEntry.estimatedSpeedUnstableRate.toFixed(
+                                        2
+                                    )}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Speed Note Count</th>
+                                <td>{detailedEntry.speedNoteCount}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </>
+            ) : null}
+        </>
     );
 }
