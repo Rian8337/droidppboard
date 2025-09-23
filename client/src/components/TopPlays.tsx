@@ -137,7 +137,7 @@ export default function TopPlays() {
                 <PlayList data={topPlayCtx.data} />
             ) : null}
 
-            <div style={{ textAlign: "center" }}>
+            <div style={{ textAlign: "center", marginTop: 10 }}>
                 Top PP will be updated every 30 minutes. If you do not see any
                 play, please reload the page after 5-10 minutes.
             </div>
