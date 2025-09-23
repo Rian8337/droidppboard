@@ -16,13 +16,13 @@ export type Comparison = "<=" | "<" | "=" | ">" | ">=";
  */
 export abstract class Util {
     /**
-     * List of all top prototype plays from all players, regardless of rework type.
+     * List of all top prototype plays from all players mapped by rework type, regardless of mods.
      */
-    static readonly allTopEntries: TopPrototypePPEntry[] = [];
+    static readonly allTopEntries = new Map<string, TopPrototypePPEntry[]>();
 
     /**
      * List of top prototype plays from all players, mapped by rework type, and each map inside the
-     * rework type mapped by droid mod string that's sorted alphabetically.
+     * rework type mapped by their mods.
      */
     private static readonly topPrototypePPList = new Map<
         string,
@@ -165,13 +165,19 @@ export abstract class Util {
                         player.reworkType,
                     )!;
 
+                    if (!this.allTopEntries.has(player.reworkType)) {
+                        this.allTopEntries.set(player.reworkType, []);
+                    }
+
                     for (const ppEntry of ppEntries) {
                         const topEntry: TopPrototypePPEntry = {
                             ...ppEntry,
                             username: player.username,
                         };
 
-                        this.allTopEntries.push(topEntry);
+                        this.allTopEntries
+                            .get(player.reworkType)!
+                            .push(topEntry);
 
                         const convertedMods = ModUtil.deserializeMods(
                             topEntry.mods,
@@ -191,13 +197,14 @@ export abstract class Util {
                     }
                 }
 
-                this.allTopEntries.sort((a, b) => b.pp - a.pp);
-                this.allTopEntries.splice(100);
+                for (const entries of this.allTopEntries.values()) {
+                    entries.sort((a, b) => b.pp - a.pp);
+                    entries.splice(100);
+                }
 
                 for (const rework of this.topPrototypePPList.values()) {
                     for (const plays of rework.values()) {
                         plays.sort((a, b) => b.pp - a.pp);
-
                         plays.splice(100);
                     }
                 }
@@ -212,7 +219,7 @@ export abstract class Util {
         mods?: ModMap,
     ): TopPrototypePPEntry[] | null {
         if (!mods) {
-            return this.allTopEntries;
+            return this.allTopEntries.get(type) ?? [];
         }
 
         const rework = this.topPrototypePPList.get(type);
