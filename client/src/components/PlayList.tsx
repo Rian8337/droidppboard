@@ -162,16 +162,19 @@ export default function PlayList(props: {
             });
             break;
 
-        case PlayListSortMode.visualPPAscending:
-        case PlayListSortMode.visualPPDescending:
+        case PlayListSortMode.readingPPAscending:
+        case PlayListSortMode.readingPPDescending:
             data.sort((a, b) => {
-                if (a.newVisual === b.newVisual) {
+                const aReading = a.newVisual ?? a.newReading;
+                const bReading = b.newVisual ?? b.newReading;
+
+                if (aReading === bReading) {
                     return a.rank - b.rank;
                 }
 
-                return sortMode === PlayListSortMode.visualPPAscending
-                    ? a.newVisual - b.newVisual
-                    : b.newVisual - a.newVisual;
+                return sortMode === PlayListSortMode.readingPPAscending
+                    ? aReading - bReading
+                    : bReading - aReading;
             });
             break;
 
@@ -330,31 +333,31 @@ export default function PlayList(props: {
                             )}
 
                             {generateHead(
-                                "Aim pp",
+                                "Aim",
                                 5,
                                 PlayListSortMode.aimPPAscending,
                                 PlayListSortMode.aimPPDescending
                             )}
 
                             {generateHead(
-                                "Tap pp",
+                                "Tap",
                                 5,
                                 PlayListSortMode.tapPPAscending,
                                 PlayListSortMode.tapPPDescending
                             )}
 
                             {generateHead(
-                                "Acc pp",
+                                "Acc",
                                 5,
                                 PlayListSortMode.accPPAscending,
                                 PlayListSortMode.accPPDescending
                             )}
 
                             {generateHead(
-                                "Vis pp",
+                                "Read",
                                 5,
-                                PlayListSortMode.visualPPAscending,
-                                PlayListSortMode.visualPPDescending
+                                PlayListSortMode.readingPPAscending,
+                                PlayListSortMode.readingPPDescending
                             )}
 
                             {generateHead(
@@ -501,9 +504,12 @@ export default function PlayList(props: {
                             />
 
                             <DetailedEntryPrevNewRow
-                                name="Visual Difficulty"
+                                name="Reading Difficulty"
                                 prevValue={detailedEntry.prevVisualDifficulty}
-                                newValue={detailedEntry.newVisualDifficulty}
+                                newValue={
+                                    detailedEntry.newVisualDifficulty ??
+                                    detailedEntry.newReadingDifficulty
+                                }
                             />
 
                             <DetailedEntryPrevNewRow
@@ -537,9 +543,12 @@ export default function PlayList(props: {
                             />
 
                             <DetailedEntryPrevNewRow
-                                name="Visual pp"
+                                name="Reading pp"
                                 prevValue={detailedEntry.prevVisual}
-                                newValue={detailedEntry.newVisual}
+                                newValue={
+                                    detailedEntry.newVisual ??
+                                    detailedEntry.newReading
+                                }
                             />
 
                             <DetailedEntryRow

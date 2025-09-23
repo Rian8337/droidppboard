@@ -67,7 +67,12 @@ export interface PrototypePPEntry extends PPEntry {
     /**
      * The new visual difficulty.
      */
-    newVisualDifficulty: number;
+    newVisualDifficulty?: number;
+
+    /**
+     * The new reading difficulty.
+     */
+    newReadingDifficulty: number;
 
     /**
      * The pp before the score was recalculated.
@@ -122,12 +127,12 @@ export interface PrototypePPEntry extends PPEntry {
     /**
      * The new visual pp value.
      */
-    newVisual: number;
+    newVisual?: number;
 
     /**
-     * The calculated unstable rate of the score.
+     * The new reading pp value.
      */
-    calculatedUnstableRate: number | null;
+    newReading: number;
 
     /**
      * The estimated unstable rate of the score.
