@@ -134,15 +134,11 @@ export default function PlayerProfile() {
                     : `Player Profile: ${data.username}`}
             </h2>
 
-            {data ? (
-                <>
-                    <PrototypeDisclaimer />
-                    <br />
-                    <PrototypeSelector />
-                    <PrototypeDescription />
-                    <hr />
-                </>
-            ) : null}
+            <PrototypeDisclaimer />
+            <br />
+            <PrototypeSelector />
+            <PrototypeDescription />
+            <hr />
 
             {errorMessage ? (
                 <h3 className="error-message">Error: {errorMessage}.</h3>
