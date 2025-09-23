@@ -149,6 +149,7 @@ export abstract class Util {
                 { projection: { _id: 0, username: 1, pp: 1, reworkType: 1 } },
             )
             .then((res) => {
+                this.allTopEntries.clear();
                 this.topPrototypePPList.clear();
 
                 for (const player of res) {
