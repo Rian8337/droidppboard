@@ -14,7 +14,10 @@
 }
 
 body {
-    background-color: #333;
+    background-image: linear-gradient(rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.75)),
+        url("../../public/background.jpg");
+    background-position: center;
+    background-attachment: fixed;
     font: 15px Exo-Medium;
     color: white;
 }

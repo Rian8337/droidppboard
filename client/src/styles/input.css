@@ -5,7 +5,7 @@
 }
 
 .search {
-    background-color: #333;
+    background-color: #444;
     font: 15px Exo-Medium;
     color: white;
     border: none;
@@ -21,10 +21,10 @@
     width: calc(30% - 20px);
     padding: 10px;
     color: white;
-    background-color: #222;
+    background-color: #333;
     margin-left: 10px;
 }
 
 .submit-search:hover {
-    background-color: #111;
+    background-color: #222;
 }
