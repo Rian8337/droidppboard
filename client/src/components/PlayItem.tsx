@@ -46,7 +46,7 @@ export default function PlayItem(props: {
                 newPP={data.newAccuracy}
             />
             <IndividualPPCell
-                prevPP={data.prevVisual}
+                prevPP={data.prevVisual ?? data.prevReading}
                 newPP={data.newVisual ?? data.newReading}
             />
             <td>{(data.pp - data.prevPP).toFixed(2)}</td>

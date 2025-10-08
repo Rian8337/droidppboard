@@ -544,7 +544,7 @@ export default function PlayList(props: {
 
                             <DetailedEntryPrevNewRow
                                 name="Reading pp"
-                                prevValue={detailedEntry.prevVisual}
+                                prevValue={detailedEntry.prevVisual ?? detailedEntry.prevReading}
                                 newValue={
                                     detailedEntry.newVisual ??
                                     detailedEntry.newReading

@@ -102,7 +102,12 @@ export interface PrototypePPEntry extends PPEntry {
     /**
      * The previous visual pp value.
      */
-    prevVisual: number;
+    prevVisual?: number;
+
+    /**
+     * The previous reading pp value.
+     */
+    prevReading: number;
 
     /**
      * The new aim pp value.
@@ -193,11 +198,6 @@ export interface PrototypePPEntry extends PPEntry {
      * The flashlight slider cheese penalty of the score.
      */
     flashlightSliderCheesePenalty: number;
-
-    /**
-     * The visual slider cheese penalty of the score.
-     */
-    visualSliderCheesePenalty: number;
 
     /**
      * The number of clickable objects weighted by difficulty.
