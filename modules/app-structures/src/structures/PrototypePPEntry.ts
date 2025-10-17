@@ -35,9 +35,9 @@ export interface PrototypePPEntry extends PPEntry {
     prevFlashlightDifficulty: number;
 
     /**
-     * The previous visual difficulty.
+     * The previous reading difficulty.
      */
-    prevVisualDifficulty: number;
+    prevReadingDifficulty: number;
 
     /**
      * The new star rating.
@@ -63,11 +63,6 @@ export interface PrototypePPEntry extends PPEntry {
      * The new flashlight difficulty.
      */
     newFlashlightDifficulty: number;
-
-    /**
-     * The new visual difficulty.
-     */
-    newVisualDifficulty?: number;
 
     /**
      * The new reading difficulty.
@@ -100,11 +95,6 @@ export interface PrototypePPEntry extends PPEntry {
     prevFlashlight: number;
 
     /**
-     * The previous visual pp value.
-     */
-    prevVisual?: number;
-
-    /**
      * The previous reading pp value.
      */
     prevReading: number;
@@ -128,11 +118,6 @@ export interface PrototypePPEntry extends PPEntry {
      * The new flashlight pp value.
      */
     newFlashlight: number;
-
-    /**
-     * The new visual pp value.
-     */
-    newVisual?: number;
 
     /**
      * The new reading pp value.

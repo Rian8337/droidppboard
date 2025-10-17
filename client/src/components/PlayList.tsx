@@ -165,16 +165,13 @@ export default function PlayList(props: {
         case PlayListSortMode.readingPPAscending:
         case PlayListSortMode.readingPPDescending:
             data.sort((a, b) => {
-                const aReading = a.newVisual ?? a.newReading;
-                const bReading = b.newVisual ?? b.newReading;
-
-                if (aReading === bReading) {
+                if (a.newReading === b.newReading) {
                     return a.rank - b.rank;
                 }
 
                 return sortMode === PlayListSortMode.readingPPAscending
-                    ? aReading - bReading
-                    : bReading - aReading;
+                    ? a.newReading - b.newReading
+                    : b.newReading - a.newReading;
             });
             break;
 
@@ -505,11 +502,8 @@ export default function PlayList(props: {
 
                             <DetailedEntryPrevNewRow
                                 name="Reading Difficulty"
-                                prevValue={detailedEntry.prevVisualDifficulty}
-                                newValue={
-                                    detailedEntry.newVisualDifficulty ??
-                                    detailedEntry.newReadingDifficulty
-                                }
+                                prevValue={detailedEntry.prevReadingDifficulty}
+                                newValue={detailedEntry.newReadingDifficulty}
                             />
 
                             <DetailedEntryPrevNewRow
@@ -544,11 +538,8 @@ export default function PlayList(props: {
 
                             <DetailedEntryPrevNewRow
                                 name="Reading pp"
-                                prevValue={detailedEntry.prevVisual ?? detailedEntry.prevReading}
-                                newValue={
-                                    detailedEntry.newVisual ??
-                                    detailedEntry.newReading
-                                }
+                                prevValue={detailedEntry.prevReading}
+                                newValue={detailedEntry.newReading}
                             />
 
                             <DetailedEntryRow
