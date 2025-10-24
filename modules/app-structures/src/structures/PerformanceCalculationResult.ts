@@ -3,6 +3,6 @@ export interface PerformanceCalculationResult {
     readonly speed: number;
     readonly accuracy: number;
     readonly flashlight: number;
-    readonly visual: number;
+    readonly reading: number;
     readonly total: number;
 }

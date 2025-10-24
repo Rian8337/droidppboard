@@ -16,7 +16,7 @@ export default function DifficultyCalculationResult(props: {
                     <th style={{ width: "18%" }}>Speed/Tap</th>
                     <th style={{ width: "18%" }}>Rhythm</th>
                     <th style={{ width: "18%" }}>Flashlight</th>
-                    <th style={{ width: "18%" }}>Visual</th>
+                    <th style={{ width: "18%" }}>Reading</th>
                     <th style={{ width: "18%" }}>Total</th>
                 </tr>
                 <tr className="calc-data">
@@ -25,7 +25,7 @@ export default function DifficultyCalculationResult(props: {
                     <td>{difficulty.droid.speed.toFixed(2)}</td>
                     <td>{difficulty.droid.rhythm.toFixed(2)}</td>
                     <td>{difficulty.droid.flashlight.toFixed(2)}</td>
-                    <td>{difficulty.droid.visual.toFixed(2)}</td>
+                    <td>{difficulty.droid.reading.toFixed(2)}</td>
                     <td>{difficulty.droid.total.toFixed(2)}</td>
                 </tr>
                 <tr className="calc-data">

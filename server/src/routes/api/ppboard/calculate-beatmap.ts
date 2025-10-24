@@ -184,7 +184,7 @@ router.post("/", async (req, res) => {
             maxCombo: parsedBeatmap.maxCombo,
             stats: {
                 cs: parsedBeatmap.difficulty.cs,
-                ar: parsedBeatmap.difficulty.ar!,
+                ar: parsedBeatmap.difficulty.ar,
                 od: parsedBeatmap.difficulty.od,
                 hp: parsedBeatmap.difficulty.hp,
             },
@@ -202,7 +202,7 @@ router.post("/", async (req, res) => {
                 rhythm: droidAttribs.attributes.difficulty.rhythmDifficulty,
                 flashlight:
                     droidAttribs.attributes.difficulty.flashlightDifficulty,
-                visual: droidAttribs.attributes.difficulty.visualDifficulty,
+                reading: droidAttribs.attributes.difficulty.readingDifficulty,
                 total: droidAttribs.attributes.difficulty.starRating,
             },
             osu: {
@@ -211,7 +211,7 @@ router.post("/", async (req, res) => {
                 rhythm: 0,
                 flashlight:
                     osuAttribs.attributes.difficulty.flashlightDifficulty,
-                visual: 0,
+                reading: 0,
                 total: osuAttribs.attributes.difficulty.starRating,
             },
         },
@@ -221,7 +221,7 @@ router.post("/", async (req, res) => {
                 speed: droidAttribs.attributes.performance.tap,
                 accuracy: droidAttribs.attributes.performance.accuracy,
                 flashlight: droidAttribs.attributes.performance.flashlight,
-                visual: droidAttribs.attributes.performance.visual,
+                reading: droidAttribs.attributes.performance.reading,
                 total: droidAttribs.attributes.performance.total,
             },
             osu: {
@@ -229,7 +229,7 @@ router.post("/", async (req, res) => {
                 speed: osuAttribs.attributes.performance.speed,
                 accuracy: osuAttribs.attributes.performance.accuracy,
                 flashlight: osuAttribs.attributes.performance.flashlight,
-                visual: 0,
+                reading: 0,
                 total: osuAttribs.attributes.performance.total,
             },
         },

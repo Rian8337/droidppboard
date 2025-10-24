@@ -3,6 +3,6 @@ export interface DifficultyCalculationResult {
     readonly speed: number;
     readonly flashlight: number;
     readonly rhythm: number;
-    readonly visual: number;
+    readonly reading: number;
     readonly total: number;
 }

@@ -16,7 +16,7 @@ export default function PerformanceCalculationResult(props: {
                     <th style={{ width: "15%" }}>Speed/Tap</th>
                     <th style={{ width: "15%" }}>Accuracy</th>
                     <th style={{ width: "15%" }}>Flashlight</th>
-                    <th style={{ width: "15%" }}>Visual</th>
+                    <th style={{ width: "15%" }}>Reading</th>
                     <th style={{ width: "15%" }}>Total</th>
                 </tr>
                 <tr className="calc-data">
@@ -25,7 +25,7 @@ export default function PerformanceCalculationResult(props: {
                     <td>{performance.droid.speed.toFixed(2)}</td>
                     <td>{performance.droid.accuracy.toFixed(2)}</td>
                     <td>{performance.droid.flashlight.toFixed(2)}</td>
-                    <td>{performance.droid.visual.toFixed(2)}</td>
+                    <td>{performance.droid.reading.toFixed(2)}</td>
                     <td>{performance.droid.total.toFixed(2)}</td>
                 </tr>
                 <tr className="calc-data">
