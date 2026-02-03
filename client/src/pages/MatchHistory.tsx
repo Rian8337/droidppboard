@@ -1,26 +1,15 @@
+import { ModUtil } from "@rian8337/osu-base";
+import { motion } from "framer-motion";
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { MultiplayerScore } from "../interfaces/MultiplayerScore";
-import { MultiplayerSession } from "../interfaces/MultiplayerSession";
-import { MultiplayerTeamMode } from "../interfaces/MultiplayerTeamMode";
-import { MultiplayerTeam } from "../interfaces/MultiplayerTeam";
 import Head from "../components/Head";
-import { motion } from "framer-motion";
-import { ModUtil } from "@rian8337/osu-base";
+import { MultiplayerRoomHistory } from "../interfaces/MultiplayerRoomHistory";
+import { MultiplayerScore } from "../interfaces/MultiplayerScore";
+import { MultiplayerTeam } from "../interfaces/MultiplayerTeam";
+import { MultiplayerTeamMode } from "../interfaces/MultiplayerTeamMode";
 
-/**
- * Represents a match session.
- */
-interface MatchSessionHistory extends MultiplayerSession {
-    /**
-     * The scores set in this match session.
-     */
-    scores: MultiplayerScore[];
-}
-
-const TeamMode = ["Head to Head", "Team VS"] as const;
-
-const WinCondition = ["Score", "Accuracy", "Combo", "Score V2"] as const;
+const teamModeConst = ["Head to Head", "Team VS"] as const;
+const winConditionConst = ["Score", "Accuracy", "Combo", "Score V2"] as const;
 
 // function to format a string to a number with commas
 function formatNumber(num: number | string) {
@@ -29,7 +18,8 @@ function formatNumber(num: number | string) {
 
 export default function MatchHistory() {
     const { matchid } = useParams<{ matchid: string }>();
-    const [matchHistory, setMatchHistory] = useState<MatchSessionHistory[]>([]);
+    const [roomHistory, setRoomHistory] =
+        useState<MultiplayerRoomHistory | null>(null);
     const [matchCosts, setMatchCosts] = useState<[string, number][]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
@@ -48,14 +38,19 @@ export default function MatchHistory() {
 
                 return res.json();
             })
-            .then((data: MatchSessionHistory[]) => {
+            .then((data: MultiplayerRoomHistory) => {
+                setRoomHistory(data);
+
+                if (data.sessions.length === 0) {
+                    return;
+                }
+
                 const playerTotalSessions = new Map<string, number>();
                 const playerScoreRatios = new Map<string, number>();
 
-                for (const session of data) {
+                for (const session of data.sessions) {
                     const sessionPlayerScores = session.scores.filter(
-                        (score) =>
-                            score.user_id !== "0" && score.user_id !== "1"
+                        (score) => score.userId !== 0 && score.userId !== 1
                     );
 
                     if (sessionPlayerScores.length === 0) {
@@ -64,67 +59,62 @@ export default function MatchHistory() {
 
                     const sessionAverageScore =
                         sessionPlayerScores.reduce(
-                            (acc, score) => acc + parseInt(score.score),
+                            (acc, score) => acc + score.score,
                             0
                         ) / sessionPlayerScores.length;
 
                     if (sessionAverageScore > 0) {
                         // Calculate the average score of each player in the session
                         for (const score of sessionPlayerScores) {
-                            if (playerTotalSessions.has(score.user_name)) {
+                            if (playerTotalSessions.has(score.userName)) {
                                 playerTotalSessions.set(
-                                    score.user_name,
-                                    playerTotalSessions.get(score.user_name)! +
-                                        1
+                                    score.userName,
+                                    playerTotalSessions.get(score.userName)! + 1
                                 );
                             } else {
-                                playerTotalSessions.set(score.user_name, 1);
+                                playerTotalSessions.set(score.userName, 1);
                             }
 
-                            if (playerScoreRatios.has(score.user_name)) {
+                            if (playerScoreRatios.has(score.userName)) {
                                 playerScoreRatios.set(
-                                    score.user_name,
-                                    playerScoreRatios.get(score.user_name)! +
-                                        parseInt(score.score) /
-                                            sessionAverageScore
+                                    score.userName,
+                                    playerScoreRatios.get(score.userName)! +
+                                        score.score / sessionAverageScore
                                 );
                             } else {
                                 playerScoreRatios.set(
-                                    score.user_name,
-                                    parseInt(score.score) / sessionAverageScore
+                                    score.userName,
+                                    score.score / sessionAverageScore
                                 );
                             }
                         }
                     }
 
                     // Reorganize the score order if team mode is team vs (first blue team, then blue team members, then red team, then red team members)
-                    if (session.team_mode !== MultiplayerTeamMode.teamVS) {
+                    if (session.teamMode !== MultiplayerTeamMode.teamVS) {
                         continue;
                     }
 
-                    const blueTeam: MultiplayerScore[] = [];
-                    const redTeam: MultiplayerScore[] = [];
+                    session.scores.sort((a, b) => {
+                        const getPriority = (
+                            score: MultiplayerScore
+                        ): number => {
+                            switch (score.userId) {
+                                case 0:
+                                    return 2;
 
-                    for (const score of session.scores) {
-                        switch (score.user_id) {
-                            case "0":
-                                redTeam.push(score);
-                                break;
+                                case 1:
+                                    return 0;
 
-                            case "1":
-                                blueTeam.push(score);
-                                break;
+                                default:
+                                    return score.team === MultiplayerTeam.blue
+                                        ? 1
+                                        : 3;
+                            }
+                        };
 
-                            default:
-                                if (score.team === MultiplayerTeam.red) {
-                                    redTeam.push(score);
-                                } else {
-                                    blueTeam.push(score);
-                                }
-                        }
-                    }
-
-                    session.scores = redTeam.concat(blueTeam);
+                        return getPriority(a) - getPriority(b);
+                    });
                 }
 
                 const matchCosts: [string, number][] = [];
@@ -139,11 +129,12 @@ export default function MatchHistory() {
                     ]);
                 }
 
-                setMatchHistory(data);
                 setMatchCosts(matchCosts.sort((a, b) => b[1] - a[1]));
             })
             .catch((err) => {
                 setError(err.message);
+                setRoomHistory(null);
+                setMatchCosts([]);
             })
             .finally(() => {
                 setLoading(false);
@@ -152,7 +143,9 @@ export default function MatchHistory() {
 
     useEffect(() => {
         if (!matchid) {
-            setError("No room id specified");
+            setError("No room ID specified");
+            setRoomHistory(null);
+            setMatchCosts([]);
             return;
         }
 
@@ -167,12 +160,12 @@ export default function MatchHistory() {
                 {scores.map((score) => {
                     return (
                         <tr
-                            key={score.session_id + score.user_name}
+                            key={score.userId + score.userName}
                             style={{
                                 color:
-                                    score.user_id === "0"
+                                    score.userId === 0
                                         ? "#ffaaaa"
-                                        : score.user_id === "1"
+                                        : score.userId === 1
                                         ? "#aaaaff"
                                         : "#ffffff",
                             }}
@@ -181,36 +174,32 @@ export default function MatchHistory() {
                                 style={{
                                     width: "30%",
                                     fontWeight:
-                                        parseInt(score.user_id) <= 1
-                                            ? "bold"
-                                            : "normal",
+                                        score.userId <= 1 ? "bold" : "normal",
                                 }}
                             >
-                                {score.user_name}{" "}
-                                {score.is_alive ? "" : "(FAILED)"}
+                                {score.userName}{" "}
+                                {score.isAlive ? "" : "(FAILED)"}
                             </td>
                             <td style={{ width: "10%" }}>
                                 {ModUtil.modsToOrderedString(
-                                    ModUtil.deserializeMods(score.play_mod)
+                                    ModUtil.deserializeMods(score.playMod)
                                 )}
                             </td>
                             <td
                                 style={{
                                     width: "30%",
                                     fontWeight:
-                                        parseInt(score.user_id) <= 1
-                                            ? "bold"
-                                            : "normal",
+                                        score.userId <= 1 ? "bold" : "normal",
                                 }}
                             >
                                 {formatNumber(score.score)}
                             </td>
                             <td style={{ width: "40%" }}>
-                                {(parseFloat(score.accuracy) * 100).toFixed(2)}%
-                                ({score.hit300} / {score.hit100} / {score.hit50}{" "}
+                                {(score.accuracy * 100).toFixed(2)}% (
+                                {score.hit300} / {score.hit100} / {score.hit50}{" "}
                                 / {score.hit0})
                             </td>
-                            <td style={{ width: "20%" }}>{score.max_combo}x</td>
+                            <td style={{ width: "20%" }}>{score.maxCombo}x</td>
                         </tr>
                     );
                 })}
@@ -218,18 +207,20 @@ export default function MatchHistory() {
         );
     };
 
-    const renderHistory = matchHistory.map((session, i) => {
+    const renderHistory = roomHistory?.sessions.map((session, i) => {
         return (
             <div key={session.id}>
                 <h3>
-                    {i + 1}. {session.map_name}
+                    {i + 1}. {session.mapName}
                 </h3>
                 <p>
-                    {TeamMode[session.team_mode] || "Unknown"} - Win Condition:{" "}
-                    {WinCondition[session.win_condition] || "Unknown"} - Remove
-                    Slider Lock: {session.remove_slider_lock ? "Yes" : "No"}
+                    {teamModeConst[session.teamMode] ?? "Unknown"} - Win
+                    Condition:{" "}
+                    {winConditionConst[session.winCondition] ?? "Unknown"} -
+                    Remove Slider Lock:{" "}
+                    {session.removeSliderLock ? "Yes" : "No"}
                 </p>
-                <p>Played at: {new Date(session.start_time).toString()}</p>
+                <p>Played at: {new Date(session.startTime).toString()}</p>
                 <hr></hr>
                 <table style={{ width: "100%" }}>
                     {renderScores(session.scores)}
@@ -261,6 +252,8 @@ export default function MatchHistory() {
             {loading && <p>Loading...</p>}
             {error && <p>{error}</p>}
 
+            {roomHistory && <h2>{roomHistory.name}</h2>}
+
             {matchCosts.length > 0 && (
                 <table>
                     <thead>
@@ -288,7 +281,7 @@ export default function MatchHistory() {
             )}
 
             <hr />
-            <div>{matchHistory.length > 0 && renderHistory}</div>
+            <div>{roomHistory !== null && renderHistory}</div>
         </motion.div>
     );
 }

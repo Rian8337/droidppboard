@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { IPlayerSkin } from "app-structures";
-import { useParams } from "react-router";
+import { useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import Head from "../components/Head";
 import "../styles/input.css";

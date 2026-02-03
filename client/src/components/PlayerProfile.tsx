@@ -1,5 +1,5 @@
 import { useState, useEffect, useContext, useRef } from "react";
-import { useParams } from "react-router";
+import { useParams } from "react-router-dom";
 import PlayList from "./PlayList";
 import Head from "./Head";
 import { motion } from "framer-motion";
