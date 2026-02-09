@@ -37,7 +37,8 @@ export default function PlayItem(props: {
             {topEntry && <td style={{ textAlign: "left" }}>{data.username}</td>}
 
             <td style={{ textAlign: "left" }}>{data.title}</td>
-            <td>{(data.master ?? data.live).performance.total.toFixed(2)}</td>
+            <td>{data.live.performance.total.toFixed(2)}</td>
+            {data.master && <td>{data.master.performance.total.toFixed(2)}</td>}
             <td>{data.local.performance.total.toFixed(2)}</td>
             <IndividualPPCell
                 prevPP={(data.master ?? data.live).performance.aim}
