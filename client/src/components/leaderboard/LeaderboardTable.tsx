@@ -1,4 +1,4 @@
-import { useContext, useEffect, useRef } from "react";
+import { useContext, useEffect, useMemo, useRef } from "react";
 import LeaderboardItem from "./LeaderboardItem";
 import PrototypeLeaderboardNavigator from "../../hooks/PrototypeLeaderboardNavigator";
 import { IPrototypePP, PrototypeLeaderboardResponse } from "app-structures";
@@ -85,6 +85,11 @@ export default function LeaderboardTable() {
         prototypeSelectorCtx.currentRework?.type,
     ]);
 
+    const hasMaster = useMemo(
+        () => leaderboardCtx.data.at(0)?.masterPPTotal !== undefined,
+        [leaderboardCtx.data]
+    );
+
     return leaderboardCtx.data.length === 0 ? (
         <>
             <h2 className="subtitle">
@@ -104,7 +109,9 @@ export default function LeaderboardTable() {
                 <thead>
                     <tr>
                         <th style={{ width: "5%" }}>No.</th>
-                        <th style={{ width: "15%" }}>UID</th>
+                        <th style={{ width: hasMaster ? "10%" : "15%" }}>
+                            UID
+                        </th>
                         <th
                             style={{
                                 width: "22.5%",
@@ -112,9 +119,18 @@ export default function LeaderboardTable() {
                         >
                             Username
                         </th>
-                        <th style={{ width: "20%" }}>Live PP</th>
-                        <th style={{ width: "20%" }}>Local PP</th>
-                        <th style={{ width: "17.5%" }}>Diff</th>
+                        <th style={{ width: hasMaster ? "17.5%" : "20%" }}>
+                            Live PP
+                        </th>
+                        {hasMaster && (
+                            <th style={{ width: "17.5%" }}>Master PP</th>
+                        )}
+                        <th style={{ width: hasMaster ? "17.5%" : "20%" }}>
+                            Local PP
+                        </th>
+                        <th style={{ width: hasMaster ? "10%" : "17.5%" }}>
+                            Diff
+                        </th>
                     </tr>
                 </thead>
                 <tbody>

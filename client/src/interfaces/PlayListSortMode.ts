@@ -1,6 +1,8 @@
 export enum PlayListSortMode {
     liveAscending,
     liveDescending,
+    masterAscending,
+    masterDescending,
     localAscending,
     localDescending,
     aimPPAscending,

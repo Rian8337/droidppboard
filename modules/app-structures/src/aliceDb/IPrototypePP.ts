@@ -18,12 +18,17 @@ export interface IPrototypePP {
     /**
      * The total droid performance points (dpp) of the account after recalculation.
      */
-    pptotal: number;
+    localPPTotal: number;
 
     /**
      * The total droid performance points (dpp) of the account before recalculation.
      */
-    prevpptotal: number;
+    livePPTotal: number;
+
+    /**
+     * The total performance points of the account in the master recalculation.
+     */
+    masterPPTotal?: number;
 
     /**
      * The UID of the account.
@@ -38,7 +43,7 @@ export interface IPrototypePP {
     /**
      * Whether this prototype entry has been calculated against the latest changes.
      */
-    scanDone: boolean;
+    scanDone?: boolean;
 
     /**
      * The type of rework the profile is in.

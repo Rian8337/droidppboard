@@ -62,7 +62,9 @@ export default function PlayList(props: {
     const [detailedEntry, setDetailedEntry] = useState<
         (typeof data)[number] | null
     >(null);
+
     const topEntries = areTopEntries(data);
+    const hasMaster = useMemo(() => data[0]?.master !== undefined, [data]);
 
     const generateHead = (
         name: string,
@@ -100,86 +102,125 @@ export default function PlayList(props: {
         case PlayListSortMode.liveAscending:
         case PlayListSortMode.liveDescending:
             data.sort((a, b) => {
-                if (a.prevPP === b.prevPP) {
+                const aVal = a.live.performance.total;
+                const bVal = b.live.performance.total;
+
+                if (aVal === bVal) {
                     return a.rank - b.rank;
                 }
 
                 return sortMode === PlayListSortMode.liveAscending
-                    ? a.prevPP - b.prevPP
-                    : b.prevPP - a.prevPP;
+                    ? aVal - bVal
+                    : bVal - aVal;
             });
             break;
 
         case PlayListSortMode.localAscending:
         case PlayListSortMode.localDescending:
             data.sort((a, b) => {
-                if (a.pp === b.pp) {
+                const aVal = a.local.performance.total;
+                const bVal = b.local.performance.total;
+
+                if (aVal === bVal) {
                     return a.rank - b.rank;
                 }
 
                 return sortMode === PlayListSortMode.localAscending
-                    ? a.pp - b.pp
-                    : b.pp - a.pp;
+                    ? aVal - bVal
+                    : bVal - aVal;
+            });
+            break;
+
+        case PlayListSortMode.masterAscending:
+        case PlayListSortMode.masterDescending:
+            data.sort((a, b) => {
+                const aVal = a.master?.performance.total ?? 0;
+                const bVal = b.master?.performance.total ?? 0;
+
+                if (aVal === bVal) {
+                    return a.rank - b.rank;
+                }
+
+                return sortMode === PlayListSortMode.masterAscending
+                    ? aVal - bVal
+                    : bVal - aVal;
             });
             break;
 
         case PlayListSortMode.aimPPAscending:
         case PlayListSortMode.aimPPDescending:
             data.sort((a, b) => {
-                if (a.newAim === b.newAim) {
+                const aVal = a.local.performance.aim;
+                const bVal = b.local.performance.aim;
+
+                if (aVal === bVal) {
                     return a.rank - b.rank;
                 }
 
                 return sortMode === PlayListSortMode.aimPPAscending
-                    ? a.newAim - b.newAim
-                    : b.newAim - a.newAim;
+                    ? aVal - bVal
+                    : bVal - aVal;
             });
             break;
 
         case PlayListSortMode.tapPPAscending:
         case PlayListSortMode.tapPPDescending:
             data.sort((a, b) => {
-                if (a.newTap === b.newTap) {
+                const aVal = a.local.performance.tap;
+                const bVal = b.local.performance.tap;
+
+                if (aVal === bVal) {
                     return a.rank - b.rank;
                 }
 
                 return sortMode === PlayListSortMode.tapPPAscending
-                    ? a.newTap - b.newTap
-                    : b.newTap - a.newTap;
+                    ? aVal - bVal
+                    : bVal - aVal;
             });
             break;
 
         case PlayListSortMode.accPPAscending:
         case PlayListSortMode.accPPDescending:
             data.sort((a, b) => {
-                if (a.newAccuracy === b.newAccuracy) {
+                const aVal = a.local.performance.accuracy;
+                const bVal = b.local.performance.accuracy;
+
+                if (aVal === bVal) {
                     return a.rank - b.rank;
                 }
 
                 return sortMode === PlayListSortMode.accPPAscending
-                    ? a.newAccuracy - b.newAccuracy
-                    : b.newAccuracy - a.newAccuracy;
+                    ? aVal - bVal
+                    : bVal - aVal;
             });
             break;
 
         case PlayListSortMode.readingPPAscending:
         case PlayListSortMode.readingPPDescending:
             data.sort((a, b) => {
-                if (a.newReading === b.newReading) {
+                const aVal = a.local.performance.reading;
+                const bVal = b.local.performance.reading;
+
+                if (aVal === bVal) {
                     return a.rank - b.rank;
                 }
 
                 return sortMode === PlayListSortMode.readingPPAscending
-                    ? a.newReading - b.newReading
-                    : b.newReading - a.newReading;
+                    ? aVal - bVal
+                    : bVal - aVal;
             });
             break;
 
         case PlayListSortMode.diffAscending:
         case PlayListSortMode.diffDescending:
             data.sort((a, b) => {
-                const diffA = a.pp - a.prevPP;
-                const diffB = b.pp - b.prevPP;
+                const diffA =
+                    a.local.performance.total -
+                    (a.master ?? a.live).performance.total;
+
+                const diffB =
+                    b.local.performance.total -
+                    (b.master ?? b.live).performance.total;
 
                 if (diffA === diffB) {
                     return a.rank - b.rank;
@@ -313,7 +354,7 @@ export default function PlayList(props: {
 
                             {topEntries && generateHead("Player", 10)}
 
-                            {generateHead("Beatmap Name", topEntries ? 30 : 35)}
+                            {generateHead("Beatmap Name", 35)}
 
                             {generateHead(
                                 "Live",
@@ -321,6 +362,14 @@ export default function PlayList(props: {
                                 PlayListSortMode.liveAscending,
                                 PlayListSortMode.liveDescending
                             )}
+
+                            {hasMaster &&
+                                generateHead(
+                                    "Master",
+                                    5,
+                                    PlayListSortMode.masterAscending,
+                                    PlayListSortMode.masterDescending
+                                )}
 
                             {generateHead(
                                 "Local",
@@ -381,7 +430,7 @@ export default function PlayList(props: {
                             )}
 
                             {topEntries ? (
-                                generateHead("100/50/0", 5)
+                                generateHead("100/50/0", 6)
                             ) : (
                                 <>
                                     {generateHead(
@@ -470,76 +519,122 @@ export default function PlayList(props: {
 
                             <DetailedEntryPrevNewRow
                                 name="Star Rating"
-                                prevValue={detailedEntry.prevStarRating}
-                                newValue={detailedEntry.newStarRating}
+                                prevValue={
+                                    (detailedEntry.master ?? detailedEntry.live)
+                                        .difficulty.starRating
+                                }
+                                newValue={
+                                    detailedEntry.local.difficulty.starRating
+                                }
                             />
 
                             <DetailedEntryPrevNewRow
                                 name="Aim Difficulty"
-                                prevValue={detailedEntry.prevAimDifficulty}
-                                newValue={detailedEntry.newAimDifficulty}
+                                prevValue={
+                                    (detailedEntry.master ?? detailedEntry.live)
+                                        .difficulty.aim
+                                }
+                                newValue={detailedEntry.local.difficulty.aim}
                             />
 
                             <DetailedEntryPrevNewRow
                                 name="Tap Difficulty"
-                                prevValue={detailedEntry.prevTapDifficulty}
-                                newValue={detailedEntry.newTapDifficulty}
+                                prevValue={
+                                    (detailedEntry.master ?? detailedEntry.live)
+                                        .difficulty.tap
+                                }
+                                newValue={detailedEntry.local.difficulty.tap}
                             />
 
                             <DetailedEntryPrevNewRow
                                 name="Rhythm Difficulty"
-                                prevValue={detailedEntry.prevRhythmDifficulty}
-                                newValue={detailedEntry.newRhythmDifficulty}
+                                prevValue={
+                                    (detailedEntry.master ?? detailedEntry.live)
+                                        .difficulty.rhythm
+                                }
+                                newValue={detailedEntry.local.difficulty.rhythm}
                             />
 
                             <DetailedEntryPrevNewRow
                                 name="Flashlight Difficulty"
                                 prevValue={
-                                    detailedEntry.prevFlashlightDifficulty
+                                    (detailedEntry.master ?? detailedEntry.live)
+                                        .difficulty.flashlight
                                 }
-                                newValue={detailedEntry.newFlashlightDifficulty}
+                                newValue={
+                                    detailedEntry.local.difficulty.flashlight
+                                }
                             />
 
                             <DetailedEntryPrevNewRow
                                 name="Reading Difficulty"
-                                prevValue={detailedEntry.prevReadingDifficulty}
-                                newValue={detailedEntry.newReadingDifficulty}
+                                prevValue={
+                                    (detailedEntry.master ?? detailedEntry.live)
+                                        .difficulty.reading
+                                }
+                                newValue={
+                                    detailedEntry.local.difficulty.reading
+                                }
                             />
 
                             <DetailedEntryPrevNewRow
                                 name="Total pp"
-                                prevValue={detailedEntry.prevPP}
-                                newValue={detailedEntry.pp}
+                                prevValue={
+                                    (detailedEntry.master ?? detailedEntry.live)
+                                        .performance.total
+                                }
+                                newValue={detailedEntry.local.performance.total}
                             />
 
                             <DetailedEntryPrevNewRow
                                 name="Aim pp"
-                                prevValue={detailedEntry.prevAim}
-                                newValue={detailedEntry.newAim}
+                                prevValue={
+                                    (detailedEntry.master ?? detailedEntry.live)
+                                        .performance.aim
+                                }
+                                newValue={detailedEntry.local.performance.aim}
                             />
 
                             <DetailedEntryPrevNewRow
                                 name="Tap pp"
-                                prevValue={detailedEntry.prevTap}
-                                newValue={detailedEntry.newTap}
+                                prevValue={
+                                    (detailedEntry.master ?? detailedEntry.live)
+                                        .performance.tap
+                                }
+                                newValue={detailedEntry.local.performance.tap}
                             />
 
                             <DetailedEntryPrevNewRow
                                 name="Accuracy pp"
-                                prevValue={detailedEntry.prevAccuracy}
-                                newValue={detailedEntry.newAccuracy}
+                                prevValue={
+                                    (detailedEntry.master ?? detailedEntry.live)
+                                        .performance.accuracy
+                                }
+                                newValue={
+                                    detailedEntry.local.performance.accuracy
+                                }
                             />
 
                             <DetailedEntryPrevNewRow
                                 name="Flashlight pp"
-                                prevValue={detailedEntry.prevFlashlight}
-                                newValue={detailedEntry.newFlashlight}
+                                prevValue={
+                                    (detailedEntry.master ?? detailedEntry.live)
+                                        .performance.flashlight
+                                }
+                                newValue={
+                                    detailedEntry.local.performance.flashlight
+                                }
                             />
 
                             <DetailedEntryPrevNewRow
                                 name="Reading pp"
-                                prevValue={detailedEntry.prevReading}
-                                newValue={detailedEntry.newReading}
+                                prevValue={
+                                    (detailedEntry.master ?? detailedEntry.live)
+                                        .performance.reading
+                                }
+                                newValue={
+                                    detailedEntry.local.performance.reading
+                                }
                             />
 
                             <DetailedEntryRow
@@ -582,34 +677,50 @@ export default function PlayList(props: {
                                 }
                             />
 
-                            <DetailedEntryRow
+                            <DetailedEntryPrevNewRow
                                 name="Estimated Unstable Rate"
-                                value={detailedEntry.estimatedUnstableRate.toFixed(
-                                    2
-                                )}
+                                prevValue={
+                                    (detailedEntry.master ?? detailedEntry.live)
+                                        .performance.estimatedUnstableRate
+                                }
+                                newValue={
+                                    detailedEntry.local.performance
+                                        .estimatedUnstableRate
+                                }
                             />
 
-                            <DetailedEntryRow
-                                name="Estimated Speed Unstable Rate"
-                                value={detailedEntry.estimatedSpeedUnstableRate.toFixed(
-                                    2
-                                )}
+                            <DetailedEntryPrevNewRow
+                                name="Estimated Tap Unstable Rate"
+                                prevValue={
+                                    (detailedEntry.master ?? detailedEntry.live)
+                                        .performance.estimatedTapUnstableRate
+                                }
+                                newValue={
+                                    detailedEntry.local.performance
+                                        .estimatedTapUnstableRate
+                                }
                             />
 
-                            <DetailedEntryRow
+                            <DetailedEntryPrevNewRow
                                 name="Speed Note Count"
-                                value={detailedEntry.speedNoteCount}
+                                prevValue={
+                                    (detailedEntry.master ?? detailedEntry.live)
+                                        .difficulty.speedNoteCount
+                                }
+                                newValue={
+                                    detailedEntry.local.difficulty
+                                        .speedNoteCount
+                                }
                             />
 
-                            <DetailedEntryRow
+                            <DetailedEntryPrevNewRow
                                 name="Tap Penalty"
-                                value={
-                                    <>
-                                        Live: {detailedEntry.liveTapPenalty}
-                                        <br />
-                                        Local:{" "}
-                                        {detailedEntry.rebalanceTapPenalty}
-                                    </>
+                                prevValue={
+                                    (detailedEntry.master ?? detailedEntry.live)
+                                        .performance.tapPenalty
+                                }
+                                newValue={
+                                    detailedEntry.local.performance.tapPenalty
                                 }
                             />
                         </tbody>

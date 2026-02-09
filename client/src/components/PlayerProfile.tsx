@@ -150,18 +150,25 @@ export default function PlayerProfile() {
                         <tbody>
                             <tr>
                                 <th>Live PP</th>
-                                <td>{data.prevpptotal.toFixed(2)}</td>
+                                <td>{data.livePPTotal.toFixed(2)}</td>
                             </tr>
+                            {data.masterPPTotal !== undefined && (
+                                <tr>
+                                    <th>Master PP</th>
+                                    <td>{data.masterPPTotal.toFixed(2)}</td>
+                                </tr>
+                            )}
                             <tr>
                                 <th>Local PP</th>
-                                <td>{data.pptotal.toFixed(2)}</td>
+                                <td>{data.localPPTotal.toFixed(2)}</td>
                             </tr>
                             <tr>
                                 <th>PP Diff</th>
                                 <td>
-                                    {(data.pptotal - data.prevpptotal).toFixed(
-                                        2
-                                    )}
+                                    {(
+                                        data.localPPTotal -
+                                        (data.masterPPTotal ?? data.livePPTotal)
+                                    ).toFixed(2)}
                                 </td>
                             </tr>
                             <tr>

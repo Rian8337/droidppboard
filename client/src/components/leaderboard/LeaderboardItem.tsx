@@ -27,9 +27,16 @@ export default function LeaderboardItem(props: {
                     {user.username}
                 </Link>
             </td>
-            <td>{user.prevpptotal.toFixed(2)}</td>
-            <td>{user.pptotal.toFixed(2)}</td>
-            <td>{(user.pptotal - user.prevpptotal).toFixed(2)}</td>
+            <td>{user.livePPTotal.toFixed(2)}</td>
+            {user.masterPPTotal !== undefined && (
+                <td>{user.masterPPTotal.toFixed(2)}</td>
+            )}
+            <td>{user.localPPTotal.toFixed(2)}</td>
+            <td>
+                {(
+                    user.localPPTotal - (user.masterPPTotal ?? user.livePPTotal)
+                ).toFixed(2)}
+            </td>
         </tr>
     );
 }

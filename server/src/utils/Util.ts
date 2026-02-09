@@ -199,13 +199,21 @@ export abstract class Util {
                 }
 
                 for (const entries of this.allTopEntries.values()) {
-                    entries.sort((a, b) => b.pp - a.pp);
+                    entries.sort(
+                        (a, b) =>
+                            b.local.performance.total -
+                            a.local.performance.total,
+                    );
                     entries.splice(100);
                 }
 
                 for (const rework of this.topPrototypePPList.values()) {
                     for (const plays of rework.values()) {
-                        plays.sort((a, b) => b.pp - a.pp);
+                        plays.sort(
+                            (a, b) =>
+                                b.local.performance.total -
+                                a.local.performance.total,
+                        );
                         plays.splice(100);
                     }
                 }

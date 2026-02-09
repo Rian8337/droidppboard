@@ -37,19 +37,30 @@ export default function PlayItem(props: {
             {topEntry && <td style={{ textAlign: "left" }}>{data.username}</td>}
 
             <td style={{ textAlign: "left" }}>{data.title}</td>
-            <td>{data.prevPP.toFixed(2)}</td>
-            <td>{data.pp.toFixed(2)}</td>
-            <IndividualPPCell prevPP={data.prevAim} newPP={data.newAim} />
-            <IndividualPPCell prevPP={data.prevTap} newPP={data.newTap} />
+            <td>{(data.master ?? data.live).performance.total.toFixed(2)}</td>
+            <td>{data.local.performance.total.toFixed(2)}</td>
             <IndividualPPCell
-                prevPP={data.prevAccuracy}
-                newPP={data.newAccuracy}
+                prevPP={(data.master ?? data.live).performance.aim}
+                newPP={data.local.performance.aim}
             />
             <IndividualPPCell
-                prevPP={data.prevReading}
-                newPP={data.newReading}
+                prevPP={(data.master ?? data.live).performance.tap}
+                newPP={data.local.performance.tap}
             />
-            <td>{(data.pp - data.prevPP).toFixed(2)}</td>
+            <IndividualPPCell
+                prevPP={(data.master ?? data.live).performance.accuracy}
+                newPP={data.local.performance.accuracy}
+            />
+            <IndividualPPCell
+                prevPP={(data.master ?? data.live).performance.reading}
+                newPP={data.local.performance.reading}
+            />
+            <td>
+                {(
+                    data.local.performance.total -
+                    (data.master ?? data.live).performance.total
+                ).toFixed(2)}
+            </td>
             <td>
                 {ModUtil.modsToOrderedString(
                     ModUtil.deserializeMods(data.mods)

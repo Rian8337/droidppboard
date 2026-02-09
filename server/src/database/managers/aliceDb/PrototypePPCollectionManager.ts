@@ -9,10 +9,10 @@ import { DatabaseCollectionManager } from "../DatabaseCollectionManager";
 export class PrototypePPCollectionManager extends DatabaseCollectionManager<IPrototypePP> {
     override get defaultDocument(): IPrototypePP {
         return {
+            livePPTotal: 0,
+            localPPTotal: 0,
             lastUpdate: Date.now(),
             pp: [],
-            pptotal: 0,
-            prevpptotal: 0,
             reworkType: "overall",
             uid: 0,
             username: "",
@@ -29,7 +29,7 @@ export class PrototypePPCollectionManager extends DatabaseCollectionManager<IPro
     async getUserDPPRank(totalPP: number, reworkType: string): Promise<number> {
         return (
             (await this.collection.countDocuments({
-                pptotal: { $gt: totalPP },
+                localPPTotal: { $gt: totalPP },
                 reworkType: reworkType,
             })) + 1
         );
@@ -70,12 +70,13 @@ export class PrototypePPCollectionManager extends DatabaseCollectionManager<IPro
                 projection: {
                     _id: 0,
                     uid: 1,
-                    pptotal: 1,
-                    prevpptotal: 1,
+                    livePPTotal: 1,
+                    localPPTotal: 1,
+                    masterPPTotal: 1,
                     username: 1,
                 },
             })
-            .sort({ pptotal: -1 })
+            .sort({ localPPTotal: -1 })
             .skip(50 * (page - 1))
             .limit(50)
             .toArray();
@@ -96,8 +97,9 @@ export class PrototypePPCollectionManager extends DatabaseCollectionManager<IPro
                     uid: 1,
                     username: 1,
                     pp: 1,
-                    pptotal: 1,
-                    prevpptotal: 1,
+                    livePPTotal: 1,
+                    localPPTotal: 1,
+                    masterPPTotal: 1,
                     lastUpdate: 1,
                 },
             },
