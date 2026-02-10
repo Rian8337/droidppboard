@@ -717,10 +717,11 @@ export default function PlayList(props: {
                                 name="Tap Penalty"
                                 prevValue={
                                     (detailedEntry.master ?? detailedEntry.live)
-                                        .performance.tapPenalty
+                                        .performance.tapPenalty ?? 1
                                 }
                                 newValue={
-                                    detailedEntry.local.performance.tapPenalty
+                                    detailedEntry.local.performance
+                                        .tapPenalty ?? 1
                                 }
                             />
                         </tbody>

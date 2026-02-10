@@ -15,8 +15,6 @@ export default function PlayerProfile() {
     const params = useParams();
     const { uid, type } = params;
 
-    const typeRef = useRef(type);
-
     const [data, setData] = useState<IPrototypePP | null | undefined>();
     const [weightedAccuracy, setWeightedAccuracy] = useState<number | null>(
         null
@@ -33,13 +31,10 @@ export default function PlayerProfile() {
 
         // Special case when the user loads this page with a type in the URL.
         if (
-            typeRef.current &&
-            typeRef.current !== prototypeSelectorCtx.currentRework?.type
+            type !== undefined &&
+            type !== prototypeSelectorCtx.currentRework?.type
         ) {
-            prototypeSelectorCtx.resetCurrentRework(typeRef.current);
-
-            // Invalidate the ref so that we don't keep setting the rework to unknown.
-            typeRef.current = undefined;
+            prototypeSelectorCtx.resetCurrentRework(type);
 
             return;
         }

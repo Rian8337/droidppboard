@@ -43,7 +43,7 @@ export interface ScorePrototypePerformanceState {
     readonly estimatedTapUnstableRate: number;
 
     /**
-     * The tap penalty of the score for this performance state.
+     * The tap penalty of the score for this performance state. Defaults to 1.
      */
-    readonly tapPenalty: number;
+    readonly tapPenalty?: number;
 }
