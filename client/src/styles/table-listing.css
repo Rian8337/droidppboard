@@ -7,6 +7,14 @@
     font: 12px Exo-Medium;
     width: 100%;
     max-width: 1000px;
+    table-layout: fixed;
+}
+
+.content-ellipsis {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: calc(100%);
 }
 
 .listing,
@@ -30,7 +38,6 @@ tbody td {
 
 .listing tbody td.assign-left {
     text-align: left;
-    padding-left: 10px;
 }
 
 .listing tbody td.clickable:hover {

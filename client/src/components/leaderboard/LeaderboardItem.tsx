@@ -15,16 +15,16 @@ export default function LeaderboardItem(props: {
     return (
         <tr>
             <td>{(props.page - 1) * 50 + props.index + 1}</td>
-            <td>{user.uid}</td>
             <td className="assign-left clickable">
                 <Link
+                    className="content-ellipsis"
                     to={`/prototype/profile/${user.uid}${
                         prototypeSelectorCtx.currentRework?.type
                             ? `/${prototypeSelectorCtx.currentRework.type}`
                             : ""
                     }`}
                 >
-                    {user.username}
+                    [{user.uid}] {user.username}
                 </Link>
             </td>
             <td>{user.livePPTotal.toFixed(2)}</td>

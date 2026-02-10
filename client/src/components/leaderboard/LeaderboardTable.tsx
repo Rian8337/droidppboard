@@ -108,27 +108,20 @@ export default function LeaderboardTable() {
             <table className="listing">
                 <thead>
                     <tr>
-                        <th style={{ width: "5%" }}>No.</th>
-                        <th style={{ width: hasMaster ? "10%" : "15%" }}>
-                            UID
-                        </th>
-                        <th
-                            style={{
-                                width: "22.5%",
-                            }}
-                        >
-                            Username
+                        <th style={{ width: "6%" }}>No.</th>
+                        <th style={{ width: hasMaster ? "26.5%" : "34%" }}>
+                            Player
                         </th>
                         <th style={{ width: hasMaster ? "17.5%" : "20%" }}>
-                            Live PP
+                            Live
                         </th>
                         {hasMaster && (
-                            <th style={{ width: "17.5%" }}>Master PP</th>
+                            <th style={{ width: "17.5%" }}>Master</th>
                         )}
                         <th style={{ width: hasMaster ? "17.5%" : "20%" }}>
-                            Local PP
+                            Local
                         </th>
-                        <th style={{ width: hasMaster ? "10%" : "17.5%" }}>
+                        <th style={{ width: hasMaster ? "15%" : "20%" }}>
                             Diff
                         </th>
                     </tr>
