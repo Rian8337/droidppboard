@@ -40,6 +40,12 @@ export default function PlayItem(props: {
             <td>{data.live.performance.total.toFixed(2)}</td>
             {data.master && <td>{data.master.performance.total.toFixed(2)}</td>}
             <td>{data.local.performance.total.toFixed(2)}</td>
+            <td>
+                {(
+                    data.local.performance.total -
+                    (data.master ?? data.live).performance.total
+                ).toFixed(2)}
+            </td>
             <IndividualPPCell
                 prevPP={(data.master ?? data.live).performance.aim}
                 newPP={data.local.performance.aim}
@@ -56,12 +62,6 @@ export default function PlayItem(props: {
                 prevPP={(data.master ?? data.live).performance.reading}
                 newPP={data.local.performance.reading}
             />
-            <td>
-                {(
-                    data.local.performance.total -
-                    (data.master ?? data.live).performance.total
-                ).toFixed(2)}
-            </td>
             <td>
                 {ModUtil.modsToOrderedString(
                     ModUtil.deserializeMods(data.mods)

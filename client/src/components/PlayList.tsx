@@ -379,6 +379,13 @@ export default function PlayList(props: {
                             )}
 
                             {generateHead(
+                                "Diff",
+                                4,
+                                PlayListSortMode.diffAscending,
+                                PlayListSortMode.diffDescending
+                            )}
+
+                            {generateHead(
                                 "Aim",
                                 5,
                                 PlayListSortMode.aimPPAscending,
@@ -404,13 +411,6 @@ export default function PlayList(props: {
                                 5,
                                 PlayListSortMode.readingPPAscending,
                                 PlayListSortMode.readingPPDescending
-                            )}
-
-                            {generateHead(
-                                "Diff.",
-                                4,
-                                PlayListSortMode.diffAscending,
-                                PlayListSortMode.diffDescending
                             )}
 
                             {generateHead("Mods", 10)}
