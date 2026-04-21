@@ -1,14 +1,15 @@
-import { useState, useEffect, useContext } from "react";
-import { useParams } from "react-router-dom";
-import PlayList from "./PlayList";
-import Head from "./Head";
-import { motion } from "framer-motion";
-import PrototypeDisclaimer from "./PrototypeDisclaimer";
 import { IPrototypePP } from "app-structures";
-import "../styles/profile.css";
+import { motion } from "framer-motion";
+import { useContext, useEffect, useMemo, useState } from "react";
+import { useParams } from "react-router-dom";
 import PrototypeSelectorNavigator from "../hooks/PrototypeSelectorNavigator";
-import PrototypeSelector from "./PrototypeSelector";
+import "../styles/profile.css";
+import { Util } from "../Util";
+import Head from "./Head";
+import PlayList from "./PlayList";
 import PrototypeDescription from "./PrototypeDescription";
+import PrototypeDisclaimer from "./PrototypeDisclaimer";
+import PrototypeSelector from "./PrototypeSelector";
 
 export default function PlayerProfile() {
     const prototypeSelectorCtx = useContext(PrototypeSelectorNavigator);
@@ -102,6 +103,16 @@ export default function PlayerProfile() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [prototypeSelectorCtx.currentRework?.type, uid]);
 
+    const diff = useMemo(() => {
+        if (!data) {
+            return 0;
+        }
+
+        return data.localPPTotal - (data.masterPPTotal ?? data.livePPTotal);
+    }, [data]);
+
+    const color = useMemo(() => Util.getDiffColor(diff), [diff]);
+
     return (
         <motion.div
             initial={{ opacity: 0 }}
@@ -159,11 +170,8 @@ export default function PlayerProfile() {
                             </tr>
                             <tr>
                                 <th>PP Diff</th>
-                                <td>
-                                    {(
-                                        data.localPPTotal -
-                                        (data.masterPPTotal ?? data.livePPTotal)
-                                    ).toFixed(2)}
+                                <td style={{ color: `rgb(${color})` }}>
+                                    {diff.toFixed(2)}
                                 </td>
                             </tr>
                             <tr>
