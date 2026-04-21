@@ -156,17 +156,23 @@ export default function PlayerProfile() {
                         <tbody>
                             <tr>
                                 <th>Live PP</th>
-                                <td>{data.livePPTotal.toFixed(2)}</td>
+                                <td style={{ color: "#faa2c1" }}>
+                                    {data.livePPTotal.toFixed(2)}
+                                </td>
                             </tr>
                             {data.masterPPTotal !== undefined && (
                                 <tr>
                                     <th>Master PP</th>
-                                    <td>{data.masterPPTotal.toFixed(2)}</td>
+                                    <td style={{ color: "#faa2c1" }}>
+                                        {data.masterPPTotal.toFixed(2)}
+                                    </td>
                                 </tr>
                             )}
                             <tr>
                                 <th>Local PP</th>
-                                <td>{data.localPPTotal.toFixed(2)}</td>
+                                <td style={{ color: "#faa2c1" }}>
+                                    {data.localPPTotal.toFixed(2)}
+                                </td>
                             </tr>
                             <tr>
                                 <th>PP Diff</th>
