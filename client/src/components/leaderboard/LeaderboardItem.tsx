@@ -1,8 +1,9 @@
 import { IPrototypePP } from "app-structures";
-import { Link } from "react-router-dom";
-import "../../styles/table-listing.css";
-import PrototypeSelectorNavigator from "../../hooks/PrototypeSelectorNavigator";
 import { useContext } from "react";
+import { Link } from "react-router-dom";
+import PrototypeSelectorNavigator from "../../hooks/PrototypeSelectorNavigator";
+import "../../styles/table-listing.css";
+import { Util } from "../../Util";
 
 export default function LeaderboardItem(props: {
     data: IPrototypePP;
@@ -11,6 +12,9 @@ export default function LeaderboardItem(props: {
 }) {
     const prototypeSelectorCtx = useContext(PrototypeSelectorNavigator);
     const user = props.data;
+
+    const diff = user.localPPTotal - (user.masterPPTotal ?? user.livePPTotal);
+    const color = Util.getDiffColor(diff);
 
     return (
         <tr>
@@ -31,12 +35,10 @@ export default function LeaderboardItem(props: {
             {user.masterPPTotal !== undefined && (
                 <td>{user.masterPPTotal.toFixed(2)}</td>
             )}
-            <td>{user.localPPTotal.toFixed(2)}</td>
             <td>
-                {(
-                    user.localPPTotal - (user.masterPPTotal ?? user.livePPTotal)
-                ).toFixed(2)}
+                <b>{user.localPPTotal.toFixed(2)}</b>
             </td>
+            <td style={{ color: `rgb(${color})` }}>{diff.toFixed(2)}</td>
         </tr>
     );
 }

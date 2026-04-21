@@ -1,6 +1,7 @@
+import { ModUtil } from "@rian8337/osu-base";
 import { PrototypePPEntry, TopPrototypePPEntry } from "app-structures";
 import "../styles/play-list.css";
-import { ModUtil } from "@rian8337/osu-base";
+import { Util } from "../Util";
 
 const isTopEntry = (
     data: PrototypePPEntry | TopPrototypePPEntry
@@ -29,6 +30,11 @@ export default function PlayItem(props: {
 }) {
     const { data, onClick } = props;
     const topEntry = isTopEntry(data);
+    const diff =
+        data.local.performance.total -
+        (data.master ?? data.live).performance.total;
+
+    const color = Util.getDiffColor(diff);
 
     return (
         <tr className="play-item" onClick={onClick}>
@@ -37,15 +43,18 @@ export default function PlayItem(props: {
             {topEntry && <td style={{ textAlign: "left" }}>{data.username}</td>}
 
             <td style={{ textAlign: "left" }}>{data.title}</td>
-            <td>{data.live.performance.total.toFixed(2)}</td>
-            {data.master && <td>{data.master.performance.total.toFixed(2)}</td>}
-            <td>{data.local.performance.total.toFixed(2)}</td>
             <td>
-                {(
-                    data.local.performance.total -
-                    (data.master ?? data.live).performance.total
-                ).toFixed(2)}
+                <b>{data.live.performance.total.toFixed(2)}</b>
             </td>
+            {data.master && (
+                <td>
+                    <b>{data.master.performance.total.toFixed(2)}</b>
+                </td>
+            )}
+            <td style={{ color: "#faa2c1" }}>
+                <b>{data.local.performance.total.toFixed(2)}</b>
+            </td>
+            <td style={{ color: `rgb(${color})` }}>{diff.toFixed(2)}</td>
             <IndividualPPCell
                 prevPP={(data.master ?? data.live).performance.aim}
                 newPP={data.local.performance.aim}
