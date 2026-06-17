@@ -63,8 +63,9 @@ a:visited {
 }
 
 .prototype-disclaimer {
+    color: red;
     text-align: center;
-    font: 15px Exo-Bold;
+    font: 2em Exo-Bold;
     max-width: 1000px;
     margin: 0 auto;
 }
