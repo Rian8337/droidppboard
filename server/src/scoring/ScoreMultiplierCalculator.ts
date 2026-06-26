@@ -25,7 +25,7 @@ export class ScoreMultiplierCalculator {
          * The {@link BeatmapDifficulty} for the beatmap that the multipliers are calculated for. This must be the
          * {@link BeatmapDifficulty} for the beatmap **before** any {@link Mod} application.
          */
-        protected readonly difficulty?: BeatmapDifficulty | null,
+        protected readonly difficulty: BeatmapDifficulty,
     ) {}
 
     /**

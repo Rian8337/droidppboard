@@ -1,6 +1,7 @@
 import {
     BeatmapDifficulty,
     MapInfo,
+    Modes,
     ModReplayV6,
     ModUtil,
 } from "@rian8337/osu-base";
@@ -124,9 +125,6 @@ router.get<"/", unknown, unknown, unknown, Partial<{ beatmapId: string }>>(
             const legacyCalculator = new DroidLegacyScoreMultiplierCalculator(
                 difficulty,
             );
-            const newCalculator = new DroidScoreMultiplierCalculator(
-                difficulty,
-            );
 
             const seen = new Set<number>();
 
@@ -144,6 +142,19 @@ router.get<"/", unknown, unknown, unknown, Partial<{ beatmapId: string }>>(
 
                     const prevMultiplier =
                         legacyCalculator.calculateFor(modArray);
+
+                    const appliedDifficulty = new BeatmapDifficulty(difficulty);
+
+                    ModUtil.applyModsToBeatmapDifficulty(
+                        appliedDifficulty,
+                        Modes.Droid,
+                        mods,
+                    );
+
+                    const newCalculator = new DroidScoreMultiplierCalculator(
+                        difficulty,
+                        appliedDifficulty,
+                    );
 
                     const newMultiplier = newCalculator.calculateFor(modArray);
 
