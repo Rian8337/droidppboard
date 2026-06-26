@@ -11,7 +11,7 @@ export default function ScoreMultiplierTable(props: {
         ScoreMultiplierSortMode.newTotalScoreDescending
     );
 
-    const data = [...props.scores];
+    const data = props.scores.map((s, i) => ({ ...s, rank: i + 1 }));
 
     switch (sortMode) {
         case ScoreMultiplierSortMode.prevMultiplierAscending:
@@ -114,7 +114,7 @@ export default function ScoreMultiplierTable(props: {
                     </tr>
                 </thead>
                 <tbody>
-                    {data.map((row, i) => {
+                    {data.map((row) => {
                         const delta = row.newTotalScore - row.prevTotalScore;
 
                         let deltaColor = "inherit";
@@ -126,7 +126,7 @@ export default function ScoreMultiplierTable(props: {
 
                         return (
                             <tr key={row.id}>
-                                <td>{i + 1}</td>
+                                <td>{row.rank}</td>
                                 <td>{row.uid}</td>
                                 <td style={{ wordBreak: "break-all" }}>
                                     {row.mods || "NM"}
