@@ -1,7 +1,7 @@
-import { TopPrototypePPEntry } from "app-structures";
+import { ModMultiplierSampleEntry, TopPrototypePPEntry } from "app-structures";
 import { Request, RequestHandler } from "express";
 import rateLimit from "express-rate-limit";
-import { ModMap, ModUtil } from "@rian8337/osu-base";
+import { ModMap, ModUtil, OsuAPIResponse } from "@rian8337/osu-base";
 import { join } from "path";
 import { ReadStream } from "fs";
 import { DatabaseManager } from "../database/managers/DatabaseManager";
@@ -19,6 +19,14 @@ export abstract class Util {
      * List of all top prototype plays from all players mapped by rework type, regardless of mods.
      */
     static readonly allTopEntries = new Map<string, TopPrototypePPEntry[]>();
+
+    /**
+     * Cache of score multiplier samples, keyed by beatmap hash.
+     */
+    static readonly scoreMultiplierCache = new Map<
+        string,
+        { data: ModMultiplierSampleEntry[]; expiresAt: number }
+    >();
 
     /**
      * List of top prototype plays from all players, mapped by rework type, and each map inside the
@@ -244,6 +252,28 @@ export abstract class Util {
         }
 
         return null;
+    }
+
+    /**
+     * Retrieves a beatmap's information.
+     *
+     * @param beatmapId The ID of the beatmap to retrieve.
+     * @returns The beatmap's information, or null if not found.
+     */
+    static async getBeatmap(beatmapId: number): Promise<OsuAPIResponse | null> {
+        try {
+            const res = await fetch(
+                `http://localhost:3017/api/beatmap/getbeatmap?key=${process.env.DROID_SERVER_INTERNAL_KEY}&id=${beatmapId}`,
+            );
+
+            if (!res.ok) {
+                return null;
+            }
+
+            return res.json();
+        } catch {
+            return null;
+        }
     }
 
     /**
