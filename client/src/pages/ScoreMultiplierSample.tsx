@@ -5,6 +5,7 @@ import ScoreMultiplierTable from "../components/scoreMultiplier/ScoreMultiplierT
 import { ModMultiplierSampleResponse } from "app-structures";
 import "../styles/main.css";
 import "../styles/input.css";
+import "../styles/play-list.css";
 
 export default function ScoreMultiplierSample() {
     const [beatmapInput, setBeatmapInput] = useState("");
