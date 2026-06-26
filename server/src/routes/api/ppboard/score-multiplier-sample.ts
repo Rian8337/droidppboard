@@ -4,7 +4,10 @@ import {
     ModReplayV6,
     ModUtil,
 } from "@rian8337/osu-base";
-import { ModMultiplierSampleEntry, ModMultiplierSampleResponse } from "app-structures";
+import {
+    ModMultiplierSampleEntry,
+    ModMultiplierSampleResponse,
+} from "app-structures";
 import express from "express";
 import { RowDataPacket } from "mysql2/promise";
 import { officialDb } from "../../../database/official";
@@ -139,7 +142,8 @@ router.get<"/", unknown, unknown, unknown, Partial<{ beatmapId: string }>>(
                     const mods = ModUtil.pcStringToMods(row.mods ?? "");
                     const modArray = [...mods.values()];
 
-                    const prevMultiplier = legacyCalculator.calculateFor(modArray);
+                    const prevMultiplier =
+                        legacyCalculator.calculateFor(modArray);
                     const newMultiplier = newCalculator.calculateFor(modArray);
 
                     return {
@@ -148,7 +152,11 @@ router.get<"/", unknown, unknown, unknown, Partial<{ beatmapId: string }>>(
                         baseScore: row.score,
                         mods: ModUtil.modsToOrderedString(modArray),
                         prevMultiplier,
-                        prevTotalScore: Math.round(row.score * prevMultiplier),
+                        prevTotalScore: Math.round(
+                            Math.fround(
+                                row.score * Math.fround(prevMultiplier),
+                            ),
+                        ),
                         newMultiplier,
                         newTotalScore: Math.round(row.score * newMultiplier),
                         accuracy: row.accuracy,
