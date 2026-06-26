@@ -1,6 +1,7 @@
 import { ModMultiplierSampleEntry } from "app-structures";
 import { useState } from "react";
 import { ScoreMultiplierSortMode } from "../../interfaces/ScoreMultiplierSortMode";
+import "../../styles/play-list.css";
 import "../../styles/table-listing.css";
 import { Precision } from "@rian8337/osu-base";
 
@@ -53,17 +54,16 @@ export default function ScoreMultiplierTable(props: {
 
     const generateHead = (
         name: string,
-        width: string,
         ascendSort?: ScoreMultiplierSortMode,
         descendSort?: ScoreMultiplierSortMode,
     ) => {
         if (ascendSort === undefined || descendSort === undefined) {
-            return <th style={{ width }}>{name}</th>;
+            return <th>{name}</th>;
         }
 
         return (
             <th
-                style={{ width, cursor: "pointer" }}
+                style={{ cursor: "pointer" }}
                 onClick={() => {
                     setSortMode(
                         sortMode === ascendSort ? descendSort : ascendSort,
@@ -82,40 +82,36 @@ export default function ScoreMultiplierTable(props: {
     };
 
     return (
-        <div className="table-container">
-            <table className="listing">
+        <div className="play-list-container">
+            <table className="listing play-list-table">
                 <thead>
                     <tr>
-                        {generateHead("#", "4%")}
-                        {generateHead("UID", "6%")}
-                        {generateHead("Mods", "10%")}
+                        {generateHead("#")}
+                        {generateHead("UID")}
+                        {generateHead("Mods")}
                         {generateHead(
                             "Prev ×",
-                            "10%",
                             ScoreMultiplierSortMode.prevMultiplierAscending,
                             ScoreMultiplierSortMode.prevMultiplierDescending,
                         )}
                         {generateHead(
                             "Prev Total",
-                            "14%",
                             ScoreMultiplierSortMode.prevTotalScoreAscending,
                             ScoreMultiplierSortMode.prevTotalScoreDescending,
                         )}
                         {generateHead(
                             "New ×",
-                            "10%",
                             ScoreMultiplierSortMode.newMultiplierAscending,
                             ScoreMultiplierSortMode.newMultiplierDescending,
                         )}
                         {generateHead(
                             "New Total",
-                            "14%",
                             ScoreMultiplierSortMode.newTotalScoreAscending,
                             ScoreMultiplierSortMode.newTotalScoreDescending,
                         )}
-                        {generateHead("Combo", "10%")}
-                        {generateHead("Accuracy", "10%")}
-                        {generateHead("Mark", "8%")}
+                        {generateHead("Combo")}
+                        {generateHead("Accuracy")}
+                        {generateHead("Mark")}
                     </tr>
                 </thead>
                 <tbody>
