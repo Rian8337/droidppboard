@@ -28,7 +28,7 @@ const placeholders = rankedAcronyms.map(() => "?").join(", ");
 
 const router = express.Router();
 
-router.use(Util.createRateLimit(3));
+router.use(Util.createRateLimit(5));
 
 interface ScoreRow extends RowDataPacket {
     id: number;
