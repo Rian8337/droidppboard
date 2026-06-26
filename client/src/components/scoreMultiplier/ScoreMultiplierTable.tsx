@@ -15,7 +15,6 @@ export default function ScoreMultiplierTable(props: {
                         <th style={{ width: "4%" }}>#</th>
                         <th style={{ width: "6%" }}>UID</th>
                         <th style={{ width: "10%" }}>Mods</th>
-                        <th style={{ width: "14%" }}>Base Score</th>
                         <th style={{ width: "10%" }}>Prev ×</th>
                         <th style={{ width: "14%" }}>Prev Total</th>
                         <th style={{ width: "10%" }}>New ×</th>
@@ -40,7 +39,6 @@ export default function ScoreMultiplierTable(props: {
                                 <td>{i + 1}</td>
                                 <td>{row.uid}</td>
                                 <td>{row.mods || "NM"}</td>
-                                <td>{row.baseScore.toLocaleString()}</td>
                                 <td>{row.prevMultiplier.toFixed(2)}×</td>
                                 <td>{row.prevTotalScore.toLocaleString()}</td>
                                 <td style={{ color: deltaColor }}>

@@ -144,12 +144,12 @@ router.get<"/", unknown, unknown, unknown, Partial<{ beatmapId: string }>>(
 
                     const prevMultiplier =
                         legacyCalculator.calculateFor(modArray);
+
                     const newMultiplier = newCalculator.calculateFor(modArray);
 
                     return {
                         id: row.id,
                         uid: row.uid,
-                        baseScore: row.score,
                         mods: ModUtil.modsToOrderedString(modArray),
                         prevMultiplier,
                         prevTotalScore: Math.round(
