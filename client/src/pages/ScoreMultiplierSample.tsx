@@ -8,7 +8,6 @@ import "../styles/input.css";
 
 export default function ScoreMultiplierSample() {
     const [beatmapInput, setBeatmapInput] = useState("");
-    const [modFilter, setModFilter] = useState("");
     const [response, setResponse] = useState<ModMultiplierSampleResponse | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | undefined>(undefined);
@@ -26,10 +25,6 @@ export default function ScoreMultiplierSample() {
         setResponse(null);
 
         const params = new URLSearchParams({ beatmapId: trimmed });
-        const mods = modFilter.trim();
-        if (mods) {
-            params.set("mods", mods);
-        }
 
         try {
             const res = await fetch(
@@ -74,8 +69,8 @@ export default function ScoreMultiplierSample() {
             />
             <h2 className="subtitle">Score Multiplier Sample</h2>
             <h3 className="description" style={{ textAlign: "center" }}>
-                Enter a beatmap ID or URL to retrieve the top 25 scores per mod
-                combination. Adjust proposed multipliers to simulate re-ranking.
+                Enter a beatmap ID or URL to compare top scores under the
+                previous and new score multipliers.
             </h3>
 
             <div className="search-container">
@@ -87,16 +82,7 @@ export default function ScoreMultiplierSample() {
                         value={beatmapInput}
                         onChange={(e) => setBeatmapInput(e.target.value)}
                         disabled={loading}
-                        style={{ width: "calc(50% - 20px)" }}
-                    />
-                    <input
-                        className="search"
-                        type="text"
-                        placeholder="Mod filter, e.g. EZ,DT (optional)"
-                        value={modFilter}
-                        onChange={(e) => setModFilter(e.target.value)}
-                        disabled={loading}
-                        style={{ width: "calc(30% - 20px)", marginLeft: "10px" }}
+                        style={{ width: "calc(80% - 20px)" }}
                     />
                     <input
                         type="submit"
