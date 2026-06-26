@@ -157,6 +157,8 @@ export default function ScoreMultiplierSample() {
                 </tbody>
             </table>
 
+            <br />
+
             <div className="search-container">
                 <form onSubmit={onSubmit} style={{ textAlign: "center" }}>
                     <input
