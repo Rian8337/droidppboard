@@ -1,31 +1,125 @@
 import { ModMultiplierSampleEntry } from "app-structures";
+import { useState } from "react";
+import { ScoreMultiplierSortMode } from "../../interfaces/ScoreMultiplierSortMode";
 import "../../styles/table-listing.css";
 import { Precision } from "@rian8337/osu-base";
 
 export default function ScoreMultiplierTable(props: {
     scores: ModMultiplierSampleEntry[];
 }) {
-    const { scores } = props;
+    const [sortMode, setSortMode] = useState(
+        ScoreMultiplierSortMode.newTotalScoreDescending,
+    );
+
+    const data = [...props.scores];
+
+    switch (sortMode) {
+        case ScoreMultiplierSortMode.prevMultiplierAscending:
+        case ScoreMultiplierSortMode.prevMultiplierDescending:
+            data.sort((a, b) =>
+                sortMode === ScoreMultiplierSortMode.prevMultiplierAscending
+                    ? a.prevMultiplier - b.prevMultiplier
+                    : b.prevMultiplier - a.prevMultiplier,
+            );
+            break;
+
+        case ScoreMultiplierSortMode.prevTotalScoreAscending:
+        case ScoreMultiplierSortMode.prevTotalScoreDescending:
+            data.sort((a, b) =>
+                sortMode === ScoreMultiplierSortMode.prevTotalScoreAscending
+                    ? a.prevTotalScore - b.prevTotalScore
+                    : b.prevTotalScore - a.prevTotalScore,
+            );
+            break;
+
+        case ScoreMultiplierSortMode.newMultiplierAscending:
+        case ScoreMultiplierSortMode.newMultiplierDescending:
+            data.sort((a, b) =>
+                sortMode === ScoreMultiplierSortMode.newMultiplierAscending
+                    ? a.newMultiplier - b.newMultiplier
+                    : b.newMultiplier - a.newMultiplier,
+            );
+            break;
+
+        case ScoreMultiplierSortMode.newTotalScoreAscending:
+        case ScoreMultiplierSortMode.newTotalScoreDescending:
+            data.sort((a, b) =>
+                sortMode === ScoreMultiplierSortMode.newTotalScoreAscending
+                    ? a.newTotalScore - b.newTotalScore
+                    : b.newTotalScore - a.newTotalScore,
+            );
+            break;
+    }
+
+    const generateHead = (
+        name: string,
+        width: string,
+        ascendSort?: ScoreMultiplierSortMode,
+        descendSort?: ScoreMultiplierSortMode,
+    ) => {
+        if (ascendSort === undefined || descendSort === undefined) {
+            return <th style={{ width }}>{name}</th>;
+        }
+
+        return (
+            <th
+                style={{ width, cursor: "pointer" }}
+                onClick={() => {
+                    setSortMode(
+                        sortMode === ascendSort ? descendSort : ascendSort,
+                    );
+                }}
+            >
+                {`${name}${
+                    sortMode === ascendSort
+                        ? " ↑"
+                        : sortMode === descendSort
+                          ? " ↓"
+                          : ""
+                }`}
+            </th>
+        );
+    };
 
     return (
         <div className="table-container">
             <table className="listing">
                 <thead>
                     <tr>
-                        <th style={{ width: "4%" }}>#</th>
-                        <th style={{ width: "6%" }}>UID</th>
-                        <th style={{ width: "10%" }}>Mods</th>
-                        <th style={{ width: "10%" }}>Prev ×</th>
-                        <th style={{ width: "14%" }}>Prev Total</th>
-                        <th style={{ width: "10%" }}>New ×</th>
-                        <th style={{ width: "14%" }}>New Total</th>
-                        <th style={{ width: "10%" }}>Combo</th>
-                        <th style={{ width: "10%" }}>Accuracy</th>
-                        <th style={{ width: "8%" }}>Mark</th>
+                        {generateHead("#", "4%")}
+                        {generateHead("UID", "6%")}
+                        {generateHead("Mods", "10%")}
+                        {generateHead(
+                            "Prev ×",
+                            "10%",
+                            ScoreMultiplierSortMode.prevMultiplierAscending,
+                            ScoreMultiplierSortMode.prevMultiplierDescending,
+                        )}
+                        {generateHead(
+                            "Prev Total",
+                            "14%",
+                            ScoreMultiplierSortMode.prevTotalScoreAscending,
+                            ScoreMultiplierSortMode.prevTotalScoreDescending,
+                        )}
+                        {generateHead(
+                            "New ×",
+                            "10%",
+                            ScoreMultiplierSortMode.newMultiplierAscending,
+                            ScoreMultiplierSortMode.newMultiplierDescending,
+                        )}
+                        {generateHead(
+                            "New Total",
+                            "14%",
+                            ScoreMultiplierSortMode.newTotalScoreAscending,
+                            ScoreMultiplierSortMode.newTotalScoreDescending,
+                        )}
+                        {generateHead("Combo", "10%")}
+                        {generateHead("Accuracy", "10%")}
+                        {generateHead("Mark", "8%")}
                     </tr>
                 </thead>
                 <tbody>
-                    {scores.map((row, i) => {
+                    {data.map((row, i) => {
                         const delta = row.newTotalScore - row.prevTotalScore;
 
                         let deltaColor = "inherit";
