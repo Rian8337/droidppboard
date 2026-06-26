@@ -129,6 +129,10 @@ router.get<"/", unknown, unknown, unknown, Partial<{ beatmapId: string }>>(
 
             scores = rows.map<ModMultiplierSampleEntry>((row) => {
                 const mods = ModUtil.deserializeMods(row.mods ?? "[]");
+
+                // Exclude RV6 since it's pointless
+                mods.delete(ModReplayV6);
+
                 const modArray = [...mods.values()];
 
                 const prevMultiplier = legacyCalculator.calculateFor(modArray);
