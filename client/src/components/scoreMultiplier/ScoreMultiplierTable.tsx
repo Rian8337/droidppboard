@@ -8,7 +8,7 @@ export default function ScoreMultiplierTable(props: {
     scores: ModMultiplierSampleEntry[];
 }) {
     const [sortMode, setSortMode] = useState(
-        ScoreMultiplierSortMode.newTotalScoreDescending,
+        ScoreMultiplierSortMode.newTotalScoreDescending
     );
 
     const data = [...props.scores];
@@ -19,7 +19,7 @@ export default function ScoreMultiplierTable(props: {
             data.sort((a, b) =>
                 sortMode === ScoreMultiplierSortMode.prevMultiplierAscending
                     ? a.prevMultiplier - b.prevMultiplier
-                    : b.prevMultiplier - a.prevMultiplier,
+                    : b.prevMultiplier - a.prevMultiplier
             );
             break;
 
@@ -28,7 +28,7 @@ export default function ScoreMultiplierTable(props: {
             data.sort((a, b) =>
                 sortMode === ScoreMultiplierSortMode.prevTotalScoreAscending
                     ? a.prevTotalScore - b.prevTotalScore
-                    : b.prevTotalScore - a.prevTotalScore,
+                    : b.prevTotalScore - a.prevTotalScore
             );
             break;
 
@@ -37,7 +37,7 @@ export default function ScoreMultiplierTable(props: {
             data.sort((a, b) =>
                 sortMode === ScoreMultiplierSortMode.newMultiplierAscending
                     ? a.newMultiplier - b.newMultiplier
-                    : b.newMultiplier - a.newMultiplier,
+                    : b.newMultiplier - a.newMultiplier
             );
             break;
 
@@ -46,7 +46,7 @@ export default function ScoreMultiplierTable(props: {
             data.sort((a, b) =>
                 sortMode === ScoreMultiplierSortMode.newTotalScoreAscending
                     ? a.newTotalScore - b.newTotalScore
-                    : b.newTotalScore - a.newTotalScore,
+                    : b.newTotalScore - a.newTotalScore
             );
             break;
     }
@@ -54,7 +54,7 @@ export default function ScoreMultiplierTable(props: {
     const generateHead = (
         name: string,
         ascendSort?: ScoreMultiplierSortMode,
-        descendSort?: ScoreMultiplierSortMode,
+        descendSort?: ScoreMultiplierSortMode
     ) => {
         if (ascendSort === undefined || descendSort === undefined) {
             return <th>{name}</th>;
@@ -65,7 +65,7 @@ export default function ScoreMultiplierTable(props: {
                 style={{ cursor: "pointer" }}
                 onClick={() => {
                     setSortMode(
-                        sortMode === ascendSort ? descendSort : ascendSort,
+                        sortMode === ascendSort ? descendSort : ascendSort
                     );
                 }}
             >
@@ -73,8 +73,8 @@ export default function ScoreMultiplierTable(props: {
                     sortMode === ascendSort
                         ? " ↑"
                         : sortMode === descendSort
-                          ? " ↓"
-                          : ""
+                        ? " ↓"
+                        : ""
                 }`}
             </th>
         );
@@ -91,26 +91,26 @@ export default function ScoreMultiplierTable(props: {
                         {generateHead(
                             "Prev ×",
                             ScoreMultiplierSortMode.prevMultiplierAscending,
-                            ScoreMultiplierSortMode.prevMultiplierDescending,
+                            ScoreMultiplierSortMode.prevMultiplierDescending
                         )}
                         {generateHead(
-                            "Prev Total",
+                            "Prev",
                             ScoreMultiplierSortMode.prevTotalScoreAscending,
-                            ScoreMultiplierSortMode.prevTotalScoreDescending,
+                            ScoreMultiplierSortMode.prevTotalScoreDescending
                         )}
                         {generateHead(
                             "New ×",
                             ScoreMultiplierSortMode.newMultiplierAscending,
-                            ScoreMultiplierSortMode.newMultiplierDescending,
+                            ScoreMultiplierSortMode.newMultiplierDescending
                         )}
                         {generateHead(
-                            "New Total",
+                            "New",
                             ScoreMultiplierSortMode.newTotalScoreAscending,
-                            ScoreMultiplierSortMode.newTotalScoreDescending,
+                            ScoreMultiplierSortMode.newTotalScoreDescending
                         )}
                         {generateHead("Combo")}
-                        {generateHead("Accuracy")}
-                        {generateHead("Mark")}
+                        {generateHead("Acc")}
+                        {generateHead("Rank")}
                     </tr>
                 </thead>
                 <tbody>
