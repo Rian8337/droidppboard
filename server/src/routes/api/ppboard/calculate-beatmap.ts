@@ -110,7 +110,7 @@ router.post("/", async (req, res) => {
 
     ModUtil.applyModsToBeatmapDifficulty(
         beatmapDifficulty,
-        Modes.droid,
+        Modes.Droid,
         mods,
         true,
     );
@@ -118,7 +118,7 @@ router.post("/", async (req, res) => {
     const formData = new FormData();
     formData.set("file", new Blob([osuFile]));
     formData.set("key", process.env.DROID_SERVER_INTERNAL_KEY!);
-    formData.set("gamemode", Modes.droid);
+    formData.set("gamemode", Modes.Droid);
     formData.set("calculationmethod", isPrototype ? "1" : "0");
     formData.set("mods", JSON.stringify(mods.serializeMods()));
 
@@ -157,7 +157,7 @@ router.post("/", async (req, res) => {
         });
     }
 
-    formData.set("gamemode", Modes.osu);
+    formData.set("gamemode", Modes.Osu);
 
     const osuAttribs: DPPProcessorCalculationResponse<
         CompleteCalculationAttributes<
