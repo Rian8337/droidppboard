@@ -39,7 +39,9 @@ export default function ScoreMultiplierTable(props: {
                             <tr key={row.id}>
                                 <td>{i + 1}</td>
                                 <td>{row.uid}</td>
-                                <td>{row.mods || "NM"}</td>
+                                <td style={{ wordBreak: "break-all" }}>
+                                    {row.mods || "NM"}
+                                </td>
                                 <td>{row.prevMultiplier.toFixed(2)}×</td>
                                 <td>{row.prevTotalScore.toLocaleString()}</td>
                                 <td style={{ color: deltaColor }}>
