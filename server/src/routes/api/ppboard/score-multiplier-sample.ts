@@ -6,6 +6,7 @@ import express from "express";
 import { RowDataPacket } from "mysql2/promise";
 import { officialDb } from "../../../database/official";
 import { Util } from "../../../utils/Util";
+import { MapInfo } from "@rian8337/osu-base";
 
 const router = express.Router();
 
@@ -42,7 +43,7 @@ router.get<
         return res.status(404).json({ message: "Beatmap not found" });
     }
 
-    const { file_md5: hash, title } = beatmap;
+    const { file_md5: hash } = beatmap;
 
     const requiredMods = (req.query.mods ?? "")
         .split(",")
@@ -86,7 +87,10 @@ router.get<
 
         const result = await officialDb
             .execute<ScoreRow[]>(query, [hash])
-            .catch(() => null);
+            .catch((e) => {
+                console.error(e);
+                return null;
+            });
 
         if (!result) {
             return res.status(500).json({ message: "Failed to query scores" });
@@ -120,8 +124,10 @@ router.get<
               })
             : allScores;
 
+    const beatmapInfo = MapInfo.from(beatmap);
+
     const response: ModMultiplierSampleResponse = {
-        beatmapTitle: title,
+        beatmapTitle: beatmapInfo.fullTitle,
         hash,
         scores,
     };
