@@ -25,7 +25,7 @@ import { ScoreMultiplierCalculator } from "./ScoreMultiplierCalculator";
  * changes to be applied without database migrations.
  */
 export class DroidLegacyScoreMultiplierCalculator extends ScoreMultiplierCalculator {
-    constructor(difficulty?: BeatmapDifficulty | null) {
+    constructor(difficulty: BeatmapDifficulty) {
         super(difficulty);
 
         //#region Difficulty Reduction
