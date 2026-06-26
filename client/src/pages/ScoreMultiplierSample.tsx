@@ -82,14 +82,12 @@ export default function ScoreMultiplierSample() {
                         value={beatmapInput}
                         onChange={(e) => setBeatmapInput(e.target.value)}
                         disabled={loading}
-                        style={{ width: "calc(80% - 20px)" }}
                     />
                     <input
                         type="submit"
                         className="submit-search"
                         value={loading ? "Loading..." : "Sample"}
                         disabled={loading || !beatmapInput.trim()}
-                        style={{ width: "calc(20% - 20px)", marginLeft: "10px" }}
                     />
                 </form>
             </div>
