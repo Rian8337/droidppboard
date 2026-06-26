@@ -2,7 +2,6 @@ import { ModMultiplierSampleEntry } from "app-structures";
 import { useState } from "react";
 import { ScoreMultiplierSortMode } from "../../interfaces/ScoreMultiplierSortMode";
 import "../../styles/play-list.css";
-import "../../styles/table-listing.css";
 import { Precision } from "@rian8337/osu-base";
 
 export default function ScoreMultiplierTable(props: {
@@ -83,7 +82,7 @@ export default function ScoreMultiplierTable(props: {
 
     return (
         <div className="play-list-container">
-            <table className="listing play-list-table">
+            <table className="play-list-table">
                 <thead>
                     <tr>
                         {generateHead("#")}
