@@ -74,7 +74,7 @@ export default function ScoreMultiplierSample() {
                 Enter a beatmap ID or URL to compare top scores under the
                 previous and new score multipliers.
             </h3>
-            <table style={{ margin: "0 auto" }}>
+            <table className="play-list-table" style={{ margin: "0 auto" }}>
                 <thead>
                     <tr>
                         <th>Mod</th>
