@@ -15,9 +15,9 @@
   "author": "Rian8337",
   "license": "MIT",
   "dependencies": {
-    "@rian8337/osu-base": "4.0.0-beta.85",
-    "@rian8337/osu-difficulty-calculator": "4.0.0-beta.85",
-    "@rian8337/osu-rebalance-difficulty-calculator": "4.0.0-beta.85",
+    "@rian8337/osu-base": "4.0.0-beta.91",
+    "@rian8337/osu-difficulty-calculator": "4.0.0-beta.94",
+    "@rian8337/osu-rebalance-difficulty-calculator": "4.0.0-beta.94",
     "app-structures": "file:../modules/app-structures",
     "cors": "^2.8.6",
     "dotenv": "^16.6.1",
@@ -25,6 +25,7 @@
     "express-form-data": "^2.0.23",
     "express-rate-limit": "^7.5.1",
     "mongodb": "^6.21.0",
+    "mysql2": "^3.22.5",
     "typescript": "^5.9.3"
   },
   "devDependencies": {
