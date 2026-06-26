@@ -82,7 +82,7 @@ export default function ScoreMultiplierTable(props: {
 
     return (
         <div className="play-list-container">
-            <table className="play-list-table">
+            <table className="play-list-table" style={{ width: "100%" }}>
                 <thead>
                     <tr>
                         {generateHead("#")}
