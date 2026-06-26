@@ -1,5 +1,6 @@
 import { ModMultiplierSampleEntry } from "app-structures";
 import "../../styles/table-listing.css";
+import { Precision } from "@rian8337/osu-base";
 
 export default function ScoreMultiplierTable(props: {
     scores: ModMultiplierSampleEntry[];
@@ -14,11 +15,11 @@ export default function ScoreMultiplierTable(props: {
                         <th style={{ width: "4%" }}>#</th>
                         <th style={{ width: "6%" }}>UID</th>
                         <th style={{ width: "10%" }}>Mods</th>
+                        <th style={{ width: "14%" }}>Base Score</th>
                         <th style={{ width: "10%" }}>Prev ×</th>
                         <th style={{ width: "14%" }}>Prev Total</th>
                         <th style={{ width: "10%" }}>New ×</th>
                         <th style={{ width: "14%" }}>New Total</th>
-                        <th style={{ width: "14%" }}>Base Score</th>
                         <th style={{ width: "10%" }}>Accuracy</th>
                         <th style={{ width: "8%" }}>Mark</th>
                     </tr>
@@ -26,18 +27,20 @@ export default function ScoreMultiplierTable(props: {
                 <tbody>
                     {scores.map((row, i) => {
                         const delta = row.newTotalScore - row.prevTotalScore;
-                        const deltaColor =
-                            delta > 0
-                                ? "lightgreen"
-                                : delta < 0
-                                  ? "rgb(252, 161, 176)"
-                                  : "inherit";
+
+                        let deltaColor = "inherit";
+
+                        if (!Precision.almostEquals(delta, 0)) {
+                            deltaColor =
+                                delta > 0 ? "lightgreen" : "rgb(252, 161, 176)";
+                        }
 
                         return (
                             <tr key={row.id}>
                                 <td>{i + 1}</td>
                                 <td>{row.uid}</td>
                                 <td>{row.mods || "NM"}</td>
+                                <td>{row.baseScore.toLocaleString()}</td>
                                 <td>{row.prevMultiplier.toFixed(2)}×</td>
                                 <td>{row.prevTotalScore.toLocaleString()}</td>
                                 <td style={{ color: deltaColor }}>
@@ -46,7 +49,6 @@ export default function ScoreMultiplierTable(props: {
                                 <td style={{ color: deltaColor }}>
                                     {row.newTotalScore.toLocaleString()}
                                 </td>
-                                <td>{row.baseScore.toLocaleString()}</td>
                                 <td>{(row.accuracy * 100).toFixed(2)}%</td>
                                 <td>{row.mark}</td>
                             </tr>
