@@ -175,7 +175,9 @@ router.get<"/", unknown, unknown, unknown, Partial<{ beatmapId: string }>>(
                     };
                 });
 
-            scores.sort((a, b) => b.newTotalScore - a.newTotalScore).splice(50);
+            scores
+                .sort((a, b) => b.newTotalScore - a.newTotalScore)
+                .splice(100);
 
             Util.scoreMultiplierCache.set(hash, {
                 data: scores,
