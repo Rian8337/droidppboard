@@ -34,6 +34,7 @@ interface ScoreRow extends RowDataPacket {
     id: number;
     uid: number;
     score: number;
+    combo: number;
     accuracy: number;
     mark: string;
     mods: string | null;
@@ -66,7 +67,7 @@ router.get<"/", unknown, unknown, unknown, Partial<{ beatmapId: string }>>(
         } else {
             const query = `
                 WITH beatmap_scores AS (
-                    SELECT id, uid, score, total_score, accuracy, mark, mods,
+                    SELECT id, uid, score, combo, total_score, accuracy, mark, mods,
                         (
                             SELECT GROUP_CONCAT(j.acronym ORDER BY j.acronym)
                             FROM JSON_TABLE(mods, '$[*]' COLUMNS (acronym VARCHAR(10) PATH '$.acronym')) j
@@ -92,7 +93,7 @@ router.get<"/", unknown, unknown, unknown, Partial<{ beatmapId: string }>>(
                     FROM per_acronym p
                     JOIN beatmap_scores bs ON bs.id = p.id
                 )
-                SELECT bs.id, bs.uid, bs.score, bs.accuracy, bs.mark,
+                SELECT bs.id, bs.uid, bs.score, bs.combo, bs.accuracy, bs.mark,
                        bs.mods_str AS mods
                 FROM ranked r
                 JOIN beatmap_scores bs ON bs.id = r.id
@@ -162,6 +163,7 @@ router.get<"/", unknown, unknown, unknown, Partial<{ beatmapId: string }>>(
                         id: row.id,
                         uid: row.uid,
                         mods: ModUtil.modsToOrderedString(modArray),
+                        combo: row.combo,
                         prevMultiplier,
                         prevTotalScore: Math.round(
                             Math.fround(

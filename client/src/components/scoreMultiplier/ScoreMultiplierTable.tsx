@@ -19,6 +19,7 @@ export default function ScoreMultiplierTable(props: {
                         <th style={{ width: "14%" }}>Prev Total</th>
                         <th style={{ width: "10%" }}>New ×</th>
                         <th style={{ width: "14%" }}>New Total</th>
+                        <th style={{ width: "10%" }}>Combo</th>
                         <th style={{ width: "10%" }}>Accuracy</th>
                         <th style={{ width: "8%" }}>Mark</th>
                     </tr>
@@ -47,6 +48,7 @@ export default function ScoreMultiplierTable(props: {
                                 <td style={{ color: deltaColor }}>
                                     {row.newTotalScore.toLocaleString()}
                                 </td>
+                                <td>{row.combo.toLocaleString()}x</td>
                                 <td>{(row.accuracy * 100).toFixed(2)}%</td>
                                 <td>{row.mark}</td>
                             </tr>

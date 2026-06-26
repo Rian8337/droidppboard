@@ -6,6 +6,7 @@ export interface ModMultiplierSampleEntry {
     readonly prevTotalScore: number;
     readonly newMultiplier: number;
     readonly newTotalScore: number;
+    readonly combo: number;
     readonly accuracy: number;
     readonly mark: string;
 }
