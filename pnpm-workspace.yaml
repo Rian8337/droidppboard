@@ -1,0 +1,7 @@
+packages:
+  - "modules/*"
+  - "server"
+  - "client"
+allowBuilds:
+  core-js: false
+  core-js-pure: false
