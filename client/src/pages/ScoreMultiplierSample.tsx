@@ -8,7 +8,8 @@ import "../styles/input.css";
 
 export default function ScoreMultiplierSample() {
     const [beatmapInput, setBeatmapInput] = useState("");
-    const [response, setResponse] = useState<ModMultiplierSampleResponse | null>(null);
+    const [response, setResponse] =
+        useState<ModMultiplierSampleResponse | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | undefined>(undefined);
 
@@ -73,6 +74,90 @@ export default function ScoreMultiplierSample() {
                 previous and new score multipliers.
             </h3>
 
+            <p>Current changes:</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Mod</th>
+                        <th>Old Multiplier</th>
+                        <th>New Multiplier</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>EZ</td>
+                        <td>0.5</td>
+                        <td>0.8</td>
+                    </tr>
+                    <tr>
+                        <td>RE</td>
+                        <td>0.5</td>
+                        <td>0.3</td>
+                    </tr>
+                    <tr>
+                        <td>HR</td>
+                        <td>1.06</td>
+                        <td>1.04</td>
+                    </tr>
+                    <tr>
+                        <td>PR</td>
+                        <td>1.06</td>
+                        <td>1.02 - 1.08 (OD-based)</td>
+                    </tr>
+                    <tr>
+                        <td>HD</td>
+                        <td>1.06 (default) / 1 (custom)</td>
+                        <td>1.06 / 1.03 (only fade approach circles)</td>
+                    </tr>
+                    <tr>
+                        <td>TC</td>
+                        <td>1.06</td>
+                        <td>1.02</td>
+                    </tr>
+                    <tr>
+                        <td>FL</td>
+                        <td>1.12 (default) / 1 (custom)</td>
+                        <td>1.02 - 1.2 (size-based, combo-based)</td>
+                    </tr>
+                    <tr>
+                        <td>FL + FR</td>
+                        <td>1</td>
+                        <td>FL bonus halved when combined with FR</td>
+                    </tr>
+                    <tr>
+                        <td>DT / NC</td>
+                        <td>1.12</td>
+                        <td>1.23</td>
+                    </tr>
+                    <tr>
+                        <td>HT</td>
+                        <td>0.3</td>
+                        <td>0.55</td>
+                    </tr>
+                    <tr>
+                        <td>CS</td>
+                        <td>0.09 (0.5x) - 1.24 (2x)</td>
+                        <td>0.2 (0.5x) - 1.46 (2x)</td>
+                    </tr>
+                    <tr>
+                        <td>WU / WD</td>
+                        <td colSpan={2}>
+                            Rate formula updated (same as CS changes above)
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>RD</td>
+                        <td>1</td>
+                        <td>0.7</td>
+                    </tr>
+                    <tr>
+                        <td>AD</td>
+                        <td>1</td>
+                        <td>0.7</td>
+                    </tr>
+                </tbody>
+            </table>
+
             <div className="search-container">
                 <form onSubmit={onSubmit} style={{ textAlign: "center" }}>
                     <input
@@ -92,9 +177,7 @@ export default function ScoreMultiplierSample() {
                 </form>
             </div>
 
-            {error && (
-                <h3 className="error-message">Error: {error}.</h3>
-            )}
+            {error && <h3 className="error-message">Error: {error}.</h3>}
 
             {response && (
                 <>
