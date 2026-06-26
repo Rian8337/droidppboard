@@ -67,11 +67,7 @@ router.get<"/", unknown, unknown, unknown, Partial<{ beatmapId: string }>>(
         } else {
             const query = `
                 WITH beatmap_scores AS (
-                    SELECT id, uid, score, combo, total_score, accuracy, mark, mods,
-                        (
-                            SELECT GROUP_CONCAT(j.acronym ORDER BY j.acronym)
-                            FROM JSON_TABLE(mods, '$[*]' COLUMNS (acronym VARCHAR(10) PATH '$.acronym')) j
-                        ) AS mods_str
+                    SELECT id, uid, score, combo, total_score, accuracy, mark, mods
                     FROM bbl_score
                     WHERE hash = ?
                 ),
