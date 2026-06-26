@@ -15,6 +15,7 @@ import ScrollToTop from "./components/ScrollToTop";
 import SkinList from "./pages/SkinList";
 import SkinPreview from "./pages/SkinPreview";
 import MatchHistory from "./pages/MatchHistory";
+import ScoreMultiplierSample from "./pages/ScoreMultiplierSample";
 
 function App() {
     const location = useLocation();
@@ -62,6 +63,10 @@ function App() {
                     <Route
                         path="/skin/:discordid/:name"
                         element={<SkinPreview />}
+                    />
+                    <Route
+                        path="/score-multiplier"
+                        element={<ScoreMultiplierSample />}
                     />
                 </Routes>
             </AnimatePresence>

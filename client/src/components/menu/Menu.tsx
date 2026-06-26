@@ -25,6 +25,10 @@ export default function Menu() {
                     path="/prototype/calculate"
                     label="Calculate Beatmap Prototype PP"
                 />
+                <MenuItem
+                    path="/score-multiplier"
+                    label="Score Multiplier Sample"
+                />
             </nav>
         </div>
     );
