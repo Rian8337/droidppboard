@@ -173,6 +173,7 @@ export default function ScoreMultiplierSample() {
                         onChange={(e) => setBeatmapInput(e.target.value)}
                         disabled={loading}
                     />
+                    <br />
                     <input
                         className="search"
                         type="text"
@@ -181,6 +182,7 @@ export default function ScoreMultiplierSample() {
                         onChange={(e) => setModFilter(e.target.value)}
                         disabled={loading}
                     />
+                    <br />
                     <input
                         type="submit"
                         className="submit-search"
