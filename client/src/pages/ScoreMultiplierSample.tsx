@@ -5,7 +5,6 @@ import ScoreMultiplierTable from "../components/scoreMultiplier/ScoreMultiplierT
 import { ModMultiplierSampleResponse } from "app-structures";
 import "../styles/main.css";
 import "../styles/input.css";
-import "../styles/play-list.css";
 
 export default function ScoreMultiplierSample() {
     const [beatmapInput, setBeatmapInput] = useState("");
@@ -74,7 +73,8 @@ export default function ScoreMultiplierSample() {
                 Enter a beatmap ID or URL to compare top scores under the
                 previous and new score multipliers.
             </h3>
-            <table className="play-list-table" style={{ margin: "0 auto" }}>
+
+            <table>
                 <thead>
                     <tr>
                         <th>Mod</th>
@@ -156,8 +156,6 @@ export default function ScoreMultiplierSample() {
                     </tr>
                 </tbody>
             </table>
-
-            <br />
 
             <div className="search-container">
                 <form onSubmit={onSubmit} style={{ textAlign: "center" }}>
