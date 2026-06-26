@@ -92,7 +92,7 @@ router.get<"/", unknown, unknown, unknown, Partial<{ beatmapId: string }>>(
                 deduped AS (
                     SELECT DISTINCT id
                     FROM ranked
-                    WHERE rn <= 25
+                    WHERE rn <= 50
                 )
                 SELECT bs.id, bs.uid, bs.score, bs.combo, bs.accuracy, bs.mark,
                        bs.mods
