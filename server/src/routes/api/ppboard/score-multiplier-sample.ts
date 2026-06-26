@@ -84,16 +84,20 @@ router.get<"/", unknown, unknown, unknown, Partial<{ beatmapId: string }>>(
                     WHERE JSON_LENGTH(s.mods) = 0
                 ),
                 ranked AS (
-                    SELECT p.id, p.acronym,
+                    SELECT p.id,
                            ROW_NUMBER() OVER (PARTITION BY p.acronym ORDER BY bs.total_score DESC) AS rn
                     FROM per_acronym p
                     JOIN beatmap_scores bs ON bs.id = p.id
+                ),
+                deduped AS (
+                    SELECT DISTINCT id
+                    FROM ranked
+                    WHERE rn <= 25
                 )
                 SELECT bs.id, bs.uid, bs.score, bs.combo, bs.accuracy, bs.mark,
-                       bs.mods_str AS mods
-                FROM ranked r
-                JOIN beatmap_scores bs ON bs.id = r.id
-                WHERE r.rn <= 25
+                       bs.mods
+                FROM deduped d
+                JOIN beatmap_scores bs ON bs.id = d.id
                 ORDER BY bs.total_score DESC
             `;
 
@@ -123,55 +127,42 @@ router.get<"/", unknown, unknown, unknown, Partial<{ beatmapId: string }>>(
                 difficulty,
             );
 
-            const seen = new Set<number>();
+            scores = rows.map<ModMultiplierSampleEntry>((row) => {
+                const mods = ModUtil.deserializeMods(row.mods ?? "[]");
+                const modArray = [...mods.values()];
 
-            scores = rows
-                .filter((row) => {
-                    if (seen.has(row.id)) {
-                        return false;
-                    }
-                    seen.add(row.id);
-                    return true;
-                })
-                .map<ModMultiplierSampleEntry>((row) => {
-                    const mods = ModUtil.pcStringToMods(row.mods ?? "");
-                    const modArray = [...mods.values()];
+                const prevMultiplier = legacyCalculator.calculateFor(modArray);
 
-                    const prevMultiplier =
-                        legacyCalculator.calculateFor(modArray);
+                const appliedDifficulty = new BeatmapDifficulty(difficulty);
 
-                    const appliedDifficulty = new BeatmapDifficulty(difficulty);
+                ModUtil.applyModsToBeatmapDifficulty(
+                    appliedDifficulty,
+                    Modes.Droid,
+                    mods,
+                );
 
-                    ModUtil.applyModsToBeatmapDifficulty(
-                        appliedDifficulty,
-                        Modes.Droid,
-                        mods,
-                    );
+                const newCalculator = new DroidScoreMultiplierCalculator(
+                    difficulty,
+                    appliedDifficulty,
+                );
 
-                    const newCalculator = new DroidScoreMultiplierCalculator(
-                        difficulty,
-                        appliedDifficulty,
-                    );
+                const newMultiplier = newCalculator.calculateFor(modArray);
 
-                    const newMultiplier = newCalculator.calculateFor(modArray);
-
-                    return {
-                        id: row.id,
-                        uid: row.uid,
-                        mods: ModUtil.modsToOrderedString(modArray),
-                        combo: row.combo,
-                        prevMultiplier,
-                        prevTotalScore: Math.round(
-                            Math.fround(
-                                row.score * Math.fround(prevMultiplier),
-                            ),
-                        ),
-                        newMultiplier,
-                        newTotalScore: Math.round(row.score * newMultiplier),
-                        accuracy: row.accuracy,
-                        mark: row.mark,
-                    };
-                });
+                return {
+                    id: row.id,
+                    uid: row.uid,
+                    mods: ModUtil.modsToOrderedString(modArray),
+                    combo: row.combo,
+                    prevMultiplier,
+                    prevTotalScore: Math.round(
+                        Math.fround(row.score * Math.fround(prevMultiplier)),
+                    ),
+                    newMultiplier,
+                    newTotalScore: Math.round(row.score * newMultiplier),
+                    accuracy: row.accuracy,
+                    mark: row.mark,
+                };
+            });
 
             scores
                 .sort((a, b) => b.newTotalScore - a.newTotalScore)
