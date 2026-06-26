@@ -17,3 +17,5 @@ export * from "./structures/SkinPreviewType";
 export * from "./structures/TopPPEntry";
 export * from "./structures/TopPrototypePPEntry";
 export * from "./structures/WhitelistDifficultyStatistics";
+export * from "./structures/ModMultiplierSampleEntry";
+export * from "./structures/ModMultiplierSampleResponse";
