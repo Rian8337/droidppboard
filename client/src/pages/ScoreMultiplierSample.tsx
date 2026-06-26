@@ -73,8 +73,6 @@ export default function ScoreMultiplierSample() {
                 Enter a beatmap ID or URL to compare top scores under the
                 previous and new score multipliers.
             </h3>
-
-            <p>Current changes:</p>
             <table>
                 <thead>
                     <tr>
@@ -122,7 +120,7 @@ export default function ScoreMultiplierSample() {
                     <tr>
                         <td>FL + FR</td>
                         <td>1</td>
-                        <td>FL bonus halved when combined with FR</td>
+                        <td>FL bonus halved</td>
                     </tr>
                     <tr>
                         <td>DT / NC</td>
