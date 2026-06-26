@@ -40,32 +40,36 @@ interface ScoreRow extends RowDataPacket {
     mods: string | null;
 }
 
-router.get<"/", unknown, unknown, unknown, Partial<{ beatmapId: string }>>(
+router.get<
     "/",
-    async (req, res) => {
-        const rawId = req.query.beatmapId ?? "";
-        const beatmapId = parseInt(rawId.split("/").at(-1) ?? "");
+    unknown,
+    unknown,
+    unknown,
+    Partial<{ beatmapId: string; mods: string }>
+>("/", async (req, res) => {
+    const rawId = req.query.beatmapId ?? "";
+    const beatmapId = parseInt(rawId.split("/").at(-1) ?? "");
 
-        if (isNaN(beatmapId) || beatmapId <= 0) {
-            return res.status(400).json({ message: "Invalid beatmap ID" });
-        }
+    if (isNaN(beatmapId) || beatmapId <= 0) {
+        return res.status(400).json({ message: "Invalid beatmap ID" });
+    }
 
-        const beatmap = await Util.getBeatmap(beatmapId);
+    const beatmap = await Util.getBeatmap(beatmapId);
 
-        if (!beatmap) {
-            return res.status(404).json({ message: "Beatmap not found" });
-        }
+    if (!beatmap) {
+        return res.status(404).json({ message: "Beatmap not found" });
+    }
 
-        const { file_md5: hash } = beatmap;
+    const { file_md5: hash } = beatmap;
 
-        const cached = Util.scoreMultiplierCache.get(hash);
+    const cached = Util.scoreMultiplierCache.get(hash);
 
-        let scores: ModMultiplierSampleEntry[];
+    let scores: ModMultiplierSampleEntry[];
 
-        if (cached && Date.now() < cached.expiresAt) {
-            scores = cached.data;
-        } else {
-            const query = `
+    if (cached && Date.now() < cached.expiresAt) {
+        scores = cached.data;
+    } else {
+        const query = `
                 WITH beatmap_scores AS (
                     SELECT id, uid, score, combo, total_score, accuracy, mark, mods
                     FROM bbl_score
@@ -101,91 +105,103 @@ router.get<"/", unknown, unknown, unknown, Partial<{ beatmapId: string }>>(
                 ORDER BY bs.total_score DESC
             `;
 
-            const result = await officialDb
-                .execute<ScoreRow[]>(query, [hash, ...rankedAcronyms])
-                .catch((e) => {
-                    console.error(e);
-                    return null;
-                });
-
-            if (!result) {
-                return res
-                    .status(500)
-                    .json({ message: "Failed to query scores" });
-            }
-
-            const [rows] = result;
-
-            const difficulty = new BeatmapDifficulty();
-
-            difficulty.cs = parseFloat(beatmap.diff_size);
-            difficulty.ar = parseFloat(beatmap.diff_approach);
-            difficulty.od = parseFloat(beatmap.diff_overall);
-            difficulty.hp = parseFloat(beatmap.diff_drain);
-
-            const legacyCalculator = new DroidLegacyScoreMultiplierCalculator(
-                difficulty,
-            );
-
-            scores = rows.map<ModMultiplierSampleEntry>((row) => {
-                const mods = ModUtil.deserializeMods(row.mods ?? "[]");
-
-                // Exclude RV6 since it's pointless
-                mods.delete(ModReplayV6);
-
-                const modArray = [...mods.values()];
-
-                const prevMultiplier = legacyCalculator.calculateFor(modArray);
-
-                const appliedDifficulty = new BeatmapDifficulty(difficulty);
-
-                ModUtil.applyModsToBeatmapDifficulty(
-                    appliedDifficulty,
-                    Modes.Droid,
-                    mods,
-                );
-
-                const newCalculator = new DroidScoreMultiplierCalculator(
-                    difficulty,
-                    appliedDifficulty,
-                );
-
-                const newMultiplier = newCalculator.calculateFor(modArray);
-
-                return {
-                    id: row.id,
-                    uid: row.uid,
-                    mods: ModUtil.modsToOrderedString(modArray),
-                    combo: row.combo,
-                    prevMultiplier,
-                    prevTotalScore: Math.round(
-                        Math.fround(row.score * Math.fround(prevMultiplier)),
-                    ),
-                    newMultiplier,
-                    newTotalScore: Math.round(row.score * newMultiplier),
-                    accuracy: row.accuracy,
-                    mark: row.mark,
-                };
+        const result = await officialDb
+            .execute<ScoreRow[]>(query, [hash, ...rankedAcronyms])
+            .catch((e) => {
+                console.error(e);
+                return null;
             });
 
-            scores
-                .sort((a, b) => b.newTotalScore - a.newTotalScore)
-                .splice(100);
-
-            Util.scoreMultiplierCache.set(hash, {
-                data: scores,
-                expiresAt: Date.now() + 3_600_000,
-            });
+        if (!result) {
+            return res.status(500).json({ message: "Failed to query scores" });
         }
 
-        const response: ModMultiplierSampleResponse = {
-            beatmapTitle: MapInfo.from(beatmap).fullTitle,
-            hash,
-            scores,
-        };
+        const [rows] = result;
 
-        return res.json(response);
-    },
-);
+        const difficulty = new BeatmapDifficulty();
+
+        difficulty.cs = parseFloat(beatmap.diff_size);
+        difficulty.ar = parseFloat(beatmap.diff_approach);
+        difficulty.od = parseFloat(beatmap.diff_overall);
+        difficulty.hp = parseFloat(beatmap.diff_drain);
+
+        const legacyCalculator = new DroidLegacyScoreMultiplierCalculator(
+            difficulty,
+        );
+
+        scores = rows.map<ModMultiplierSampleEntry>((row) => {
+            const mods = ModUtil.deserializeMods(row.mods ?? "[]");
+
+            // Exclude RV6 since it's pointless
+            mods.delete(ModReplayV6);
+
+            const modArray = [...mods.values()];
+
+            const prevMultiplier = legacyCalculator.calculateFor(modArray);
+
+            const appliedDifficulty = new BeatmapDifficulty(difficulty);
+
+            ModUtil.applyModsToBeatmapDifficulty(
+                appliedDifficulty,
+                Modes.Droid,
+                mods,
+            );
+
+            const newCalculator = new DroidScoreMultiplierCalculator(
+                difficulty,
+                appliedDifficulty,
+            );
+
+            const newMultiplier = newCalculator.calculateFor(modArray);
+
+            return {
+                id: row.id,
+                uid: row.uid,
+                mods: ModUtil.modsToOrderedString(modArray),
+                combo: row.combo,
+                prevMultiplier,
+                prevTotalScore: Math.round(
+                    Math.fround(row.score * Math.fround(prevMultiplier)),
+                ),
+                newMultiplier,
+                newTotalScore: Math.round(row.score * newMultiplier),
+                accuracy: row.accuracy,
+                mark: row.mark,
+            };
+        });
+
+        scores.sort((a, b) => b.newTotalScore - a.newTotalScore);
+
+        Util.scoreMultiplierCache.set(hash, {
+            data: scores,
+            expiresAt: Date.now() + 3_600_000,
+        });
+    }
+
+    const filterAcronyms = [
+        ...ModUtil.pcStringToMods(req.query.mods ?? "").values(),
+    ].map((m) => m.acronym);
+
+    const filtered =
+        filterAcronyms.length === 0
+            ? scores
+            : scores.filter((s) => {
+                  const scoreAcronyms = new Set(
+                      [...ModUtil.pcStringToMods(s.mods).values()].map(
+                          (m) => m.acronym,
+                      ),
+                  );
+
+                  return filterAcronyms.every((a) => scoreAcronyms.has(a));
+              });
+
+    const response: ModMultiplierSampleResponse = {
+        beatmapTitle: MapInfo.from(beatmap).fullTitle,
+        hash,
+        scores: filtered.slice(0, 100),
+    };
+
+    return res.json(response);
+});
 
 export default router;

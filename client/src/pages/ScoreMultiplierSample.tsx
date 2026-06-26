@@ -8,6 +8,7 @@ import "../styles/input.css";
 
 export default function ScoreMultiplierSample() {
     const [beatmapInput, setBeatmapInput] = useState("");
+    const [modFilter, setModFilter] = useState("");
     const [response, setResponse] =
         useState<ModMultiplierSampleResponse | null>(null);
     const [loading, setLoading] = useState(false);
@@ -26,6 +27,11 @@ export default function ScoreMultiplierSample() {
         setResponse(null);
 
         const params = new URLSearchParams({ beatmapId: trimmed });
+
+        const trimmedMods = modFilter.trim();
+        if (trimmedMods) {
+            params.set("mods", trimmedMods);
+        }
 
         try {
             const res = await fetch(
@@ -165,6 +171,14 @@ export default function ScoreMultiplierSample() {
                         placeholder="Beatmap ID or URL..."
                         value={beatmapInput}
                         onChange={(e) => setBeatmapInput(e.target.value)}
+                        disabled={loading}
+                    />
+                    <input
+                        className="search"
+                        type="text"
+                        placeholder="Mod filter (e.g. EZDT)..."
+                        value={modFilter}
+                        onChange={(e) => setModFilter(e.target.value)}
                         disabled={loading}
                     />
                     <input
