@@ -129,48 +129,48 @@ router.get<
             difficulty,
         );
 
-        scores = rows.map<ModMultiplierSampleEntry>((row) => {
-            const mods = ModUtil.deserializeMods(row.mods ?? "[]");
+        scores = rows
+            .map<ModMultiplierSampleEntry>((row) => {
+                const mods = ModUtil.deserializeMods(row.mods ?? "[]");
 
-            // Exclude RV6 since it's pointless
-            mods.delete(ModReplayV6);
+                // Exclude RV6 since it's pointless
+                mods.delete(ModReplayV6);
 
-            const modArray = [...mods.values()];
+                const modArray = [...mods.values()];
 
-            const prevMultiplier = legacyCalculator.calculateFor(modArray);
+                const prevMultiplier = legacyCalculator.calculateFor(modArray);
 
-            const appliedDifficulty = new BeatmapDifficulty(difficulty);
+                const appliedDifficulty = new BeatmapDifficulty(difficulty);
 
-            ModUtil.applyModsToBeatmapDifficulty(
-                appliedDifficulty,
-                Modes.Droid,
-                mods,
-            );
+                ModUtil.applyModsToBeatmapDifficulty(
+                    appliedDifficulty,
+                    Modes.Droid,
+                    mods,
+                );
 
-            const newCalculator = new DroidScoreMultiplierCalculator(
-                difficulty,
-                appliedDifficulty,
-            );
+                const newCalculator = new DroidScoreMultiplierCalculator(
+                    difficulty,
+                    appliedDifficulty,
+                );
 
-            const newMultiplier = newCalculator.calculateFor(modArray);
+                const newMultiplier = newCalculator.calculateFor(modArray);
 
-            return {
-                id: row.id,
-                uid: row.uid,
-                mods: ModUtil.modsToOrderedString(modArray),
-                combo: row.combo,
-                prevMultiplier,
-                prevTotalScore: Math.round(
-                    Math.fround(row.score * Math.fround(prevMultiplier)),
-                ),
-                newMultiplier,
-                newTotalScore: Math.round(row.score * newMultiplier),
-                accuracy: row.accuracy,
-                mark: row.mark,
-            };
-        });
-
-        scores.sort((a, b) => b.newTotalScore - a.newTotalScore);
+                return {
+                    id: row.id,
+                    uid: row.uid,
+                    mods: ModUtil.modsToOrderedString(modArray),
+                    combo: row.combo,
+                    prevMultiplier,
+                    prevTotalScore: Math.round(
+                        Math.fround(row.score * Math.fround(prevMultiplier)),
+                    ),
+                    newMultiplier,
+                    newTotalScore: Math.round(row.score * newMultiplier),
+                    accuracy: row.accuracy,
+                    mark: row.mark,
+                };
+            })
+            .sort((a, b) => b.newTotalScore - a.newTotalScore);
 
         Util.scoreMultiplierCache.set(hash, {
             data: scores,
