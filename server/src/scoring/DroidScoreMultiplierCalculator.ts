@@ -43,7 +43,10 @@ export class DroidScoreMultiplierCalculator extends ScoreMultiplierCalculator {
         //#region Difficulty Increase
 
         this.single(ModHardRock, 1.04);
-        this.single(ModPrecise, 1.02 + (0.06 * appliedDifficulty.od) / 10);
+        this.single(
+            ModPrecise,
+            1.02 + 0.08 * Math.pow(appliedDifficulty.od / 10, 2),
+        );
         this.single(ModHidden, (hd) => this.hiddenMultiplier(hd));
         this.single(ModTraceable, 1.02);
 
