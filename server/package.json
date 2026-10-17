@@ -6,7 +6,8 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
-    "start": "node ."
+    "start": "node .",
+    "test": "vitest run"
   },
   "engines": {
     "node": ">=18.x"
@@ -36,7 +37,8 @@
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^7.18.0",
     "eslint": "^8.57.1",
-    "prettier": "^3.8.1"
+    "prettier": "^3.8.1",
+    "vitest": "3.2.4"
   },
   "eslintConfig": {
     "env": {

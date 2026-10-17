@@ -1,0 +1,167 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { BrokerClient } from "./BrokerClient";
+
+const fetchMock = vi.fn();
+
+function jsonResponse(body: unknown, status = 200): Response {
+    return new Response(JSON.stringify(body), {
+        status,
+        headers: { "Content-Type": "application/json" },
+    });
+}
+
+function lastRequest(): { url: string; init: RequestInit } {
+    const [url, init] = fetchMock.mock.lastCall as [string, RequestInit];
+
+    return { url, init };
+}
+
+function headersOf(init: RequestInit): Headers {
+    return new Headers(init.headers);
+}
+
+describe("BrokerClient", () => {
+    beforeEach(() => {
+        vi.stubEnv("DPP_BROKER_URL", "http://broker.test/");
+        vi.stubEnv("DPP_BROKER_KEY", "test-key");
+        vi.stubGlobal("fetch", fetchMock);
+        vi.spyOn(console, "error").mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+        fetchMock.mockReset();
+        vi.unstubAllEnvs();
+        vi.unstubAllGlobals();
+        vi.restoreAllMocks();
+    });
+
+    it("sends X-Acting-Uid only when acting for a person", async () => {
+        fetchMock.mockImplementation(() => Promise.resolve(jsonResponse([])));
+
+        await BrokerClient.getVariants();
+
+        let request = lastRequest();
+        expect(request.url).toBe("http://broker.test/variants");
+        expect(headersOf(request.init).get("X-Api-Key")).toBe("test-key");
+        expect(headersOf(request.init).has("X-Acting-Uid")).toBe(false);
+
+        await BrokerClient.getVariants(1234);
+
+        request = lastRequest();
+        expect(headersOf(request.init).get("X-Acting-Uid")).toBe("1234");
+    });
+
+    it("returns null when the variant list cannot be fetched", async () => {
+        fetchMock.mockResolvedValueOnce(jsonResponse({}, 500));
+        expect(await BrokerClient.getVariants()).toBeNull();
+
+        fetchMock.mockRejectedValueOnce(new Error("connection refused"));
+        expect(await BrokerClient.getVariants()).toBeNull();
+    });
+
+    it("returns null when the acting user cannot be fetched", async () => {
+        fetchMock.mockResolvedValueOnce(jsonResponse({}, 404));
+        expect(await BrokerClient.getMe(1)).toBeNull();
+
+        fetchMock.mockRejectedValueOnce(new Error("connection refused"));
+        expect(await BrokerClient.getMe(1)).toBeNull();
+    });
+
+    it("fetches the acting user", async () => {
+        const me = { uid: 7, role: "manager", grants: ["droid-live"] };
+        fetchMock.mockResolvedValueOnce(jsonResponse(me));
+
+        expect(await BrokerClient.getMe(7)).toEqual(me);
+
+        const request = lastRequest();
+        expect(request.url).toBe("http://broker.test/me");
+        expect(headersOf(request.init).get("X-Acting-Uid")).toBe("7");
+    });
+
+    it("forwards admin requests with method, path, and body", async () => {
+        fetchMock.mockResolvedValueOnce(jsonResponse({ created: true }, 201));
+
+        const result = await BrokerClient.forwardAdmin(
+            "POST",
+            "/variants",
+            42,
+            { name: "abc" },
+        );
+
+        expect(result).toEqual({ status: 201, body: { created: true } });
+
+        const { url, init } = lastRequest();
+        expect(url).toBe("http://broker.test/admin/variants");
+        expect(init.method).toBe("POST");
+        expect(init.body).toBe(JSON.stringify({ name: "abc" }));
+
+        const headers = headersOf(init);
+        expect(headers.get("X-Acting-Uid")).toBe("42");
+        expect(headers.get("X-Api-Key")).toBe("test-key");
+        expect(headers.get("Content-Type")).toBe("application/json");
+    });
+
+    it("sends no content type when forwarding without a body", async () => {
+        fetchMock.mockResolvedValueOnce(jsonResponse([]));
+
+        await BrokerClient.forwardAdmin("GET", "/variants", 42);
+
+        const { init } = lastRequest();
+        expect(init.body).toBeUndefined();
+        expect(headersOf(init).has("Content-Type")).toBe(false);
+    });
+
+    it("passes broker error statuses and bodies through", async () => {
+        const body = { error: { code: "FORBIDDEN", message: "No" } };
+        fetchMock.mockResolvedValueOnce(jsonResponse(body, 403));
+
+        expect(await BrokerClient.forwardAdmin("GET", "/x", 1)).toEqual({
+            status: 403,
+            body,
+        });
+    });
+
+    it("returns a null body for empty responses", async () => {
+        fetchMock.mockResolvedValueOnce(new Response(null, { status: 204 }));
+
+        expect(await BrokerClient.forwardAdmin("DELETE", "/x", 1)).toEqual({
+            status: 204,
+            body: null,
+        });
+    });
+
+    it("answers 502 when the broker is unreachable", async () => {
+        const unavailable = {
+            status: 502,
+            body: {
+                error: {
+                    code: "BROKER_UNAVAILABLE",
+                    message: "The variant service is unavailable",
+                },
+            },
+        };
+
+        fetchMock.mockRejectedValueOnce(new Error("connection refused"));
+        expect(await BrokerClient.forwardAdmin("GET", "/x", 1)).toEqual(
+            unavailable,
+        );
+
+        fetchMock.mockResolvedValueOnce(
+            new Response("<html>bad gateway</html>", { status: 200 }),
+        );
+        expect(await BrokerClient.forwardAdmin("GET", "/x", 1)).toEqual(
+            unavailable,
+        );
+    });
+
+    it("rejects admin paths that could escape /admin", async () => {
+        await expect(
+            BrokerClient.forwardAdmin("GET", "/../me", 1),
+        ).rejects.toThrow();
+        await expect(
+            BrokerClient.forwardAdmin("GET", "variants", 1),
+        ).rejects.toThrow();
+
+        expect(fetchMock).not.toHaveBeenCalled();
+    });
+});
