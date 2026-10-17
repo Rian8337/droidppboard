@@ -3,7 +3,38 @@ import {
     currentPasswordHash,
     legacyPasswordHash,
     passwordMatches,
+    phpAddSlashes,
+    phpHtmlSpecialChars,
+    phpTrim,
 } from "./passwordHash";
+
+describe("PHP equivalents", () => {
+    it("phpAddSlashes escapes quotes, backslashes and NUL", () => {
+        expect(phpAddSlashes("'")).toBe("\\'");
+        expect(phpAddSlashes('"')).toBe('\\"');
+        expect(phpAddSlashes("\\")).toBe("\\\\");
+        expect(phpAddSlashes("\0")).toBe("\\0");
+        expect(phpAddSlashes("a\0b")).toBe("a\\0b");
+        expect(phpAddSlashes("plain &<>")).toBe("plain &<>");
+    });
+
+    it("phpHtmlSpecialChars converts the default characters", () => {
+        expect(phpHtmlSpecialChars("&")).toBe("&amp;");
+        expect(phpHtmlSpecialChars('"')).toBe("&quot;");
+        expect(phpHtmlSpecialChars("'")).toBe("&#039;");
+        expect(phpHtmlSpecialChars("<")).toBe("&lt;");
+        expect(phpHtmlSpecialChars(">")).toBe("&gt;");
+        expect(phpHtmlSpecialChars("&amp;")).toBe("&amp;amp;");
+        expect(phpHtmlSpecialChars("plain \\ \0")).toBe("plain \\ \0");
+    });
+
+    it("phpTrim removes only the characters PHP trims", () => {
+        expect(phpTrim(" \t\n\r\0\x0Bab \t")).toBe("ab");
+        expect(phpTrim("\u00a0ab\u00a0")).toBe("\u00a0ab\u00a0");
+        expect(phpTrim("a b")).toBe("a b");
+        expect(phpTrim(" \t")).toBe("");
+    });
+});
 
 const passwords = [
     "plain",
@@ -59,6 +90,7 @@ describe("passwordMatches", () => {
         expect(passwordMatches("   ", currentPasswordHash(""))).toBe(false);
         expect(passwordMatches("secret", "")).toBe(false);
         expect(passwordMatches("secret", "short")).toBe(false);
+        expect(passwordMatches("secret", "\u00e9".repeat(32))).toBe(false);
     });
 
     it("tells the two forms apart for passwords with special characters", () => {

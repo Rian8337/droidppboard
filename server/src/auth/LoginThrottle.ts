@@ -1,3 +1,5 @@
+import { phpTrim } from "./passwordHash";
+
 const second = 1000;
 const minute = 60 * second;
 
@@ -16,6 +18,22 @@ const globalBlockMs = 5 * minute;
 interface UsernameState {
     failures: number;
     lastFailureAt: number;
+}
+
+const combiningMarks = new RegExp("\\p{M}", "gu");
+
+/**
+ * Gets the key that identifies a username for throttling, so that spellings that reach the same
+ * account share one key.
+ *
+ * @param username The username as it was entered.
+ * @returns The key.
+ */
+export function throttleKey(username: string): string {
+    return phpTrim(username)
+        .normalize("NFD")
+        .replace(combiningMarks, "")
+        .toLowerCase();
 }
 
 export type LoginThrottleResult =
@@ -55,7 +73,7 @@ export class LoginThrottle {
             retryAfterMs.push(this.globalBlockedUntil - now);
         }
 
-        const state = this.usernames.get(this.normalize(username));
+        const state = this.usernames.get(throttleKey(username));
 
         if (state && state.failures >= freeUsernameFailures) {
             const delayMs = this.delaySeconds(state.failures) * second;
@@ -96,7 +114,7 @@ export class LoginThrottle {
      */
     recordFailure(ip: string, username: string): void {
         const now = this.now();
-        const key = this.normalize(username);
+        const key = throttleKey(username);
 
         this.prune(now);
 
@@ -124,11 +142,7 @@ export class LoginThrottle {
      * @param username The username that was logged in to.
      */
     recordSuccess(username: string): void {
-        this.usernames.delete(this.normalize(username));
-    }
-
-    private normalize(username: string): string {
-        return username.toLowerCase();
+        this.usernames.delete(throttleKey(username));
     }
 
     private delaySeconds(failures: number): number {

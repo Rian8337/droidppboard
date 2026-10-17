@@ -27,11 +27,23 @@ function md5(value: string): string {
     return createHash("md5").update(value, "utf8").digest("hex");
 }
 
-function addSlashes(value: string): string {
+/**
+ * Does what PHP's `addslashes` does.
+ *
+ * @param value The string to escape.
+ * @returns The escaped string.
+ */
+export function phpAddSlashes(value: string): string {
     return value.replace(/['"\\]/g, "\\$&").replace(/\0/g, "\\0");
 }
 
-function escapeHtml(value: string): string {
+/**
+ * Does what PHP 8.1+'s `htmlspecialchars` does with its default flags.
+ *
+ * @param value The string to escape.
+ * @returns The escaped string.
+ */
+export function phpHtmlSpecialChars(value: string): string {
     return value
         .replace(/&/g, "&amp;")
         .replace(/"/g, "&quot;")
@@ -57,7 +69,7 @@ export function currentPasswordHash(password: string): string {
  * @returns The hash, in lowercase hex.
  */
 export function legacyPasswordHash(password: string): string {
-    return md5(escapeHtml(addSlashes(password)) + "taikotaiko");
+    return md5(phpHtmlSpecialChars(phpAddSlashes(password)) + "taikotaiko");
 }
 
 function hexEquals(a: string, b: string): boolean {
@@ -82,6 +94,10 @@ export function passwordMatches(password: string, storedHash: string): boolean {
     }
 
     const stored = storedHash.toLowerCase();
+
+    if (!/^[0-9a-f]{32}$/.test(stored)) {
+        return false;
+    }
 
     // Both are always compared so that timing does not reveal which form matched.
     const matchesCurrent = hexEquals(currentPasswordHash(trimmed), stored);

@@ -63,6 +63,9 @@ describe("verifyTurnstile", () => {
 
         fetchMock.mockResolvedValueOnce(jsonResponse({}, 500));
         expect(await verifyTurnstile("token", "1.2.3.4")).toBe(false);
+        expect(console.error).toHaveBeenCalledWith(
+            expect.stringContaining("500"),
+        );
 
         fetchMock.mockResolvedValueOnce(new Response("not json"));
         expect(await verifyTurnstile("token", "1.2.3.4")).toBe(false);

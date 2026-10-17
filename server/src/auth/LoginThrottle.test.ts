@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { LoginThrottle } from "./LoginThrottle";
+import { LoginThrottle, throttleKey } from "./LoginThrottle";
 
 const second = 1000;
 const minute = 60 * second;
@@ -164,6 +164,24 @@ describe("LoginThrottle", () => {
 
         throttle.recordSuccess("alice");
         expect(throttle.check("8.8.8.8", "ALICE")).toEqual({ allowed: true });
+    });
+
+    it("shares one delay between spellings of the same username", () => {
+        const spellings = ["alice", " alice", "alice\t", "ALICE", "alic\u00e9"];
+
+        for (let i = 0; i < 3; ++i) {
+            fail(spellings[i]);
+        }
+
+        for (const spelling of spellings) {
+            expect(throttle.check("8.8.8.8", spelling).allowed).toBe(false);
+        }
+
+        expect(throttleKey("alic\u0065\u0301")).toBe(throttleKey("alice"));
+        expect(throttleKey("\u00a0alice")).not.toBe(throttleKey("alice"));
+
+        throttle.recordSuccess(" ALIC\u00c9\n");
+        expect(throttle.check("8.8.8.8", "alice")).toEqual({ allowed: true });
     });
 
     it("refuses all logins for five minutes after a hundred failures in five minutes", () => {

@@ -42,6 +42,10 @@ export async function verifyTurnstile(
         });
 
         if (!response.ok) {
+            console.error(
+                `Turnstile verification answered with status ${response.status}`,
+            );
+
             return false;
         }
 
