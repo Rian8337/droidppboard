@@ -20,13 +20,19 @@ import {
     DroidDifficultyAttributes as RebalanceDroidDifficultyAttributes,
     OsuDifficultyAttributes as RebalanceOsuDifficultyAttributes,
 } from "@rian8337/osu-rebalance-difficulty-calculator";
-import { CompleteCalculationAttributes } from "../../../structures/difficultyattributes/CompleteCalculationAttributes";
 import { DroidPerformanceAttributes } from "../../../structures/difficultyattributes/DroidPerformanceAttributes";
 import { RebalanceDroidPerformanceAttributes } from "../../../structures/difficultyattributes/RebalanceDroidPerformanceAttributes";
 import { OsuPerformanceAttributes } from "../../../structures/difficultyattributes/OsuPerformanceAttributes";
-import { DPPProcessorCalculationResponse } from "../../../structures/difficultyattributes/DPPProcessorCalculationResponse";
+import { BrokerPerformanceResponse } from "../../../structures/difficultyattributes/BrokerPerformanceResponse";
 
 const router = Router();
+
+/**
+ * Converts a strain chart from the broker (a base64 PNG) to binary data, which is what the client reads.
+ */
+function decodeStrainChart(strainChart?: string): number[] {
+    return strainChart ? Array.from(Buffer.from(strainChart, "base64")) : [];
+}
 
 router.use(Util.createRateLimit(5, 1000));
 
@@ -115,41 +121,67 @@ router.post("/", async (req, res) => {
         true,
     );
 
-    const formData = new FormData();
-    formData.set("file", new Blob([osuFile]));
-    formData.set("key", process.env.DROID_SERVER_INTERNAL_KEY!);
-    formData.set("gamemode", Modes.Droid);
-    formData.set("calculationmethod", isPrototype ? "1" : "0");
-    formData.set("mods", JSON.stringify(mods.serializeMods()));
-
-    if (req.body.generatestrainchart) {
-        formData.set("generatestrainchart", "1");
-    }
-
     const realAcc = new Accuracy({
         percent: accuracy,
         nobjects: parsedBeatmap.hitObjects.objects.length,
         nmiss: miss,
     });
 
-    formData.set("n300", realAcc.n300.toString());
-    formData.set("n100", realAcc.n100.toString());
-    formData.set("n50", realAcc.n50.toString());
-    formData.set("nmiss", realAcc.nmiss.toString());
-    formData.set("maxcombo", combo.toString());
+    const requestBody = JSON.stringify({
+        beatmap: { file: osuFile },
+        mods: mods.serializeMods(),
+        score: {
+            n300: realAcc.n300,
+            n100: realAcc.n100,
+            n50: realAcc.n50,
+            nmiss: realAcc.nmiss,
+            combo: combo,
+        },
+        strainChart: !!req.body.generatestrainchart,
+    });
 
-    const url = new URL(
-        "http://localhost:3006/api/dpp/processor/calculate-beatmap-file",
-    );
+    const algorithm = isPrototype ? "rebalance" : "live";
 
-    const droidAttribs: DPPProcessorCalculationResponse<
-        CompleteCalculationAttributes<
-            DroidDifficultyAttributes | RebalanceDroidDifficultyAttributes,
-            DroidPerformanceAttributes | RebalanceDroidPerformanceAttributes
-        >
-    > | null = await fetch(url, { method: "POST", body: formData })
-        .then((res) => (res.ok ? res.json() : null))
-        .catch(() => null);
+    const calculate = async <TDifficulty, TPerformance>(mode: Modes) => {
+        const variant = `${mode}-${algorithm}`;
+
+        try {
+            const response = await fetch(
+                `${process.env.DPP_BROKER_URL!.replace(/\/+$/, "")}/variants/${variant}/performance`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-Api-Key": process.env.DPP_BROKER_KEY!,
+                    },
+                    body: requestBody,
+                },
+            );
+
+            if (!response.ok) {
+                console.error(
+                    `Calculation for ${variant} failed with status ${response.status.toString()}:`,
+                    await response.text(),
+                );
+
+                return null;
+            }
+
+            return (await response.json()) as BrokerPerformanceResponse<
+                TDifficulty,
+                TPerformance
+            >;
+        } catch (e) {
+            console.error(`Calculation for ${variant} failed:`, e);
+
+            return null;
+        }
+    };
+
+    const droidAttribs = await calculate<
+        DroidDifficultyAttributes | RebalanceDroidDifficultyAttributes,
+        DroidPerformanceAttributes | RebalanceDroidPerformanceAttributes
+    >(Modes.Droid);
 
     if (!droidAttribs) {
         return res.status(400).json({
@@ -157,16 +189,10 @@ router.post("/", async (req, res) => {
         });
     }
 
-    formData.set("gamemode", Modes.Osu);
-
-    const osuAttribs: DPPProcessorCalculationResponse<
-        CompleteCalculationAttributes<
-            OsuDifficultyAttributes | RebalanceOsuDifficultyAttributes,
-            OsuPerformanceAttributes
-        >
-    > | null = await fetch(url, { method: "POST", body: formData })
-        .then((res) => (res.ok ? res.json() : null))
-        .catch(() => null);
+    const osuAttribs = await calculate<
+        OsuDifficultyAttributes | RebalanceOsuDifficultyAttributes,
+        OsuPerformanceAttributes
+    >(Modes.Osu);
 
     if (!osuAttribs) {
         return res.status(400).json({
@@ -197,45 +223,43 @@ router.post("/", async (req, res) => {
         },
         difficulty: {
             droid: {
-                aim: droidAttribs.attributes.difficulty.aimDifficulty,
-                speed: droidAttribs.attributes.difficulty.tapDifficulty,
-                rhythm: droidAttribs.attributes.difficulty.rhythmDifficulty,
-                flashlight:
-                    droidAttribs.attributes.difficulty.flashlightDifficulty,
-                reading: droidAttribs.attributes.difficulty.readingDifficulty,
-                total: droidAttribs.attributes.difficulty.starRating,
+                aim: droidAttribs.difficulty.aimDifficulty,
+                speed: droidAttribs.difficulty.tapDifficulty,
+                rhythm: droidAttribs.difficulty.rhythmDifficulty,
+                flashlight: droidAttribs.difficulty.flashlightDifficulty,
+                reading: droidAttribs.difficulty.readingDifficulty,
+                total: droidAttribs.difficulty.starRating,
             },
             osu: {
-                aim: osuAttribs.attributes.difficulty.aimDifficulty,
-                speed: osuAttribs.attributes.difficulty.speedDifficulty,
+                aim: osuAttribs.difficulty.aimDifficulty,
+                speed: osuAttribs.difficulty.speedDifficulty,
                 rhythm: 0,
-                flashlight:
-                    osuAttribs.attributes.difficulty.flashlightDifficulty,
+                flashlight: osuAttribs.difficulty.flashlightDifficulty,
                 reading: 0,
-                total: osuAttribs.attributes.difficulty.starRating,
+                total: osuAttribs.difficulty.starRating,
             },
         },
         performance: {
             droid: {
-                aim: droidAttribs.attributes.performance.aim,
-                speed: droidAttribs.attributes.performance.tap,
-                accuracy: droidAttribs.attributes.performance.accuracy,
-                flashlight: droidAttribs.attributes.performance.flashlight,
-                reading: droidAttribs.attributes.performance.reading,
-                total: droidAttribs.attributes.performance.total,
+                aim: droidAttribs.performance.aim,
+                speed: droidAttribs.performance.tap,
+                accuracy: droidAttribs.performance.accuracy,
+                flashlight: droidAttribs.performance.flashlight,
+                reading: droidAttribs.performance.reading,
+                total: droidAttribs.performance.total,
             },
             osu: {
-                aim: osuAttribs.attributes.performance.aim,
-                speed: osuAttribs.attributes.performance.speed,
-                accuracy: osuAttribs.attributes.performance.accuracy,
-                flashlight: osuAttribs.attributes.performance.flashlight,
+                aim: osuAttribs.performance.aim,
+                speed: osuAttribs.performance.speed,
+                accuracy: osuAttribs.performance.accuracy,
+                flashlight: osuAttribs.performance.flashlight,
                 reading: 0,
-                total: osuAttribs.attributes.performance.total,
+                total: osuAttribs.performance.total,
             },
         },
         strainGraph: {
-            droid: droidAttribs.strainChart,
-            osu: osuAttribs.strainChart,
+            droid: decodeStrainChart(droidAttribs.strainChart),
+            osu: decodeStrainChart(osuAttribs.strainChart),
         },
     };
 
