@@ -22,10 +22,9 @@ export default function LeaderboardItem(props: {
             <td className="assign-left clickable">
                 <Link
                     className="content-ellipsis"
-                    to={`/prototype/profile/${user.uid}${
-                        prototypeSelectorCtx.currentRework?.type
-                            ? `/${prototypeSelectorCtx.currentRework.type}`
-                            : ""
+                    to={`/prototype/profile/${user.uid}/${
+                        prototypeSelectorCtx.currentVariant?.name ??
+                        "droid-rebalance"
                     }`}
                 >
                     [{user.uid}] {user.username}

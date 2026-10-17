@@ -1,22 +1,21 @@
-import { IPrototypePP } from "../aliceDb/IPrototypePP";
-import { IPrototypePPType } from "../aliceDb/IPrototypePPType";
+import { PPVariant } from "./PPVariant";
 
 /**
- * The response from the server when fetching the prototype leaderboard.
+ * The response from the server when fetching a prototype page.
  */
 export interface PrototypeLeaderboardResponse<T> {
     /**
-     * The reworks available for the prototype leaderboard.
+     * The droid prototype variants the viewer can see.
      */
-    readonly reworks: IPrototypePPType[];
+    readonly variants: PPVariant[];
 
     /**
-     * The current rework being displayed.
+     * The variant being displayed.
      */
-    readonly currentRework?: IPrototypePPType;
+    readonly currentVariant: PPVariant;
 
     /**
-     * The data for the prototype leaderboard.
+     * The data for the page.
      */
-    readonly data: T[];
+    readonly data: T;
 }

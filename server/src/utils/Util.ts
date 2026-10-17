@@ -16,7 +16,7 @@ export type Comparison = "<=" | "<" | "=" | ">" | ">=";
  */
 export abstract class Util {
     /**
-     * List of all top prototype plays from all players mapped by rework type, regardless of mods.
+     * List of all top prototype plays from all players mapped by variant, regardless of mods.
      */
     static readonly allTopEntries = new Map<string, TopPrototypePPEntry[]>();
 
@@ -29,8 +29,8 @@ export abstract class Util {
     >();
 
     /**
-     * List of top prototype plays from all players, mapped by rework type, and each map inside the
-     * rework type mapped by their mods.
+     * List of top prototype plays from all players, mapped by variant, and each map inside the
+     * variant mapped by their mods.
      */
     private static readonly topPrototypePPList = new Map<
         string,
@@ -150,7 +150,7 @@ export abstract class Util {
     }
 
     static refreshPrototypeTopPP(): void {
-        // Prototype pp is different as there are multiple rework types.
+        // Prototype pp is different as there are multiple variants.
         DatabaseManager.aliceDb.collections.prototypePP
             .get(
                 {},

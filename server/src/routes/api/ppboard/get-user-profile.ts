@@ -1,56 +1,70 @@
 import express from "express";
 import { DatabaseManager } from "../../../database/managers/DatabaseManager";
 import { Util } from "../../../utils/Util";
+import { asyncHandler } from "../../../utils/asyncHandler";
+import { resolveVisibleVariant } from "../../../utils/visibleVariant";
+import { IPrototypePP, PrototypeLeaderboardResponse } from "app-structures";
 
 const router = express.Router();
 
 router.use(Util.createRateLimit(5));
 
-router.get<
+router.get(
     "/",
-    unknown,
-    unknown,
-    unknown,
-    Partial<{ uid: string; type: string }>
->("/", async (req, res) => {
-    const uid = parseInt(req.query.uid ?? "");
-    const reworkType = req.query.type ?? "overall";
+    asyncHandler(async (req, res) => {
+        // What a person can see depends on who they are.
+        res.set("Cache-Control", "no-store");
 
-    if (isNaN(uid)) {
-        return res.status(404).json({ message: "Player not found!" });
-    }
+        // Query parameters can be parsed into arrays or objects, so their types have to be checked.
+        const { uid: uidQuery, type } = req.query;
+        const uid = parseInt(typeof uidQuery === "string" ? uidQuery : "");
 
-    const playerInfo =
-        await DatabaseManager.aliceDb.collections.prototypePP.getFromUid(
-            uid,
-            reworkType,
+        if (isNaN(uid)) {
+            res.status(404).json({ message: "Player not found!" });
+
+            return;
+        }
+
+        const actingUid: unknown = res.locals.uid;
+        const resolved = await resolveVisibleVariant(
+            typeof type === "string" ? type : undefined,
+            typeof actingUid === "number" ? actingUid : undefined,
         );
 
-    if (!playerInfo) {
-        return res.status(404).json({ message: "Player not found!" });
-    }
+        if (resolved === "notFound") {
+            res.status(404).json({ message: "Variant not found" });
 
-    const availableReworks =
-        await DatabaseManager.aliceDb.collections.prototypePPType.get(
-            {},
-            { projection: { _id: 0, name: 1, type: 1 } },
-        );
+            return;
+        }
 
-    const currentRework =
-        await DatabaseManager.aliceDb.collections.prototypePPType.getOne(
-            {
-                type: reworkType,
-            },
-            { projection: { _id: 0 } },
-        );
+        if (resolved === "unavailable") {
+            res.status(503).json({
+                message: "The variant list is unavailable",
+            });
 
-    const response = {
-        reworks: availableReworks,
-        currentRework: currentRework ?? undefined,
-        data: playerInfo,
-    };
+            return;
+        }
 
-    res.json(response);
-});
+        const playerInfo =
+            await DatabaseManager.aliceDb.collections.prototypePP.getFromUid(
+                uid,
+                resolved.current.name,
+            );
+
+        if (!playerInfo) {
+            res.status(404).json({ message: "Player not found!" });
+
+            return;
+        }
+
+        const response: PrototypeLeaderboardResponse<IPrototypePP> = {
+            variants: resolved.variants,
+            currentVariant: resolved.current,
+            data: playerInfo,
+        };
+
+        res.json(response);
+    }),
+);
 
 export default router;

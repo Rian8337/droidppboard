@@ -7,6 +7,7 @@ import PrototypeDisclaimer from "./PrototypeDisclaimer";
 import PrototypeTopPlaysNavigator from "../hooks/PrototypeTopPlaysNavigator";
 import { Util } from "../Util";
 import PrototypeSelectorNavigator from "../hooks/PrototypeSelectorNavigator";
+import AuthContext from "../hooks/AuthContext";
 import PrototypeSelector from "./PrototypeSelector";
 import {
     PrototypeLeaderboardResponse,
@@ -18,11 +19,17 @@ import PrototypeDescription from "./PrototypeDescription";
 export default function TopPlays() {
     const topPlayCtx = useContext(PrototypeTopPlaysNavigator);
     const prototypeSelectorCtx = useContext(PrototypeSelectorNavigator);
+    const authCtx = useContext(AuthContext);
 
     const { type } = useParams();
     const typeRef = useRef(type);
 
     useEffect(() => {
+        // Wait for the login state, as it decides which variants are visible.
+        if (!authCtx.isLoaded) {
+            return;
+        }
+
         const modCombinations = Util.parseMods(topPlayCtx.query);
 
         if (modCombinations === null && topPlayCtx.query) {
@@ -32,11 +39,11 @@ export default function TopPlays() {
         // Special case when the user loads this page with a type in the URL.
         if (
             typeRef.current &&
-            typeRef.current !== prototypeSelectorCtx.currentRework?.type
+            typeRef.current !== prototypeSelectorCtx.currentVariant?.name
         ) {
-            prototypeSelectorCtx.resetCurrentRework(typeRef.current);
+            prototypeSelectorCtx.resetCurrentVariant(typeRef.current);
 
-            // Invalidate the ref so that we don't keep setting the rework to unknown.
+            // Invalidate the ref so that we don't keep setting the variant to unknown.
             typeRef.current = undefined;
 
             return;
@@ -52,18 +59,21 @@ export default function TopPlays() {
             searchParams.set("mods", modCombinations.join(""));
         }
 
-        if (prototypeSelectorCtx.currentRework) {
-            searchParams.set("type", prototypeSelectorCtx.currentRework.type);
+        if (prototypeSelectorCtx.currentVariant) {
+            searchParams.set("type", prototypeSelectorCtx.currentVariant.name);
         }
+
+        const controller = new AbortController();
 
         const debounce = setTimeout(() => {
             fetch(
-                `/api/ppboard/prototype/gettopplays?${searchParams.toString()}`
+                `/api/ppboard/prototype/gettopplays?${searchParams.toString()}`,
+                { signal: controller.signal }
             )
-                .then((res) => {
-                    if (res.status === 429) {
+                .then(async (res) => {
+                    if (!res.ok) {
                         throw new Error(
-                            "You are being rate limited. Please try again later"
+                            await Util.getResponseErrorMessage(res)
                         );
                     }
 
@@ -71,27 +81,44 @@ export default function TopPlays() {
                 })
                 .then(
                     (
-                        rawData: PrototypeLeaderboardResponse<TopPrototypePPEntry>
+                        rawData: PrototypeLeaderboardResponse<
+                            TopPrototypePPEntry[]
+                        >
                     ) => {
-                        prototypeSelectorCtx.setReworks(rawData.reworks);
-                        prototypeSelectorCtx.setCurrentRework(
-                            rawData.currentRework
+                        prototypeSelectorCtx.setVariants(rawData.variants);
+                        prototypeSelectorCtx.setCurrentVariant(
+                            rawData.currentVariant
                         );
 
                         topPlayCtx.setData(rawData.data);
                     }
                 )
                 .catch((e: Error) => {
+                    if (e.name === "AbortError") {
+                        return;
+                    }
+
+                    prototypeSelectorCtx.clearVariants();
                     topPlayCtx.setErrorMessage(e.message);
                 })
                 .finally(() => {
-                    topPlayCtx.setSearchReady(true);
+                    if (!controller.signal.aborted) {
+                        topPlayCtx.setSearchReady(true);
+                    }
                 });
         }, 500);
 
-        return () => clearTimeout(debounce);
+        return () => {
+            clearTimeout(debounce);
+            controller.abort();
+        };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [topPlayCtx.query, prototypeSelectorCtx.currentRework?.type]);
+    }, [
+        topPlayCtx.query,
+        prototypeSelectorCtx.currentVariant?.name,
+        authCtx.isLoaded,
+        authCtx.user?.uid,
+    ]);
 
     return (
         <motion.div

@@ -6,6 +6,7 @@ import { PrototypeTopPlaysNavigatorProvider } from "./PrototypeTopPlaysNavigator
 import { WhitelistNavigatorProvider } from "./WhitelistNavigator";
 import { SkinListNavigatorProvider } from "./SkinListNavigator";
 import { PrototypeSelectorNavigatorProvider } from "./PrototypeSelectorNavigator";
+import { AuthContextProvider } from "./AuthContext";
 
 const compose =
     (...components: FC<Record<string, unknown>>[]) =>
@@ -22,5 +23,7 @@ export const Providers = compose(
     MainCalculationContextProvider,
     PrototypeCalculationContextProvider,
     WhitelistNavigatorProvider,
-    SkinListNavigatorProvider
+    SkinListNavigatorProvider,
+    // Must be last (outermost), as other providers read the login state.
+    AuthContextProvider
 );

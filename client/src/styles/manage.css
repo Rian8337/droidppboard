@@ -1,0 +1,159 @@
+.manage-container {
+    margin: 0 auto;
+    max-width: 1000px;
+    padding: 0 10px;
+    font: 15px Exo-Medium;
+}
+
+.manage-center,
+.manage-error {
+    text-align: center;
+}
+
+.manage-error {
+    color: rgb(250, 82, 82);
+}
+
+.manage-nav {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.manage-nav a.active {
+    text-decoration: underline;
+}
+
+.manage-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.manage-table th,
+.manage-table td {
+    text-align: left;
+    padding: 6px 8px;
+    border-bottom: 1px solid #444;
+    overflow-wrap: anywhere;
+}
+
+.manage-section {
+    margin: 20px 0;
+    padding: 10px 14px;
+    background-color: #2b2b2b;
+    border-radius: 6px;
+}
+
+.manage-notice {
+    border: 2px solid rgb(252, 161, 176);
+}
+
+.manage-form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-width: 700px;
+}
+
+.manage-form label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.manage-inline-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin: 8px 0;
+}
+
+.manage-input {
+    background-color: #444;
+    font: 15px Exo-Medium;
+    color: white;
+    border: none;
+    border-bottom: 3px solid rgb(252, 161, 176);
+    border-radius: 6px;
+    box-sizing: border-box;
+    padding: 8px;
+}
+
+.manage-form .manage-input {
+    width: 100%;
+}
+
+.manage-textarea {
+    resize: vertical;
+}
+
+.manage-button {
+    font: 15px Exo-Medium;
+    padding: 8px 12px;
+    color: white;
+    background-color: #333;
+    border: none;
+    cursor: pointer;
+}
+
+.manage-button:hover:enabled {
+    background-color: #222;
+}
+
+.manage-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.manage-danger {
+    background-color: #7a2020;
+}
+
+.manage-list {
+    list-style: none;
+    padding: 0;
+}
+
+.manage-list li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin: 4px 0;
+}
+
+.manage-check {
+    display: flex;
+    flex-direction: row !important;
+    align-items: center;
+    gap: 6px;
+    margin: 6px 0;
+}
+
+.manage-fieldset {
+    border: 1px solid #444;
+    border-radius: 6px;
+}
+
+.manage-counter {
+    font-size: 13px;
+    opacity: 0.8;
+}
+
+.manage-counter-over {
+    font-size: 13px;
+    color: rgb(250, 82, 82);
+}
+
+.manage-preview {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.manage-hint {
+    font-size: 13px;
+    opacity: 0.8;
+}

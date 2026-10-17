@@ -19,6 +19,35 @@ export abstract class Util {
     }
 
     /**
+     * Obtains an error message from an unsuccessful response of the server.
+     *
+     * @param res The response.
+     * @returns The `message` field of the response's body, or a generic message if there is none.
+     */
+    static async getResponseErrorMessage(res: Response): Promise<string> {
+        if (res.status === 429) {
+            return "You are being rate limited. Please try again later";
+        }
+
+        try {
+            const body: unknown = await res.json();
+
+            if (
+                typeof body === "object" &&
+                body !== null &&
+                "message" in body &&
+                typeof body.message === "string"
+            ) {
+                return body.message;
+            }
+        } catch {
+            // The body is not JSON; fall through.
+        }
+
+        return `Request failed with status ${res.status}`;
+    }
+
+    /**
      * Obtains a color based on the difference between two values. Positive differences yield greener colors, while negative differences yield redder colors.
      *
      * @param diff The difference between two values.

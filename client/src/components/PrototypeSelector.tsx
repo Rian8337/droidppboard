@@ -7,32 +7,34 @@ export default function PrototypeSelector() {
     const location = useLocation();
     const navigate = useNavigate();
 
-    function changeRework(event: React.ChangeEvent<HTMLSelectElement>) {
-        // Redirect the user to the new rework if we are in a prototype page.
+    function changeVariant(event: React.ChangeEvent<HTMLSelectElement>) {
+        // Redirect the user to the new variant if we are in a prototype page.
         if (
             location.pathname.includes("/prototype/") &&
-            prototypeSelectorCtx.currentRework
+            prototypeSelectorCtx.currentVariant
         ) {
-            navigate(
-                location.pathname.replace(
-                    prototypeSelectorCtx.currentRework.type,
-                    event.target.value
-                )
+            // The variant is always the last segment of a prototype page's path.
+            const segments = location.pathname.replace(/\/+$/, "").split("/");
+
+            segments[segments.length - 1] = encodeURIComponent(
+                event.target.value
             );
+
+            navigate(segments.join("/"));
         }
     }
 
     return (
         <div style={{ textAlign: "center" }}>
-            <h4>Current Rework</h4>
+            <h4>Current Variant</h4>
             <select
                 className="search"
-                value={prototypeSelectorCtx.currentRework?.type ?? "unknown"}
-                onChange={changeRework}
+                value={prototypeSelectorCtx.currentVariant?.name ?? "unknown"}
+                onChange={changeVariant}
             >
-                {prototypeSelectorCtx.reworks.map((rework) => (
-                    <option key={rework.type} value={rework.type}>
-                        {rework.name}
+                {prototypeSelectorCtx.variants.map((variant) => (
+                    <option key={variant.name} value={variant.name}>
+                        {variant.title ?? variant.name}
                     </option>
                 ))}
             </select>
