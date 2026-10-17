@@ -17,6 +17,10 @@ import SkinPreview from "./pages/SkinPreview";
 import MatchHistory from "./pages/MatchHistory";
 import ScoreMultiplierSample from "./pages/ScoreMultiplierSample";
 import Login from "./pages/Login";
+import ManageVariants from "./pages/manage/ManageVariants";
+import ManageVariant from "./pages/manage/ManageVariant";
+import ManageUsers from "./pages/manage/ManageUsers";
+import ManageKeys from "./pages/manage/ManageKeys";
 
 function App() {
     const location = useLocation();
@@ -32,6 +36,13 @@ function App() {
                 <Routes location={location} key={location.pathname}>
                     <Route path="/" element={<Home />} />
                     <Route path="/login" element={<Login />} />
+                    <Route path="/manage" element={<ManageVariants />} />
+                    <Route
+                        path="/manage/variants/:name"
+                        element={<ManageVariant />}
+                    />
+                    <Route path="/manage/users" element={<ManageUsers />} />
+                    <Route path="/manage/keys" element={<ManageKeys />} />
                     <Route path="/whitelist" element={<Whitelist />} />
                     <Route
                         path="/calculate"

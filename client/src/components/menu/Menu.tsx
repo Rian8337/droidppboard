@@ -2,9 +2,11 @@ import MenuItem from "./MenuItem";
 import "../../styles/menu.css";
 import { useContext } from "react";
 import PrototypeSelectorNavigator from "../../hooks/PrototypeSelectorNavigator";
+import AuthContext from "../../hooks/AuthContext";
 
 export default function Menu() {
     const prototypeSelectorCtx = useContext(PrototypeSelectorNavigator);
+    const { user } = useContext(AuthContext);
     const variantName =
         prototypeSelectorCtx.currentVariant?.name ?? "droid-rebalance";
 
@@ -30,6 +32,7 @@ export default function Menu() {
                     path="/score-multiplier"
                     label="Score Multiplier Sample"
                 />
+                {user?.role ? <MenuItem path="/manage" label="Manage" /> : null}
             </nav>
         </div>
     );
