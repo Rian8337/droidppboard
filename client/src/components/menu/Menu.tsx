@@ -5,7 +5,8 @@ import PrototypeSelectorNavigator from "../../hooks/PrototypeSelectorNavigator";
 
 export default function Menu() {
     const prototypeSelectorCtx = useContext(PrototypeSelectorNavigator);
-    const reworkType = prototypeSelectorCtx.currentRework?.type ?? "overall";
+    const variantName =
+        prototypeSelectorCtx.currentVariant?.name ?? "droid-rebalance";
 
     return (
         <div className="main-menu">
@@ -14,11 +15,11 @@ export default function Menu() {
                 <MenuItem path="/whitelist" label="Whitelist" />
                 <MenuItem path="/calculate" label="Calculate Beatmap PP" />
                 <MenuItem
-                    path={`/prototype/leaderboard/${reworkType}`}
+                    path={`/prototype/leaderboard/${variantName}`}
                     label="Prototype Leaderboard"
                 />
                 <MenuItem
-                    path={`/prototype/top-plays/${reworkType}`}
+                    path={`/prototype/top-plays/${variantName}`}
                     label="Prototype Top Plays"
                 />
                 <MenuItem

@@ -1,8 +1,9 @@
 import { IPrototypePP } from "app-structures";
 import { motion } from "framer-motion";
-import { useContext, useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import PrototypeSelectorNavigator from "../hooks/PrototypeSelectorNavigator";
+import AuthContext from "../hooks/AuthContext";
 import "../styles/profile.css";
 import { Util } from "../Util";
 import Head from "./Head";
@@ -13,8 +14,10 @@ import PrototypeSelector from "./PrototypeSelector";
 
 export default function PlayerProfile() {
     const prototypeSelectorCtx = useContext(PrototypeSelectorNavigator);
+    const authCtx = useContext(AuthContext);
     const params = useParams();
     const { uid, type } = params;
+    const typeRef = useRef(type);
 
     const [data, setData] = useState<IPrototypePP | null | undefined>();
     const [weightedAccuracy, setWeightedAccuracy] = useState<number | null>(
@@ -30,12 +33,20 @@ export default function PlayerProfile() {
             return;
         }
 
+        // Wait for the login state, as it decides which variants are visible.
+        if (!authCtx.isLoaded) {
+            return;
+        }
+
         // Special case when the user loads this page with a type in the URL.
         if (
-            type !== undefined &&
-            type !== prototypeSelectorCtx.currentRework?.type
+            typeRef.current &&
+            typeRef.current !== prototypeSelectorCtx.currentVariant?.name
         ) {
-            prototypeSelectorCtx.resetCurrentRework(type);
+            prototypeSelectorCtx.resetCurrentVariant(typeRef.current);
+
+            // Invalidate the ref so that we don't keep setting the variant to unknown.
+            typeRef.current = undefined;
 
             return;
         }
@@ -50,23 +61,17 @@ export default function PlayerProfile() {
 
         searchParams.set("uid", uid);
 
-        if (prototypeSelectorCtx.currentRework) {
-            searchParams.set("type", prototypeSelectorCtx.currentRework.type);
+        if (prototypeSelectorCtx.currentVariant) {
+            searchParams.set("type", prototypeSelectorCtx.currentVariant.name);
         }
 
         fetch(
             `/api/ppboard/prototype/getuserprofile?${searchParams.toString()}`,
             { signal: controller.signal }
         )
-            .then((res) => {
-                if (res.status === 429) {
-                    throw new Error(
-                        "You are being rate limited. Please try again later"
-                    );
-                }
-
+            .then(async (res) => {
                 if (!res.ok) {
-                    throw new Error();
+                    throw new Error(await Util.getResponseErrorMessage(res));
                 }
 
                 return res.json();
@@ -87,8 +92,8 @@ export default function PlayerProfile() {
 
                 setWeightedAccuracy(accSum / weight || 0);
 
-                prototypeSelectorCtx.setReworks(rawData.reworks);
-                prototypeSelectorCtx.setCurrentRework(rawData.currentRework);
+                prototypeSelectorCtx.setVariants(rawData.variants);
+                prototypeSelectorCtx.setCurrentVariant(rawData.currentVariant);
             })
             .catch((e: Error) => {
                 if (e.name === "AbortError") {
@@ -101,7 +106,12 @@ export default function PlayerProfile() {
 
         return () => controller.abort();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [prototypeSelectorCtx.currentRework?.type, uid]);
+    }, [
+        prototypeSelectorCtx.currentVariant?.name,
+        uid,
+        authCtx.isLoaded,
+        authCtx.user?.uid,
+    ]);
 
     const diff = useMemo(() => {
         if (!data) {

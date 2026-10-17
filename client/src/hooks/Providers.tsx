@@ -6,6 +6,7 @@ import { PrototypeTopPlaysNavigatorProvider } from "./PrototypeTopPlaysNavigator
 import { WhitelistNavigatorProvider } from "./WhitelistNavigator";
 import { SkinListNavigatorProvider } from "./SkinListNavigator";
 import { PrototypeSelectorNavigatorProvider } from "./PrototypeSelectorNavigator";
+import { AuthContextProvider } from "./AuthContext";
 
 const compose =
     (...components: FC<Record<string, unknown>>[]) =>
@@ -16,6 +17,7 @@ const compose =
         );
 
 export const Providers = compose(
+    AuthContextProvider,
     PrototypeLeaderboardNavigatorProvider,
     PrototypeSelectorNavigatorProvider,
     PrototypeTopPlaysNavigatorProvider,

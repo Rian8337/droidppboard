@@ -16,6 +16,7 @@ import SkinList from "./pages/SkinList";
 import SkinPreview from "./pages/SkinPreview";
 import MatchHistory from "./pages/MatchHistory";
 import ScoreMultiplierSample from "./pages/ScoreMultiplierSample";
+import Login from "./pages/Login";
 
 function App() {
     const location = useLocation();
@@ -30,6 +31,7 @@ function App() {
             <AnimatePresence exitBeforeEnter>
                 <Routes location={location} key={location.pathname}>
                     <Route path="/" element={<Home />} />
+                    <Route path="/login" element={<Login />} />
                     <Route path="/whitelist" element={<Whitelist />} />
                     <Route
                         path="/calculate"

@@ -1,57 +1,54 @@
-import { IPrototypePPType } from "app-structures";
+import { PPVariant } from "app-structures";
 import { PropsWithChildren, useState, createContext } from "react";
 
-const defaultRework: IPrototypePPType = {
-    name: "Unknown",
-    type: "overall",
-    description: "Loading rework...",
+const defaultVariant: PPVariant = {
+    name: "droid-rebalance",
+    title: null,
+    aliases: [],
+    description: "Loading variant...",
+    available: true,
+    mode: "droid",
+    algorithm: "rebalance",
 };
 
 const PrototypeSelectorNavigator = createContext({
-    reworks: [defaultRework] as readonly Pick<
-        IPrototypePPType,
-        "name" | "type"
-    >[],
-    currentRework: defaultRework as IPrototypePPType | undefined,
-    setReworks: (reworks: readonly IPrototypePPType[]) => {},
-    setCurrentRework: (rework: IPrototypePPType | undefined) => {},
-    resetCurrentRework: (type: string) => {},
+    variants: [defaultVariant] as readonly PPVariant[],
+    currentVariant: defaultVariant as PPVariant | undefined,
+    setVariants: (variants: readonly PPVariant[]) => {},
+    setCurrentVariant: (variant: PPVariant | undefined) => {},
+    resetCurrentVariant: (name: string) => {},
 });
 
 export function PrototypeSelectorNavigatorProvider(props: PropsWithChildren) {
-    const [reworks, setReworks] = useState<
-        readonly Pick<IPrototypePPType, "name" | "type">[]
-    >([]);
+    const [variants, setVariants] = useState<readonly PPVariant[]>([]);
 
-    const [currentRework, setCurrentRework] = useState<
-        IPrototypePPType | undefined
-    >(defaultRework);
+    const [currentVariant, setCurrentVariant] = useState<PPVariant | undefined>(
+        defaultVariant
+    );
 
-    const modifyReworks = (
-        reworks: readonly Pick<IPrototypePPType, "name" | "type">[] = []
-    ) => {
-        setReworks(() => reworks);
+    const modifyVariants = (variants: readonly PPVariant[] = []) => {
+        setVariants(() => variants);
     };
 
-    const modifyCurrentRework = (rework?: IPrototypePPType) => {
-        setCurrentRework(rework);
+    const modifyCurrentVariant = (variant?: PPVariant) => {
+        setCurrentVariant(variant);
     };
 
-    const resetCurrentRework = (type: string) => {
-        setCurrentRework({
-            ...defaultRework,
-            type: type,
+    const resetCurrentVariant = (name: string) => {
+        setCurrentVariant({
+            ...defaultVariant,
+            name: name,
         });
     };
 
     return (
         <PrototypeSelectorNavigator.Provider
             value={{
-                reworks,
-                currentRework,
-                setReworks: modifyReworks,
-                setCurrentRework: modifyCurrentRework,
-                resetCurrentRework: resetCurrentRework,
+                variants,
+                currentVariant,
+                setVariants: modifyVariants,
+                setCurrentVariant: modifyCurrentVariant,
+                resetCurrentVariant,
             }}
         >
             {props.children}

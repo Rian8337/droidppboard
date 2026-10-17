@@ -5,23 +5,31 @@ import { IPrototypePP, PrototypeLeaderboardResponse } from "app-structures";
 import "../../styles/table-listing.css";
 import PrototypeSelectorNavigator from "../../hooks/PrototypeSelectorNavigator";
 import { useParams } from "react-router-dom";
+import AuthContext from "../../hooks/AuthContext";
+import { Util } from "../../Util";
 
 export default function LeaderboardTable() {
     const leaderboardCtx = useContext(PrototypeLeaderboardNavigator);
     const prototypeSelectorCtx = useContext(PrototypeSelectorNavigator);
+    const authCtx = useContext(AuthContext);
 
     const { type } = useParams();
     const typeRef = useRef(type);
 
     useEffect(() => {
+        // Wait for the login state, as it decides which variants are visible.
+        if (!authCtx.isLoaded) {
+            return;
+        }
+
         // Special case when the user loads this page with a type in the URL.
         if (
             typeRef.current &&
-            typeRef.current !== prototypeSelectorCtx.currentRework?.type
+            typeRef.current !== prototypeSelectorCtx.currentVariant?.name
         ) {
-            prototypeSelectorCtx.resetCurrentRework(typeRef.current);
+            prototypeSelectorCtx.resetCurrentVariant(typeRef.current);
 
-            // Invalidate the ref so that we don't keep setting the rework to unknown.
+            // Invalidate the ref so that we don't keep setting the variant to unknown.
             typeRef.current = undefined;
 
             return;
@@ -41,29 +49,27 @@ export default function LeaderboardTable() {
             searchParams.set("query", leaderboardCtx.query);
         }
 
-        if (prototypeSelectorCtx.currentRework?.type) {
-            searchParams.set("type", prototypeSelectorCtx.currentRework.type);
+        if (prototypeSelectorCtx.currentVariant?.name) {
+            searchParams.set("type", prototypeSelectorCtx.currentVariant.name);
         }
 
         fetch(
             `/api/ppboard/prototype/getleaderboard?${searchParams.toString()}`,
             { signal: controller.signal }
         )
-            .then((res) => {
-                if (res.status === 429) {
-                    throw new Error(
-                        "You are being rate limited. Please try again later"
-                    );
+            .then(async (res) => {
+                if (!res.ok) {
+                    throw new Error(await Util.getResponseErrorMessage(res));
                 }
 
                 return res.json();
             })
-            .then((rawData: PrototypeLeaderboardResponse<IPrototypePP>) => {
+            .then((rawData: PrototypeLeaderboardResponse<IPrototypePP[]>) => {
                 leaderboardCtx.setData(rawData.data);
                 leaderboardCtx.setCurrentPage(leaderboardCtx.internalPage);
 
-                prototypeSelectorCtx.setReworks(rawData.reworks);
-                prototypeSelectorCtx.setCurrentRework(rawData.currentRework);
+                prototypeSelectorCtx.setVariants(rawData.variants);
+                prototypeSelectorCtx.setCurrentVariant(rawData.currentVariant);
             })
             .catch((e: Error) => {
                 if (e.name === "AbortError") {
@@ -82,7 +88,9 @@ export default function LeaderboardTable() {
     }, [
         leaderboardCtx.internalPage,
         leaderboardCtx.query,
-        prototypeSelectorCtx.currentRework?.type,
+        prototypeSelectorCtx.currentVariant?.name,
+        authCtx.isLoaded,
+        authCtx.user?.uid,
     ]);
 
     const hasMaster = useMemo(

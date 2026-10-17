@@ -5,13 +5,13 @@ import PrototypeSelectorNavigator from "../hooks/PrototypeSelectorNavigator";
 export default function PrototypeDescription() {
     const prototypeSelectorCtx = useContext(PrototypeSelectorNavigator);
 
-    if (!prototypeSelectorCtx.currentRework?.description) {
+    if (!prototypeSelectorCtx.currentVariant?.description) {
         return null;
     }
 
     return (
         <div className="prototype-description">
-            {prototypeSelectorCtx.currentRework.description
+            {prototypeSelectorCtx.currentVariant.description
                 .split("\n")
                 .map((v, i) => (
                     <p key={`prototype-description-${i}`}>{v}</p>
