@@ -46,7 +46,7 @@ export interface IPrototypePP {
     scanDone?: boolean;
 
     /**
-     * The type of rework the profile is in.
+     * The variant the profile is in.
      */
     reworkType: string;
 }
