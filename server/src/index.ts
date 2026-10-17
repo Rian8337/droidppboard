@@ -11,6 +11,7 @@ import getScoreMultiplierSample from "./routes/api/ppboard/score-multiplier-samp
 import login from "./routes/api/auth/login";
 import logout from "./routes/api/auth/logout";
 import me from "./routes/api/auth/me";
+import manage from "./routes/api/manage/manage";
 import searchSkins from "./routes/api/skins/search-skins";
 import getSkin from "./routes/api/skins/get-skin";
 import { config } from "dotenv";
@@ -37,6 +38,7 @@ const app = express();
 const ppboardRouter = express.Router();
 const skinsRouter = express.Router();
 const authRouter = express.Router();
+const manageRouter = express.Router();
 
 // Allow local requests and the website to access the API
 const allowedOrigins = [
@@ -65,6 +67,7 @@ app.use(Util.createRateLimit(12));
 app.use("/api/ppboard", ppboardRouter);
 app.use("/api/skins", skinsRouter);
 app.use("/api/auth", authRouter);
+app.use("/api/manage", manageRouter);
 
 //#endregion
 
@@ -95,6 +98,17 @@ authRouter.use(sessionMiddleware);
 authRouter.use("/login", login);
 authRouter.use("/logout", logout);
 authRouter.use("/me", me);
+
+//#endregion
+
+//#region Management endpoints
+
+// These act for the logged-in person, so they need a session and a trusted origin.
+manageRouter.use(Util.createRateLimit(30));
+manageRouter.use(requireAllowedOrigin(allowedOrigins));
+manageRouter.use(sessionMiddleware);
+
+manageRouter.use(manage);
 
 //#endregion
 
