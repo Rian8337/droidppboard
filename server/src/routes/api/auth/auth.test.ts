@@ -3,6 +3,7 @@ import express from "express";
 import { AddressInfo } from "net";
 import { Server } from "http";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { bodyParserErrorHandler } from "../../../utils/bodyParserErrorHandler";
 import { currentPasswordHash } from "../../../auth/passwordHash";
 
 const mocks = vi.hoisted(() => ({
@@ -54,6 +55,7 @@ async function start() {
     const router = express.Router();
 
     app.use(express.json());
+    app.use(bodyParserErrorHandler);
     app.use(cookieParser());
     app.use("/api/auth", router);
 
@@ -263,6 +265,80 @@ describe("auth routes", () => {
             expect(mocks.verifyTurnstile).toHaveBeenCalledTimes(3);
         });
 
+        it("deletes the previous session of the browser when logging in", async () => {
+            const res = await post("/api/auth/login", validBody, {
+                Cookie: `ppboard_session=${"B".repeat(43)}`,
+            });
+
+            expect(res.status).toBe(200);
+            expect(mocks.store.delete).toHaveBeenCalledWith("B".repeat(43));
+            expect(mocks.store.create).toHaveBeenCalledWith(42);
+        });
+
+        it("still logs in when the previous session cannot be deleted", async () => {
+            mocks.store.delete.mockRejectedValue(new Error("db down"));
+
+            const res = await post("/api/auth/login", validBody, {
+                Cookie: `ppboard_session=${"B".repeat(43)}`,
+            });
+
+            expect(res.status).toBe(200);
+            expect(mocks.store.create).toHaveBeenCalledWith(42);
+        });
+
+        it("records a failure for banned and archived accounts with the right password", async () => {
+            const { LoginThrottle } =
+                await import("../../../auth/LoginThrottle");
+            const recordFailure = vi.spyOn(
+                LoginThrottle.prototype,
+                "recordFailure",
+            );
+
+            for (const flags of [{ banned: true }, { archived: true }]) {
+                mocks.findForLogin.mockResolvedValueOnce({
+                    ...account,
+                    ...flags,
+                });
+
+                const res = await post("/api/auth/login", validBody);
+
+                expect(res.status).toBe(401);
+                expect(await res.json()).toEqual({
+                    message: "Invalid username or password",
+                });
+            }
+
+            expect(recordFailure).toHaveBeenCalledTimes(2);
+            expect(recordFailure).toHaveBeenCalledWith(
+                expect.any(String),
+                "Player",
+            );
+            expect(mocks.store.create).not.toHaveBeenCalled();
+        });
+
+        it("does not log secrets from malformed JSON bodies", async () => {
+            const spies = [
+                vi.spyOn(console, "error"),
+                vi.spyOn(console, "log"),
+                vi.spyOn(console, "warn"),
+            ];
+
+            const res = await fetch(`${baseUrl}/api/auth/login`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", Origin: origin },
+                body: '{"password":SECRETPASS123}',
+            });
+
+            expect(res.status).toBe(400);
+            expect(await res.json()).toEqual({ message: "Invalid request" });
+
+            for (const spy of spies) {
+                expect(JSON.stringify(spy.mock.calls)).not.toContain(
+                    "SECRETPASS",
+                );
+            }
+        });
+
         it("rejects logins from other origins", async () => {
             const res = await post("/api/auth/login", validBody, {
                 Origin: "https://evil.example",
@@ -394,6 +470,19 @@ describe("auth routes", () => {
             expect(res.headers.get("set-cookie")).toContain(
                 "ppboard_session=;",
             );
+        });
+
+        it("keeps the cookie and answers 500 when the session cannot be deleted", async () => {
+            mocks.store.delete.mockRejectedValue(new Error("db down"));
+
+            const res = await post(
+                "/api/auth/logout",
+                {},
+                { Cookie: `ppboard_session=${token}` },
+            );
+
+            expect(res.status).toBe(500);
+            expect(res.headers.get("set-cookie")).toBeNull();
         });
 
         it("rejects logouts from other origins", async () => {

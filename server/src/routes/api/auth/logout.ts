@@ -14,12 +14,12 @@ router.post(
     asyncHandler(async (req, res) => {
         const token = readSessionToken(req.cookies);
 
-        res.clearCookie(sessionCookieName, getClearSessionCookieOptions());
-
+        // The session is deleted first, so that a failure leaves the cookie for a retry.
         if (token) {
             await getSessionStore().delete(token);
         }
 
+        res.clearCookie(sessionCookieName, getClearSessionCookieOptions());
         res.status(204).end();
     }),
 );

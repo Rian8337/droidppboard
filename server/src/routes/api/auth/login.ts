@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { LoginThrottle } from "../../../auth/LoginThrottle";
 import { OsuDroidAccounts } from "../../../auth/OsuDroidAccounts";
+import { readSessionToken } from "../../../auth/sessionMiddleware";
 import { passwordMatches, phpTrim } from "../../../auth/passwordHash";
 import {
     getSessionCookieOptions,
@@ -121,7 +122,18 @@ router.post(
 
         throttle.recordSuccess(username);
 
-        const token = await getSessionStore().create(account.id);
+        const store = getSessionStore();
+        const oldToken = readSessionToken(req.cookies);
+
+        if (oldToken) {
+            try {
+                await store.delete(oldToken);
+            } catch {
+                console.error("Could not delete the previous session");
+            }
+        }
+
+        const token = await store.create(account.id);
 
         res.cookie(sessionCookieName, token, getSessionCookieOptions());
         res.status(200).json({ uid: account.id, username: account.username });
