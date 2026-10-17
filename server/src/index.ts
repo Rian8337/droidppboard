@@ -21,6 +21,7 @@ import { bodyParserErrorHandler } from "./utils/bodyParserErrorHandler";
 import { requireAllowedOrigin } from "./auth/originCheck";
 import { sessionMiddleware } from "./auth/sessionMiddleware";
 import { initSessions } from "./auth/sessions";
+import { warnIfSessionSecretUnset } from "./auth/passwordFingerprint";
 import { DatabaseManager } from "./database/managers/DatabaseManager";
 import {
     DroidAPIRequestBuilder,
@@ -28,6 +29,8 @@ import {
 } from "@rian8337/osu-base";
 
 config();
+
+warnIfSessionSecretUnset();
 
 DroidAPIRequestBuilder.setAPIKey(process.env.DROID_API_KEY!);
 OsuAPIRequestBuilder.setAPIKey(process.env.OSU_API_KEY!);

@@ -30,6 +30,16 @@ export abstract class BrokerClient {
     private static readonly adminPathPattern = /^(\/[A-Za-z0-9_-]+)+$/;
 
     /**
+     * Checks whether a path is one that can be forwarded to the broker's admin API.
+     *
+     * @param path The path under `/admin`.
+     * @returns Whether the path starts with `/` and consists of plain name segments.
+     */
+    static isValidAdminPath(path: string): boolean {
+        return BrokerClient.adminPathPattern.test(path);
+    }
+
+    /**
      * Gets the variants that are visible to a person, or to visitors if none is given.
      *
      * @param actingUid The uid of the person to act for.
@@ -118,7 +128,7 @@ export abstract class BrokerClient {
      * @throws If the path is not made up of plain name segments or resolves outside `/admin`.
      */
     private static adminUrl(path: string): URL {
-        if (!BrokerClient.adminPathPattern.test(path)) {
+        if (!BrokerClient.isValidAdminPath(path)) {
             throw new Error("Invalid broker admin path");
         }
 

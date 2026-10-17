@@ -69,7 +69,7 @@ describe("SessionStore", () => {
     it("stores only the token hash", async () => {
         const { collection, clock, store } = setup();
 
-        const token = await store.create(42);
+        const token = await store.create(42, "fp");
 
         expect(token).toMatch(/^[A-Za-z0-9_-]{43}$/);
         expect(collection.documents).toHaveLength(1);
@@ -80,6 +80,7 @@ describe("SessionStore", () => {
             createHash("sha256").update(token).digest("hex"),
         );
         expect(document.uid).toBe(42);
+        expect(document.passwordFingerprint).toBe("fp");
         expect(document.createdAt.getTime()).toBe(clock.time);
         expect(document.expiresAt.getTime()).toBe(clock.time + day);
         expect(JSON.stringify(document)).not.toContain(token);
@@ -88,27 +89,45 @@ describe("SessionStore", () => {
     it("gives every session its own token", async () => {
         const { store } = setup();
 
-        expect(await store.create(1)).not.toBe(await store.create(1));
+        expect(await store.create(1, "fp")).not.toBe(
+            await store.create(1, "fp"),
+        );
     });
 
     it("finds a session by its token", async () => {
         const { store } = setup();
 
-        const token = await store.create(7);
+        const token = await store.create(7, "fp");
 
-        expect(await store.get(token)).toEqual({ uid: 7 });
+        expect(await store.get(token)).toEqual({
+            uid: 7,
+            passwordFingerprint: "fp",
+        });
         expect(await store.get("not-a-token")).toBeNull();
+    });
+
+    it("returns no fingerprint for a session stored without one", async () => {
+        const { collection, store } = setup();
+
+        const token = await store.create(3, "fp");
+
+        delete collection.documents[0].passwordFingerprint;
+
+        expect(await store.get(token)).toEqual({ uid: 3 });
     });
 
     it("slides expiry by a day on use", async () => {
         const { collection, clock, store } = setup();
         const start = clock.time;
 
-        const token = await store.create(1);
+        const token = await store.create(1, "fp");
 
         clock.time += 6 * hour;
 
-        expect(await store.get(token)).toEqual({ uid: 1 });
+        expect(await store.get(token)).toEqual({
+            uid: 1,
+            passwordFingerprint: "fp",
+        });
         expect(collection.documents[0].expiresAt.getTime()).toBe(
             start + 6 * hour + day,
         );
@@ -117,7 +136,7 @@ describe("SessionStore", () => {
     it("does not write when expiry would move by five minutes or less", async () => {
         const { collection, clock, store } = setup();
 
-        const token = await store.create(1);
+        const token = await store.create(1, "fp");
 
         clock.time += 5 * minute;
         await store.get(token);
@@ -134,11 +153,14 @@ describe("SessionStore", () => {
         const { collection, clock, store } = setup();
         const start = clock.time;
 
-        const token = await store.create(1);
+        const token = await store.create(1, "fp");
 
         for (let i = 0; i < 8; ++i) {
             clock.time += 20 * hour;
-            expect(await store.get(token)).toEqual({ uid: 1 });
+            expect(await store.get(token)).toEqual({
+                uid: 1,
+                passwordFingerprint: "fp",
+            });
         }
 
         // The last use was 160 hours in, which a day would take past the seven day cap.
@@ -150,11 +172,14 @@ describe("SessionStore", () => {
     it("ends the session at the seven day cap even with constant use", async () => {
         const { clock, store } = setup();
 
-        const token = await store.create(1);
+        const token = await store.create(1, "fp");
 
         for (let i = 0; i < 7 * 24 - 1; ++i) {
             clock.time += hour;
-            expect(await store.get(token)).toEqual({ uid: 1 });
+            expect(await store.get(token)).toEqual({
+                uid: 1,
+                passwordFingerprint: "fp",
+            });
         }
 
         clock.time += hour;
@@ -165,8 +190,8 @@ describe("SessionStore", () => {
     it("forgets deleted and expired sessions", async () => {
         const { clock, store } = setup();
 
-        const deleted = await store.create(1);
-        const expired = await store.create(2);
+        const deleted = await store.create(1, "fp");
+        const expired = await store.create(2, "fp");
 
         await store.delete(deleted);
 

@@ -2,6 +2,7 @@ import { Router } from "express";
 import { LoginThrottle } from "../../../auth/LoginThrottle";
 import { OsuDroidAccounts } from "../../../auth/OsuDroidAccounts";
 import { readSessionToken } from "../../../auth/sessionMiddleware";
+import { getPasswordFingerprint } from "../../../auth/passwordFingerprint";
 import { passwordMatches, phpTrim } from "../../../auth/passwordHash";
 import {
     getSessionCookieOptions,
@@ -51,7 +52,7 @@ function parseLoginRequest(body: unknown): LoginRequest | null {
         trimmedUsername.length < 1 ||
         trimmedUsername.length > 20 ||
         password.length < 1 ||
-        password.length > 100 ||
+        password.length > 1024 ||
         turnstileToken.length < 1 ||
         turnstileToken.length > 2048
     ) {
@@ -112,7 +113,9 @@ router.post(
 
             // The username is quoted so that it cannot forge log lines.
             console.warn(
-                `Failed login from ${ip} for username ${JSON.stringify(username)}`,
+                `Failed login from ${ip} for username ${JSON.stringify(
+                    username,
+                )}`,
             );
 
             res.status(401).json({ message: "Invalid username or password" });
@@ -133,7 +136,10 @@ router.post(
             }
         }
 
-        const token = await store.create(account.id);
+        const token = await store.create(
+            account.id,
+            getPasswordFingerprint(account.password),
+        );
 
         res.cookie(sessionCookieName, token, getSessionCookieOptions());
         res.status(200).json({ uid: account.id, username: account.username });

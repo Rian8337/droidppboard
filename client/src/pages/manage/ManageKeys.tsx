@@ -60,6 +60,7 @@ function KeyManager() {
             <CreateKeyForm
                 variantNames={variantNames}
                 disabled={isBusy}
+                rawKeyShown={created !== null}
                 error={createError}
                 onCreate={async (input) => {
                     setCreateError(undefined);
@@ -162,6 +163,11 @@ function RawKeyNotice(props: {
 function CreateKeyForm(props: {
     variantNames: readonly string[];
     disabled: boolean;
+    /**
+     * Whether a raw key is still shown. Creating another key would replace it, and a raw key
+     * can't be shown again.
+     */
+    rawKeyShown: boolean;
     error?: string;
     onCreate(input: {
         name: string;
@@ -181,6 +187,7 @@ function CreateKeyForm(props: {
     const rateLimit = parseRateLimit(limit);
     const canSubmit =
         !props.disabled &&
+        !props.rawKeyShown &&
         !isSubmitting &&
         !!name.trim() &&
         rateLimit !== undefined;
@@ -290,6 +297,11 @@ function CreateKeyForm(props: {
                 >
                     {isSubmitting ? "Creating..." : "Create"}
                 </button>
+                {props.rawKeyShown ? (
+                    <span className="manage-hint">
+                        Dismiss the key above first
+                    </span>
+                ) : null}
             </form>
 
             {props.error ? <p className="manage-error">{props.error}</p> : null}

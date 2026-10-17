@@ -7,11 +7,22 @@ import { SessionDocument, SessionStore } from "./SessionStore";
  */
 export const sessionCookieName = "ppboard_session";
 
+/**
+ * Whether the cookie is marked `Secure`. This is the default: only local development and tests,
+ * which run over plain HTTP, switch it off.
+ */
+function isSecure(): boolean {
+    return (
+        process.env.NODE_ENV !== "development" &&
+        process.env.NODE_ENV !== "test"
+    );
+}
+
 function baseCookieOptions(): CookieOptions {
     return {
         httpOnly: true,
         sameSite: "strict",
-        secure: process.env.NODE_ENV === "production",
+        secure: isSecure(),
         path: "/",
     };
 }

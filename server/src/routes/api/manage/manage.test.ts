@@ -12,9 +12,18 @@ const mocks = vi.hoisted(() => ({
 vi.mock("../../../auth/OsuDroidAccounts", () => ({
     OsuDroidAccounts: { getUsernames: mocks.getUsernames },
 }));
-vi.mock("../../../clients/BrokerClient", () => ({
-    BrokerClient: { forwardAdmin: mocks.forwardAdmin },
-}));
+vi.mock("../../../clients/BrokerClient", async (importOriginal) => {
+    const actual =
+        await importOriginal<typeof import("../../../clients/BrokerClient")>();
+
+    return {
+        // The path validator is the real one, so that these tests cover what it rejects.
+        BrokerClient: {
+            isValidAdminPath: actual.BrokerClient.isValidAdminPath,
+            forwardAdmin: mocks.forwardAdmin,
+        },
+    };
+});
 
 const origin = "https://droidpp.osudroid.moe";
 
@@ -186,25 +195,42 @@ describe("management routes", () => {
             });
         });
 
-        it("answers 404 for paths the broker client does not accept", async () => {
-            mocks.forwardAdmin.mockImplementation(() => {
-                throw new Error("Invalid admin path");
-            });
+        it("answers 404 without calling the broker for paths the validator rejects", async () => {
+            const paths = [
+                "/api/manage/variants/a.b",
+                "/api/manage/variants/a%2Fb",
+                "/api/manage/variants//x",
+                "/api/manage",
+                "/api/manage/",
+            ];
 
-            const res = await request("GET", "/api/manage/variants/a.b");
+            for (const path of paths) {
+                const res = await request("GET", path);
 
-            expect(res.status).toBe(404);
-            expect(await res.json()).toEqual({ message: "Not found" });
+                expect(res.status, path).toBe(404);
+                expect(await res.json()).toEqual({ message: "Not found" });
+            }
+
+            expect(mocks.forwardAdmin).not.toHaveBeenCalled();
         });
 
-        it("answers 404 for the bare management path without a broker call", async () => {
-            mocks.forwardAdmin.mockImplementation(() => {
-                throw new Error("Invalid admin path");
+        it("answers 502 when the broker client fails for any other reason", async () => {
+            const error = vi.mocked(console.error);
+
+            mocks.forwardAdmin.mockRejectedValue(
+                new Error("DPP_BROKER_URL is not set"),
+            );
+
+            const res = await request("GET", "/api/manage/variants");
+
+            expect(res.status).toBe(502);
+            expect(await res.json()).toEqual({
+                message: "The variant service is unavailable",
             });
-
-            const res = await request("GET", "/api/manage");
-
-            expect(res.status).toBe(404);
+            expect(error).toHaveBeenCalledTimes(1);
+            expect(error).toHaveBeenCalledWith(
+                "Could not forward a management request to the broker",
+            );
         });
 
         it("limits JSON bodies to 64 KB", async () => {

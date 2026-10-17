@@ -1,5 +1,6 @@
 import { RowDataPacket } from "mysql2/promise";
 import { officialDb } from "../database/official";
+import { getPasswordFingerprint } from "./passwordFingerprint";
 import { phpTrim } from "./passwordHash";
 
 interface UserRow extends RowDataPacket {
@@ -55,20 +56,30 @@ export abstract class OsuDroidAccounts {
     }
 
     /**
-     * Checks whether an account exists and is neither banned nor archived.
+     * Gets what is needed to decide whether a session of an account is still good.
      *
      * @param uid The uid of the account.
-     * @returns Whether the account is active.
+     * @returns Whether the account is active (neither banned nor archived) and the fingerprint of
+     * its current password hash, or `null` if it does not exist.
      */
-    static async isActive(uid: number): Promise<boolean> {
+    static async getSessionState(
+        uid: number,
+    ): Promise<{ active: boolean; passwordFingerprint: string } | null> {
         const [rows] = await officialDb.execute<UserRow[]>(
-            "SELECT banned, archived FROM bbl_user WHERE id = ? LIMIT 1",
+            "SELECT password, banned, archived FROM bbl_user WHERE id = ? LIMIT 1",
             [uid],
         );
 
         const row = rows[0];
 
-        return !!row && row.banned === 0 && row.archived === 0;
+        if (!row) {
+            return null;
+        }
+
+        return {
+            active: row.banned === 0 && row.archived === 0,
+            passwordFingerprint: getPasswordFingerprint(row.password),
+        };
     }
 
     /**
@@ -86,7 +97,9 @@ export abstract class OsuDroidAccounts {
         }
 
         const [rows] = await officialDb.execute<UserRow[]>(
-            `SELECT id, username FROM bbl_user WHERE id IN (${unique.map(() => "?").join(", ")})`,
+            `SELECT id, username FROM bbl_user WHERE id IN (${unique
+                .map(() => "?")
+                .join(", ")})`,
             unique,
         );
 

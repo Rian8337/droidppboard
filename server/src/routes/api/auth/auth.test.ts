@@ -5,10 +5,11 @@ import { Server } from "http";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { bodyParserErrorHandler } from "../../../utils/bodyParserErrorHandler";
 import { currentPasswordHash } from "../../../auth/passwordHash";
+import { getPasswordFingerprint } from "../../../auth/passwordFingerprint";
 
 const mocks = vi.hoisted(() => ({
     findForLogin: vi.fn(),
-    isActive: vi.fn(),
+    getSessionState: vi.fn(),
     getUsernames: vi.fn(),
     verifyTurnstile: vi.fn(),
     getMe: vi.fn(),
@@ -22,7 +23,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock("../../../auth/OsuDroidAccounts", () => ({
     OsuDroidAccounts: {
         findForLogin: mocks.findForLogin,
-        isActive: mocks.isActive,
+        getSessionState: mocks.getSessionState,
         getUsernames: mocks.getUsernames,
     },
 }));
@@ -45,8 +46,9 @@ let baseUrl: string;
 
 async function start() {
     const { requireAllowedOrigin } = await import("../../../auth/originCheck");
-    const { sessionMiddleware } =
-        await import("../../../auth/sessionMiddleware");
+    const { sessionMiddleware } = await import(
+        "../../../auth/sessionMiddleware"
+    );
     const login = (await import("./login")).default;
     const logout = (await import("./logout")).default;
     const me = (await import("./me")).default;
@@ -102,6 +104,8 @@ const account = {
     archived: false,
 };
 
+const fingerprint = getPasswordFingerprint(account.password);
+
 describe("auth routes", () => {
     beforeEach(async () => {
         vi.resetModules();
@@ -109,7 +113,10 @@ describe("auth routes", () => {
         vi.spyOn(console, "error").mockImplementation(() => {});
 
         mocks.findForLogin.mockResolvedValue(account);
-        mocks.isActive.mockResolvedValue(true);
+        mocks.getSessionState.mockResolvedValue({
+            active: true,
+            passwordFingerprint: fingerprint,
+        });
         mocks.getUsernames.mockResolvedValue(new Map([[42, "Player"]]));
         mocks.verifyTurnstile.mockResolvedValue(true);
         mocks.getMe.mockResolvedValue({
@@ -118,7 +125,10 @@ describe("auth routes", () => {
             grants: ["x"],
         });
         mocks.store.create.mockResolvedValue(token);
-        mocks.store.get.mockResolvedValue({ uid: 42 });
+        mocks.store.get.mockResolvedValue({
+            uid: 42,
+            passwordFingerprint: fingerprint,
+        });
         mocks.store.delete.mockResolvedValue(undefined);
 
         await start();
@@ -141,7 +151,7 @@ describe("auth routes", () => {
             expect(res.status).toBe(200);
             expect(await res.json()).toEqual({ uid: 42, username: "Player" });
             expect(mocks.findForLogin).toHaveBeenCalledWith("Player");
-            expect(mocks.store.create).toHaveBeenCalledWith(42);
+            expect(mocks.store.create).toHaveBeenCalledWith(42, fingerprint);
 
             const cookie = res.headers.get("set-cookie")!;
 
@@ -152,6 +162,17 @@ describe("auth routes", () => {
             expect(cookie).toContain("Max-Age=604800");
         });
 
+        it("accepts passwords of up to 1024 characters", async () => {
+            const res = await post("/api/auth/login", {
+                ...validBody,
+                password: "x".repeat(1024),
+            });
+
+            // The password is wrong, but the body is well-formed.
+            expect(res.status).toBe(401);
+            expect(mocks.verifyTurnstile).toHaveBeenCalledTimes(1);
+        });
+
         it("rejects malformed bodies without involving the throttle or captcha", async () => {
             const bodies = [
                 {},
@@ -159,7 +180,7 @@ describe("auth routes", () => {
                 { ...validBody, username: "x".repeat(21) },
                 { ...validBody, username: { $ne: "" } },
                 { ...validBody, password: "" },
-                { ...validBody, password: "x".repeat(101) },
+                { ...validBody, password: "x".repeat(1025) },
                 { ...validBody, password: ["a"] },
                 { ...validBody, turnstileToken: "" },
                 { ...validBody, turnstileToken: "x".repeat(2049) },
@@ -272,7 +293,7 @@ describe("auth routes", () => {
 
             expect(res.status).toBe(200);
             expect(mocks.store.delete).toHaveBeenCalledWith("B".repeat(43));
-            expect(mocks.store.create).toHaveBeenCalledWith(42);
+            expect(mocks.store.create).toHaveBeenCalledWith(42, fingerprint);
         });
 
         it("still logs in when the previous session cannot be deleted", async () => {
@@ -283,12 +304,13 @@ describe("auth routes", () => {
             });
 
             expect(res.status).toBe(200);
-            expect(mocks.store.create).toHaveBeenCalledWith(42);
+            expect(mocks.store.create).toHaveBeenCalledWith(42, fingerprint);
         });
 
         it("records a failure for banned and archived accounts with the right password", async () => {
-            const { LoginThrottle } =
-                await import("../../../auth/LoginThrottle");
+            const { LoginThrottle } = await import(
+                "../../../auth/LoginThrottle"
+            );
             const recordFailure = vi.spyOn(
                 LoginThrottle.prototype,
                 "recordFailure",
@@ -402,7 +424,64 @@ describe("auth routes", () => {
         });
 
         it("drops sessions of banned or archived accounts", async () => {
-            mocks.isActive.mockResolvedValue(false);
+            mocks.getSessionState.mockResolvedValue({
+                active: false,
+                passwordFingerprint: fingerprint,
+            });
+
+            const res = await fetch(`${baseUrl}/api/auth/me`, {
+                headers: cookie,
+            });
+
+            expect(res.status).toBe(401);
+            expect(mocks.store.delete).toHaveBeenCalledWith(token);
+            expect(res.headers.get("set-cookie")).toContain(
+                "ppboard_session=;",
+            );
+        });
+
+        it("drops sessions of accounts that no longer exist", async () => {
+            mocks.getSessionState.mockResolvedValue(null);
+
+            const res = await fetch(`${baseUrl}/api/auth/me`, {
+                headers: cookie,
+            });
+
+            expect(res.status).toBe(401);
+            expect(mocks.store.delete).toHaveBeenCalledWith(token);
+        });
+
+        it("drops sessions whose account password has changed", async () => {
+            mocks.getSessionState.mockResolvedValue({
+                active: true,
+                passwordFingerprint:
+                    getPasswordFingerprint("a new stored hash"),
+            });
+
+            const res = await fetch(`${baseUrl}/api/auth/me`, {
+                headers: cookie,
+            });
+
+            expect(res.status).toBe(401);
+            expect(mocks.getMe).not.toHaveBeenCalled();
+            expect(mocks.store.delete).toHaveBeenCalledWith(token);
+            expect(res.headers.get("set-cookie")).toContain(
+                "ppboard_session=;",
+            );
+        });
+
+        it("keeps sessions whose account password is unchanged", async () => {
+            const res = await fetch(`${baseUrl}/api/auth/me`, {
+                headers: cookie,
+            });
+
+            expect(res.status).toBe(200);
+            expect(mocks.store.delete).not.toHaveBeenCalled();
+            expect(res.headers.get("set-cookie")).toBeNull();
+        });
+
+        it("drops sessions created before passwords were tracked", async () => {
+            mocks.store.get.mockResolvedValue({ uid: 42 });
 
             const res = await fetch(`${baseUrl}/api/auth/me`, {
                 headers: cookie,

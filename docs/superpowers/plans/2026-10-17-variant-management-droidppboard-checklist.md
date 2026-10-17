@@ -5,10 +5,16 @@ Manual checks for the variant-based prototype pages, login, and the management p
 ## Prerequisites
 
 - Server environment:
-    - `NODE_ENV=production`. The session cookie (`ppboard_session`) is only marked `Secure` when this is set. The site must then be served over HTTPS, because browsers drop `Secure` cookies over plain HTTP and login will appear to succeed but not stick.
+    - The session cookie (`ppboard_session`) is marked `Secure` by default, so the site must be served over HTTPS: browsers drop `Secure` cookies over plain HTTP, and login would appear to succeed but not stick. Set `NODE_ENV=development` only for local HTTP development (`NODE_ENV=test` also turns `Secure` off); leave it unset or `production` in staging and production.
+    - `SESSION_SECRET`, a long random string. It keys the fingerprint of each account's password hash that is stored with its session, so changing the password ends the session. If it is unset the server still starts, but logs a warning at startup and the fingerprints are not keyed. Changing it later ends every session.
     - `DPP_BROKER_URL` pointing at the running broker.
     - `DPP_BROKER_KEY`, the board's broker key. It must have `can_act_for_users` and must have no grants and no all-variants access of its own. Otherwise visitors would see private variants through the board's own key.
     - `TURNSTILE_SECRET_KEY`.
+- Broker and data prerequisites:
+    - `droid-live`, `droid-rebalance`, `osu-live` and `osu-rebalance` are public in the broker. Step 14 runs the beatmap calculator as a visitor to confirm it.
+    - In the `prototypepp` collection, `reworkType` `overall` has been renamed to `droid-rebalance`, and the `fc-time` and `acc-pp-removal` entries have been deleted.
+    - The board's broker key has `can_act_for_users` before go-live. Without it, the broker refuses the board's requests on behalf of logged-in people.
+    - `req.ip` is the real client IP. Check this once in staging with step 16. If Cloudflare or nginx is in front of the server, configure nginx with `real_ip_header CF-Connecting-IP` and Cloudflare's IP ranges (`set_real_ip_from`), or adjust Express's `trust proxy` setting. Otherwise every visitor shares one IP and the per-IP login limit hits everyone at once.
 - Client build environment:
     - `REACT_APP_TURNSTILE_SITE_KEY`, set at client build time (not at runtime).
 - Data:
@@ -74,3 +80,15 @@ Manual checks for the variant-based prototype pages, login, and the management p
 13. **Not-logged-in management access is refused.**
     - Action: In a private window with no session, open `/manage`.
     - Expected: The page does not show management content. A direct request to `/api/auth/me` answers "Not logged in" with HTTP 401.
+
+14. **Public variants calculate for a visitor.**
+    - Action: In a private browser window (no session), open the beatmap calculator and calculate a beatmap with each of `droid-live`, `droid-rebalance`, `osu-live` and `osu-rebalance`.
+    - Expected: All four calculations succeed and show results. None of them answers "Variant not found" or an error about the variant being unavailable.
+
+15. **Changing the osu!droid password ends the board session.**
+    - Action: Log in to the board as a test account and keep the tab open. In another browser, change that account's osu!droid password on the official site. Back in the first tab, reload the page or open `/manage`.
+    - Expected: The board session ends on the next request: the header shows Login instead of Logout and the session cookie is cleared. Logging in with the new password works. Restore the old password afterwards if the account is shared.
+
+16. **The client IP is the real one.**
+    - Action: On `/login`, submit a wrong password for a test account. Read the server log line `Failed login from <ip> for username "<name>"`.
+    - Expected: `<ip>` is the address you are connecting from, not `127.0.0.1`, the nginx host or a Cloudflare address. If it is not, fix the proxy configuration as described in the prerequisites before go-live.

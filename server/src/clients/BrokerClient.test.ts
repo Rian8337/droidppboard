@@ -179,6 +179,20 @@ describe("BrokerClient", () => {
         expect(fetchMock).not.toHaveBeenCalled();
     });
 
+    it.each(["/variants", "/variants/droid-live/grants/123", "/a_b-c/1"])(
+        "validates the admin path %s",
+        (path) => {
+            expect(BrokerClient.isValidAdminPath(path)).toBe(true);
+        },
+    );
+
+    it.each(["", "/", "variants", "/a.b", "/a//b", "/a/", "/a?b", "/%2e%2e"])(
+        "invalidates the admin path %j",
+        (path) => {
+            expect(BrokerClient.isValidAdminPath(path)).toBe(false);
+        },
+    );
+
     it.each([
         [
             "/variants/droid-live/grants/123",

@@ -29,6 +29,11 @@ interface AuthContextValue {
     readonly isLoaded: boolean;
 
     /**
+     * The error of the last failed logout, if any. The user stays logged in in that case.
+     */
+    readonly logoutError: string | undefined;
+
+    /**
      * Reloads the login state from the server.
      */
     refresh(): Promise<void>;
@@ -42,6 +47,7 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue>({
     user: null,
     isLoaded: false,
+    logoutError: undefined,
     refresh: async () => {},
     logout: async () => {},
 });
@@ -49,13 +55,16 @@ const AuthContext = createContext<AuthContextValue>({
 export function AuthContextProvider(props: PropsWithChildren) {
     const [user, setUser] = useState<AuthUser | null>(null);
     const [isLoaded, setLoaded] = useState(false);
+    const [logoutError, setLogoutError] = useState<string | undefined>();
 
     const refresh = useCallback(async () => {
         try {
-            const res = await fetch("/api/auth/me");
+            const res = await fetch("/api/auth/me", {
+                signal: AbortSignal.timeout(10000),
+            });
 
             // Any non-OK response (including a 401 while the server's database is down)
-            // is treated as logged out. There is no retry.
+            // and a timeout are treated as logged out. There is no retry.
             setUser(res.ok ? ((await res.json()) as AuthUser) : null);
         } catch {
             setUser(null);
@@ -65,10 +74,19 @@ export function AuthContextProvider(props: PropsWithChildren) {
     }, []);
 
     const logout = useCallback(async () => {
+        setLogoutError(undefined);
+
         try {
-            await fetch("/api/auth/logout", { method: "POST" });
+            const res = await fetch("/api/auth/logout", { method: "POST" });
+
+            if (!res.ok) {
+                throw new Error("Logout was refused");
+            }
         } catch {
-            // Ignore; the state below is taken from the server either way.
+            // The session may still exist, so the user state is kept.
+            setLogoutError("Logout failed, please try again");
+
+            return;
         }
 
         await refresh();
@@ -79,8 +97,8 @@ export function AuthContextProvider(props: PropsWithChildren) {
     }, [refresh]);
 
     const value = useMemo(
-        () => ({ user, isLoaded, refresh, logout }),
-        [user, isLoaded, refresh, logout]
+        () => ({ user, isLoaded, logoutError, refresh, logout }),
+        [user, isLoaded, logoutError, refresh, logout]
     );
 
     return (

@@ -20,6 +20,14 @@ export default function Header() {
                             <button type="button" onClick={authCtx.logout}>
                                 Logout
                             </button>
+                            {authCtx.logoutError ? (
+                                <span
+                                    role="alert"
+                                    className="header-auth-error"
+                                >
+                                    {authCtx.logoutError}
+                                </span>
+                            ) : null}
                         </>
                     ) : (
                         <Link

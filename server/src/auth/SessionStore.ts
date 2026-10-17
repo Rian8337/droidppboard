@@ -24,6 +24,11 @@ const minExpiryUpdateMs = 5 * minute;
 export interface SessionDocument {
     tokenHash: string;
     uid: number;
+    /**
+     * A fingerprint of the account's password hash when the session was created. Sessions from
+     * before this was tracked have none.
+     */
+    passwordFingerprint?: string;
     createdAt: Date;
     expiresAt: Date;
 }
@@ -78,15 +83,17 @@ export class SessionStore {
      * Creates a session.
      *
      * @param uid The uid of the account that logged in.
+     * @param passwordFingerprint The fingerprint of the account's password hash.
      * @returns The token of the session. This is the only time that it is available.
      */
-    async create(uid: number): Promise<string> {
+    async create(uid: number, passwordFingerprint: string): Promise<string> {
         const token = randomBytes(32).toString("base64url");
         const now = this.now();
 
         await this.collection.insertOne({
             tokenHash: hashToken(token),
             uid,
+            passwordFingerprint,
             createdAt: new Date(now),
             expiresAt: new Date(now + idleLifetimeMs),
         });
@@ -103,7 +110,9 @@ export class SessionStore {
      * @param token The token.
      * @returns The session, or `null` if the token is unknown or expired.
      */
-    async get(token: string): Promise<{ uid: number } | null> {
+    async get(
+        token: string,
+    ): Promise<{ uid: number; passwordFingerprint?: string } | null> {
         const tokenHash = hashToken(token);
         const session = await this.collection.findOne({ tokenHash });
 
@@ -128,7 +137,12 @@ export class SessionStore {
             );
         }
 
-        return { uid: session.uid };
+        return session.passwordFingerprint === undefined
+            ? { uid: session.uid }
+            : {
+                  uid: session.uid,
+                  passwordFingerprint: session.passwordFingerprint,
+              };
     }
 
     /**

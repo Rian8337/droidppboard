@@ -74,6 +74,12 @@ router.use(
             return;
         }
 
+        if (!BrokerClient.isValidAdminPath(req.path)) {
+            res.status(404).json({ message: "Not found" });
+
+            return;
+        }
+
         const body = methodsWithBody.has(req.method) ? req.body : undefined;
 
         let response;
@@ -86,8 +92,14 @@ router.use(
                 body,
             );
         } catch {
-            // The path is not one the broker client accepts. Nothing was sent to the broker.
-            res.status(404).json({ message: "Not found" });
+            // The path was valid, so this is a problem on our side, such as the broker URL not
+            // being set. The error is not logged, as it could embed request details.
+            console.error(
+                "Could not forward a management request to the broker",
+            );
+            res.status(502).json({
+                message: "The variant service is unavailable",
+            });
 
             return;
         }

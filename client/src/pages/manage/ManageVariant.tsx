@@ -58,7 +58,7 @@ function VariantEditor(props: { name: string }) {
                 isAdmin={user?.role === "admin"}
                 reload={reload}
             />
-            <AliasSection variant={variant} reload={reload} />
+            <AliasSection variant={variant} variants={data} reload={reload} />
             <GrantSection name={variant.name} />
         </>
     );
@@ -93,15 +93,32 @@ function DetailsSection(props: {
     function save(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
 
-        if (canSave) {
-            run(() =>
-                manageRequest(
-                    "PATCH",
-                    `/variants/${encodeURIComponent(variant.name)}`,
-                    { title, description }
-                )
-            );
+        if (!canSave) {
+            return;
         }
+
+        // Only what changed is sent, so that a stale form can't overwrite what someone else saved.
+        const changes: { title?: string; description?: string } = {};
+
+        if (title !== (variant.title ?? "")) {
+            changes.title = title;
+        }
+
+        if (description !== (variant.description ?? "")) {
+            changes.description = description;
+        }
+
+        if (Object.keys(changes).length === 0) {
+            return;
+        }
+
+        run(() =>
+            manageRequest(
+                "PATCH",
+                `/variants/${encodeURIComponent(variant.name)}`,
+                changes
+            )
+        );
     }
 
     return (
@@ -200,6 +217,7 @@ function DetailsSection(props: {
 
 function AliasSection(props: {
     variant: AdminVariant;
+    variants: readonly AdminVariant[];
     reload: () => Promise<void>;
 }) {
     const { run, error, isBusy } = useManageAction(props.reload);
@@ -211,6 +229,19 @@ function AliasSection(props: {
         const name = alias.trim();
 
         if (!name) {
+            return;
+        }
+
+        const owner = props.variants.find(
+            (v) => v.name !== props.variant.name && v.aliases.includes(name)
+        );
+
+        if (
+            owner &&
+            !window.confirm(
+                `Alias ${name} currently points to ${owner.name}. Repoint it to ${props.variant.name}?`
+            )
+        ) {
             return;
         }
 
