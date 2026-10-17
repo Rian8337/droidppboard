@@ -13,7 +13,7 @@ export class PrototypePPCollectionManager extends DatabaseCollectionManager<IPro
             localPPTotal: 0,
             lastUpdate: Date.now(),
             pp: [],
-            reworkType: "overall",
+            reworkType: "droid-rebalance",
             uid: 0,
             username: "",
             scanDone: true,
@@ -24,7 +24,7 @@ export class PrototypePPCollectionManager extends DatabaseCollectionManager<IPro
      * Gets the dpp rank of a specified dpp value.
      *
      * @param totalPP The total PP.
-     * @param reworkType The rework type.
+     * @param reworkType The variant.
      */
     async getUserDPPRank(totalPP: number, reworkType: string): Promise<number> {
         return (
@@ -39,7 +39,7 @@ export class PrototypePPCollectionManager extends DatabaseCollectionManager<IPro
      * Searches for players to display in leaderboard.
      *
      * @param page The page to display.
-     * @param reworkType The rework type.
+     * @param reworkType The variant.
      * @param searchQuery The player search query, if any.
      * @returns The players, up to 50 players.
      */
@@ -86,7 +86,7 @@ export class PrototypePPCollectionManager extends DatabaseCollectionManager<IPro
      * Gets the bind information of an osu!droid account from its uid.
      *
      * @param uid The uid of the osu!droid account.
-     * @param reworkType The rework type.
+     * @param reworkType The variant.
      */
     getFromUid(uid: number, reworkType: string): Promise<IPrototypePP | null> {
         return this.getOne(

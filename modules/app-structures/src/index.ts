@@ -1,6 +1,5 @@
 export * from "./aliceDb/IPlayerSkin";
 export * from "./aliceDb/IPrototypePP";
-export * from "./aliceDb/IPrototypePPType";
 export * from "./elainaDb/IMapWhitelist";
 export * from "./structures/ICalculationParams";
 export * from "./structures/ICalculationResult";
