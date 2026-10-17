@@ -24,6 +24,12 @@ export abstract class BrokerClient {
     private static readonly requestTimeoutMs = 10_000;
 
     /**
+     * Admin paths are made up of segments of letters, digits, `_` and `-`, as broker names,
+     * aliases and uids are.
+     */
+    private static readonly adminPathPattern = /^(\/[A-Za-z0-9_-]+)+$/;
+
+    /**
      * Gets the variants that are visible to a person, or to visitors if none is given.
      *
      * @param actingUid The uid of the person to act for.
@@ -47,7 +53,7 @@ export abstract class BrokerClient {
      * Forwards a request to the broker's admin API on behalf of a person.
      *
      * @param method The HTTP method.
-     * @param path The path under `/admin`, which must start with `/`.
+     * @param path The path under `/admin`, which must start with `/` and consist of plain name segments.
      * @param actingUid The uid of the person to act for.
      * @param body The JSON body, if any.
      * @returns The broker's status and JSON body, or a 502 if the broker could not be reached.
@@ -58,37 +64,79 @@ export abstract class BrokerClient {
         actingUid: number,
         body?: unknown,
     ): Promise<BrokerForwardResponse> {
-        if (!path.startsWith("/") || path.includes("..")) {
-            throw new Error("Invalid broker admin path");
-        }
+        const url = this.adminUrl(path);
+
+        let response: Response;
 
         try {
-            const response = await fetch(this.url(`/admin${path}`), {
+            response = await fetch(url.href, {
                 method,
                 headers: this.headers(actingUid, body !== undefined),
                 body: body === undefined ? undefined : JSON.stringify(body),
                 signal: AbortSignal.timeout(this.requestTimeoutMs),
             });
+        } catch (e) {
+            console.error("Broker admin request failed:", e);
 
+            return this.unavailable();
+        }
+
+        try {
             const text = await response.text();
 
             return {
                 status: response.status,
                 body: text ? (JSON.parse(text) as unknown) : null,
             };
-        } catch (e) {
-            console.error("Broker admin request failed:", e);
+        } catch {
+            // The error is deliberately not logged: it can embed part of the response body.
+            console.error(
+                `Broker returned an unreadable body for ${method} /admin${path}`,
+            );
 
-            return {
-                status: 502,
-                body: {
-                    error: {
-                        code: "BROKER_UNAVAILABLE",
-                        message: "The variant service is unavailable",
-                    },
-                },
-            };
+            return this.unavailable();
         }
+    }
+
+    private static unavailable(): BrokerForwardResponse {
+        return {
+            status: 502,
+            body: {
+                error: {
+                    code: "BROKER_UNAVAILABLE",
+                    message: "The variant service is unavailable",
+                },
+            },
+        };
+    }
+
+    /**
+     * Builds the URL of an admin endpoint, ensuring it cannot resolve outside `/admin`.
+     *
+     * @param path The path under `/admin`.
+     * @returns The URL.
+     * @throws If the path is not made up of plain name segments or resolves outside `/admin`.
+     */
+    private static adminUrl(path: string): URL {
+        if (!BrokerClient.adminPathPattern.test(path)) {
+            throw new Error("Invalid broker admin path");
+        }
+
+        const base = new URL(this.url(""));
+        const url = new URL(this.url(`/admin${path}`));
+        const adminPath = `${base.pathname.replace(/\/+$/, "")}/admin`;
+
+        if (
+            url.origin !== base.origin ||
+            url.search ||
+            url.hash ||
+            (url.pathname !== adminPath &&
+                !url.pathname.startsWith(`${adminPath}/`))
+        ) {
+            throw new Error("Invalid broker admin path");
+        }
+
+        return url;
     }
 
     private static async getJson<T>(

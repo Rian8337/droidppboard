@@ -154,14 +154,55 @@ describe("BrokerClient", () => {
         );
     });
 
-    it("rejects admin paths that could escape /admin", async () => {
+    it.each([
+        "/%2e%2e/me",
+        "/%2E%2E/me",
+        "/.%2e/me",
+        "/%2e./me",
+        "/%2e%2e\\me",
+        "/x/%2e%2e/%2e%2e/me",
+        "/%2e%2e",
+        "/../me",
+        "/variants/foo..bar",
+        "variants",
+        "",
+        "/",
+        "/variants/",
+        "/variants?x=1",
+        "/variants#x",
+        "//evil.test/x",
+    ])("rejects the admin path %j", async (path) => {
         await expect(
-            BrokerClient.forwardAdmin("GET", "/../me", 1),
-        ).rejects.toThrow();
-        await expect(
-            BrokerClient.forwardAdmin("GET", "variants", 1),
+            BrokerClient.forwardAdmin("GET", path, 1),
         ).rejects.toThrow();
 
         expect(fetchMock).not.toHaveBeenCalled();
+    });
+
+    it.each([
+        [
+            "/variants/droid-live/grants/123",
+            "/admin/variants/droid-live/grants/123",
+        ],
+        ["/keys/board/revoke", "/admin/keys/board/revoke"],
+    ])("accepts the admin path %s", async (path, expected) => {
+        fetchMock.mockResolvedValueOnce(jsonResponse({}));
+
+        await BrokerClient.forwardAdmin("POST", path, 1);
+
+        expect(lastRequest().url).toBe(`http://broker.test${expected}`);
+    });
+
+    it("does not log the response text when the body is not JSON", async () => {
+        const errorSpy = vi.mocked(console.error);
+        fetchMock.mockResolvedValueOnce(
+            new Response("secret-description", { status: 200 }),
+        );
+
+        await BrokerClient.forwardAdmin("GET", "/x", 1);
+
+        expect(JSON.stringify(errorSpy.mock.calls)).not.toContain(
+            "secret-description",
+        );
     });
 });
