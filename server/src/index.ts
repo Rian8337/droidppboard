@@ -70,6 +70,9 @@ app.use("/api/auth", authRouter);
 
 //#region Droid PP endpoints
 
+// Identifies the person, as which variants are visible depends on who they are.
+ppboardRouter.use(sessionMiddleware);
+
 ppboardRouter.use("/prototype/getleaderboard", getPPLeaderboard);
 ppboardRouter.use("/prototype/getuserprofile", getUserProfile);
 ppboardRouter.use("/getwhitelist", getWhitelist);

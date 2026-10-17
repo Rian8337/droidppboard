@@ -1,7 +1,8 @@
 import express from "express";
 import { ModUtil } from "@rian8337/osu-base";
 import { Util } from "../../../utils/Util";
-import { DatabaseManager } from "../../../database/managers/DatabaseManager";
+import { asyncHandler } from "../../../utils/asyncHandler";
+import { resolveVisibleVariant } from "../../../utils/visibleVariant";
 import {
     PrototypeLeaderboardResponse,
     TopPrototypePPEntry,
@@ -11,34 +12,52 @@ const router = express.Router();
 
 router.use(Util.createRateLimit(5));
 
-router.get<
+router.get(
     "/",
-    unknown,
-    unknown,
-    unknown,
-    Partial<{ mods: string; type: string }>
->("/", async (req, res) => {
-    const mod = req.query.mods ?? "";
-    const type = req.query.type ?? "overall";
+    asyncHandler(async (req, res) => {
+        // What a person can see depends on who they are.
+        res.set("Cache-Control", "no-store");
 
-    const convertedMods =
-        mod.length > 0 && mod.toLowerCase() !== "nm"
-            ? ModUtil.pcStringToMods(mod)
-            : undefined;
+        // Query parameters can be parsed into arrays or objects, so their types have to be checked.
+        const { mods, type } = req.query;
+        const mod = typeof mods === "string" ? mods : "";
 
-    const reworks =
-        await DatabaseManager.aliceDb.collections.prototypePPType.get(
-            {},
-            { projection: { _id: 0, name: 1, type: 1 } },
+        const convertedMods =
+            mod.length > 0 && mod.toLowerCase() !== "nm"
+                ? ModUtil.pcStringToMods(mod)
+                : undefined;
+
+        const uid: unknown = res.locals.uid;
+        const resolved = await resolveVisibleVariant(
+            typeof type === "string" ? type : undefined,
+            typeof uid === "number" ? uid : undefined,
         );
 
-    const response: PrototypeLeaderboardResponse<TopPrototypePPEntry> = {
-        reworks: reworks,
-        currentRework: reworks.find((r) => r.type === type),
-        data: Util.getTopPrototypePP(type, convertedMods) ?? [],
-    };
+        if (resolved === "notFound") {
+            res.status(404).json({ message: "Variant not found" });
 
-    res.json(response);
-});
+            return;
+        }
+
+        if (resolved === "unavailable") {
+            res.status(503).json({
+                message: "The variant list is unavailable",
+            });
+
+            return;
+        }
+
+        // The precomputed top plays include every variant, so they are read only after the check.
+        const response: PrototypeLeaderboardResponse<TopPrototypePPEntry[]> = {
+            variants: resolved.variants,
+            currentVariant: resolved.current,
+            data:
+                Util.getTopPrototypePP(resolved.current.name, convertedMods) ??
+                [],
+        };
+
+        res.json(response);
+    }),
+);
 
 export default router;
