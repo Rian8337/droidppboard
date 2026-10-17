@@ -93,6 +93,10 @@ export default function Login() {
                 const seconds = parseInt(res.headers.get("Retry-After") ?? "");
 
                 if (Number.isFinite(seconds) && seconds > 0) {
+                    // Keep the message a full sentence before the retry hint follows it.
+                    setErrorMessage(
+                        /[.!?]$/.test(message) ? message : `${message}.`
+                    );
                     setRetryAfter(seconds);
                 }
             }
@@ -169,10 +173,10 @@ export default function Login() {
                 <h3 className="error-message" role="alert">
                     {errorMessage}
                     {retryAfter !== undefined
-                        ? `. Try again in ${retryAfter} second${
+                        ? ` Try again in ${retryAfter} second${
                               retryAfter === 1 ? "" : "s"
                           }.`
-                        : "."}
+                        : null}
                 </h3>
             ) : null}
 

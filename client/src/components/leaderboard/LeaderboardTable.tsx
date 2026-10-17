@@ -76,6 +76,7 @@ export default function LeaderboardTable() {
                     return;
                 }
 
+                prototypeSelectorCtx.clearVariants();
                 leaderboardCtx.setErrorMessage(e.message);
             })
             .finally(() => {

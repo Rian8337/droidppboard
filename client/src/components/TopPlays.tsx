@@ -63,9 +63,12 @@ export default function TopPlays() {
             searchParams.set("type", prototypeSelectorCtx.currentVariant.name);
         }
 
+        const controller = new AbortController();
+
         const debounce = setTimeout(() => {
             fetch(
-                `/api/ppboard/prototype/gettopplays?${searchParams.toString()}`
+                `/api/ppboard/prototype/gettopplays?${searchParams.toString()}`,
+                { signal: controller.signal }
             )
                 .then(async (res) => {
                     if (!res.ok) {
@@ -91,14 +94,24 @@ export default function TopPlays() {
                     }
                 )
                 .catch((e: Error) => {
+                    if (e.name === "AbortError") {
+                        return;
+                    }
+
+                    prototypeSelectorCtx.clearVariants();
                     topPlayCtx.setErrorMessage(e.message);
                 })
                 .finally(() => {
-                    topPlayCtx.setSearchReady(true);
+                    if (!controller.signal.aborted) {
+                        topPlayCtx.setSearchReady(true);
+                    }
                 });
         }, 500);
 
-        return () => clearTimeout(debounce);
+        return () => {
+            clearTimeout(debounce);
+            controller.abort();
+        };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
         topPlayCtx.query,

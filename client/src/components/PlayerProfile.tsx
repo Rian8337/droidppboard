@@ -100,6 +100,7 @@ export default function PlayerProfile() {
                     return;
                 }
 
+                prototypeSelectorCtx.clearVariants();
                 setData(null);
                 setErrorMessage(e.message);
             });

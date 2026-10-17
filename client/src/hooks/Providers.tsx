@@ -17,12 +17,13 @@ const compose =
         );
 
 export const Providers = compose(
-    AuthContextProvider,
     PrototypeLeaderboardNavigatorProvider,
     PrototypeSelectorNavigatorProvider,
     PrototypeTopPlaysNavigatorProvider,
     MainCalculationContextProvider,
     PrototypeCalculationContextProvider,
     WhitelistNavigatorProvider,
-    SkinListNavigatorProvider
+    SkinListNavigatorProvider,
+    // Must be last (outermost), as other providers read the login state.
+    AuthContextProvider
 );

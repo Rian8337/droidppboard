@@ -1,11 +1,19 @@
 import { PPVariant } from "app-structures";
-import { PropsWithChildren, useState, createContext } from "react";
+import {
+    PropsWithChildren,
+    useState,
+    createContext,
+    useContext,
+    useEffect,
+    useRef,
+} from "react";
+import AuthContext from "./AuthContext";
 
 const defaultVariant: PPVariant = {
     name: "droid-rebalance",
     title: null,
     aliases: [],
-    description: "Loading variant...",
+    description: null,
     available: true,
     mode: "droid",
     algorithm: "rebalance",
@@ -17,6 +25,7 @@ const PrototypeSelectorNavigator = createContext({
     setVariants: (variants: readonly PPVariant[]) => {},
     setCurrentVariant: (variant: PPVariant | undefined) => {},
     resetCurrentVariant: (name: string) => {},
+    clearVariants: () => {},
 });
 
 export function PrototypeSelectorNavigatorProvider(props: PropsWithChildren) {
@@ -41,6 +50,28 @@ export function PrototypeSelectorNavigatorProvider(props: PropsWithChildren) {
         });
     };
 
+    // Forgets everything that was learned about variants, keeping only the name of the current one
+    // (so that effects keyed on it do not fetch again).
+    const clearVariants = () => {
+        setVariants([]);
+        setCurrentVariant((current) =>
+            current ? { ...defaultVariant, name: current.name } : current
+        );
+    };
+
+    // What a person can see depends on who they are, so nothing is kept across a login or logout.
+    const authCtx = useContext(AuthContext);
+    const uid = authCtx.user?.uid;
+    const previousUid = useRef(uid);
+
+    useEffect(() => {
+        if (previousUid.current !== uid) {
+            previousUid.current = uid;
+            clearVariants();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [uid]);
+
     return (
         <PrototypeSelectorNavigator.Provider
             value={{
@@ -49,6 +80,7 @@ export function PrototypeSelectorNavigatorProvider(props: PropsWithChildren) {
                 setVariants: modifyVariants,
                 setCurrentVariant: modifyCurrentVariant,
                 resetCurrentVariant,
+                clearVariants,
             }}
         >
             {props.children}
