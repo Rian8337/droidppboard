@@ -2,6 +2,14 @@ import { ICalculationResult } from "app-structures";
 import "../../styles/table-calculation-result.css";
 import { useEffect, useState } from "react";
 
+function createObjectURL(data: readonly number[]): string {
+    return URL.createObjectURL(
+        new Blob([new Uint8Array(data)], {
+            type: "image/png",
+        })
+    );
+}
+
 export default function StrainGraphCalculationResult(props: {
     strainGraph: ICalculationResult["strainGraph"];
 }) {
@@ -10,33 +18,21 @@ export default function StrainGraphCalculationResult(props: {
     const [droidUrl, setDroidUrl] = useState<string | null>(null);
     const [osuUrl, setOsuUrl] = useState<string | null>(null);
 
-    function createObjectURL(data: readonly number[]): string {
-        return URL.createObjectURL(
-            new Blob([new Uint8Array(data)], {
-                type: "image/png",
-            })
-        );
-    }
+    useEffect(() => {
+        const url = createObjectURL(strainGraph.droid);
+
+        setDroidUrl(url);
+
+        return () => URL.revokeObjectURL(url);
+    }, [strainGraph.droid]);
 
     useEffect(() => {
-        setDroidUrl(createObjectURL(strainGraph.droid));
+        const url = createObjectURL(strainGraph.osu);
 
-        return () => {
-            if (droidUrl) {
-                URL.revokeObjectURL(droidUrl);
-            }
-        };
-    }, [droidUrl, strainGraph.droid]);
+        setOsuUrl(url);
 
-    useEffect(() => {
-        setOsuUrl(createObjectURL(strainGraph.osu));
-
-        return () => {
-            if (osuUrl) {
-                URL.revokeObjectURL(osuUrl);
-            }
-        };
-    }, [osuUrl, strainGraph.osu]);
+        return () => URL.revokeObjectURL(url);
+    }, [strainGraph.osu]);
 
     if (!droidUrl || !osuUrl) {
         return <p>Loading graph...</p>;
