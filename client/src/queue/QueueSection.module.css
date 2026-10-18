@@ -2,6 +2,13 @@
     margin: 8px 0 16px;
 }
 
+/* A clear line between the queue and the recently finished list. */
+.section + .section {
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.18);
+}
+
 .header {
     display: flex;
     flex-wrap: wrap;
@@ -11,16 +18,16 @@
     padding: 6px 16px;
 }
 
+/* The heading, with the counts of the queue below it. */
 .title {
     display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: 4px 8px;
+    flex-direction: column;
+    gap: 2px;
 }
 
 .heading {
     margin: 0;
-    font-size: 15px;
+    font-size: 20px;
     font-weight: 800;
 }
 

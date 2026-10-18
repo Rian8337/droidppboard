@@ -151,7 +151,7 @@ export function QueueList({
                         Queue
                     </h2>
                     <span className={styles.count}>
-                        · {running} running, {waiting} waiting
+                        {running} running, {waiting} waiting
                         {!showAll &&
                             ` · Estimated wait: ${formatEstimatedWait(estimatedWaitSeconds)}`}
                     </span>
