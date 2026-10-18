@@ -1,6 +1,6 @@
 import { Accuracy, Modes } from "@rian8337/osu-base";
 import { CalculationOutcome, CalculationParameters } from "app-structures";
-import express from "express";
+import express, { Response } from "express";
 import {
     buildCalculationResponse,
     decodeBeatmap,
@@ -10,6 +10,7 @@ import {
 import { getBaselineVariant } from "../../../calculation/calculatorVariants";
 import { prepareCalculation } from "../../../calculation/prepareCalculation";
 import {
+    OnlineScoreOutcome,
     OnlineScoreResponse,
     ScoreServiceClient,
 } from "../../../recalculation/ScoreServiceClient";
@@ -33,11 +34,49 @@ function toParameters(
         beatmap,
         mods: score.score.mods,
         combo: counts.combo,
-        accuracy: new Accuracy(counts).value * 100,
+        accuracy: Math.round(new Accuracy(counts).value * 10000) / 100,
         n100: counts.n100,
         n50: counts.n50,
         nmiss: counts.nmiss,
     };
+}
+
+/**
+ * Checks whether two lookups returned the same play, by its mods, combo and hit counts.
+ *
+ * Each lookup asks for the best score by pp, and the score service picks that play without
+ * regard to the variant, so both normally return the same stored play. This guards against that
+ * ever changing, as comparing two different plays would show a difference that is not the
+ * variants'.
+ */
+function isSameScore(a: OnlineScoreResponse, b: OnlineScoreResponse): boolean {
+    const describe = ({ score, calculation }: OnlineScoreResponse) =>
+        JSON.stringify([
+            [...score.mods].sort((x, y) => x.acronym.localeCompare(y.acronym)),
+            calculation.score.combo,
+            calculation.score.n300,
+            calculation.score.n100,
+            calculation.score.n50,
+            calculation.score.nmiss,
+        ]);
+
+    return describe(a) === describe(b);
+}
+
+/**
+ * Answers a lookup that did not find a score to calculate.
+ */
+function sendFailure(
+    res: Response,
+    outcome: Exclude<OnlineScoreOutcome, { kind: "ok" }>,
+) {
+    if (outcome.kind === "skip") {
+        res.status(404).json({ message: "You have no score on this beatmap" });
+    } else {
+        res.status(503).json({
+            message: "Could not contact the score service",
+        });
+    }
 }
 
 function toCalculationOutcome(score: OnlineScoreResponse): CalculationOutcome {
@@ -85,45 +124,51 @@ router.post(
         const baselineName = getBaselineVariant(request.scope, variantName);
         const hash = getBeatmapHash(osuFile);
 
-        // The baseline is only worth looking up for a person who has a score to compare.
-        const scores: OnlineScoreResponse[] = [];
+        const outcome = await ScoreServiceClient.getOnlineScore(
+            uid,
+            hash,
+            variantName,
+            uid,
+        );
 
-        for (const name of baselineName === null
-            ? [variantName]
-            : [variantName, baselineName]) {
-            const outcome = await ScoreServiceClient.getOnlineScore(
-                uid,
-                hash,
-                name,
-                uid,
-            );
-
-            if (outcome.kind === "ok") {
-                scores.push(outcome.response);
-
-                continue;
-            }
-
-            if (outcome.kind === "skip") {
-                res.status(404).json({
-                    message: "You have no score on this beatmap",
-                });
-            } else {
-                res.status(503).json({
-                    message: "Could not contact the score service",
-                });
-            }
+        if (outcome.kind !== "ok") {
+            sendFailure(res, outcome);
 
             return;
         }
 
-        const [score, baselineScore] = scores;
+        const score = outcome.response;
+        let baselineScore: OnlineScoreResponse | null = null;
+
+        // The baseline is only worth looking up for a person who has a score to compare.
+        if (baselineName !== null) {
+            const baselineOutcome = await ScoreServiceClient.getOnlineScore(
+                uid,
+                hash,
+                baselineName,
+                uid,
+            );
+
+            if (baselineOutcome.kind === "error") {
+                sendFailure(res, baselineOutcome);
+
+                return;
+            }
+
+            // Without a score for the baseline, the variant is shown on its own.
+            if (
+                baselineOutcome.kind === "ok" &&
+                isSameScore(score, baselineOutcome.response)
+            ) {
+                baselineScore = baselineOutcome.response;
+            }
+        }
 
         res.json(
             buildCalculationResponse({
                 scope: request.scope,
                 variant: variantName,
-                baseline: baselineName,
+                baseline: baselineScore === null ? null : baselineName,
                 calculatorVersion: variant?.calculatorVersion ?? null,
                 parameters: toParameters(score, request.parameters.beatmap),
                 osuFile,
@@ -132,9 +177,10 @@ router.post(
                 mode: Modes.Droid,
                 mods: score.score.mods,
                 result: toCalculationOutcome(score),
-                baselineResult: baselineScore
-                    ? toCalculationOutcome(baselineScore)
-                    : null,
+                baselineResult:
+                    baselineScore === null
+                        ? null
+                        : toCalculationOutcome(baselineScore),
                 ignoredMods: [],
             }),
         );

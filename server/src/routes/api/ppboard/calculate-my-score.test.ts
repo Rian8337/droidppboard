@@ -391,6 +391,75 @@ describe("POST /calculate/my-score", () => {
         expect(res.status).toBe(503);
     });
 
+    it("shows the variant alone when the baseline has no score", async () => {
+        scoreServiceFetch.mockImplementation((url) =>
+            Promise.resolve(
+                url.searchParams.get("variant") === "droid-live"
+                    ? jsonResponse({ error: { code: "SCORE_NOT_FOUND" } }, 404)
+                    : jsonResponse(scoreBody(120)),
+            ),
+        );
+
+        const res = await post({
+            scope: "variant",
+            variant: "droid-rebalance",
+        });
+
+        expect(res.status).toBe(200);
+        expect(await res.json()).toMatchObject({
+            variant: "droid-rebalance",
+            baseline: null,
+            baselineResult: null,
+            result: { performance: { total: 120 } },
+        });
+    });
+
+    it("shows the variant alone when the baseline lookup returns a different play", async () => {
+        scoreServiceFetch.mockImplementation((url) => {
+            const isLive = url.searchParams.get("variant") === "droid-live";
+            const body = scoreBody(isLive ? 100 : 120);
+
+            if (isLive) {
+                body.score.mods = [{ acronym: "HR" }];
+            }
+
+            return Promise.resolve(jsonResponse(body));
+        });
+
+        const res = await post({
+            scope: "variant",
+            variant: "droid-rebalance",
+        });
+
+        expect(res.status).toBe(200);
+        expect(await res.json()).toMatchObject({
+            baseline: null,
+            baselineResult: null,
+            parameters: { mods: [{ acronym: "HD" }, { acronym: "DT" }] },
+            result: { performance: { total: 120 } },
+        });
+    });
+
+    it("treats the same mods in another order as the same play", async () => {
+        scoreServiceFetch.mockImplementation((url) => {
+            const isLive = url.searchParams.get("variant") === "droid-live";
+            const body = scoreBody(isLive ? 100 : 120);
+
+            if (isLive) {
+                body.score.mods = [{ acronym: "DT" }, { acronym: "HD" }];
+            }
+
+            return Promise.resolve(jsonResponse(body));
+        });
+
+        const res = await post({
+            scope: "variant",
+            variant: "droid-rebalance",
+        });
+
+        expect(await res.json()).toMatchObject({ baseline: "droid-live" });
+    });
+
     it("answers 503 when the baseline cannot be looked up", async () => {
         scoreServiceFetch.mockImplementation((url) =>
             Promise.resolve(
