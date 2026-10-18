@@ -259,6 +259,57 @@ describe("CalculatorView", () => {
         );
     });
 
+    it("copies the whole raw response, strain chart included, although it shows the chart shortened", async () => {
+        const writeText = vi.fn().mockResolvedValue(undefined);
+
+        stubClipboard({ writeText });
+        renderWithProviders(<CalculatorView scope="variant" variant="droid-rebalance" />);
+        await calculate();
+        await userEvent.click(screen.getByRole("button", { name: "Show raw response" }));
+        await userEvent.click(screen.getByRole("button", { name: "Copy to clipboard" }));
+
+        const copied = writeText.mock.calls[0][0] as string;
+
+        expect(copied).toContain('"strainChart": "iVBORw0KGgo="');
+        expect(JSON.parse(copied)).toEqual(droidCalculation);
+    });
+
+    it("titles the result panel with the title it is given for the variant", async () => {
+        renderWithProviders(
+            <CalculatorView
+                scope="variant"
+                variant="droid-rebalance"
+                getVariantTitle={(name) => `Title of ${name}`}
+            />,
+        );
+        await calculate();
+
+        expect(screen.getByRole("heading", { name: "Title of droid-rebalance" })).toBeVisible();
+    });
+
+    it("titles the result panel with the variant's name when there is no title", async () => {
+        renderWithProviders(<CalculatorView scope="variant" variant="droid-rebalance" />);
+        await calculate();
+
+        expect(screen.getByRole("heading", { name: "droid-rebalance" })).toBeVisible();
+    });
+
+    it("clears a previous calculation error with Reset", async () => {
+        server.use(
+            http.post("/api/ppboard/calculate", () =>
+                HttpResponse.json({ message: "Beatmap not found" }, { status: 404 }),
+            ),
+        );
+
+        renderWithProviders(<CalculatorView scope="variant" variant="droid-rebalance" />);
+        await userEvent.type(screen.getByLabelText("Beatmap link or ID"), "1");
+        await userEvent.click(screen.getByRole("button", { name: "Calculate" }));
+        await screen.findByRole("alert");
+        await userEvent.click(screen.getByRole("button", { name: "Reset" }));
+
+        expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    });
+
     it("downloads the result panel as a PNG", async () => {
         const click = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
 
@@ -340,7 +391,9 @@ describe("CalculatorView", () => {
                 variantPicker={<p>Pick a variant</p>}
                 renderGenerateLink={(response) => <button>Link for {response.variant}</button>}
                 renderMyScore={(showResult) => (
-                    <button onClick={() => showResult(droidCalculation)}>My score</button>
+                    <button onClick={() => showResult(droidCalculation, emptyFormValues)}>
+                        My score
+                    </button>
                 )}
             />,
         );
@@ -358,6 +411,14 @@ describe("CalculatorView", () => {
 describe("CalculatorTab", () => {
     beforeEach(() => {
         vi.mocked(useBreakpoint).mockReturnValue("desktop");
+    });
+
+    it("titles the result with the variant's title", async () => {
+        recordForms();
+        renderWithProviders(<CalculatorTab variant={droidRebalance} />);
+        await calculate();
+
+        expect(screen.getByRole("heading", { name: "Rebalance" })).toBeVisible();
     });
 
     it("calculates on the variant of the tab", async () => {

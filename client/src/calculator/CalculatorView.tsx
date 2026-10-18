@@ -1,8 +1,9 @@
 import { faCode } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import type { CalculationResponse, CalculationScope } from "app-structures";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 import { useCalculation } from "../api/calculator";
+import { formatApiError } from "../api/http";
 import { Button } from "../components/Button";
 import { ErrorMessage } from "../components/ErrorMessage";
 import { useBreakpoint } from "../hooks/useBreakpoint";
@@ -12,6 +13,7 @@ import {
     emptyFormValues,
     getFormValuesFromResult,
     type CalculatorFormValues,
+    type SubmittedCalculation,
 } from "./calculatorForm";
 import { ExportImageMenu } from "./ExportImageMenu";
 import { RawResponseDialog } from "./RawResponseDialog";
@@ -28,20 +30,37 @@ export interface CalculatorViewProps {
     /** What the form starts with, such as the values of a snapshot's result. */
     initialValues?: CalculatorFormValues;
 
+    /** Gets the title that the result panel shows for a variant. Defaults to the variant's name. */
+    getVariantTitle?: (variantName: string) => string;
+
     /**
      * Slot for the Generate link action, shown next to the other actions of the result panel. It
-     * is given the result that is on show.
+     * is given the result that is on show and what it was calculated from.
      */
-    renderGenerateLink?: (response: CalculationResponse) => ReactNode;
+    renderGenerateLink?: (
+        response: CalculationResponse,
+        submitted: SubmittedCalculation,
+    ) => ReactNode;
 
     /**
      * Slot for the "Calculate my score" section, shown below the form. Its result shows in the
-     * same result panel: call `showResult` with it.
+     * same result panel: call `showResult` with it and the values it was calculated from.
      */
-    renderMyScore?: (showResult: (response: CalculationResponse) => void) => ReactNode;
+    renderMyScore?: (
+        showResult: (response: CalculationResponse, values: CalculatorFormValues) => void,
+    ) => ReactNode;
 }
 
 const missingBeatmapMessage = "Please enter a valid beatmap file, link or ID";
+
+/** The result on show, with what it was calculated from. */
+interface ShownResult {
+    response: CalculationResponse;
+    submitted: SubmittedCalculation;
+
+    /** Tells one result from the next, as two calculations can have equal responses. */
+    number: number;
+}
 
 /** Makes text safe to use in a file name. */
 function toFileNamePart(text: string): string {
@@ -61,6 +80,7 @@ export function CalculatorView({
     variant,
     variantPicker,
     initialValues = emptyFormValues,
+    getVariantTitle,
     renderGenerateLink,
     renderMyScore,
 }: CalculatorViewProps) {
@@ -68,25 +88,34 @@ export function CalculatorView({
     const calculation = useCalculation(scope, variant);
     const [values, setValues] = useState(initialValues);
     const [fileInputKey, setFileInputKey] = useState(0);
-    const [result, setResult] = useState<CalculationResponse | null>(null);
+    const [shown, setShown] = useState<ShownResult | null>(null);
     const [formError, setFormError] = useState<string | null>(null);
     const [isRawResponseOpen, setIsRawResponseOpen] = useState(false);
     const resultRef = useRef<HTMLDivElement>(null);
     const panelRef = useRef<HTMLElement>(null);
-    const scrolledResultRef = useRef<CalculationResponse | null>(null);
+    const scrolledNumberRef = useRef<number | null>(null);
+    const result = shown?.response ?? null;
 
     useEffect(() => {
-        if (result === null || result === scrolledResultRef.current) {
+        if (shown === null || shown.number === scrolledNumberRef.current) {
             return;
         }
 
         // Only a new result scrolls; turning the device must not.
-        scrolledResultRef.current = result;
+        scrolledNumberRef.current = shown.number;
 
         if (breakpoint !== "desktop") {
             resultRef.current?.scrollIntoView?.({ behavior: "smooth", block: "start" });
         }
-    }, [result, breakpoint]);
+    }, [shown, breakpoint]);
+
+    function showResult(response: CalculationResponse, submitted: SubmittedCalculation) {
+        setShown((previous) => ({
+            response,
+            submitted,
+            number: (previous?.number ?? 0) + 1,
+        }));
+    }
 
     function calculate() {
         if (!values.beatmapFile && values.beatmap.trim() === "") {
@@ -96,13 +125,16 @@ export function CalculatorView({
         }
 
         setFormError(null);
-        calculation.mutate(values, { onSuccess: setResult });
+        calculation.mutate(values, {
+            onSuccess: (response) => showResult(response, { values, isMyScore: false }),
+        });
     }
 
     function reset() {
         setValues(emptyFormValues);
         setFileInputKey((key) => key + 1);
         setFormError(null);
+        calculation.reset();
     }
 
     function loadFromResult() {
@@ -114,13 +146,7 @@ export function CalculatorView({
         setFileInputKey((key) => key + 1);
     }
 
-    const error =
-        formError ??
-        (calculation.error
-            ? calculation.error.retryAfterSeconds === undefined
-                ? calculation.error.message
-                : `${calculation.error.message}. Try again in ${calculation.error.retryAfterSeconds} seconds`
-            : null);
+    const error = formError ?? (calculation.error ? formatApiError(calculation.error) : null);
 
     return (
         <div className={styles.view}>
@@ -137,29 +163,36 @@ export function CalculatorView({
                     variantPicker={variantPicker}
                 />
                 {error !== null && <ErrorMessage message={error} />}
-                {renderMyScore?.(setResult)}
+                {renderMyScore?.((response, myScoreValues) =>
+                    showResult(response, { values: myScoreValues, isMyScore: true }),
+                )}
             </div>
             <div ref={resultRef} className={styles.result}>
-                {result ? (
-                    <>
+                {shown ? (
+                    // A key per result, so that a link made for the previous one does not stay.
+                    <Fragment key={shown.number}>
                         <div className={styles.actions}>
                             <Button variant="secondary" onClick={() => setIsRawResponseOpen(true)}>
                                 <FontAwesomeIcon icon={faCode} />
                                 Show raw response
                             </Button>
-                            {renderGenerateLink?.(result)}
+                            {renderGenerateLink?.(shown.response, shown.submitted)}
                             <ExportImageMenu
                                 target={panelRef}
-                                fileName={getImageFileName(result)}
+                                fileName={getImageFileName(shown.response)}
                             />
                         </div>
-                        <ResultPanel ref={panelRef} response={result} />
+                        <ResultPanel
+                            ref={panelRef}
+                            response={shown.response}
+                            title={getVariantTitle?.(shown.response.variant)}
+                        />
                         <RawResponseDialog
-                            response={result}
+                            response={shown.response}
                             isOpen={isRawResponseOpen}
                             onClose={() => setIsRawResponseOpen(false)}
                         />
-                    </>
+                    </Fragment>
                 ) : (
                     <p className={styles.placeholder}>
                         The result of the calculation shows up here.

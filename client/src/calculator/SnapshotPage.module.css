@@ -1,0 +1,36 @@
+.page {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-width: 720px;
+    padding: 16px;
+}
+
+.note {
+    margin: 0;
+    padding: 16px;
+    color: var(--muted);
+}
+
+.taken {
+    margin: 0;
+    font-weight: 800;
+}
+
+.actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+}
+
+.hint {
+    color: var(--muted);
+    font-size: 13px;
+}
+
+@media (min-width: 1024px) {
+    .page {
+        padding: 24px;
+    }
+}

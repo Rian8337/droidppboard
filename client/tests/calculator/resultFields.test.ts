@@ -60,6 +60,21 @@ describe("getResultSections", () => {
         });
     });
 
+    it("shows a difference that rounds to zero without a sign or a tone", () => {
+        for (const total of [300.1234 + 0.0002, 300.1234 - 0.0002, 300.1234]) {
+            const sections = getResultSections({
+                ...droidCalculation,
+                result: { ...droidCalculation.result, performance: { total } },
+            });
+
+            expect(getField(sections, "Difference")).toEqual({
+                label: "Difference",
+                value: "0.000",
+                tone: undefined,
+            });
+        }
+    });
+
     it("omits Live pp and Difference without a baseline", () => {
         const sections = getResultSections({
             ...droidCalculation,
@@ -130,6 +145,6 @@ describe("getResultSections", () => {
     it("lists the mods that were ignored", () => {
         const sections = getResultSections({ ...osuCalculation, ignoredMods: ["TD", "AP"] });
 
-        expect(getField(sections, "Ignored mods")?.value).toBe("TD, AP");
+        expect(getField(sections, "Ignored for osu!standard")?.value).toBe("TD, AP");
     });
 });

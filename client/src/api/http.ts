@@ -128,3 +128,10 @@ export async function requestJson<T>(
 
     return parsed as T;
 }
+
+/** The text to show for a failed request, with how long to wait if the server said so. */
+export function formatApiError(error: ApiError): string {
+    return error.retryAfterSeconds === undefined
+        ? error.message
+        : `${error.message}. Try again in ${error.retryAfterSeconds} seconds`;
+}

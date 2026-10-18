@@ -140,7 +140,8 @@ function getPerformanceFields(
         fields.push({ label: "Live pp", value: formatAttribute(liveTotal, "pp") });
 
         if (typeof total === "number") {
-            const difference = total - liveTotal;
+            // What rounds to zero on screen is no change, whatever its sign.
+            const difference = Number((total - liveTotal).toFixed(3));
 
             fields.push({
                 label: "Difference",
@@ -184,7 +185,7 @@ export function getResultSections(response: CalculationResponse): ResultSection[
     ];
 
     if (response.ignoredMods.length > 0) {
-        score.push({ label: "Ignored mods", value: response.ignoredMods.join(", ") });
+        score.push({ label: "Ignored for osu!standard", value: response.ignoredMods.join(", ") });
     }
 
     const starRating = result.difficulty.starRating;

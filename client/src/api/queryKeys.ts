@@ -8,5 +8,6 @@ export const queryKeys = {
     leaderboard: (variant: string, page: number, search: string) =>
         ["leaderboard", variant, page, search] as const,
     profile: (variant: string, uid: number) => ["profile", variant, uid] as const,
+    snapshot: (id: string) => ["snapshot", id] as const,
     topPlays: (variant: string, mods: string) => ["topPlays", variant, mods] as const,
 };

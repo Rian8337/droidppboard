@@ -34,6 +34,12 @@ export const emptyFormValues: CalculatorFormValues = {
     sliderEndsDropped: "",
 };
 
+/** The form values that a result was calculated from, and whether My score made it. */
+export interface SubmittedCalculation {
+    values: CalculatorFormValues;
+    isMyScore: boolean;
+}
+
 /** The text fields that go into the request under their own names. */
 export const numericFieldNames = [
     "combo",
@@ -73,6 +79,24 @@ export function buildCalculationFormData(
         if (value !== "") {
             form.set(name, value);
         }
+    }
+
+    return form;
+}
+
+/**
+ * Builds the multipart body that makes a snapshot of a calculation: the same fields as the
+ * calculation itself, plus the source when My score made it.
+ */
+export function buildSnapshotFormData(
+    scope: CalculationScope,
+    variant: string,
+    { values, isMyScore }: SubmittedCalculation,
+): FormData {
+    const form = buildCalculationFormData(scope, variant, values);
+
+    if (isMyScore) {
+        form.set("source", "my-score");
     }
 
     return form;

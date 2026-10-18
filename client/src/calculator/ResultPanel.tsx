@@ -7,18 +7,21 @@ import styles from "./ResultPanel.module.css";
 export interface ResultPanelProps {
     response: CalculationResponse;
 
+    /** The variant's title, shown in the header. Defaults to the variant's name. */
+    title?: string;
+
     /** The panel's element, which Export as image takes a picture of. */
     ref?: Ref<HTMLElement>;
 }
 
 /** The result of a calculation as read-only text in groups, followed by the strain graph. */
-export function ResultPanel({ response, ref }: ResultPanelProps) {
+export function ResultPanel({ response, title, ref }: ResultPanelProps) {
     const [header, ...sections] = getResultSections(response);
 
     return (
         <article ref={ref} className={styles.panel} aria-label="Calculation result">
             <header className={styles.header}>
-                <h3 className={styles.title}>{header.title}</h3>
+                <h3 className={styles.title}>{title ?? header.title}</h3>
                 <dl className={styles.headerFields}>
                     {header.fields.map((field) => (
                         <div key={field.label} className={styles.headerField}>

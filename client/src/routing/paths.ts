@@ -2,6 +2,9 @@ import type { CalculationScope } from "app-structures";
 
 export type VariantTab = "info" | "leaderboard" | "top-plays" | "queue" | "calculator" | "admin";
 
+/** The Beatmap calculator tool. */
+export const beatmapCalculatorPath = "/calculate";
+
 /** The variant the site opens on. */
 export const defaultVariant = "droid-rebalance";
 
@@ -22,5 +25,5 @@ export function getSnapshotPath(scope: CalculationScope, variant: string, id: st
 
     return scope === "variant"
         ? `/v/${encodeURIComponent(variant)}/calculator/s/${encodedId}`
-        : `/calculate/s/${encodedId}`;
+        : `${beatmapCalculatorPath}/s/${encodedId}`;
 }

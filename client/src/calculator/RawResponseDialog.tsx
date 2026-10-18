@@ -17,11 +17,10 @@ function getBase64Size(base64: string): number {
 }
 
 /**
- * The response as pretty-printed JSON. A strain chart is thousands of characters of base64 that
- * nobody reads, so it is replaced by its size here; this changes what is shown and copied, not the
- * response.
+ * The response as pretty-printed JSON for reading. A strain chart is thousands of characters of
+ * base64 that nobody reads, so it is replaced by its size here; this changes only what is shown.
  */
-function formatRawResponse(response: CalculationResponse): string {
+function formatShownResponse(response: CalculationResponse): string {
     return JSON.stringify(
         response,
         (key, value: unknown) =>
@@ -32,16 +31,14 @@ function formatRawResponse(response: CalculationResponse): string {
     );
 }
 
-/** The raw JSON of a calculation, with a button to copy it. */
+/** The raw JSON of a calculation, with a button to copy all of it, strain chart included. */
 export function RawResponseDialog({ response, isOpen, onClose }: RawResponseDialogProps) {
-    const json = formatRawResponse(response);
-
     return (
         <Dialog title="Raw response" isOpen={isOpen} onClose={onClose}>
             <div className={styles.actions}>
-                <CopyButton text={json} label="Copy to clipboard" />
+                <CopyButton text={JSON.stringify(response, null, 2)} label="Copy to clipboard" />
             </div>
-            <pre className={styles.json}>{json}</pre>
+            <pre className={styles.json}>{formatShownResponse(response)}</pre>
         </Dialog>
     );
 }

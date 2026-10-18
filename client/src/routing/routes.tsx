@@ -1,4 +1,6 @@
 import { Navigate, Route, Routes, useLocation } from "react-router";
+import { SnapshotPage } from "../calculator/SnapshotPage";
+import { BeatmapCalculatorPage } from "../pages/BeatmapCalculatorPage";
 import { NotFoundPage } from "../pages/NotFoundPage";
 import { ProfilePage } from "../profile/ProfilePage";
 import { AppLayout } from "../shell/AppLayout";
@@ -21,6 +23,12 @@ export function AppRoutes() {
             <Route element={<AppLayout />}>
                 <Route index element={<Navigate replace to={getVariantPath(defaultVariant)} />} />
                 <Route path="v/:variant/players/:uid" element={<ProfilePage />} />
+                <Route
+                    path="v/:variant/calculator/s/:id"
+                    element={<SnapshotPage scope="variant" />}
+                />
+                <Route path="calculate" element={<BeatmapCalculatorPage />} />
+                <Route path="calculate/s/:id" element={<SnapshotPage scope="tool" />} />
                 <Route path="v/:variant/:tab" element={<VariantPage />} />
                 <Route path="*" element={<LegacyRedirect />} />
             </Route>

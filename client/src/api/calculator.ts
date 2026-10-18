@@ -20,3 +20,36 @@ export function useCalculation(
             ),
     });
 }
+
+/** What My score is calculated for: the scope and variant, and the beatmap link or ID. */
+export interface MyScoreRequest {
+    scope: CalculationScope;
+    variant: string;
+    beatmap: string;
+}
+
+/**
+ * Calculates the logged-in person's own score on a beatmap, on an osu!droid variant. A `404` says
+ * they have no score on it.
+ */
+export function useMyScoreCalculation(): UseMutationResult<
+    CalculationResponse,
+    ApiError,
+    MyScoreRequest
+> {
+    return useMutation({
+        mutationFn: ({ scope, variant, beatmap }: MyScoreRequest) => {
+            const form = new FormData();
+
+            form.set("scope", scope);
+            form.set("variant", variant);
+            form.set("beatmap", beatmap.trim());
+
+            return requestJson<CalculationResponse>(
+                "POST",
+                "/api/ppboard/calculate/my-score",
+                form,
+            );
+        },
+    });
+}
