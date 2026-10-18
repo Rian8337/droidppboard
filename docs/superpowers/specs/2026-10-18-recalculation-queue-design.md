@@ -11,7 +11,7 @@ recalculated today only by Mahiru's `/recalc` Discord command (`~/Projects/Mahir
 - `/recalc calculate` queues one player for a variant. The queue is in memory and works one player at a time.
 - `/recalc calculateall` (bot owner) loops over every unscanned player of a variant (`scanDone: false`) in its own
   loop, beside the `calculate` queue, hitting the same processors at the same time. It can reset progress first, and
-  clones `droid-rebalance` profiles into a variant that has none.
+  clones `droid-rebalance` profiles into a variant that has none (later changed: every Start adds the profiles the variant is missing).
 - `/recalc queue` lists the waiting uids.
 
 Mahiru's variant management work (Mahiru PR #15, merged) already made `/recalc` variant-aware:
@@ -118,8 +118,8 @@ Mahiru's `/recalc` is retired completely.
   After a restart the run is stopped; an admin presses Start again to continue (my call). Mahiru did not auto-resume
   either.
 - **Start over** resets `scanDone` to `false` for that variant's profiles first, as Mahiru's `resetprogress` did.
-- If a variant has no `prototypepp` documents yet, starting a full run first clones `droid-rebalance`'s, as the
-  variant management spec specifies for Mahiru today.
+- Starting a full run first adds every `droid-rebalance` profile the variant lacks (a variant that has none gets them all; one that a single entry touched first gets the rest), idempotently and without duplicating a profile that is saved at the same time. The
+  variant management spec specifies the cloning for Mahiru today.
 - **Failures in a full run** (decided after review). Unlike Mahiru, a failed player is never marked `scanDone`.
   - It stays unscanned and is retried later in the same run, up to **3 attempts** in total.
   - After that, the run moves on and the player stays unscanned, so the next Start picks them up again.

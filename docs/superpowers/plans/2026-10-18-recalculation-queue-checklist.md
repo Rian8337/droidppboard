@@ -2,9 +2,27 @@
 
 Manual checks for the recalculation queue page (`/prototype/queue`) and the `/api/recalc` routes behind it. Run these against a staging deployment before release. Each step lists the exact action and the result to expect.
 
+## Rollout
+
+Do these in order. The checklist below assumes they are done.
+
+1. **Deploy the broker first** (dpp-processor-backend, branch `recalculation-queue`). The board reads each variant's healthy instance count from it, and the broker enforces access on the calculations themselves.
+2. **Deploy the board** (this repo, branch `recalculation-queue`) with the environment variables below.
+3. **Deploy Mahiru last** (branch `recalculation-queue`), which retires `/recalc`:
+    - Build from a clean `dist/`: `rm -rf dist && pnpm build`. Mahiru's `build-linux` script runs its delete with `&`, concurrently with the build, so do not rely on it. A stale `dist/` keeps the deleted `/recalc` JavaScript loadable.
+    - Then run `/undeploy command:recalc` in Discord. Add `serveronly:True` if the command was deployed only to the debug server. Deleting the code does not unregister the slash command.
+
+Board environment variables:
+
+- `DPP_SCORE_SERVICE_URL` and `DPP_SCORE_SERVICE_KEY`: the score service that answers `GET /online-scores`, and the board's key for it.
+- `RECALC_MAX_ACTIVE_PER_PERSON` (5): waiting or calculating entries per person, across all variants.
+- `RECALC_ADD_COOLDOWN_SECONDS` (10): the wait between two adds by the same person.
+- `RECALC_FINISHED_RETENTION_MINUTES` (60): how long finished and failed entries stay listed.
+- The beatmap-service key (`DROID_SERVER_INTERNAL_KEY`) must have no per-minute limit, or a high one.
+
 ## Prerequisites
 
-- Deploy order: the broker change must be deployed first (dpp-processor-backend, branch `recalculation-queue`). The board reads each variant's healthy instance count from it, and the broker enforces access on the calculations themselves. Without it the queue cannot tell how many players a variant may calculate at once.
+- Deploy order: see "Rollout" above. The broker change must be deployed first, as without it the queue cannot tell how many players a variant may calculate at once.
 - Server environment, on top of the variable management settings in `2026-10-17-variant-management-droidppboard-checklist.md`:
     - `DPP_SCORE_SERVICE_URL`, the base URL of the score service that answers `GET /online-scores`.
     - `DPP_SCORE_SERVICE_KEY`, the board's key for the score service. The board sends the person who queued an entry (or the admin who started a full run) as `X-Acting-Uid`, so the key must be allowed to act for users.
@@ -23,9 +41,9 @@ Manual checks for the recalculation queue page (`/prototype/queue`) and the `/ap
 
 ## Steps
 
-1. **A visitor sees the queue but gets a login link instead of the form.**
-   - Action: Open `/prototype/queue` in a private browser window (no session).
-   - Expected: The page lists the queue and "Recently finished" for the public variants. The left panel shows "Log in to add players to the queue." with a link to `/login`, and no form. There are no Remove buttons and no full-run controls. Only public variants appear in the "Show global queue" view.
+1. **A visitor sees the queue and picks a variant, but gets a login link instead of the form.**
+   - Action: Open `/prototype/queue` in a private browser window (no session), and change the variant in the picker.
+   - Expected: The page lists the queue and "Recently finished" for the public variants, and the list follows the picker. The left panel shows the variant picker and "Log in to add players to the queue." with a link to `/login`, and no player box, "Me" or "Add to queue" button. There are no Remove buttons and no full-run controls. Only public variants appear in the "Show global queue" view.
 
 2. **The menu links to the page.**
    - Action: Look at the menu on any page, and click "Recalculation Queue".
@@ -81,15 +99,15 @@ Manual checks for the recalculation queue page (`/prototype/queue`) and the `/ap
 
 15. **A full run: start, pause and resume.**
     - Action: As the admin, select the variant and click Start in the "Full run" panel. Then, while it runs, stop the variant's instances (or take it unavailable in the broker), wait a minute, and bring them back.
-    - Expected: The line reads "Full run in progress: N of total players. Started by <admin> just now." with a bar. The count grows. While the variant is unavailable it reads "Full run paused (variant unavailable)", and it goes back to "in progress" by itself when an instance is healthy again. Players in flight when it went down count as failed in the line (", N failed").
+    - Expected: The line reads "Full run in progress: N of total players. Started by <admin> just now." with a bar. The count grows. While the variant is unavailable it reads "Full run paused (variant unavailable)", and it goes back to "in progress" by itself when an instance is healthy again. Only the players in flight when the variant went down count as failed in the line (", N failed"). Check the server log or the "failed" count: it must not keep growing while the variant is down, as the run holds back new players until it has re-checked the variant's instances.
 
 16. **A full run: stop and continue.**
     - Action: Click Stop. Then click Start again.
-    - Expected: Stop changes the line to "Full run stopped" and the count stops. Start continues from where it was: the done count does not go back to zero, and finished profiles are not calculated again. Restarting the server while a run is going leaves it stopped, and Start continues it.
+    - Expected: Stop changes the line to "Full run stopped" and the count stops. Start continues from where it was: the done count does not go back to zero, and finished profiles are not calculated again. Runs live in memory: after a restart of the server the page shows no run, and pressing Start continues from the `scanDone` progress in the database.
 
 17. **A full run: start over.**
     - Action: Click "Start over" and cancel the confirmation, then click it again and confirm. (Start over is shown only while no run is going.)
-    - Expected: Cancelling does nothing. Confirming resets the variant's profiles to unscanned: the done count starts at 0 and the run begins again. For a variant with no `prototypepp` profiles, Start first clones those of `droid-rebalance`.
+    - Expected: Cancelling does nothing. Confirming resets the variant's profiles to unscanned: the done count starts at 0 and the run begins again. Every Start (start over included) first adds the `droid-rebalance` profiles that the variant lacks, so a variant that only has profiles from queued players still gets the whole set.
 
 18. **Everyone sees a full run, only admins control it.**
     - Action: While a run is going, open the page as A, as a visitor, and as C (for a private variant's run).
