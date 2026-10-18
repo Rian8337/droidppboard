@@ -47,12 +47,17 @@ function Leaderboard({ variant }: LeaderboardTabProps) {
 
     useEffect(() => {
         const timeout = setTimeout(() => {
-            setSearch(searchInput.trim());
-            setPage(1);
+            const trimmed = searchInput.trim();
+
+            // Only a different search starts over; the first run on mount must keep the page.
+            if (trimmed !== search) {
+                setSearch(trimmed);
+                setPage(1);
+            }
         }, searchDelayMs);
 
         return () => clearTimeout(timeout);
-    }, [searchInput]);
+    }, [searchInput, search]);
 
     const entries: LeaderboardEntry[] = (players ?? []).map((player, index) => ({
         rank: (page - 1) * leaderboardPageSize + index + 1,

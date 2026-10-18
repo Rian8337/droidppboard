@@ -1,7 +1,7 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { IPrototypePP, PrototypeLeaderboardResponse } from "app-structures";
-import { http, HttpResponse } from "msw";
+import { delay, http, HttpResponse } from "msw";
 import { Route, Routes, useLocation } from "react-router";
 import { useBreakpoint } from "../../src/hooks/useBreakpoint";
 import type { RenderWithProvidersOptions } from "../utils/renderWithProviders";
@@ -221,5 +221,84 @@ describe("LeaderboardTab", () => {
         await user.click(screen.getByRole("button", { name: "Try again" }));
 
         expect(await screen.findByText("Alpha")).toBeVisible();
+    });
+
+    it("shows a loading state instead of stale, mis-ranked rows while the next page loads", async () => {
+        server.use(
+            http.get("/api/ppboard/prototype/getleaderboard", async ({ request }) => {
+                const page = Number(new URL(request.url).searchParams.get("page") ?? "1");
+
+                if (page === 2) {
+                    await delay(150);
+                }
+
+                const body: PrototypeLeaderboardResponse<IPrototypePP[]> = {
+                    variants: [droidRebalance, readingVariant],
+                    currentVariant: droidRebalance,
+                    data: buildPage(page, page === 1 ? 50 : 2),
+                };
+
+                return HttpResponse.json(body);
+            }),
+        );
+        const user = userEvent.setup();
+
+        renderTab();
+        await screen.findByText("Player 1-0");
+
+        await user.click(screen.getByRole("button", { name: "Next page" }));
+
+        expect(screen.getByText("Loading...")).toBeVisible();
+        expect(screen.queryByText("Player 1-0")).not.toBeInTheDocument();
+        expect(screen.queryByText("Player 1-49")).not.toBeInTheDocument();
+
+        const row = (await screen.findByText("Player 2-0")).closest("tr")!;
+        expect(within(row).getAllByRole("cell")[0]).toHaveTextContent("51");
+    });
+
+    it("shows a dash for a missing Master pp and falls back to live pp for its difference", async () => {
+        answerWith(
+            () => [
+                buildPlayer({
+                    uid: 1,
+                    username: "WithMaster",
+                    localPPTotal: 1000,
+                    livePPTotal: 900,
+                    masterPPTotal: 950,
+                }),
+                buildPlayer({
+                    uid: 2,
+                    username: "WithoutMaster",
+                    localPPTotal: 1000,
+                    livePPTotal: 900,
+                }),
+            ],
+            readingVariant,
+        );
+
+        renderTab(readingVariant);
+
+        const withMaster = (await screen.findByText("WithMaster")).closest("tr")!;
+        const withoutMaster = screen.getByText("WithoutMaster").closest("tr")!;
+
+        expect(within(withMaster).getByText("950.00")).toBeVisible();
+        expect(within(withMaster).getByText("+50.0")).toBeVisible();
+        expect(within(withoutMaster).getByText("-")).toBeVisible();
+        expect(within(withoutMaster).getByText("+100.0")).toBeVisible();
+    });
+
+    it("keeps the page when the search has not changed", async () => {
+        const requests = answerWith((page) => buildPage(page, 50));
+        const user = userEvent.setup();
+
+        renderTab();
+        await screen.findByText("Player 1-0");
+        await user.click(screen.getByRole("button", { name: "Next page" }));
+        await screen.findByText("Player 2-0");
+
+        await new Promise((resolve) => setTimeout(resolve, 400));
+
+        expect(screen.getByText("Page 2")).toBeVisible();
+        expect(requests.filter((url) => url.searchParams.get("page") === "1")).toHaveLength(1);
     });
 });

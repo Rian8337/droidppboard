@@ -1,4 +1,4 @@
-import { keepPreviousData, useQuery, type UseQueryResult } from "@tanstack/react-query";
+import { useQuery, type UseQueryResult } from "@tanstack/react-query";
 import type { IPrototypePP, PrototypeLeaderboardResponse } from "app-structures";
 import { requestJson } from "./http";
 import { queryKeys } from "./queryKeys";
@@ -8,7 +8,7 @@ export const leaderboardPageSize = 50;
 
 /**
  * One page of a variant's leaderboard, ranked by local pp. `search` filters players by name; an
- * empty one lists everybody. The previous page stays on screen while the next one loads.
+ * empty one lists everybody. Rows are never kept from another page, so their ranks stay right.
  */
 export function useLeaderboard(
     variant: string,
@@ -30,6 +30,5 @@ export function useLeaderboard(
             );
         },
         select: (response) => response.data,
-        placeholderData: keepPreviousData,
     });
 }
