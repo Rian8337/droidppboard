@@ -2,7 +2,7 @@
  * Plain data and builders for the mocked server. Playwright imports this file too, so it must not
  * import msw, vitest or Testing Library.
  */
-import type { PPVariant } from "app-structures";
+import type { IPrototypePP, PPVariant } from "app-structures";
 import type { Me } from "../../src/api/auth";
 
 /** Builds a variant, which is a public osu!droid rebalance one unless overridden. */
@@ -69,3 +69,24 @@ export const managerMe: Me = buildMe({
 });
 
 export const plainMe: Me = buildMe();
+
+/** Builds a leaderboard row: a player with 500 live pp and 520 local pp unless overridden. */
+export function buildPlayer(overrides: Partial<IPrototypePP> = {}): IPrototypePP {
+    return {
+        lastUpdate: 1_790_000_000_000,
+        pp: [],
+        localPPTotal: 520,
+        livePPTotal: 500,
+        uid: 1000,
+        username: "Alpha",
+        reworkType: "droid-rebalance",
+        ...overrides,
+    };
+}
+
+/** The rows the mocked leaderboard answers with: one gains pp, one loses pp and one is unchanged. */
+export const leaderboardPlayers: IPrototypePP[] = [
+    buildPlayer({ uid: 1000, username: "Alpha", localPPTotal: 1520.5, livePPTotal: 1500 }),
+    buildPlayer({ uid: 1001, username: "Bravo", localPPTotal: 1480, livePPTotal: 1490.25 }),
+    buildPlayer({ uid: 1002, username: "Charlie", localPPTotal: 1400, livePPTotal: 1400 }),
+];

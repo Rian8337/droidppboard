@@ -1,5 +1,6 @@
 import type { PPVariant } from "app-structures";
 import type { ComponentType } from "react";
+import { LeaderboardTab } from "../leaderboard/LeaderboardTab";
 import type { VariantTab } from "../routing/paths";
 import { InfoTab } from "./InfoTab";
 
@@ -10,4 +11,5 @@ import { InfoTab } from "./InfoTab";
 export const variantTabContent: Partial<Record<VariantTab, ComponentType<{ variant: PPVariant }>>> =
     {
         info: InfoTab,
+        leaderboard: LeaderboardTab,
     };

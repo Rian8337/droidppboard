@@ -1,5 +1,6 @@
 import { http, HttpResponse, type RequestHandler } from "msw";
-import { droidRebalance, plainMe, readingVariant } from "./fixtures";
+import type { IPrototypePP, PrototypeLeaderboardResponse } from "app-structures";
+import { droidRebalance, leaderboardPlayers, plainMe, readingVariant } from "./fixtures";
 
 /**
  * The server's default answers: nobody is logged in and only public variants exist. Tests change
@@ -14,4 +15,15 @@ export const handlers: RequestHandler[] = [
     ),
     http.post("/api/auth/logout", () => new HttpResponse(null, { status: 204 })),
     http.get("/api/ppboard/variants", () => HttpResponse.json([droidRebalance, readingVariant])),
+    http.get("/api/ppboard/prototype/getleaderboard", ({ request }) => {
+        const type = new URL(request.url).searchParams.get("type");
+        const currentVariant = type === readingVariant.name ? readingVariant : droidRebalance;
+        const body: PrototypeLeaderboardResponse<IPrototypePP[]> = {
+            variants: [droidRebalance, readingVariant],
+            currentVariant,
+            data: leaderboardPlayers,
+        };
+
+        return HttpResponse.json(body);
+    }),
 ];

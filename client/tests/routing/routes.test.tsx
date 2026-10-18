@@ -14,7 +14,7 @@ describe("AppRoutes", () => {
         renderWithProviders(<AppRoutes />, { route: "/" });
 
         expect(await screen.findByRole("heading", { name: "PP Board · Rebalance" })).toBeVisible();
-        expect(await screen.findByText("This tab is not available yet.")).toBeVisible();
+        expect(await screen.findByText("Alpha")).toBeVisible();
     });
 
     it("shows a variant tab inside the shell", async () => {

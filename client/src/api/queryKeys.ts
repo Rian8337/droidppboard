@@ -5,4 +5,6 @@
 export const queryKeys = {
     me: () => ["me"] as const,
     variants: () => ["variants"] as const,
+    leaderboard: (variant: string, page: number, search: string) =>
+        ["leaderboard", variant, page, search] as const,
 };
