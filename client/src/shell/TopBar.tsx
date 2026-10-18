@@ -2,6 +2,7 @@ import { faBars, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useLocation, useMatch } from "react-router";
 import { useVariants } from "../api/variants";
+import { discordUrl } from "../utils/links";
 import { AccountMenu } from "./AccountMenu";
 import styles from "./TopBar.module.css";
 
@@ -9,8 +10,6 @@ export interface TopBarProps {
     isSidebarOpen: boolean;
     onToggleSidebar: () => void;
 }
-
-const discordUrl = "https://discord.gg/nyD92cE";
 
 const pageNames: ReadonlyMap<string, string> = new Map([
     ["calculate", "Beatmap calculator"],

@@ -14,21 +14,26 @@ describe("AppRoutes", () => {
         renderWithProviders(<AppRoutes />, { route: "/" });
 
         expect(await screen.findByRole("heading", { name: "PP Board · Rebalance" })).toBeVisible();
-        expect(screen.getByText("leaderboard")).toBeVisible();
+        expect(await screen.findByText("This tab is not available yet.")).toBeVisible();
     });
 
     it("shows a variant tab inside the shell", async () => {
         renderWithProviders(<AppRoutes />, { route: "/v/reading/queue" });
 
         expect(await screen.findByRole("heading", { name: "PP Board · Reading" })).toBeVisible();
-        expect(screen.getByText("queue")).toBeVisible();
+        expect(await screen.findByText("This tab is not available yet.")).toBeVisible();
+        expect(screen.getByRole("link", { name: "Queue" })).toHaveAttribute("aria-current", "page");
     });
 
     it("redirects an old address to its new one", async () => {
         renderWithProviders(<AppRoutes />, { route: "/prototype/top-plays/reading?x=1" });
 
         expect(await screen.findByRole("heading", { name: "PP Board · Reading" })).toBeVisible();
-        expect(screen.getByText("top-plays")).toBeVisible();
+        expect(await screen.findByText("This tab is not available yet.")).toBeVisible();
+        expect(screen.getByRole("link", { name: "Top plays" })).toHaveAttribute(
+            "aria-current",
+            "page",
+        );
     });
 
     it("says when a page does not exist", () => {

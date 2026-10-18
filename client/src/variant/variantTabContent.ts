@@ -1,0 +1,13 @@
+import type { PPVariant } from "app-structures";
+import type { ComponentType } from "react";
+import type { VariantTab } from "../routing/paths";
+import { InfoTab } from "./InfoTab";
+
+/**
+ * What each tab of a variant shows. A tab without an entry shows an empty state, so the tabs
+ * built later register themselves here.
+ */
+export const variantTabContent: Partial<Record<VariantTab, ComponentType<{ variant: PPVariant }>>> =
+    {
+        info: InfoTab,
+    };

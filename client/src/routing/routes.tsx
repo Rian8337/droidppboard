@@ -1,7 +1,7 @@
 import { Navigate, Route, Routes, useLocation } from "react-router";
 import { NotFoundPage } from "../pages/NotFoundPage";
-import { VariantPagePlaceholder } from "../pages/VariantPagePlaceholder";
 import { AppLayout } from "../shell/AppLayout";
+import { VariantPage } from "../variant/VariantPage";
 import { mapLegacyPath } from "./legacyRedirects";
 import { defaultVariant, getVariantPath } from "./paths";
 
@@ -19,7 +19,7 @@ export function AppRoutes() {
         <Routes>
             <Route element={<AppLayout />}>
                 <Route index element={<Navigate replace to={getVariantPath(defaultVariant)} />} />
-                <Route path="v/:variant/:tab" element={<VariantPagePlaceholder />} />
+                <Route path="v/:variant/:tab" element={<VariantPage />} />
                 <Route path="*" element={<LegacyRedirect />} />
             </Route>
         </Routes>
