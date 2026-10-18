@@ -27,10 +27,12 @@
     opacity: 0.85;
 }
 
-/* Long titles and names wrap instead of being cut off, so nothing is left to hover for. */
+/* Long titles and names wrap instead of being cut off, so nothing is left to hover for. A title
+   takes its full width up to the limit, so that the table cannot squeeze it into a tall column. */
 .map {
     display: inline-block;
-    max-width: clamp(12em, 20vw, 22em);
+    width: max-content;
+    max-width: 28em;
     white-space: normal;
     overflow-wrap: anywhere;
 }
