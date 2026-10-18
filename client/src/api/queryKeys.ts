@@ -17,6 +17,10 @@ export const queryKeys = {
     manageGrants: (variant: string) => ["manage", "grants", variant] as const,
     /** Every API key, as the broker lists them. */
     manageKeys: () => ["manage", "keys"] as const,
+    /** Every variant, as the admin list answers: private ones, `droid-live` and the osu! variants too. */
+    manageVariants: () => ["manage", "variants"] as const,
+    /** Every person who has a role or a grant. */
+    manageUsers: () => ["manage", "users"] as const,
     /** The usernames of people, for the uids joined by commas. */
     manageUsernames: (uids: string) => ["manage", "usernames", uids] as const,
     /** The roles of people, for the uids joined by commas. */

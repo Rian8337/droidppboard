@@ -1,0 +1,35 @@
+.page {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    align-self: flex-start;
+    color: var(--accent);
+    text-decoration: none;
+}
+
+.title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 800;
+}
+
+.name {
+    margin: 0;
+    color: var(--muted);
+}
+
+.note {
+    margin: 0;
+    color: var(--muted);
+}
+
+/* The tab pads itself for the variant page; here the page already does. */
+.page > :last-child {
+    padding: 0;
+}

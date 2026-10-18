@@ -32,6 +32,46 @@ export interface AdminKey {
     readonly revokedAt: string | null;
 }
 
+/** A variant as `GET /api/manage/variants` lists it, which includes ones the site does not show. */
+export interface AdminVariant {
+    readonly name: string;
+    readonly title: string | null;
+    readonly aliases: readonly string[];
+    readonly description: string | null;
+    readonly available: boolean;
+    readonly public: boolean;
+    readonly instanceCount: number;
+}
+
+/** A person who has a role or a grant, as `GET /api/manage/users` lists them. */
+export interface AdminUser {
+    readonly uid: number;
+    readonly role: ManageRole | null;
+    readonly grants: readonly string[];
+}
+
+/** What creating a key answers with. The raw key is shown once and cannot be fetched again. */
+export interface CreatedKey {
+    readonly key: AdminKey;
+    readonly rawKey: string;
+}
+
+/** What to send to create a key. */
+export interface NewKey {
+    readonly name: string;
+    readonly rateLimitPerMinute: number | null;
+    readonly allVariants: boolean;
+    readonly canActForUsers: boolean;
+    readonly grants: readonly string[];
+}
+
+/** What to change about a key. A field that is left out stays as it is; a `null` limit means unlimited. */
+export interface KeyChanges {
+    rateLimitPerMinute?: number | null;
+    allVariants?: boolean;
+    canActForUsers?: boolean;
+}
+
 /** A person's role, as `GET /api/manage/user-roles` answers. */
 export interface UserRole {
     readonly uid: number;
@@ -136,6 +176,25 @@ export function useAdminKeys({
     });
 }
 
+/** Every variant, including `droid-live` and the osu! variants. Admins only. */
+export function useAdminVariants({
+    isEnabled = true,
+}: { isEnabled?: boolean } = {}): UseQueryResult<AdminVariant[], ApiError> {
+    return useQuery({
+        queryKey: queryKeys.manageVariants(),
+        enabled: isEnabled,
+        queryFn: () => requestJson<AdminVariant[]>("GET", "/api/manage/variants"),
+    });
+}
+
+/** Everyone who has a role or a grant. Admins only. */
+export function useAdminUsers(): UseQueryResult<AdminUser[], ApiError> {
+    return useQuery({
+        queryKey: queryKeys.manageUsers(),
+        queryFn: () => requestJson<AdminUser[]>("GET", "/api/manage/users"),
+    });
+}
+
 /** What to change about a variant. A field that is left out stays as it is; `null` clears a title or description. */
 export interface VariantChanges {
     title?: string | null;
@@ -149,7 +208,12 @@ export interface VariantChanges {
 function useRefreshVariants(): () => Promise<void> {
     const queryClient = useQueryClient();
 
-    return () => queryClient.invalidateQueries({ queryKey: queryKeys.variants() });
+    return async () => {
+        await Promise.all([
+            queryClient.invalidateQueries({ queryKey: queryKeys.variants() }),
+            queryClient.invalidateQueries({ queryKey: queryKeys.manageVariants() }),
+        ]);
+    };
 }
 
 /** Changes a variant's title, description or visibility. */
@@ -248,5 +312,73 @@ export function useChangeKeyGrant(
                 `/api/manage/keys/${encodeURIComponent(key)}/grants/${encodeURIComponent(variant)}`,
             ),
         onSettled: () => queryClient.invalidateQueries({ queryKey: queryKeys.manageKeys() }),
+    });
+}
+
+/** Creates an API key. The answer holds the raw key, which the caller must show once and then drop. */
+export function useCreateKey(): UseMutationResult<CreatedKey, ApiError, NewKey> {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (key: NewKey) => requestJson<CreatedKey>("POST", "/api/manage/keys", key),
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.manageKeys() }),
+    });
+}
+
+/** Changes an API key's rate limit, or what it may do. */
+export function useUpdateKey(key: string): UseMutationResult<unknown, ApiError, KeyChanges> {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (changes: KeyChanges) =>
+            requestJson("PATCH", `/api/manage/keys/${encodeURIComponent(key)}`, changes),
+        onSettled: () => queryClient.invalidateQueries({ queryKey: queryKeys.manageKeys() }),
+    });
+}
+
+/** Grants an API key a variant, or takes it away. */
+export function useChangeVariantGrantOfKey(
+    key: string,
+): UseMutationResult<void, ApiError, { variant: string; isGranted: boolean }> {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ variant, isGranted }: { variant: string; isGranted: boolean }) =>
+            requestJson<void>(
+                isGranted ? "PUT" : "DELETE",
+                `/api/manage/keys/${encodeURIComponent(key)}/grants/${encodeURIComponent(variant)}`,
+            ),
+        onSettled: () => queryClient.invalidateQueries({ queryKey: queryKeys.manageKeys() }),
+    });
+}
+
+/** Revokes an API key for good. */
+export function useRevokeKey(key: string): UseMutationResult<unknown, ApiError, void> {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: () => requestJson("POST", `/api/manage/keys/${encodeURIComponent(key)}/revoke`),
+        onSettled: () => queryClient.invalidateQueries({ queryKey: queryKeys.manageKeys() }),
+    });
+}
+
+/** Sets a person's site-wide role, or removes it with `null`. Admins only. */
+export function useSetRole(): UseMutationResult<
+    void,
+    ApiError,
+    { uid: number; role: ManageRole | null }
+> {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ uid, role }: { uid: number; role: ManageRole | null }) =>
+            requestJson<void>("PUT", `/api/manage/users/${uid}/role`, { role }),
+        onSettled: () =>
+            Promise.all([
+                queryClient.invalidateQueries({ queryKey: queryKeys.manageUsers() }),
+                // A role decides who a manager may remove, and the roles shown beside grants.
+                queryClient.invalidateQueries({ queryKey: ["manage", "userRoles"] }),
+                queryClient.invalidateQueries({ queryKey: queryKeys.me() }),
+            ]),
     });
 }

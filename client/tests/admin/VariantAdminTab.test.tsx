@@ -2,7 +2,15 @@ import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { VariantAdminTab } from "../../src/admin/VariantAdminTab";
-import { adminMe, buildAdminKey, buildFullRun, flowaim, managerMe } from "../mocks/fixtures";
+import {
+    adminMe,
+    buildAdminKey,
+    buildFullRun,
+    droidRebalance,
+    flowaim,
+    managerMe,
+    readingVariant,
+} from "../mocks/fixtures";
 import { server } from "../mocks/server";
 import { renderWithProviders } from "../utils/renderWithProviders";
 import { serveManage } from "./serveManage";
@@ -128,6 +136,45 @@ describe("VariantAdminTab as a manager", () => {
         );
         await waitFor(() =>
             expect(screen.queryByRole("textbox", { name: "User ID" })).not.toBeInTheDocument(),
+        );
+    });
+});
+
+describe("moving an alias as a manager", () => {
+    const owner = { ...droidRebalance, aliases: ["rebalance", "taken"] };
+    const reading = { ...readingVariant, aliases: ["mine"] };
+
+    beforeEach(() => {
+        serveManage({ grants, usernames, roles });
+        server.use(
+            http.get("/api/ppboard/variants", () => HttpResponse.json([owner, reading, flowaim])),
+        );
+    });
+
+    async function typeAlias(alias: string, me: typeof managerMe) {
+        renderTab(me);
+        await userEvent.click(await screen.findByRole("button", { name: "Edit settings" }));
+        await userEvent.type(await screen.findByRole("textbox", { name: "New alias" }), alias);
+    }
+
+    it("offers to move an alias of a variant the manager also manages", async () => {
+        await typeAlias("mine", { ...managerMe, grants: ["flowaim", "reading"] });
+        await userEvent.click(await screen.findByRole("button", { name: "Add alias" }));
+
+        expect(await screen.findByRole("button", { name: "Move alias here" })).toBeEnabled();
+        expect(screen.getByText(/mine points to reading now/)).toBeVisible();
+    });
+
+    it("shows an alias of a variant the manager cannot manage as taken, without a way to move it", async () => {
+        const sent = serveManage({ grants, usernames, roles });
+
+        await typeAlias("taken", managerMe);
+
+        expect(await screen.findByText(/taken belongs to droid-rebalance/)).toBeVisible();
+        expect(screen.getByRole("button", { name: "Add alias" })).toBeDisabled();
+        expect(screen.queryByRole("button", { name: "Move alias here" })).not.toBeInTheDocument();
+        expect(sent.filter((request) => request.path.startsWith("/api/manage/aliases"))).toEqual(
+            [],
         );
     });
 });

@@ -1,5 +1,6 @@
 import type { PPVariant } from "app-structures";
 import { useState, type SubmitEvent } from "react";
+import { useMe } from "../api/auth";
 import { useVariants } from "../api/variants";
 import {
     maxVariantDescriptionLength,
@@ -13,11 +14,18 @@ import { Button } from "../components/Button";
 import { Checkbox } from "../components/Checkbox";
 import { Dialog } from "../components/Dialog";
 import { TextField } from "../components/TextField";
+import { canManageVariant } from "../variant/permissions";
 import { DescriptionEditor } from "./DescriptionEditor";
 import styles from "./VariantSettingsDialog.module.css";
 
+/** What the settings need of a variant: both the site's variants and the admin list have it. */
+export type SettingsVariant = Pick<
+    PPVariant,
+    "name" | "title" | "description" | "public" | "available"
+> & { readonly aliases: readonly string[] };
+
 export interface VariantSettingsDialogProps {
-    variant: PPVariant;
+    variant: SettingsVariant;
 
     /** Whether the person may change who can see the variant, which only admins may. */
     canChangeVisibility: boolean;
@@ -133,24 +141,27 @@ function SettingsForm({
 }
 
 /** Adds and removes aliases. Each change is saved at once, apart from the form's Save. */
-function AliasEditor({ variant }: { variant: PPVariant }) {
+function AliasEditor({ variant }: { variant: SettingsVariant }) {
     const [alias, setAlias] = useState("");
     const [pendingOwner, setPendingOwner] = useState<string | null>(null);
     const { data: variants = [] } = useVariants();
+    const { data: me = null } = useMe();
     const setting = useSetAlias(variant.name);
     const removing = useRemoveAlias();
     const name = alias.trim();
     const isValid = aliasPattern.test(name);
+    const currentOwner = variants.find(
+        (candidate) => candidate.name !== variant.name && candidate.aliases.includes(name),
+    );
+
+    // Moving an alias takes it from its owner, so only people who manage the owner may; for others it is taken.
+    const isTaken = currentOwner !== undefined && !canManageVariant(me, currentOwner.name);
     const error = setting.error ?? removing.error;
 
     function addAlias() {
-        const owner = variants.find(
-            (candidate) => candidate.name !== variant.name && candidate.aliases.includes(name),
-        );
-
         // Moving an alias changes where its links go, so the person confirms it.
-        if (owner && pendingOwner === null) {
-            setPendingOwner(owner.name);
+        if (currentOwner && pendingOwner === null) {
+            setPendingOwner(currentOwner.name);
 
             return;
         }
@@ -198,7 +209,7 @@ function AliasEditor({ variant }: { variant: PPVariant }) {
                         if (event.key === "Enter") {
                             event.preventDefault();
 
-                            if (isValid && !setting.isPending) {
+                            if (isValid && !isTaken && !setting.isPending) {
                                 addAlias();
                             }
                         }
@@ -206,7 +217,7 @@ function AliasEditor({ variant }: { variant: PPVariant }) {
                 />
                 <Button
                     variant="secondary"
-                    disabled={!isValid || setting.isPending}
+                    disabled={!isValid || isTaken || setting.isPending}
                     onClick={addAlias}
                 >
                     {pendingOwner === null ? "Add alias" : "Move alias here"}
@@ -215,7 +226,13 @@ function AliasEditor({ variant }: { variant: PPVariant }) {
             {name !== "" && !isValid && (
                 <p className={styles.error}>Aliases can use letters, digits, - and _.</p>
             )}
-            {pendingOwner !== null && (
+            {isTaken && (
+                <p role="status" className={styles.note}>
+                    {name} belongs to {currentOwner.name}, which you do not manage. Ask an admin to
+                    move it.
+                </p>
+            )}
+            {pendingOwner !== null && !isTaken && (
                 <p role="status" className={styles.note}>
                     {name} points to {pendingOwner} now. Move it to this variant?
                 </p>

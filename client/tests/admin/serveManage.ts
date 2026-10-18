@@ -1,5 +1,10 @@
 import { http, HttpResponse } from "msw";
-import { buildQueueView, type AdminKeyData } from "../mocks/fixtures";
+import {
+    buildQueueView,
+    type AdminKeyData,
+    type AdminUserData,
+    type AdminVariantData,
+} from "../mocks/fixtures";
 import { server } from "../mocks/server";
 import type { FullRunView } from "app-structures";
 
@@ -12,6 +17,11 @@ export interface ServeManageOptions {
     /** The role of each person; a person who is absent has none. */
     roles?: Record<number, RoleChoice>;
     keys?: AdminKeyData[];
+    /** Every variant, as the admin list answers. */
+    adminVariants?: AdminVariantData[];
+    users?: AdminUserData[];
+    /** What creating a key answers with. */
+    createdKey?: { key: AdminKeyData; rawKey: string };
     fullRuns?: FullRunView[];
 }
 
@@ -29,6 +39,9 @@ export function serveManage({
     usernames = {},
     roles = {},
     keys = [],
+    adminVariants = [],
+    users = [],
+    createdKey,
     fullRuns = [],
 }: ServeManageOptions = {}) {
     const sent: SentRequest[] = [];
@@ -70,6 +83,20 @@ export function serveManage({
             return HttpResponse.json(uids.map((uid) => ({ uid, role: roles[uid] ?? null })));
         }),
         http.get("/api/manage/keys", () => HttpResponse.json(keys)),
+        http.get("/api/manage/variants", () => HttpResponse.json(adminVariants)),
+        http.get("/api/manage/users", () => HttpResponse.json(users)),
+        http.post("/api/manage/keys", async ({ request }) => {
+            await record(request);
+
+            return HttpResponse.json(createdKey, { status: 201 });
+        }),
+        http.patch("/api/manage/keys/:name", async ({ request }) => {
+            await record(request);
+
+            return HttpResponse.json({});
+        }),
+        http.post("/api/manage/keys/:name/revoke", respondNoContent),
+        http.put("/api/manage/users/:uid/role", respondNoContent),
         http.put("/api/manage/variants/:name/grants/:uid", respondNoContent),
         http.delete("/api/manage/variants/:name/grants/:uid", respondNoContent),
         http.put("/api/manage/aliases/:alias", respondNoContent),

@@ -1,0 +1,9 @@
+.page {
+    padding: 16px;
+}
+
+.note {
+    margin: 0;
+    padding: 16px;
+    color: var(--muted);
+}

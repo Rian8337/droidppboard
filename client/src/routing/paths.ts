@@ -27,3 +27,8 @@ export function getSnapshotPath(scope: CalculationScope, variant: string, id: st
         ? `/v/${encodeURIComponent(variant)}/calculator/s/${encodedId}`
         : `${beatmapCalculatorPath}/s/${encodedId}`;
 }
+
+/** The admin area's page for a variant's settings and access, which also reaches variants the sidebar lacks. */
+export function getAdminVariantPath(variant: string): string {
+    return `/admin/variants/${encodeURIComponent(variant)}`;
+}

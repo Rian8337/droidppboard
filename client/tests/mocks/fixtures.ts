@@ -362,3 +362,40 @@ export function buildAdminKey(overrides: Partial<AdminKeyData> = {}): AdminKeyDa
         ...overrides,
     };
 }
+
+/** The shape `GET /api/manage/variants` answers per variant: every variant, public or not. */
+export interface AdminVariantData {
+    readonly name: string;
+    readonly title: string | null;
+    readonly aliases: readonly string[];
+    readonly description: string | null;
+    readonly available: boolean;
+    readonly public: boolean;
+    readonly instanceCount: number;
+}
+
+/** Builds a public, available variant of the admin list unless overridden. */
+export function buildAdminVariant(overrides: Partial<AdminVariantData> = {}): AdminVariantData {
+    return {
+        name: "droid-rebalance",
+        title: null,
+        aliases: [],
+        description: null,
+        available: true,
+        public: true,
+        instanceCount: 1,
+        ...overrides,
+    };
+}
+
+/** The shape `GET /api/manage/users` answers per person who has a role or a grant. */
+export interface AdminUserData {
+    readonly uid: number;
+    readonly role: "admin" | "manager" | null;
+    readonly grants: readonly string[];
+}
+
+/** Builds a person with no role and no grants unless overridden. */
+export function buildAdminUser(overrides: Partial<AdminUserData> = {}): AdminUserData {
+    return { uid: 100, role: null, grants: [], ...overrides };
+}

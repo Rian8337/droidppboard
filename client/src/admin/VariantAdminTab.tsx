@@ -1,4 +1,3 @@
-import type { PPVariant } from "app-structures";
 import { useState } from "react";
 import { useMe } from "../api/auth";
 import { Button } from "../components/Button";
@@ -7,11 +6,17 @@ import { AccessTable } from "./AccessTable";
 import { FullRunControls } from "./FullRunControls";
 import { GrantKeyDialog } from "./GrantKeyDialog";
 import { GrantUserDialog } from "./GrantUserDialog";
-import { VariantSettingsDialog } from "./VariantSettingsDialog";
+import { VariantSettingsDialog, type SettingsVariant } from "./VariantSettingsDialog";
 import styles from "./VariantAdminTab.module.css";
 
 export interface VariantAdminTabProps {
-    variant: PPVariant;
+    variant: SettingsVariant;
+
+    /**
+     * Whether to offer the full run, which only the variants of the board have. Defaults to yes; the admin area's
+     * page for `droid-live` and the osu! variants turns it off.
+     */
+    hasFullRun?: boolean;
 }
 
 type OpenDialog = "settings" | "user" | "key" | null;
@@ -20,7 +25,7 @@ type OpenDialog = "settings" | "user" | "key" | null;
  * The Admin tab of a variant, for people who manage it: its settings, who may use it, and for admins its API keys
  * and the full run.
  */
-export function VariantAdminTab({ variant }: VariantAdminTabProps) {
+export function VariantAdminTab({ variant, hasFullRun = true }: VariantAdminTabProps) {
     const { data: me = null } = useMe();
     const [openDialog, setOpenDialog] = useState<OpenDialog>(null);
 
@@ -45,7 +50,7 @@ export function VariantAdminTab({ variant }: VariantAdminTabProps) {
                     </Button>
                 )}
             </div>
-            {isAdminViewing && <FullRunControls variant={variant.name} />}
+            {isAdminViewing && hasFullRun && <FullRunControls variant={variant.name} />}
             <AccessTable variant={variant.name} me={me} />
             <VariantSettingsDialog
                 variant={variant}

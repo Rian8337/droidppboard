@@ -1,4 +1,9 @@
 import { Navigate, Route, Routes, useLocation } from "react-router";
+import { AdminLayout } from "../admin/AdminLayout";
+import { AdminVariantPage } from "../admin/AdminVariantPage";
+import { AllVariantsPage } from "../admin/AllVariantsPage";
+import { KeysPage } from "../admin/KeysPage";
+import { RolesPage } from "../admin/RolesPage";
 import { SnapshotPage } from "../calculator/SnapshotPage";
 import { BeatmapCalculatorPage } from "../pages/BeatmapCalculatorPage";
 import { NotFoundPage } from "../pages/NotFoundPage";
@@ -29,6 +34,13 @@ export function AppRoutes() {
                 />
                 <Route path="calculate" element={<BeatmapCalculatorPage />} />
                 <Route path="calculate/s/:id" element={<SnapshotPage scope="tool" />} />
+                <Route path="admin" element={<AdminLayout />}>
+                    <Route index element={<Navigate replace to="keys" />} />
+                    <Route path="keys" element={<KeysPage />} />
+                    <Route path="roles" element={<RolesPage />} />
+                    <Route path="variants" element={<AllVariantsPage />} />
+                    <Route path="variants/:name" element={<AdminVariantPage />} />
+                </Route>
                 <Route path="v/:variant/:tab" element={<VariantPage />} />
                 <Route path="*" element={<LegacyRedirect />} />
             </Route>
