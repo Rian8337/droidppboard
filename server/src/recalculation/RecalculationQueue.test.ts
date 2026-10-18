@@ -1094,6 +1094,38 @@ describe("RecalculationQueue", () => {
             expect(pending.filter((p) => p.uid === 21)).toHaveLength(2);
         });
 
+        it("never exceeds capacity when a single entry and a full-run player share a uid", async () => {
+            fullRunStore.seed("A", [21, 22, 23]);
+            await startRun("A", { capacity: 2 });
+            add(21, "A", { capacity: 2 });
+
+            expect(pending.map((p) => p.uid)).toEqual([21, 22]);
+            expect(statuses()).toEqual({ 21: "waiting" });
+
+            await finishScanned(21, "A");
+
+            // The single entry took the freed calculator, not the run.
+            expect(statuses()).toEqual({ 21: "calculating" });
+            expect(pending.map((p) => p.uid)).toEqual([21, 22, 21]);
+        });
+
+        it("holds a single entry while the full run calculates the same player", async () => {
+            fullRunStore.seed("A", [21]);
+            await startRun("A", { capacity: 2 });
+            add(21, "A", { capacity: 2 });
+            add(12, "A", { capacity: 2 });
+
+            // The next waiting entry is not blocked by the held one.
+            expect(statuses()).toEqual({ 21: "waiting", 12: "calculating" });
+
+            await finishScanned(21, "A");
+
+            expect(statuses()).toEqual({
+                21: "calculating",
+                12: "calculating",
+            });
+        });
+
         it("does not start a player that another run's in-flight calculation covers", async () => {
             fullRunStore.seed("A", [21, 22]);
             await startRun("A", { capacity: 1 });

@@ -622,6 +622,22 @@ export class RecalculationQueue {
         return uids;
     }
 
+    /**
+     * Gets how many players are calculating for a variant, counting a player
+     * once per calculation.
+     */
+    private calculatingCount(variant: string) {
+        let count = this.fullRunCalculating.get(variant)?.size ?? 0;
+
+        for (const entry of this.entries.values()) {
+            if (entry.status === "calculating" && entry.variant === variant) {
+                ++count;
+            }
+        }
+
+        return count;
+    }
+
     private capacityOf(variant: string) {
         return this.capacities.get(variant) ?? 0;
     }
@@ -764,6 +780,11 @@ export class RecalculationQueue {
                 continue;
             }
 
+            // The full run is calculating this player; wait for it.
+            if (this.fullRunCalculating.get(entry.variant)?.has(entry.uid)) {
+                continue;
+            }
+
             calculating.set(entry.variant, running + 1);
             this.start(entry);
         }
@@ -809,7 +830,7 @@ export class RecalculationQueue {
     private async claimOnce(run: FullRun) {
         const { variant } = run;
         const freeCalculators = () =>
-            this.capacityOf(variant) - this.calculatingUids(variant).size;
+            this.capacityOf(variant) - this.calculatingCount(variant);
         const canClaim = () =>
             run.status === "running" && freeCalculators() > 0;
 
