@@ -126,7 +126,11 @@ export default function RecalcFullRunPanel(props: {
         }
     }
 
-    if (controlled.every(({ run }) => !run) && !props.canManage) {
+    // The global view has a heading to show only when a run is going.
+    if (
+        controlled.length === 0 ||
+        (controlled.every(({ run }) => !run) && !props.canManage)
+    ) {
         return null;
     }
 

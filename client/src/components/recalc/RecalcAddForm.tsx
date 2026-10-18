@@ -85,20 +85,7 @@ export default function RecalcAddForm(props: {
     const [notice, setNotice] = useState<string | undefined>();
     const cooldown = useCooldownRemaining(props.allowance);
 
-    if (!props.user) {
-        return (
-            <section className="recalc-panel">
-                <h3>Add to queue</h3>
-                <p>
-                    <Link to="/login" state={{ from: location.pathname }}>
-                        Log in
-                    </Link>{" "}
-                    to add players to the queue.
-                </p>
-            </section>
-        );
-    }
-
+    const { user } = props;
     const trimmed = player.trim();
     const canSubmit = !isBusy && !!props.variant && trimmed.length > 0;
 
@@ -132,7 +119,8 @@ export default function RecalcAddForm(props: {
     return (
         <section className="recalc-panel">
             <h3>Add to queue</h3>
-            <form className="recalc-form" onSubmit={submit}>
+            <div className="recalc-form">
+                {/* Visitors pick a variant too, as it also drives the queue. */}
                 <label>
                     Variant
                     <select
@@ -147,53 +135,70 @@ export default function RecalcAddForm(props: {
                         ))}
                     </select>
                 </label>
-                <label>
-                    Player (uid or username)
-                    <span className="recalc-inline">
-                        <input
-                            className="recalc-input"
-                            type="text"
-                            value={player}
-                            maxLength={20}
-                            onChange={(e) => setPlayer(e.target.value)}
-                        />
-                        <button
-                            type="button"
-                            className="recalc-button"
-                            onClick={() =>
-                                setPlayer(props.user!.uid.toString())
-                            }
-                        >
-                            Me
-                        </button>
-                    </span>
-                </label>
-                <button
-                    type="submit"
-                    className="recalc-button"
-                    disabled={!canSubmit}
-                >
-                    {isBusy ? "Adding..." : "Add to queue"}
-                </button>
-            </form>
 
-            {error ? (
-                <p role="alert" className="recalc-error">
-                    {error}
-                </p>
-            ) : null}
-            {notice ? <p role="status">{notice}</p> : null}
+                {user ? (
+                    <>
+                        <form className="recalc-form" onSubmit={submit}>
+                            <label>
+                                Player (uid or username)
+                                <span className="recalc-inline">
+                                    <input
+                                        className="recalc-input"
+                                        type="text"
+                                        value={player}
+                                        maxLength={20}
+                                        onChange={(e) =>
+                                            setPlayer(e.target.value)
+                                        }
+                                    />
+                                    <button
+                                        type="button"
+                                        className="recalc-button"
+                                        onClick={() =>
+                                            setPlayer(user.uid.toString())
+                                        }
+                                    >
+                                        Me
+                                    </button>
+                                </span>
+                            </label>
+                            <button
+                                type="submit"
+                                className="recalc-button"
+                                disabled={!canSubmit}
+                            >
+                                {isBusy ? "Adding..." : "Add to queue"}
+                            </button>
+                        </form>
 
-            {props.allowance ? (
-                <p className="recalc-hint">
-                    You have {props.allowance.active} of{" "}
-                    {props.allowance.maxActive} players waiting (all variants)
-                    {" · "}
-                    {cooldown > 0
-                        ? `next add in ${formatCooldown(cooldown)}`
-                        : "you can add now"}
-                </p>
-            ) : null}
+                        {error ? (
+                            <p role="alert" className="recalc-error">
+                                {error}
+                            </p>
+                        ) : null}
+                        {notice ? <p role="status">{notice}</p> : null}
+
+                        {props.allowance ? (
+                            <p className="recalc-hint">
+                                You have {props.allowance.active} of{" "}
+                                {props.allowance.maxActive} players waiting (all
+                                variants)
+                                {" · "}
+                                {cooldown > 0
+                                    ? `next add in ${formatCooldown(cooldown)}`
+                                    : "you can add now"}
+                            </p>
+                        ) : null}
+                    </>
+                ) : (
+                    <p>
+                        <Link to="/login" state={{ from: location.pathname }}>
+                            Log in
+                        </Link>{" "}
+                        to add players to the queue.
+                    </p>
+                )}
+            </div>
         </section>
     );
 }
