@@ -3,6 +3,7 @@ export * from "./aliceDb/IPrototypePP";
 export * from "./elainaDb/IMapWhitelist";
 export * from "./structures/ICalculationParams";
 export * from "./structures/ICalculationResult";
+export * from "./structures/Calculation";
 export * from "./structures/PPEntry";
 export * from "./structures/PPVariant";
 export * from "./structures/PrototypeLeaderboardResponse";

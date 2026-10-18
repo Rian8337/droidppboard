@@ -6,7 +6,7 @@ import getPPLeaderboard from "./routes/api/ppboard/get-leaderboard";
 import getUserProfile from "./routes/api/ppboard/get-user-profile";
 import getWhitelist from "./routes/api/ppboard/get-whitelist";
 import getTopPlays from "./routes/api/ppboard/get-top-plays";
-import calculateBeatmap from "./routes/api/ppboard/calculate-beatmap";
+import calculate from "./routes/api/ppboard/calculate";
 import getScoreMultiplierSample from "./routes/api/ppboard/score-multiplier-sample";
 import getVariants from "./routes/api/ppboard/get-variants";
 import login from "./routes/api/auth/login";
@@ -89,10 +89,7 @@ ppboardRouter.use("/prototype/getleaderboard", getPPLeaderboard);
 ppboardRouter.use("/prototype/getuserprofile", getUserProfile);
 ppboardRouter.use("/getwhitelist", getWhitelist);
 ppboardRouter.use("/prototype/gettopplays", getTopPlays);
-ppboardRouter.use(
-    ["/calculatebeatmap", "/prototype/calculatebeatmap"],
-    calculateBeatmap,
-);
+ppboardRouter.use("/calculate", calculate);
 ppboardRouter.use("/score-multiplier-sample", getScoreMultiplierSample);
 
 //#endregion
