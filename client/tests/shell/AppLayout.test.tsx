@@ -70,4 +70,43 @@ describe("AppLayout", () => {
 
         expect(screen.getByRole("complementary")).toBeVisible();
     });
+
+    it("closes the sidebar when the backdrop of a tablet is pressed", async () => {
+        vi.mocked(useBreakpoint).mockReturnValue("tablet");
+        const { container } = renderLayout();
+
+        await userEvent.click(screen.getByRole("button", { name: "Open menu" }));
+
+        const backdrop = container.querySelector("div[aria-hidden=true]");
+
+        expect(backdrop).toBeInTheDocument();
+
+        await userEvent.click(backdrop!);
+
+        expect(screen.queryByRole("complementary")).not.toBeInTheDocument();
+    });
+
+    it("has no backdrop on a phone", async () => {
+        vi.mocked(useBreakpoint).mockReturnValue("phone");
+        const { container } = renderLayout();
+
+        await userEvent.click(screen.getByRole("button", { name: "Open menu" }));
+
+        expect(container.querySelector("div[aria-hidden=true]")).not.toBeInTheDocument();
+    });
+
+    it("returns the sidebar to its default when the screen changes size", async () => {
+        vi.mocked(useBreakpoint).mockReturnValue("tablet");
+        renderLayout();
+
+        await userEvent.click(screen.getByRole("button", { name: "Open menu" }));
+
+        expect(screen.getByRole("complementary")).toBeVisible();
+
+        // The screen grows to a desktop; the next render (here caused by the click) notices.
+        vi.mocked(useBreakpoint).mockReturnValue("desktop");
+        await userEvent.click(screen.getByRole("button", { name: "Close menu" }));
+
+        expect(screen.getByRole("complementary")).toBeVisible();
+    });
 });

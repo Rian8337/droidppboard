@@ -17,10 +17,13 @@ export interface MenuProps {
 
     /** Shown below the items, such as the error of an action. */
     footer?: ReactNode;
+
+    /** Called each time the menu opens. */
+    onOpen?: () => void;
 }
 
 /** A popup list of actions that opens on click or tap and closes on an outside press, Escape or a choice. */
-export function Menu({ trigger, items, footer }: MenuProps) {
+export function Menu({ trigger, items, footer, onOpen }: MenuProps) {
     const [isOpen, setIsOpen] = useState(false);
     const rootRef = useRef<HTMLDivElement>(null);
     const triggerRef = useRef<HTMLButtonElement>(null);
@@ -93,7 +96,13 @@ export function Menu({ trigger, items, footer }: MenuProps) {
                 aria-haspopup="menu"
                 aria-expanded={isOpen}
                 aria-controls={isOpen ? listId : undefined}
-                onClick={() => setIsOpen((wasOpen) => !wasOpen)}
+                onClick={() => {
+                    if (!isOpen) {
+                        onOpen?.();
+                    }
+
+                    setIsOpen(!isOpen);
+                }}
             >
                 {trigger}
             </button>

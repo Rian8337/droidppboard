@@ -52,10 +52,8 @@ export function mapLegacyPath(pathname: string): string | null {
 
                 return null;
             case 4: {
-                const uid = Number(third);
-
-                return second === "profile" && Number.isInteger(uid)
-                    ? getProfilePath(fourth, uid)
+                return second === "profile" && /^\d+$/.test(third)
+                    ? getProfilePath(fourth, Number(third))
                     : null;
             }
             default:

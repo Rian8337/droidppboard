@@ -1,4 +1,4 @@
-import { screen } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { Route, Routes, useLocation } from "react-router";
@@ -66,6 +66,15 @@ describe("TopBar", () => {
         expect(screen.getByRole("heading", { name: "Whitelist" })).toBeVisible();
     });
 
+    it.each(["/constructor", "/__proto__", "/toString/x", "/hasOwnProperty"])(
+        "titles %s with the site name rather than something inherited",
+        (route) => {
+            renderTopBar(route, { me: null });
+
+            expect(screen.getByRole("heading", { name: "PP Board" })).toBeVisible();
+        },
+    );
+
     it("links to the Discord server", () => {
         renderTopBar("/", { me: null });
 
@@ -130,7 +139,7 @@ describe("TopBar", () => {
             await userEvent.click(await screen.findByRole("button", { name: /admin/ }));
             await userEvent.click(screen.getByRole("menuitem", { name: "Log out" }));
 
-            expect(onLogout).toHaveBeenCalledTimes(1);
+            await waitFor(() => expect(onLogout).toHaveBeenCalledTimes(1));
         });
 
         it("shows a failed logout in the menu", async () => {
@@ -146,6 +155,25 @@ describe("TopBar", () => {
 
             expect(await screen.findByRole("alert")).toHaveTextContent("Logout failed");
             expect(screen.getByRole("menu")).toBeVisible();
+        });
+
+        it("does not show an earlier failed logout when the menu is opened again", async () => {
+            server.use(
+                http.post("/api/auth/logout", () =>
+                    HttpResponse.json({ message: "Logout failed" }, { status: 500 }),
+                ),
+            );
+            renderTopBar("/", { me: adminMe });
+
+            await userEvent.click(await screen.findByRole("button", { name: /admin/ }));
+            await userEvent.click(screen.getByRole("menuitem", { name: "Log out" }));
+            expect(await screen.findByRole("alert")).toBeVisible();
+
+            await userEvent.keyboard("{Escape}");
+            await userEvent.click(screen.getByRole("button", { name: /admin/ }));
+
+            expect(screen.getByRole("menu")).toBeVisible();
+            expect(screen.queryByRole("alert")).not.toBeInTheDocument();
         });
     });
 });

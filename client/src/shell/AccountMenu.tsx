@@ -61,6 +61,7 @@ export function AccountMenu() {
                 </>
             }
             items={items}
+            onOpen={() => logout.reset()}
             footer={
                 logout.error && (
                     <p role="alert" className={styles.error}>

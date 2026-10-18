@@ -12,16 +12,16 @@ export interface TopBarProps {
 
 const discordUrl = "https://discord.gg/nyD92cE";
 
-const pageNames: Readonly<Record<string, string | undefined>> = {
-    calculate: "Beatmap calculator",
-    whitelist: "Whitelist",
-    "score-multiplier": "Score multiplier sample",
-    about: "About",
-    login: "Log in",
-    admin: "Admin",
-    skin: "Skins",
-    match_history: "Match history",
-};
+const pageNames: ReadonlyMap<string, string> = new Map([
+    ["calculate", "Beatmap calculator"],
+    ["whitelist", "Whitelist"],
+    ["score-multiplier", "Score multiplier sample"],
+    ["about", "About"],
+    ["login", "Log in"],
+    ["admin", "Admin"],
+    ["skin", "Skins"],
+    ["match_history", "Match history"],
+]);
 
 /** The top bar: the sidebar toggle, where the person is, Discord and the account. */
 export function TopBar({ isSidebarOpen, onToggleSidebar }: TopBarProps) {
@@ -36,7 +36,7 @@ export function TopBar({ isSidebarOpen, onToggleSidebar }: TopBarProps) {
 
         title = `PP Board · ${variant?.title ?? variantName}`;
     } else {
-        title = pageNames[pathname.split("/")[1]] ?? title;
+        title = pageNames.get(pathname.split("/")[1]) ?? title;
     }
 
     return (
