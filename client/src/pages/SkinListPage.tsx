@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import type { IPlayerSkin } from "app-structures";
 import { Link } from "react-router";
 import { skinPageSize, useSkins } from "../api/skins";
-import { ApiError, formatApiError } from "../api/http";
+import { formatError } from "../api/http";
 import { DataTable, type Column } from "../components/DataTable";
 import { ErrorMessage } from "../components/ErrorMessage";
 import { Paging } from "../components/Paging";
@@ -47,12 +47,7 @@ export function SkinListPage() {
 
     function renderBody() {
         if (error && !skins) {
-            return (
-                <ErrorMessage
-                    message={error instanceof ApiError ? formatApiError(error) : error.message}
-                    onRetry={() => void refetch()}
-                />
-            );
+            return <ErrorMessage message={formatError(error)} onRetry={() => void refetch()} />;
         }
 
         if (isPending) {

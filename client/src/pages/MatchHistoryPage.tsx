@@ -3,7 +3,12 @@ import { useParams } from "react-router";
 import { useMatchHistory } from "../api/matchHistory";
 import { DataTable, type Column } from "../components/DataTable";
 import { ErrorMessage } from "../components/ErrorMessage";
-import { calculateMatchCosts, isTeamTotal, sortTeamScores } from "../matchHistory/matchCosts";
+import {
+    calculateMatchCosts,
+    isTeamTotal,
+    redTotalUserId,
+    sortTeamScores,
+} from "../matchHistory/matchCosts";
 import {
     MultiplayerTeamMode,
     teamModeNames,
@@ -20,7 +25,7 @@ function getScoreClass(score: MultiplayerScore): string | undefined {
         return undefined;
     }
 
-    return score.userId === 0 ? styles.red : styles.blue;
+    return score.userId === redTotalUserId ? styles.red : styles.blue;
 }
 
 const scoreColumns: Column<MultiplayerScore>[] = [

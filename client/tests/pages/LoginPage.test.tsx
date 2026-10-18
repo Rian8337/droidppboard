@@ -91,6 +91,15 @@ describe("LoginPage", () => {
         expect(await screen.findByText("Home page")).toBeVisible();
     });
 
+    it("does not return to another site", async () => {
+        installTurnstile();
+        renderLogin({ pathname: "/login", state: { from: "//evil.example/steal" } });
+
+        await submitCredentials();
+
+        expect(await screen.findByText("Home page")).toBeVisible();
+    });
+
     it("shows the server's message for a wrong password and asks for a new captcha", async () => {
         const reset = installTurnstile();
 

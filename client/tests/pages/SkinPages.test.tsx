@@ -107,4 +107,39 @@ describe("SkinPreviewPage", () => {
 
         expect(await screen.findByText("Skin not found")).toBeVisible();
     });
+
+    it("offers no download for an address that is not a web address", async () => {
+        server.use(
+            http.get("/api/skins/get", () =>
+                HttpResponse.json(buildSkin({ url: "javascript:alert(1)" })),
+            ),
+        );
+        renderPreview();
+
+        expect(await screen.findByRole("heading", { name: "Cool Skin" })).toBeVisible();
+        expect(screen.queryByRole("link", { name: "Download" })).not.toBeInTheDocument();
+        expect(screen.getByText("No download available.")).toBeVisible();
+    });
+
+    it("loads no preview image from an address that is not a web address", async () => {
+        server.use(
+            http.get("/api/skins/get", () =>
+                HttpResponse.json(
+                    buildSkin({
+                        previews: {
+                            gameplay: { messageId: "1", attachmentURL: "javascript:alert(1)" },
+                            songSelection: {
+                                messageId: "2",
+                                attachmentURL: "data:image/svg+xml,<svg/>",
+                            },
+                        } as never,
+                    }),
+                ),
+            ),
+        );
+        renderPreview();
+
+        expect(await screen.findByText("This skin does not have a preview.")).toBeVisible();
+        expect(screen.queryByRole("img")).not.toBeInTheDocument();
+    });
 });

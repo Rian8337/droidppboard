@@ -1,9 +1,10 @@
 import type { SkinPreviewData } from "app-structures";
 import { useParams } from "react-router";
-import { ApiError, formatApiError } from "../api/http";
+import { formatError } from "../api/http";
 import { useSkin } from "../api/skins";
 import { EmptyState } from "../components/EmptyState";
 import { ErrorMessage } from "../components/ErrorMessage";
+import { getSafeHttpUrl } from "../utils/getSafeHttpUrl";
 import pageStyles from "./Page.module.css";
 import styles from "./SkinPreviewPage.module.css";
 
@@ -21,10 +22,7 @@ export function SkinPreviewPage() {
     if (error) {
         return (
             <div className={pageStyles.page}>
-                <ErrorMessage
-                    message={error instanceof ApiError ? formatApiError(error) : error.message}
-                    onRetry={() => void refetch()}
-                />
+                <ErrorMessage message={formatError(error)} onRetry={() => void refetch()} />
             </div>
         );
     }
@@ -42,21 +40,29 @@ export function SkinPreviewPage() {
     const previews = previewKinds.flatMap(([kind, alt]) => {
         const preview = uploaded[kind];
 
-        return preview ? [{ kind, alt, source: preview.attachmentURL }] : [];
+        // Skins are stored as people shared them, so only web addresses are loaded.
+        const source = preview ? getSafeHttpUrl(preview.attachmentURL) : undefined;
+
+        return source ? [{ kind, alt, source }] : [];
     });
+    const downloadUrl = getSafeHttpUrl(skin.url);
 
     return (
         <div className={`${pageStyles.page} ${pageStyles.narrow}`}>
             <h2 className={pageStyles.title}>{skin.name}</h2>
             {skin.description && <p className={styles.description}>{skin.description}</p>}
-            <a
-                className={styles.download}
-                href={skin.url}
-                target="_blank"
-                rel="noopener noreferrer"
-            >
-                Download
-            </a>
+            {downloadUrl ? (
+                <a
+                    className={styles.download}
+                    href={downloadUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >
+                    Download
+                </a>
+            ) : (
+                <p className={pageStyles.note}>No download available.</p>
+            )}
             {previews.length > 0 ? (
                 <div className={styles.previews}>
                     {previews.map(({ kind, alt, source }) => (

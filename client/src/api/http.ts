@@ -135,3 +135,8 @@ export function formatApiError(error: ApiError): string {
         ? error.message
         : `${error.message}. Try again in ${error.retryAfterSeconds} seconds`;
 }
+
+/** The text to show for any failed request: an {@link ApiError} with its wait, else the error's message. */
+export function formatError(error: Error): string {
+    return error instanceof ApiError ? formatApiError(error) : error.message;
+}

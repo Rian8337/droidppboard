@@ -2,7 +2,7 @@ import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import type { IMapWhitelist } from "app-structures";
 import { useState } from "react";
-import { ApiError, formatApiError } from "../api/http";
+import { formatError } from "../api/http";
 import { useWhitelist, whitelistPageSize } from "../api/whitelist";
 import { DataTable, type Column, type SortState } from "../components/DataTable";
 import { ErrorMessage } from "../components/ErrorMessage";
@@ -76,12 +76,7 @@ export function WhitelistPage() {
 
     function renderBody() {
         if (error && !beatmaps) {
-            return (
-                <ErrorMessage
-                    message={error instanceof ApiError ? formatApiError(error) : error.message}
-                    onRetry={() => void refetch()}
-                />
-            );
+            return <ErrorMessage message={formatError(error)} onRetry={() => void refetch()} />;
         }
 
         if (isPending) {

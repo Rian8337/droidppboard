@@ -1,6 +1,6 @@
 import type { SerializedMod } from "@rian8337/osu-base";
 import { useState, type FormEvent } from "react";
-import { ApiError, formatApiError } from "../api/http";
+import { formatError } from "../api/http";
 import { useScoreMultiplierSample, type ScoreMultiplierRequest } from "../api/scoreMultiplier";
 import { Button } from "../components/Button";
 import { ErrorMessage } from "../components/ErrorMessage";
@@ -33,12 +33,7 @@ export function ScoreMultiplierPage() {
 
     function renderResult() {
         if (error) {
-            return (
-                <ErrorMessage
-                    message={error instanceof ApiError ? formatApiError(error) : error.message}
-                    onRetry={() => void refetch()}
-                />
-            );
+            return <ErrorMessage message={formatError(error)} onRetry={() => void refetch()} />;
         }
 
         if (sample) {

@@ -13,6 +13,17 @@
     text-decoration: none;
 }
 
+.download {
+    display: inline-flex;
+    align-items: center;
+}
+
+@media (pointer: coarse) {
+    .download {
+        min-height: var(--touch-target);
+    }
+}
+
 .download:hover {
     filter: brightness(1.1);
 }

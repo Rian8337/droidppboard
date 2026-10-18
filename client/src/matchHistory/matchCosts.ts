@@ -1,8 +1,8 @@
 import { MultiplayerTeam, type MultiplayerScore, type MultiplayerSession } from "./types";
 
 /** The user IDs the tournament server uses for the red and the blue team's total in Team VS. */
-const redTotalUserId = 0;
-const blueTotalUserId = 1;
+export const redTotalUserId = 0;
+export const blueTotalUserId = 1;
 
 /** Whether the score is a team's total rather than a player's. */
 export function isTeamTotal(score: MultiplayerScore): boolean {

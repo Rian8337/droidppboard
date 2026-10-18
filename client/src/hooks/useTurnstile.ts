@@ -127,6 +127,7 @@ export function useTurnstile(
 
     const reset = useCallback(() => {
         onTokenRef.current(null);
+        setError(null);
 
         if (widgetIdRef.current) {
             window.turnstile?.reset(widgetIdRef.current);
