@@ -178,6 +178,28 @@ describe("recalculation routes", () => {
             expect(mocks.getVariants).toHaveBeenCalledWith(undefined);
         });
 
+        it("lists the droid variants the viewer can see for the picker", async () => {
+            const response = await request("GET", "/api/recalc/queue", {
+                uid: null,
+            });
+            const body = (await response.json()) as { variants: PPVariant[] };
+
+            // The osu variant is not a prototype variant, so it is left out.
+            expect(body.variants.map((v) => v.name)).toEqual([
+                "droid-live",
+                "droid-rebalance",
+            ]);
+
+            const selected = await request(
+                "GET",
+                "/api/recalc/queue?variant=droid-live",
+            );
+
+            expect(
+                ((await selected.json()) as { variants: PPVariant[] }).variants,
+            ).toHaveLength(2);
+        });
+
         it("resolves aliases and answers 404 for an unknown, osu or private variant", async () => {
             const aliased = await request(
                 "GET",

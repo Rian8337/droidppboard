@@ -483,7 +483,7 @@ export class RecalculationQueue {
         visibleVariants: ReadonlySet<string>,
         selected: string | null,
         viewerUid: number | undefined,
-    ): Omit<RecalcQueueView, "canManageFullRuns"> {
+    ): Omit<RecalcQueueView, "canManageFullRuns" | "variants"> {
         this.pruneFinished();
 
         const isShown = (variant: string) =>

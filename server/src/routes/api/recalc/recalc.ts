@@ -145,6 +145,7 @@ router.get(
                 uid,
             ),
             canManageFullRuns: canManageFullRuns(me),
+            variants: visible.variants,
         });
     }),
 );

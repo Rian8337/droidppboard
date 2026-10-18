@@ -24,6 +24,7 @@ export default function Menu() {
                     path={`/prototype/top-plays/${variantName}`}
                     label="Prototype Top Plays"
                 />
+                <MenuItem path="/prototype/queue" label="Recalculation Queue" />
                 <MenuItem
                     path="/prototype/calculate"
                     label="Calculate Beatmap Prototype PP"

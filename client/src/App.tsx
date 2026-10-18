@@ -21,6 +21,7 @@ import ManageVariants from "./pages/manage/ManageVariants";
 import ManageVariant from "./pages/manage/ManageVariant";
 import ManageUsers from "./pages/manage/ManageUsers";
 import ManageKeys from "./pages/manage/ManageKeys";
+import PrototypeRecalcQueue from "./pages/PrototypeRecalcQueue";
 
 function App() {
     const location = useLocation();
@@ -47,6 +48,10 @@ function App() {
                     <Route
                         path="/calculate"
                         element={<MainCalculateBeatmap />}
+                    />
+                    <Route
+                        path="/prototype/queue"
+                        element={<PrototypeRecalcQueue />}
                     />
                     <Route
                         path="/prototype/:type"

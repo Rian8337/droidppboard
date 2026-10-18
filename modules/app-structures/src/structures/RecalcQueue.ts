@@ -1,3 +1,5 @@
+import { PPVariant } from "./PPVariant";
+
 /**
  * The status of a single recalculation entry.
  */
@@ -196,4 +198,10 @@ export interface RecalcQueueView {
      * Whether the viewer may start and control full runs.
      */
     canManageFullRuns: boolean;
+
+    /**
+     * The droid variants the viewer can see, sorted by name. The queue page lists them in its
+     * variant picker.
+     */
+    variants: PPVariant[];
 }
