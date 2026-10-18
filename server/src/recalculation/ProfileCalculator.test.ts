@@ -151,6 +151,17 @@ describe("calculateProfile", () => {
         expect(deps.saveProfile).not.toHaveBeenCalled();
     });
 
+    it("fails with the queue's reason when a service throws", async () => {
+        const deps = createDeps({
+            getTopScoreHashes: vi.fn().mockRejectedValue(new Error("boom")),
+        });
+
+        const outcome = await calculateProfile(7, "variant", 1, vi.fn(), deps);
+
+        expect(outcome).toEqual({ ok: false, reason: "Unexpected error" });
+        expect(deps.saveProfile).not.toHaveBeenCalled();
+    });
+
     it("fails when there are no top scores", async () => {
         const deps = createDeps({
             getTopScoreHashes: vi.fn().mockResolvedValue([]),
@@ -204,6 +215,33 @@ describe("calculateProfile", () => {
             "c",
             "d",
         ]);
+    });
+
+    it("asks the score service with the score's own hash when the beatmap was updated", async () => {
+        const deps = createDeps({
+            getTopScoreHashes: vi.fn().mockResolvedValue(["a"]),
+            // The beatmap service answers with the updated beatmap, whose file_md5 differs.
+            getBeatmapByHash: vi.fn(async (hash: string) => ({
+                kind: "ok" as const,
+                beatmap: beatmap(`new-${hash}`),
+            })),
+        });
+
+        const outcome = await calculateProfile(7, "variant", 1, vi.fn(), deps);
+
+        expect(outcome.ok).toBe(true);
+        expect(
+            deps.getOnlineScore.mock.calls.map(([, hash, variant]) => [
+                hash,
+                variant,
+            ]),
+        ).toEqual([
+            ["a", "droid-live"],
+            ["a", "variant"],
+            ["a", "droid-rebalance"],
+        ]);
+        // The stored entry keeps the beatmap's own hash.
+        expect(deps.saveProfile.mock.calls[0][2].pp[0].hash).toBe("new-a");
     });
 
     it("builds entries from the beatmap and the three calculations", async () => {

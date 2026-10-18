@@ -114,7 +114,7 @@ export async function calculateProfile(
     } catch (e) {
         console.error(`Profile calculation of uid ${uid.toString()} threw:`, e);
 
-        outcome = { ok: false, reason: "An unexpected error occurred" };
+        outcome = { ok: false, reason: "Unexpected error" };
     }
 
     console.info(
@@ -161,6 +161,7 @@ async function calculate(
             const entry = await createEntry(
                 uid,
                 MapInfo.from(beatmapOutcome.beatmap),
+                hash,
                 variant,
                 includeMaster,
                 actingUid,
@@ -214,12 +215,16 @@ async function calculate(
 /**
  * Calculates a score for the live, local, and (if asked) master variants.
  *
+ * The score service finds the score by the hash it was set on, which differs from the beatmap's current hash when the
+ * beatmap was updated since.
+ *
  * @returns The entry, `null` if the score does not exist for one of the variants, or the reason for why a service
  * failed.
  */
 async function createEntry(
     uid: number,
     beatmap: MapInfo,
+    scoreHash: string,
     variant: string,
     includeMaster: boolean,
     actingUid: number,
@@ -232,7 +237,7 @@ async function createEntry(
         : [liveVariant, variant]) {
         const outcome = await deps.getOnlineScore(
             uid,
-            beatmap.hash,
+            scoreHash,
             name,
             actingUid,
         );
