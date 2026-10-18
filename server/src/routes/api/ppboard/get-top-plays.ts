@@ -3,10 +3,8 @@ import { ModUtil } from "@rian8337/osu-base";
 import { Util } from "../../../utils/Util";
 import { asyncHandler } from "../../../utils/asyncHandler";
 import { resolveVisibleVariant } from "../../../utils/visibleVariant";
-import {
-    PrototypeLeaderboardResponse,
-    TopPrototypePPEntry,
-} from "app-structures";
+import { readCountries } from "../../../utils/readCountries";
+import { PrototypeLeaderboardResponse, PrototypeTopPlay } from "app-structures";
 
 const router = express.Router();
 
@@ -48,12 +46,17 @@ router.get(
         }
 
         // The precomputed top plays include every variant, so they are read only after the check.
-        const response: PrototypeLeaderboardResponse<TopPrototypePPEntry[]> = {
+        const plays =
+            Util.getTopPrototypePP(resolved.current.name, convertedMods) ?? [];
+        const countries = await readCountries(plays.map((play) => play.uid));
+
+        const response: PrototypeLeaderboardResponse<PrototypeTopPlay[]> = {
             variants: resolved.variants,
             currentVariant: resolved.current,
-            data:
-                Util.getTopPrototypePP(resolved.current.name, convertedMods) ??
-                [],
+            data: plays.map((play) => ({
+                ...play,
+                country: countries.get(play.uid) ?? null,
+            })),
         };
 
         res.json(response);

@@ -22,6 +22,10 @@ vi.mock("../../../database/managers/DatabaseManager", () => ({
     },
 }));
 
+vi.mock("../../../auth/OsuDroidAccounts", () => ({
+    OsuDroidAccounts: { getCountries: vi.fn().mockResolvedValue(new Map()) },
+}));
+
 function variant(name: string): PPVariant {
     return {
         name,

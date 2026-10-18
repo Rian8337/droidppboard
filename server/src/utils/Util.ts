@@ -148,7 +148,15 @@ export abstract class Util {
         DatabaseManager.aliceDb.collections.prototypePP
             .get(
                 {},
-                { projection: { _id: 0, username: 1, pp: 1, reworkType: 1 } },
+                {
+                    projection: {
+                        _id: 0,
+                        uid: 1,
+                        username: 1,
+                        pp: 1,
+                        reworkType: 1,
+                    },
+                },
             )
             .then((res) => {
                 this.allTopEntries.clear();
@@ -175,6 +183,7 @@ export abstract class Util {
                     for (const ppEntry of ppEntries) {
                         const topEntry: TopPrototypePPEntry = {
                             ...ppEntry,
+                            uid: player.uid,
                             username: player.username,
                         };
 
