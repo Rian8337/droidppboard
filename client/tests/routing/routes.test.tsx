@@ -85,4 +85,41 @@ describe("AppRoutes", () => {
 
         expect(await screen.findByText(/^Snapshot taken /)).toBeVisible();
     });
+
+    it.each([
+        ["/whitelist", "Whitelisted beatmaps"],
+        ["/score-multiplier", "Old multiplier"],
+        ["/about", "Donor list"],
+        ["/login", "Log in with your osu!droid account."],
+    ])("opens %s inside the shell", async (route, text) => {
+        server.use(http.get("/api/ppboard/getwhitelist", () => HttpResponse.json([])));
+        renderWithProviders(<AppRoutes />, { route });
+
+        expect(await screen.findByText(text)).toBeVisible();
+        expect(screen.getByRole("complementary")).toBeVisible();
+    });
+
+    it("opens the skin list, a skin and a match history", async () => {
+        server.use(
+            http.get("/api/skins/search", () => HttpResponse.json([])),
+            http.get("/api/skins/get", () => HttpResponse.json(null)),
+            http.get("https://droidpp.osudroid.moe/api/tournament/getrooms_history", () =>
+                HttpResponse.json({ name: "Room", sessions: [] }),
+            ),
+        );
+
+        const skinList = renderWithProviders(<AppRoutes />, { route: "/skin/list" });
+
+        expect(await screen.findByText("No skins found.")).toBeVisible();
+        skinList.unmount();
+
+        const skin = renderWithProviders(<AppRoutes />, { route: "/skin/1234/Cool" });
+
+        expect(await screen.findByText("Skin not found")).toBeVisible();
+        skin.unmount();
+
+        renderWithProviders(<AppRoutes />, { route: "/match_history/5" });
+
+        expect(await screen.findByRole("heading", { name: "Room" })).toBeVisible();
+    });
 });

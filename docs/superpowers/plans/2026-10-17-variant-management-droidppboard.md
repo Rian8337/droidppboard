@@ -66,7 +66,7 @@ Cloudflare Turnstile, Vitest (new, server only).
   grants and roles show names.
 - **Server-only Vitest and a CI workflow** (`server` build plus tests on pushes to `master` and on pull requests),
   matching Mahiru.
-- **Turnstile site key at build time.** The client gets it from `REACT_APP_TURNSTILE_SITE_KEY`.
+- **Turnstile site key at build time.** The client gets it from `VITE_TURNSTILE_SITE_KEY`.
 - **The beatmap calculator is unchanged** (spec non-goal).
 
 ## Review Focus
@@ -290,7 +290,7 @@ Cloudflare Turnstile, Vitest (new, server only).
   loaded from `GET /api/auth/me` on start.
 - **Login page.** Username, password, and an explicitly rendered Turnstile widget (script
   `https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit`, site key
-  `process.env.REACT_APP_TURNSTILE_SITE_KEY`). The page shows the server's message on failure and `Retry-After` on
+  `import.meta.env.VITE_TURNSTILE_SITE_KEY`). The page shows the server's message on failure and `Retry-After` on
   `429`, then navigates back on success.
 - **Selector.**
   - It uses `variants` and `currentVariant` and shows `title ?? name`, with values as the canonical names.
@@ -347,7 +347,7 @@ Cloudflare Turnstile, Vitest (new, server only).
   returns nothing related to prototypes.
 - [ ] **Step 2: Write the manual checklist.**
   - Prerequisites: the env vars `DPP_BROKER_URL`, `DPP_BROKER_KEY` (`can_act_for_users`, no own grants),
-    `TURNSTILE_SECRET_KEY`, and `REACT_APP_TURNSTILE_SITE_KEY` at client build time; a private variant; and users
+    `TURNSTILE_SECRET_KEY`, and `VITE_TURNSTILE_SITE_KEY` at client build time; a private variant; and users
     with no role, with a grant, as a manager, and as an admin.
   - Steps:
     - a visitor sees only public variants;

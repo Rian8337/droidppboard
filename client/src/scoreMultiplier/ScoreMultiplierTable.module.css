@@ -1,0 +1,12 @@
+.better {
+    color: var(--up);
+}
+
+.worse {
+    color: var(--down);
+}
+
+.mods {
+    word-break: break-all;
+    white-space: normal;
+}

@@ -25,5 +25,11 @@ export const queryKeys = {
     manageUsernames: (uids: string) => ["manage", "usernames", uids] as const,
     /** The roles of people, for the uids joined by commas. */
     manageUserRoles: (uids: string) => ["manage", "userRoles", uids] as const,
+    whitelist: (page: number, query: string) => ["whitelist", page, query] as const,
+    scoreMultiplierSample: (beatmapId: string, mods: string) =>
+        ["scoreMultiplierSample", beatmapId, mods] as const,
+    skins: (page: number, query: string) => ["skins", page, query] as const,
+    skin: (discordId: string, name: string) => ["skin", discordId, name] as const,
+    matchHistory: (matchId: string) => ["matchHistory", matchId] as const,
     topPlays: (variant: string, mods: string) => ["topPlays", variant, mods] as const,
 };

@@ -16,7 +16,7 @@ Manual checks for the variant-based prototype pages, login, and the management p
     - The board's broker key has `can_act_for_users` before go-live. Without it, the broker refuses the board's requests on behalf of logged-in people.
     - `req.ip` is the real client IP. Check this once in staging with step 16. If Cloudflare or nginx is in front of the server, configure nginx with `real_ip_header CF-Connecting-IP` and Cloudflare's IP ranges (`set_real_ip_from`), or adjust Express's `trust proxy` setting. Otherwise every visitor shares one IP and the per-IP login limit hits everyone at once.
 - Client build environment:
-    - `REACT_APP_TURNSTILE_SITE_KEY`, set at client build time (not at runtime).
+    - `VITE_TURNSTILE_SITE_KEY`, set at client build time (not at runtime).
 - Data:
     - At least one public variant and one private variant.
     - Test accounts, each with an osu!droid account: one with no role, one with a grant on the private variant, one manager, one admin.

@@ -4,7 +4,10 @@
  */
 import type {
     CalculationResponse,
+    IMapWhitelist,
+    IPlayerSkin,
     IPrototypePP,
+    ModMultiplierSampleResponse,
     PPVariant,
     PrototypePPEntry,
     RecalcEntryView,
@@ -398,4 +401,63 @@ export interface AdminUserData {
 /** Builds a person with no role and no grants unless overridden. */
 export function buildAdminUser(overrides: Partial<AdminUserData> = {}): AdminUserData {
     return { uid: 100, role: null, grants: [], ...overrides };
+}
+
+/** Builds a whitelisted beatmap unless overridden. */
+export function buildWhitelistedBeatmap(overrides: Partial<IMapWhitelist> = {}): IMapWhitelist {
+    return {
+        mapid: 1,
+        hashid: "a".repeat(32),
+        mapname: "Artist - Title [Insane]",
+        diffstat: { cs: 4, ar: 9, od: 8, hp: 5, sr: 5.43, bpm: 180 },
+        ...overrides,
+    };
+}
+
+export const whitelistedBeatmaps: IMapWhitelist[] = [
+    buildWhitelistedBeatmap({ mapid: 11, mapname: "Alpha - First Song [Hard]" }),
+    buildWhitelistedBeatmap({ mapid: 22, mapname: "Bravo - Second Song [Expert]" }),
+];
+
+/** What the score multiplier sample answers for a beatmap. */
+export const multiplierSample: ModMultiplierSampleResponse = {
+    beatmapTitle: "Artist - Sample Song [Insane]",
+    hash: "b".repeat(32),
+    scores: [
+        {
+            id: 1,
+            uid: 5001,
+            mods: "HDDT",
+            prevMultiplier: 1.19,
+            prevTotalScore: 1_190_000,
+            newMultiplier: 1.3,
+            newTotalScore: 1_300_000,
+            combo: 500,
+            accuracy: 0.9876,
+            mark: "S",
+        },
+        {
+            id: 2,
+            uid: 5002,
+            mods: "",
+            prevMultiplier: 1,
+            prevTotalScore: 1_000_000,
+            newMultiplier: 1,
+            newTotalScore: 1_000_000,
+            combo: 480,
+            accuracy: 0.95,
+            mark: "A",
+        },
+    ],
+};
+
+/** Builds a player's skin unless overridden. */
+export function buildSkin(overrides: Partial<IPlayerSkin> = {}): IPlayerSkin {
+    return {
+        discordid: "1234",
+        name: "Cool Skin",
+        description: "A cool skin",
+        url: "https://example.com/cool-skin.osk",
+        ...overrides,
+    };
 }

@@ -1,0 +1,28 @@
+.wrapper {
+    overflow-x: auto;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table th,
+.table td {
+    padding: 9px 8px;
+    border-bottom: 1px solid var(--line);
+    text-align: left;
+    vertical-align: top;
+}
+
+.table th {
+    font-weight: 800;
+}
+
+.table tbody th {
+    white-space: nowrap;
+}
+
+.shared {
+    color: var(--muted);
+}

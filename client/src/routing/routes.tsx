@@ -6,7 +6,14 @@ import { KeysPage } from "../admin/KeysPage";
 import { RolesPage } from "../admin/RolesPage";
 import { SnapshotPage } from "../calculator/SnapshotPage";
 import { BeatmapCalculatorPage } from "../pages/BeatmapCalculatorPage";
+import { AboutPage } from "../pages/AboutPage";
+import { LoginPage } from "../pages/LoginPage";
+import { MatchHistoryPage } from "../pages/MatchHistoryPage";
 import { NotFoundPage } from "../pages/NotFoundPage";
+import { ScoreMultiplierPage } from "../pages/ScoreMultiplierPage";
+import { SkinListPage } from "../pages/SkinListPage";
+import { SkinPreviewPage } from "../pages/SkinPreviewPage";
+import { WhitelistPage } from "../pages/WhitelistPage";
 import { ProfilePage } from "../profile/ProfilePage";
 import { AppLayout } from "../shell/AppLayout";
 import { VariantPage } from "../variant/VariantPage";
@@ -34,6 +41,13 @@ export function AppRoutes() {
                 />
                 <Route path="calculate" element={<BeatmapCalculatorPage />} />
                 <Route path="calculate/s/:id" element={<SnapshotPage scope="tool" />} />
+                <Route path="whitelist" element={<WhitelistPage />} />
+                <Route path="score-multiplier" element={<ScoreMultiplierPage />} />
+                <Route path="about" element={<AboutPage />} />
+                <Route path="login" element={<LoginPage />} />
+                <Route path="skin/list" element={<SkinListPage />} />
+                <Route path="skin/:discordid/:name" element={<SkinPreviewPage />} />
+                <Route path="match_history/:matchid" element={<MatchHistoryPage />} />
                 <Route path="admin" element={<AdminLayout />}>
                     <Route index element={<Navigate replace to="keys" />} />
                     <Route path="keys" element={<KeysPage />} />
