@@ -11,7 +11,7 @@ import { beatmapCalculatorPath, defaultVariant, getVariantPath } from "../routin
 import { formatUtcTime } from "../utils/formatUtcTime";
 import { canLoadFromResult, getFormValuesFromResult } from "./calculatorForm";
 import { ResultPanel } from "./ResultPanel";
-import { isToolVariantName, toolVariantLabels } from "./toolVariants";
+import { getToolVariantLabel } from "./toolVariants";
 import styles from "./SnapshotPage.module.css";
 
 export interface SnapshotPageProps {
@@ -29,9 +29,7 @@ function getSnapshotTitle(
     variants: PPVariant[] | undefined,
 ): string {
     if (response.scope === "tool") {
-        return isToolVariantName(response.variant)
-            ? toolVariantLabels[response.variant]
-            : response.variant;
+        return getToolVariantLabel(response.variant);
     }
 
     return (
@@ -47,7 +45,7 @@ function getSnapshotTitle(
 export function SnapshotPage({ scope }: SnapshotPageProps) {
     const { variant: variantParameter = defaultVariant, id = "" } = useParams();
     const { data: snapshot, error, isPending, refetch } = useSnapshot(id);
-    const { data: variants } = useVariants();
+    const { data: variants } = useVariants({ isEnabled: scope === "variant" });
     const navigate = useNavigate();
 
     if (error instanceof ApiError && error.status === 404) {
@@ -90,9 +88,9 @@ export function SnapshotPage({ scope }: SnapshotPageProps) {
 
     return (
         <div className={styles.page}>
-            <p className={styles.taken}>
+            <h2 className={styles.taken}>
                 {`Snapshot taken ${formatUtcTime(createdAt)} on ${title}`}
-            </p>
+            </h2>
             <div className={styles.actions}>
                 <Button variant="secondary" onClick={loadFromResult} disabled={!canLoad}>
                     Load data from result

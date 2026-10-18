@@ -1,6 +1,7 @@
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
+import { useMe } from "../../src/api/auth";
 import { MyScoreForm } from "../../src/calculator/MyScoreForm";
 import { useBreakpoint } from "../../src/hooks/useBreakpoint";
 import { CalculatorTab } from "../../src/variant/CalculatorTab";
@@ -11,6 +12,13 @@ import { renderWithProviders } from "../utils/renderWithProviders";
 vi.mock("../../src/hooks/useBreakpoint", () => ({ useBreakpoint: vi.fn() }));
 
 const showResult = vi.fn();
+
+/** Says when the login state is known, which is when the form has decided whether to show. */
+function LoginStateProbe() {
+    const { isPending } = useMe();
+
+    return isPending ? null : <p>Login state known</p>;
+}
 
 function recordForms(): FormData[] {
     const forms: FormData[] = [];
@@ -37,25 +45,31 @@ describe("MyScoreForm", () => {
 
     it("is hidden when logged out", async () => {
         renderWithProviders(
-            <MyScoreForm scope="variant" variant="droid-rebalance" showResult={showResult} />,
+            <>
+                <MyScoreForm scope="variant" variant="droid-rebalance" showResult={showResult} />
+                <LoginStateProbe />
+            </>,
             {
                 me: null,
             },
         );
 
-        // The login state loads first; give it the time it needs before concluding nothing shows.
-        await new Promise((resolve) => setTimeout(resolve, 50));
+        // The form hides while the login state loads, so wait for it before concluding it stays hidden.
+        await screen.findByText("Login state known");
 
         expect(screen.queryByText("Calculate my score on this beatmap")).not.toBeInTheDocument();
     });
 
     it("is hidden for osu!standard variants", async () => {
         renderWithProviders(
-            <MyScoreForm scope="tool" variant="osu-live" showResult={showResult} />,
+            <>
+                <MyScoreForm scope="tool" variant="osu-live" showResult={showResult} />
+                <LoginStateProbe />
+            </>,
             { me: plainMe },
         );
 
-        await new Promise((resolve) => setTimeout(resolve, 50));
+        await screen.findByText("Login state known");
 
         expect(screen.queryByText("Calculate my score on this beatmap")).not.toBeInTheDocument();
     });
@@ -88,13 +102,15 @@ describe("MyScoreForm", () => {
     it("hands the result and the beatmap it was calculated for to the calculator", async () => {
         recordForms();
         renderWithProviders(
-            <MyScoreForm scope="variant" variant="droid-rebalance" showResult={showResult} />,
+            <>
+                <MyScoreForm scope="variant" variant="droid-rebalance" showResult={showResult} />
+                <LoginStateProbe />
+            </>,
             { me: plainMe },
         );
         await userEvent.type(await screen.findByLabelText("Beatmap for my score"), " 1234 ");
         await userEvent.click(screen.getByRole("button", { name: "Calculate my score" }));
 
-        await screen.findByRole("button", { name: "Calculate my score" });
         await vi.waitFor(() => expect(showResult).toHaveBeenCalledTimes(1));
         expect(showResult.mock.calls[0][0]).toEqual(droidCalculation);
         expect(showResult.mock.calls[0][1]).toMatchObject({ beatmap: "1234", beatmapFile: null });

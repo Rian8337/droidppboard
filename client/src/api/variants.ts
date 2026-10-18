@@ -5,10 +5,14 @@ import { queryKeys } from "./queryKeys";
 
 /**
  * The variants the person may see. Private variants are only included for those they are shared
- * with, so this is cleared when who is logged in changes.
+ * with, so this is cleared when who is logged in changes. A page that needs them only sometimes
+ * can pass `isEnabled: false` to skip loading.
  */
-export function useVariants(): UseQueryResult<PPVariant[]> {
+export function useVariants({ isEnabled = true }: { isEnabled?: boolean } = {}): UseQueryResult<
+    PPVariant[]
+> {
     return useQuery({
+        enabled: isEnabled,
         queryKey: queryKeys.variants(),
         queryFn: () => requestJson<PPVariant[]>("GET", "/api/ppboard/variants"),
     });

@@ -60,6 +60,14 @@ describe("BeatmapCalculatorPage", () => {
         vi.mocked(useBreakpoint).mockReturnValue("desktop");
     });
 
+    it("has a heading for the page", () => {
+        renderWithProviders(<BeatmapCalculatorPage />);
+
+        expect(
+            screen.getByRole("heading", { level: 1, name: "Beatmap calculator" }),
+        ).toBeInTheDocument();
+    });
+
     it("offers exactly the four variants, with osu!droid live selected", () => {
         renderWithProviders(<BeatmapCalculatorPage />);
 

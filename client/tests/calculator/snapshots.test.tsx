@@ -230,6 +230,23 @@ describe("SnapshotPage", () => {
         ).toBeVisible();
     });
 
+    it("does not load the variants for a Beatmap calculator snapshot", async () => {
+        const variantRequests = vi.fn();
+
+        server.use(
+            http.get("/api/ppboard/variants", () => {
+                variantRequests();
+
+                return HttpResponse.json([]);
+            }),
+        );
+        serveSnapshot(buildSnapshot(osuCalculation));
+        renderSnapshotPage("/calculate/s/abc1234567");
+        await screen.findByRole("heading", { name: /^Snapshot taken / });
+
+        expect(variantRequests).not.toHaveBeenCalled();
+    });
+
     it("loads the data of the result into the calculator", async () => {
         serveSnapshot(buildSnapshot());
         renderSnapshotPage("/v/droid-rebalance/calculator/s/abc1234567");
