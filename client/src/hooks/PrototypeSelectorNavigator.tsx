@@ -18,6 +18,9 @@ const defaultVariant: PPVariant = {
     healthyInstanceCount: 1,
     mode: "droid",
     algorithm: "rebalance",
+    public: true,
+    builtAt: null,
+    calculatorVersion: null,
 };
 
 const PrototypeSelectorNavigator = createContext({

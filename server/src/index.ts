@@ -8,6 +8,7 @@ import getWhitelist from "./routes/api/ppboard/get-whitelist";
 import getTopPlays from "./routes/api/ppboard/get-top-plays";
 import calculateBeatmap from "./routes/api/ppboard/calculate-beatmap";
 import getScoreMultiplierSample from "./routes/api/ppboard/score-multiplier-sample";
+import getVariants from "./routes/api/ppboard/get-variants";
 import login from "./routes/api/auth/login";
 import logout from "./routes/api/auth/logout";
 import me from "./routes/api/auth/me";
@@ -83,6 +84,7 @@ app.use("/api/recalc", recalcRouter);
 // Identifies the person, as which variants are visible depends on who they are.
 ppboardRouter.use(sessionMiddleware);
 
+ppboardRouter.use("/variants", getVariants);
 ppboardRouter.use("/prototype/getleaderboard", getPPLeaderboard);
 ppboardRouter.use("/prototype/getuserprofile", getUserProfile);
 ppboardRouter.use("/getwhitelist", getWhitelist);

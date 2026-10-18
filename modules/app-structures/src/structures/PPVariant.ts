@@ -41,4 +41,19 @@ export interface PPVariant {
      * The algorithm the variant uses, if known.
      */
     algorithm: "live" | "rebalance" | null;
+
+    /**
+     * Whether everyone can see the variant, as opposed to only the people it is shared with.
+     */
+    public: boolean;
+
+    /**
+     * When the variant's calculator was built, as an ISO 8601 timestamp, if known.
+     */
+    builtAt: string | null;
+
+    /**
+     * The version of the variant's calculator, if known.
+     */
+    calculatorVersion: string | null;
 }

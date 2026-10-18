@@ -1,7 +1,10 @@
 import { PPVariant } from "app-structures";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { BrokerClient } from "../clients/BrokerClient";
-import { resolveVisibleVariant } from "./visibleVariant";
+import {
+    listVisibleDroidVariants,
+    resolveVisibleVariant,
+} from "./visibleVariant";
 
 function variant(overrides: Partial<PPVariant> & { name: string }): PPVariant {
     return {
@@ -12,6 +15,9 @@ function variant(overrides: Partial<PPVariant> & { name: string }): PPVariant {
         healthyInstanceCount: 1,
         mode: "droid",
         algorithm: "rebalance",
+        public: true,
+        builtAt: null,
+        calculatorVersion: null,
         ...overrides,
     };
 }
@@ -98,6 +104,15 @@ describe("resolveVisibleVariant", () => {
         expect(await resolveVisibleVariant("osu-live")).toBe("notFound");
     });
 
+    it("answers notFound for droid-live", async () => {
+        stubVariants([
+            variant({ name: "droid-live" }),
+            variant({ name: "droid-rebalance" }),
+        ]);
+
+        expect(await resolveVisibleVariant("droid-live")).toBe("notFound");
+    });
+
     it("treats a name that is not a string as not found", async () => {
         stubVariants([variant({ name: "droid-rebalance" })]);
 
@@ -106,5 +121,27 @@ describe("resolveVisibleVariant", () => {
                 "droid-rebalance",
             ] as unknown as string),
         ).toBe("notFound");
+    });
+});
+
+describe("listVisibleDroidVariants", () => {
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
+    it("leaves out droid-live", async () => {
+        stubVariants([
+            variant({ name: "droid-live" }),
+            variant({ name: "droid-rebalance" }),
+            variant({ name: "osu-rebalance", mode: "osu" }),
+            variant({ name: "flowaim" }),
+        ]);
+
+        const result = await listVisibleDroidVariants();
+
+        expect(result?.map((v) => v.name)).toEqual([
+            "droid-rebalance",
+            "flowaim",
+        ]);
     });
 });
