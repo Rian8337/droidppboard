@@ -1,5 +1,6 @@
 import {
     Accuracy,
+    Beatmap,
     BeatmapDecoder,
     BeatmapDifficulty,
     MathUtils,
@@ -45,7 +46,7 @@ export interface CalculationFailure {
     readonly status: number;
 }
 
-interface BrokerPerformance {
+export interface BrokerPerformance {
     readonly difficulty: Record<string, unknown>;
     readonly performance: Record<string, unknown>;
     readonly strainChart?: string;
@@ -84,11 +85,103 @@ function pickNumbers(attributes: Record<string, unknown>) {
     );
 }
 
-function toOutcome(response: BrokerPerformance): CalculationOutcome {
+/**
+ * Keeps the numeric attributes of a calculation.
+ *
+ * @param response The difficulty and performance attributes, and the strain chart if there is one.
+ * @returns The outcome.
+ */
+export function toOutcome(response: BrokerPerformance): CalculationOutcome {
     return {
         difficulty: pickNumbers(response.difficulty),
         performance: pickNumbers(response.performance),
         strainChart: response.strainChart ?? null,
+    };
+}
+
+/**
+ * Decodes the contents of a `.osu` file.
+ *
+ * @param osuFile The contents of the file.
+ * @returns The beatmap, or `null` if the file is not a beatmap with objects.
+ */
+export function decodeBeatmap(osuFile: string): Beatmap | null {
+    try {
+        const { result } = new BeatmapDecoder().decode(osuFile);
+
+        return result.hitObjects.objects.length > 0 ? result : null;
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * Gets the MD5 hash of a beatmap from the contents of its `.osu` file.
+ */
+export function getBeatmapHash(osuFile: string): string {
+    return createHash("md5").update(osuFile).digest("hex");
+}
+
+export interface CalculationResponseInput {
+    readonly scope: CalculationScope;
+    readonly variant: string;
+    readonly baseline: string | null;
+    readonly calculatorVersion: string | null;
+    readonly parameters: CalculationParameters;
+    readonly osuFile: string;
+    readonly beatmapId: number | null;
+    readonly beatmap: Beatmap;
+    readonly mode: Modes;
+
+    /**
+     * The mods that the beatmap's difficulty is shown with.
+     */
+    readonly mods: readonly SerializedMod[];
+
+    readonly result: CalculationOutcome;
+    readonly baselineResult: CalculationOutcome | null;
+    readonly ignoredMods: string[];
+}
+
+/**
+ * Builds the response of a calculation from the outcomes of a variant and its baseline.
+ *
+ * @param input What was calculated.
+ * @returns The response.
+ */
+export function buildCalculationResponse(
+    input: CalculationResponseInput,
+): CalculationResponse {
+    const { beatmap } = input;
+    const difficulty = new BeatmapDifficulty(beatmap.difficulty);
+
+    ModUtil.applyModsToBeatmapDifficulty(
+        difficulty,
+        input.mode,
+        ModUtil.deserializeMods(input.mods),
+        true,
+    );
+
+    return {
+        scope: input.scope,
+        variant: input.variant,
+        baseline: input.baseline,
+        calculatorVersion: input.calculatorVersion,
+        calculatedAt: new Date().toISOString(),
+        beatmap: {
+            id: input.beatmapId,
+            hash: getBeatmapHash(input.osuFile),
+            title: beatmap.metadata.title,
+            maxCombo: beatmap.maxCombo,
+            cs: difficulty.cs,
+            ar: difficulty.ar,
+            od: difficulty.od,
+            hp: difficulty.hp,
+        },
+        parameters: input.parameters,
+        result: input.result,
+        baselineResult: input.baselineResult,
+        ignoredMods: input.ignoredMods,
     };
 }
 
@@ -111,19 +204,13 @@ export async function calculateScore(
     const { scope, variant, parameters, osuFile } = input;
     const mode = variant.startsWith("osu-") ? Modes.Osu : Modes.Droid;
 
-    let beatmap;
+    const beatmap = decodeBeatmap(osuFile);
 
-    try {
-        beatmap = new BeatmapDecoder().decode(osuFile).result;
-    } catch {
+    if (beatmap === null) {
         return { error: "Invalid beatmap file", status: 400 };
     }
 
     const objectCount = beatmap.hitObjects.objects.length;
-
-    if (objectCount === 0) {
-        return { error: "Invalid beatmap file", status: 400 };
-    }
 
     let mods = parameters.mods;
     let ignoredMods: string[] = [];
@@ -134,15 +221,6 @@ export async function calculateScore(
         mods = split.applicable;
         ignoredMods = split.ignored;
     }
-
-    const difficulty = new BeatmapDifficulty(beatmap.difficulty);
-
-    ModUtil.applyModsToBeatmapDifficulty(
-        difficulty,
-        mode,
-        ModUtil.deserializeMods(mods),
-        true,
-    );
 
     const nmiss = parameters.nmiss ?? 0;
     const hasHitCounts =
@@ -223,25 +301,19 @@ export async function calculateScore(
         }
     }
 
-    return {
+    return buildCalculationResponse({
         scope,
         variant,
         baseline,
         calculatorVersion: input.calculatorVersion ?? null,
-        calculatedAt: new Date().toISOString(),
-        beatmap: {
-            id: input.beatmapId,
-            hash: createHash("md5").update(osuFile).digest("hex"),
-            title: beatmap.metadata.title,
-            maxCombo: beatmap.maxCombo,
-            cs: difficulty.cs,
-            ar: difficulty.ar,
-            od: difficulty.od,
-            hp: difficulty.hp,
-        },
         parameters,
+        osuFile,
+        beatmapId: input.beatmapId,
+        beatmap,
+        mode,
+        mods,
         result: result as CalculationOutcome,
         baselineResult: baselineResult as CalculationOutcome | null,
         ignoredMods,
-    };
+    });
 }
