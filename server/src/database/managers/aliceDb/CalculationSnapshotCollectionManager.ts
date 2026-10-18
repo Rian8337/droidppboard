@@ -60,12 +60,15 @@ export class CalculationSnapshotCollectionManager extends DatabaseCollectionMana
     }
 
     /**
-     * Makes MongoDB remove snapshots once their expiry has passed.
+     * Creates the indexes of the collection: one that makes MongoDB remove snapshots once their
+     * expiry has passed, and a unique one on the ID so that opening a snapshot is a lookup and
+     * two snapshots never share an ID.
      */
-    async ensureExpiryIndex(): Promise<void> {
+    async ensureIndexes(): Promise<void> {
         await this.collection.createIndex(
             { expiresAt: 1 },
             { expireAfterSeconds: 0 },
         );
+        await this.collection.createIndex({ id: 1 }, { unique: true });
     }
 }

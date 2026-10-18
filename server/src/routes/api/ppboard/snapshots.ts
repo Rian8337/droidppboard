@@ -32,6 +32,13 @@ function createId(): string {
     return randomBytes(8).toString("base64url").slice(0, 10);
 }
 
+/**
+ * Checks whether a database write failed because of a duplicate key.
+ */
+function isDuplicateKeyError(e: unknown): boolean {
+    return (e as { code?: unknown } | null)?.code === 11000;
+}
+
 const requireLogin: RequestHandler = (_, res, next) => {
     // Whether a snapshot can be made depends on who is logged in.
     res.set("Cache-Control", "no-store");
@@ -89,18 +96,29 @@ router.post(
         }
 
         const createdAt = new Date();
-        const snapshot: CalculationSnapshot = {
+        const expiresAt = new Date(
+            createdAt.getTime() + getTtlDays() * dayMs,
+        ).toISOString();
+        let snapshot: CalculationSnapshot = {
             id: createId(),
             createdAt: createdAt.toISOString(),
-            expiresAt: new Date(
-                createdAt.getTime() + getTtlDays() * dayMs,
-            ).toISOString(),
+            expiresAt,
             calculation,
         };
+        const { calculationSnapshots } = DatabaseManager.aliceDb.collections;
 
-        await DatabaseManager.aliceDb.collections.calculationSnapshots.insertSnapshot(
-            snapshot,
-        );
+        try {
+            await calculationSnapshots.insertSnapshot(snapshot);
+        } catch (e) {
+            // The ID is unique in the collection, so a clash is answered by trying another ID.
+            if (!isDuplicateKeyError(e)) {
+                throw e;
+            }
+
+            snapshot = { ...snapshot, id: createId() };
+
+            await calculationSnapshots.insertSnapshot(snapshot);
+        }
 
         res.status(201).json({
             id: snapshot.id,

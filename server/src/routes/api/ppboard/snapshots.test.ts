@@ -489,6 +489,41 @@ describe("calculation snapshots", () => {
             expect(insertSnapshot).not.toHaveBeenCalled();
         });
 
+        it("tries another ID once when the ID is already taken", async () => {
+            insertSnapshot.mockRejectedValueOnce(
+                Object.assign(new Error("duplicate key"), { code: 11000 }),
+            );
+
+            const res = await post();
+            const body = (await res.json()) as { id: string };
+
+            expect(res.status).toBe(201);
+            expect(insertSnapshot).toHaveBeenCalledTimes(2);
+
+            const [first, second] = insertSnapshot.mock.calls.map(
+                ([stored]) => stored,
+            );
+
+            expect(second!.id).not.toBe(first!.id);
+            expect(body.id).toBe(second!.id);
+            expect(second!.calculation).toEqual(first!.calculation);
+        });
+
+        it("does not retry a second clash or any other failure", async () => {
+            vi.spyOn(console, "error").mockImplementation(() => undefined);
+            insertSnapshot.mockRejectedValue(
+                Object.assign(new Error("duplicate key"), { code: 11000 }),
+            );
+
+            expect((await post()).status).toBe(500);
+            expect(insertSnapshot).toHaveBeenCalledTimes(2);
+
+            insertSnapshot.mockReset().mockRejectedValue(new Error("down"));
+
+            expect((await post()).status).toBe(500);
+            expect(insertSnapshot).toHaveBeenCalledTimes(1);
+        });
+
         it("answers 429 on the sixth request in a minute", async () => {
             for (let i = 0; i < 5; i++) {
                 expect((await post()).status).toBe(201);

@@ -75,6 +75,6 @@ export abstract class DatabaseManager {
             collections: new AliceDBCollection(db),
         };
 
-        await this.aliceDb.collections.calculationSnapshots.ensureExpiryIndex();
+        await this.aliceDb.collections.calculationSnapshots.ensureIndexes();
     }
 }
