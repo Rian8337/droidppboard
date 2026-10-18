@@ -1,0 +1,13 @@
+.note {
+    margin: 0;
+    padding: 16px;
+    color: var(--muted);
+}
+
+.state {
+    padding: 16px;
+}
+
+.switch {
+    margin: 8px 16px;
+}

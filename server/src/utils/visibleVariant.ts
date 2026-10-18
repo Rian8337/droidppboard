@@ -4,7 +4,14 @@ import { BrokerClient } from "../clients/BrokerClient";
 const defaultVariantName = "droid-rebalance";
 
 /**
- * Lists the droid prototype variants that a person may view, sorted by name.
+ * The name of the live variant, which is the baseline that the others are compared with and is
+ * never offered as a variant of its own.
+ */
+export const liveVariantName = "droid-live";
+
+/**
+ * Lists the droid prototype variants that a person may view, sorted by name. The live variant is
+ * left out.
  *
  * @param actingUid The uid of the person to act for, or `undefined` for a visitor.
  * @returns The variants, or `null` if they could not be fetched.
@@ -19,7 +26,11 @@ export async function listVisibleDroidVariants(
     }
 
     return allVariants
-        .filter((v) => v.mode === "droid" || v.mode === null)
+        .filter(
+            (v) =>
+                (v.mode === "droid" || v.mode === null) &&
+                v.name !== liveVariantName,
+        )
         .sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
 }
 

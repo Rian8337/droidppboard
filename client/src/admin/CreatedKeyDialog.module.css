@@ -1,0 +1,33 @@
+.content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.warning {
+    margin: 0;
+    color: var(--warn);
+    font-weight: 800;
+}
+
+.note {
+    margin: 0;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.key {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.key > :first-child {
+    flex: 1;
+    min-width: 0;
+}
+
+.actions {
+    display: flex;
+    justify-content: flex-end;
+}

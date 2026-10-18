@@ -38,13 +38,16 @@ function variant(name: string, overrides: Partial<PPVariant> = {}): PPVariant {
         healthyInstanceCount: 1,
         mode: "droid",
         algorithm: null,
+        public: true,
+        builtAt: null,
+        calculatorVersion: null,
         ...overrides,
     };
 }
 
 const visibleVariants = [
     variant("droid-rebalance", { aliases: ["rebalance"] }),
-    variant("droid-live"),
+    variant("flowaim"),
     variant("osu-live", { mode: "osu" }),
 ];
 
@@ -161,7 +164,7 @@ describe("recalculation routes", () => {
     describe("GET /queue", () => {
         it("shows the global view to visitors without defaulting to a variant", async () => {
             // droid-rebalance is not visible here, so a default would make this a 404.
-            mocks.getVariants.mockResolvedValue([variant("droid-live")]);
+            mocks.getVariants.mockResolvedValue([variant("flowaim")]);
 
             const response = await request("GET", "/api/recalc/queue", {
                 uid: null,
@@ -186,13 +189,13 @@ describe("recalculation routes", () => {
 
             // The osu variant is not a prototype variant, so it is left out.
             expect(body.variants.map((v) => v.name)).toEqual([
-                "droid-live",
                 "droid-rebalance",
+                "flowaim",
             ]);
 
             const selected = await request(
                 "GET",
-                "/api/recalc/queue?variant=droid-live",
+                "/api/recalc/queue?variant=flowaim",
             );
 
             expect(
@@ -273,7 +276,7 @@ describe("recalculation routes", () => {
 
         it("looks players up by username", async () => {
             await request("POST", "/api/recalc/queue", {
-                body: { variant: "droid-live", username: "  Player " },
+                body: { variant: "flowaim", username: "  Player " },
             });
 
             expect(mocks.findPlayer).toHaveBeenCalledWith("Player");
@@ -291,7 +294,7 @@ describe("recalculation routes", () => {
             expect(
                 (
                     await request("POST", "/api/recalc/queue", {
-                        body: { variant: "droid-live" },
+                        body: { variant: "flowaim" },
                     })
                 ).status,
             ).toBe(400);
@@ -303,6 +306,18 @@ describe("recalculation routes", () => {
             });
 
             expect(missingVariant.status).toBe(404);
+
+            // droid-live is the baseline, so it is never queued even when the broker lists it.
+            mocks.getVariants.mockResolvedValueOnce([
+                ...visibleVariants,
+                variant("droid-live"),
+            ]);
+
+            const liveVariant = await request("POST", "/api/recalc/queue", {
+                body: { variant: "droid-live", uid: 1000 },
+            });
+
+            expect(liveVariant.status).toBe(404);
 
             mocks.findPlayer.mockResolvedValueOnce(null);
 
@@ -330,11 +345,11 @@ describe("recalculation routes", () => {
 
         it("answers 409 for an unavailable variant and for a duplicate", async () => {
             mocks.getVariants.mockResolvedValueOnce([
-                variant("droid-live", { healthyInstanceCount: 0 }),
+                variant("flowaim", { healthyInstanceCount: 0 }),
             ]);
 
             const unavailable = await request("POST", "/api/recalc/queue", {
-                body: { variant: "droid-live", uid: 1000 },
+                body: { variant: "flowaim", uid: 1000 },
             });
 
             expect(unavailable.status).toBe(409);
@@ -352,13 +367,13 @@ describe("recalculation routes", () => {
 
         it("answers 409 when a broker that predates the instance count omits it", async () => {
             const { healthyInstanceCount: _omitted, ...withoutCount } = variant(
-                "droid-live",
+                "flowaim",
             );
 
             mocks.getVariants.mockResolvedValueOnce([withoutCount]);
 
             const response = await request("POST", "/api/recalc/queue", {
-                body: { variant: "droid-live", uid: 1000 },
+                body: { variant: "flowaim", uid: 1000 },
             });
 
             expect(response.status).toBe(409);
@@ -379,7 +394,7 @@ describe("recalculation routes", () => {
             ).toBe(201);
 
             const cooldown = await request("POST", "/api/recalc/queue", {
-                body: { variant: "droid-live", uid: 1001 },
+                body: { variant: "flowaim", uid: 1001 },
             });
 
             expect(cooldown.status).toBe(429);
@@ -390,12 +405,12 @@ describe("recalculation routes", () => {
 
             time += 20_000;
             await request("POST", "/api/recalc/queue", {
-                body: { variant: "droid-live", uid: 1001 },
+                body: { variant: "flowaim", uid: 1001 },
             });
             time += 20_000;
 
             const limit = await request("POST", "/api/recalc/queue", {
-                body: { variant: "droid-live", uid: 1002 },
+                body: { variant: "flowaim", uid: 1002 },
             });
 
             expect(limit.status).toBe(429);
@@ -437,7 +452,7 @@ describe("recalculation routes", () => {
         }
 
         it("removes the person's own waiting entry", async () => {
-            const id = await add("droid-live");
+            const id = await add("flowaim");
 
             expect(
                 (await request("DELETE", `/api/recalc/queue/${id}`)).status,
@@ -450,7 +465,7 @@ describe("recalculation routes", () => {
                 (await request("DELETE", "/api/recalc/queue/missing")).status,
             ).toBe(404);
 
-            const others = await add("droid-live", 7);
+            const others = await add("flowaim", 7);
 
             expect(
                 (await request("DELETE", `/api/recalc/queue/${others}`)).status,
@@ -473,7 +488,7 @@ describe("recalculation routes", () => {
                 grants: [],
             });
 
-            const others = await add("droid-live", 7);
+            const others = await add("flowaim", 7);
 
             expect(
                 (await request("DELETE", `/api/recalc/queue/${others}`)).status,
@@ -485,7 +500,7 @@ describe("recalculation routes", () => {
             const result = queue.enqueue({
                 uid: 5,
                 username: "X",
-                variant: "droid-live",
+                variant: "flowaim",
                 capacity: 1,
                 queuedByUid: 42,
                 queuedByUsername: "Queuer",
@@ -525,7 +540,7 @@ describe("recalculation routes", () => {
         });
 
         it("answers 401 to visitors", async () => {
-            const id = await add("droid-live");
+            const id = await add("flowaim");
 
             expect(
                 (
@@ -581,7 +596,7 @@ describe("recalculation routes", () => {
 
             const stopNone = await request(
                 "POST",
-                "/api/recalc/full-runs/droid-live/stop",
+                "/api/recalc/full-runs/flowaim/stop",
             );
 
             expect(stopNone.status).toBe(409);
@@ -590,7 +605,7 @@ describe("recalculation routes", () => {
                 (
                     await request(
                         "POST",
-                        "/api/recalc/full-runs/droid-live/start",
+                        "/api/recalc/full-runs/flowaim/start",
                     )
                 ).status,
             ).toBe(204);
@@ -598,12 +613,12 @@ describe("recalculation routes", () => {
                 (
                     await request(
                         "POST",
-                        "/api/recalc/full-runs/droid-live/start",
+                        "/api/recalc/full-runs/flowaim/start",
                     )
                 ).status,
             ).toBe(409);
             expect(
-                (await request("POST", "/api/recalc/full-runs/droid-live/stop"))
+                (await request("POST", "/api/recalc/full-runs/flowaim/stop"))
                     .status,
             ).toBe(204);
         });
@@ -617,8 +632,8 @@ describe("recalculation routes", () => {
                 mocks.getMe.mockResolvedValue(me);
 
                 for (const path of [
-                    "/api/recalc/full-runs/droid-live/start",
-                    "/api/recalc/full-runs/droid-live/stop",
+                    "/api/recalc/full-runs/flowaim/start",
+                    "/api/recalc/full-runs/flowaim/stop",
                     "/api/recalc/full-runs/private-variant/start",
                 ]) {
                     expect((await request("POST", path)).status).toBe(403);
@@ -631,7 +646,7 @@ describe("recalculation routes", () => {
                 (
                     await request(
                         "POST",
-                        "/api/recalc/full-runs/droid-live/start",
+                        "/api/recalc/full-runs/flowaim/start",
                         { uid: null },
                     )
                 ).status,
@@ -652,7 +667,7 @@ describe("recalculation routes", () => {
                 (
                     await request(
                         "POST",
-                        "/api/recalc/full-runs/droid-live/start",
+                        "/api/recalc/full-runs/flowaim/start",
                         { body: { restart: "yes" } },
                     )
                 ).status,
@@ -666,7 +681,7 @@ describe("recalculation routes", () => {
 
             const response = await request(
                 "POST",
-                "/api/recalc/full-runs/droid-live/start",
+                "/api/recalc/full-runs/flowaim/start",
             );
             const text = await response.text();
 

@@ -1,0 +1,27 @@
+.control {
+    display: flex;
+    overflow: hidden;
+    border-radius: 4px;
+    background: var(--input);
+}
+
+.option {
+    flex: 1;
+    padding: 8px 12px;
+    border: 0;
+    background: transparent;
+    color: var(--text);
+    text-align: center;
+    cursor: pointer;
+}
+
+.option:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+}
+
+.selected {
+    background: var(--btn2);
+    color: #ffb3cc;
+    font-weight: 800;
+}

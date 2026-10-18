@@ -1,4 +1,4 @@
-import { PPVariant } from "./PPVariant";
+import type { PPVariant } from "./PPVariant";
 
 /**
  * The response from the server when fetching a prototype page.

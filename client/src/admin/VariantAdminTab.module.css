@@ -1,0 +1,12 @@
+.admin {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding: 16px;
+}
+
+.buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}

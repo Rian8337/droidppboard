@@ -1,0 +1,36 @@
+.section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+}
+
+.heading {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 800;
+}
+
+.details {
+    margin: 0;
+    color: var(--muted);
+}
+
+.session {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+}
+
+/* A team's total rather than a player: red for 0, blue for 1, as in the game. */
+.red {
+    color: #ffaaaa;
+    font-weight: 800;
+}
+
+.blue {
+    color: #aaaaff;
+    font-weight: 800;
+}

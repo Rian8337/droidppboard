@@ -23,6 +23,9 @@ export interface BrokerForwardResponse {
 export abstract class BrokerClient {
     private static readonly requestTimeoutMs = 10_000;
 
+    // A calculation renders a strain chart, which takes longer than a lookup.
+    private static readonly performanceTimeoutMs = 30_000;
+
     /**
      * Admin paths are made up of segments of letters, digits, `_` and `-`, as broker names,
      * aliases and uids are.
@@ -124,6 +127,45 @@ export abstract class BrokerClient {
             // The error is deliberately not logged: it can embed part of the response body.
             console.error(
                 `Broker returned an unreadable body for ${method} /admin${path}`,
+            );
+
+            return this.unavailable();
+        }
+    }
+
+    /**
+     * Asks a variant to calculate the difficulty and performance of a score on behalf of a person.
+     *
+     * @param variant The name of the variant.
+     * @param body The JSON body of the broker's performance request.
+     * @param actingUid The uid of the person to act for, which private variants need.
+     * @returns The broker's status and JSON body, or a 502 if the broker could not be reached.
+     */
+    static async calculatePerformance(
+        variant: string,
+        body: unknown,
+        actingUid?: number,
+    ): Promise<BrokerForwardResponse> {
+        const path = `/variants/${encodeURIComponent(variant)}/performance`;
+
+        try {
+            const response = await fetch(this.url(path), {
+                method: "POST",
+                headers: this.headers(actingUid, true),
+                body: JSON.stringify(body),
+                signal: AbortSignal.timeout(this.performanceTimeoutMs),
+            });
+            const text = await response.text();
+
+            return {
+                status: response.status,
+                body: text ? (JSON.parse(text) as unknown) : null,
+            };
+        } catch (e) {
+            // Only the kind of error is logged, as its message can embed the URL.
+            console.error(
+                "Broker performance request failed:",
+                e instanceof Error ? e.name : typeof e,
             );
 
             return this.unavailable();

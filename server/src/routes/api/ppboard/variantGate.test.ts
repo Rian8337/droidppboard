@@ -22,6 +22,10 @@ vi.mock("../../../database/managers/DatabaseManager", () => ({
     },
 }));
 
+vi.mock("../../../auth/OsuDroidAccounts", () => ({
+    OsuDroidAccounts: { getCountries: vi.fn().mockResolvedValue(new Map()) },
+}));
+
 function variant(name: string): PPVariant {
     return {
         name,
@@ -32,6 +36,9 @@ function variant(name: string): PPVariant {
         healthyInstanceCount: 1,
         mode: "droid",
         algorithm: "rebalance",
+        public: true,
+        builtAt: null,
+        calculatorVersion: null,
     };
 }
 
@@ -99,15 +106,23 @@ describe("variant visibility on the ppboard routes", () => {
         },
     );
 
+    it("answers 404 for droid-live on the leaderboard", async () => {
+        const res = await fetch(baseUrl + "/leaderboard?type=droid-live");
+
+        expect(res.status).toBe(404);
+        expect(await res.json()).toEqual({ message: "Variant not found" });
+        expect(mocks.searchPlayers).not.toHaveBeenCalled();
+    });
+
     it("get-top-plays reads the data of a visible variant", async () => {
         const { Util } = await import("../../../utils/Util");
 
-        const res = await fetch(baseUrl + "/topplays?type=droid-live");
+        const res = await fetch(baseUrl + "/topplays?type=droid-rebalance");
 
         expect(res.status).toBe(200);
         expect(res.headers.get("cache-control")).toBe("no-store");
         expect(Util.getTopPrototypePP).toHaveBeenCalledWith(
-            "droid-live",
+            "droid-rebalance",
             undefined,
         );
     });

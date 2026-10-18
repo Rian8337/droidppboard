@@ -1,0 +1,10 @@
+.flag {
+    flex: none;
+    width: 1.333em;
+    height: 1em;
+    margin-inline-end: 0.5em;
+    border-radius: 2px;
+    object-fit: cover;
+    vertical-align: -0.125em;
+    box-shadow: 0 0 0 1px var(--line);
+}

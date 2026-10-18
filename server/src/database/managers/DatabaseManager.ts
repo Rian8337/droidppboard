@@ -74,5 +74,7 @@ export abstract class DatabaseManager {
             instance: db,
             collections: new AliceDBCollection(db),
         };
+
+        await this.aliceDb.collections.calculationSnapshots.ensureIndexes();
     }
 }

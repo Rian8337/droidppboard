@@ -1,0 +1,9 @@
+/* Only for screen readers: the top bar already shows the page's name. */
+.title {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}

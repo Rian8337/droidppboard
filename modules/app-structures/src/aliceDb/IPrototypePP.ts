@@ -1,4 +1,4 @@
-import { PrototypePPEntry } from "../structures/PrototypePPEntry";
+import type { PrototypePPEntry } from "../structures/PrototypePPEntry";
 
 /**
  * Represents the prototype droid performance point (dpp) entry of an osu!droid account.

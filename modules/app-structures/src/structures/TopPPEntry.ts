@@ -1,4 +1,4 @@
-import { PPEntry } from "./PPEntry";
+import type { PPEntry } from "./PPEntry";
 
 /**
  * Represents a PP entry that will be displayed in top plays list.

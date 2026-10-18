@@ -1,4 +1,4 @@
-import { PPEntry } from "./PPEntry";
+import type { PPEntry } from "./PPEntry";
 
 /**
  * Contains information about ongoing dpp recalculation.

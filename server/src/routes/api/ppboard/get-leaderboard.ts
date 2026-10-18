@@ -3,7 +3,8 @@ import { DatabaseManager } from "../../../database/managers/DatabaseManager";
 import { Util } from "../../../utils/Util";
 import { asyncHandler } from "../../../utils/asyncHandler";
 import { resolveVisibleVariant } from "../../../utils/visibleVariant";
-import { IPrototypePP, PrototypeLeaderboardResponse } from "app-structures";
+import { readCountries } from "../../../utils/readCountries";
+import { PrototypeLeaderboardResponse, PrototypePlayer } from "app-structures";
 
 const router = express.Router();
 
@@ -43,14 +44,23 @@ router.get(
             return;
         }
 
-        const response: PrototypeLeaderboardResponse<IPrototypePP[]> = {
-            variants: resolved.variants,
-            currentVariant: resolved.current,
-            data: await DatabaseManager.aliceDb.collections.prototypePP.searchPlayers(
+        const players =
+            await DatabaseManager.aliceDb.collections.prototypePP.searchPlayers(
                 page,
                 resolved.current.name,
                 searchQuery,
-            ),
+            );
+        const countries = await readCountries(
+            players.map((player) => player.uid),
+        );
+
+        const response: PrototypeLeaderboardResponse<PrototypePlayer[]> = {
+            variants: resolved.variants,
+            currentVariant: resolved.current,
+            data: players.map((player) => ({
+                ...player,
+                country: countries.get(player.uid) ?? null,
+            })),
         };
 
         res.json(response);

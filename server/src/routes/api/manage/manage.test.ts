@@ -7,6 +7,7 @@ import { bodyParserErrorHandler } from "../../../utils/bodyParserErrorHandler";
 const mocks = vi.hoisted(() => ({
     forwardAdmin: vi.fn(),
     getUsernames: vi.fn(),
+    getMe: vi.fn(),
 }));
 
 vi.mock("../../../auth/OsuDroidAccounts", () => ({
@@ -21,6 +22,7 @@ vi.mock("../../../clients/BrokerClient", async (importOriginal) => {
         BrokerClient: {
             isValidAdminPath: actual.BrokerClient.isValidAdminPath,
             forwardAdmin: mocks.forwardAdmin,
+            getMe: mocks.getMe,
         },
     };
 });
@@ -90,6 +92,7 @@ describe("management routes", () => {
 
         mocks.forwardAdmin.mockResolvedValue({ status: 200, body: { ok: 1 } });
         mocks.getUsernames.mockResolvedValue(new Map());
+        mocks.getMe.mockResolvedValue({ uid: 42, role: "admin", grants: [] });
 
         await start();
     });
@@ -342,6 +345,122 @@ describe("management routes", () => {
 
             expect(max.status).toBe(200);
             expect(mocks.getUsernames).toHaveBeenCalledTimes(2);
+        });
+    });
+    describe("user roles", () => {
+        function stubRoles(
+            roles: Record<number, "admin" | "manager" | null | undefined>,
+        ) {
+            mocks.getMe.mockImplementation(async (uid: number) => {
+                const role = roles[uid];
+
+                return role === undefined ? null : { uid, role, grants: [] };
+            });
+        }
+
+        it("requires a session", async () => {
+            const res = await fetch(baseUrl + "/api/manage/user-roles?uids=1");
+
+            expect(res.status).toBe(401);
+            expect(mocks.getMe).not.toHaveBeenCalled();
+        });
+
+        it("answers the role of each person to an admin", async () => {
+            stubRoles({ 42: "admin", 7: "manager", 8: null, 9: "admin" });
+
+            const res = await request(
+                "GET",
+                "/api/manage/user-roles?uids=7,8,9",
+            );
+
+            expect(res.status).toBe(200);
+            expect(res.headers.get("cache-control")).toBe("no-store");
+            expect(await res.json()).toEqual([
+                { uid: 7, role: "manager" },
+                { uid: 8, role: null },
+                { uid: 9, role: "admin" },
+            ]);
+            expect(mocks.getMe).toHaveBeenCalledWith(42);
+            expect(mocks.getMe).toHaveBeenCalledWith(7);
+            expect(mocks.forwardAdmin).not.toHaveBeenCalled();
+        });
+
+        it("answers a manager", async () => {
+            stubRoles({ 42: "manager", 8: null });
+
+            const res = await request("GET", "/api/manage/user-roles?uids=8");
+
+            expect(res.status).toBe(200);
+            expect(await res.json()).toEqual([{ uid: 8, role: null }]);
+        });
+
+        it("refuses a person without a role, without looking anyone up", async () => {
+            stubRoles({ 42: null, 8: "admin" });
+
+            const res = await request("GET", "/api/manage/user-roles?uids=8");
+
+            expect(res.status).toBe(403);
+            expect(mocks.getMe).toHaveBeenCalledTimes(1);
+            expect(mocks.getMe).toHaveBeenCalledWith(42);
+        });
+
+        it("answers 502 when the caller or a person cannot be looked up", async () => {
+            stubRoles({ 42: "admin" });
+
+            const missingTarget = await request(
+                "GET",
+                "/api/manage/user-roles?uids=8",
+            );
+
+            expect(missingTarget.status).toBe(502);
+
+            mocks.getMe.mockResolvedValue(null);
+
+            const missingCaller = await request(
+                "GET",
+                "/api/manage/user-roles?uids=8",
+            );
+
+            expect(missingCaller.status).toBe(502);
+        });
+
+        it("checks the uids as the usernames lookup does", async () => {
+            const uids = (count: number) =>
+                Array.from({ length: count }, (_, i) => i + 1).join(",");
+
+            mocks.getMe.mockImplementation(async (uid: number) => ({
+                uid,
+                role: uid === 42 ? "admin" : null,
+                grants: [],
+            }));
+
+            const ok = await request(
+                "GET",
+                `/api/manage/user-roles?uids=${uids(100)}`,
+            );
+
+            expect(ok.status).toBe(200);
+
+            for (const value of [
+                "",
+                uids(101),
+                "0",
+                "1,,2",
+                "abc",
+                "2147483648",
+            ]) {
+                const res = await request(
+                    "GET",
+                    `/api/manage/user-roles?uids=${encodeURIComponent(value)}`,
+                );
+
+                expect(res.status, value).toBe(400);
+                expect(await res.json()).toEqual({ message: "Invalid uids" });
+            }
+
+            const missing = await request("GET", "/api/manage/user-roles");
+
+            expect(missing.status).toBe(400);
         });
     });
 });

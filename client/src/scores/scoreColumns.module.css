@@ -1,0 +1,68 @@
+.rank {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.rankChange {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.rankChange[data-tone="up"],
+.highlight[data-tone="up"] {
+    color: var(--up);
+}
+
+.rankChange[data-tone="down"],
+.highlight[data-tone="down"] {
+    color: var(--down);
+}
+
+.delta {
+    margin-left: 6px;
+    font-size: 0.8em;
+    opacity: 0.85;
+}
+
+/* Long titles and names wrap instead of being cut off, so nothing is left to hover for. */
+.map {
+    display: inline-block;
+    max-width: 28em;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.player {
+    display: inline-block;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.maxCombo {
+    color: var(--muted);
+    font-size: 0.85em;
+}
+
+.visuallyHidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+/* Rank, Player and Map are pinned, so on a phone they must leave room for the columns that scroll. */
+@media (max-width: 639px) {
+    .map {
+        max-width: 36vw;
+    }
+
+    .player {
+        max-width: 22vw;
+    }
+}

@@ -1,4 +1,4 @@
-import { RefObject, useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
 
 interface TurnstileRenderOptions {
     sitekey: string;
@@ -10,24 +10,18 @@ interface TurnstileRenderOptions {
 declare global {
     interface Window {
         turnstile?: {
-            render(
-                container: HTMLElement,
-                options: TurnstileRenderOptions
-            ): string;
+            render(container: HTMLElement, options: TurnstileRenderOptions): string;
             reset(widgetId?: string): void;
             remove(widgetId?: string): void;
         };
     }
 }
 
-const scriptUrl =
-    "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+const scriptUrl = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
 
 let scriptPromise: Promise<void> | undefined;
 
-/**
- * Loads the Turnstile script, injecting it into the document only once.
- */
+/** Loads the Turnstile script, injecting it into the document only once. */
 function loadTurnstileScript(): Promise<void> {
     if (window.turnstile) {
         return Promise.resolve();
@@ -54,42 +48,52 @@ function loadTurnstileScript(): Promise<void> {
     return scriptPromise;
 }
 
+export interface Turnstile {
+    /** Attach to the element the widget is drawn in. */
+    readonly containerRef: RefObject<HTMLDivElement | null>;
+
+    /**
+     * Asks for a new challenge. Tokens are single-use, so call this after every attempt that used
+     * one.
+     */
+    readonly reset: () => void;
+
+    /** Why the captcha is not usable, if it is not. */
+    readonly error: string | null;
+}
+
 /**
- * Renders a Turnstile widget into a container.
+ * Draws a Cloudflare Turnstile widget in a container.
  *
- * @param siteKey The site key. If empty, no widget is rendered.
- * @param onToken Called with the token when the challenge is solved, or `null` when the token
- * is no longer valid.
- * @returns The container to attach to an element, a function to reset the widget (tokens are
- * single-use, so this must be called after every attempt that used one), and a load error, if any.
+ * @param siteKey The site key. If empty, no widget is drawn.
+ * @param onToken Called with the token when the challenge is solved, or `null` when the token is
+ * no longer valid.
  */
 export function useTurnstile(
     siteKey: string | undefined,
-    onToken: (token: string | null) => void
-): {
-    containerRef: RefObject<HTMLDivElement>;
-    reset: () => void;
-    error: string | null;
-} {
-    const containerRef = useRef<HTMLDivElement>(null);
-    const widgetIdRef = useRef<string>();
+    onToken: (token: string | null) => void,
+): Turnstile {
+    const containerRef = useRef<HTMLDivElement | null>(null);
+    const widgetIdRef = useRef<string | undefined>(undefined);
     const onTokenRef = useRef(onToken);
     const [error, setError] = useState<string | null>(null);
 
-    onTokenRef.current = onToken;
+    useEffect(() => {
+        onTokenRef.current = onToken;
+    });
 
     useEffect(() => {
         if (!siteKey) {
             return;
         }
 
-        let cancelled = false;
+        let isCancelled = false;
 
         loadTurnstileScript()
             .then(() => {
                 const container = containerRef.current;
 
-                if (cancelled || !container || !window.turnstile) {
+                if (isCancelled || !container || !window.turnstile) {
                     return;
                 }
 
@@ -105,14 +109,14 @@ export function useTurnstile(
                     },
                 });
             })
-            .catch((e: Error) => {
-                if (!cancelled) {
-                    setError(e.message);
+            .catch((failure: Error) => {
+                if (!isCancelled) {
+                    setError(failure.message);
                 }
             });
 
         return () => {
-            cancelled = true;
+            isCancelled = true;
 
             if (widgetIdRef.current) {
                 window.turnstile?.remove(widgetIdRef.current);
@@ -123,6 +127,7 @@ export function useTurnstile(
 
     const reset = useCallback(() => {
         onTokenRef.current(null);
+        setError(null);
 
         if (widgetIdRef.current) {
             window.turnstile?.reset(widgetIdRef.current);

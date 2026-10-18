@@ -1,0 +1,42 @@
+.rows {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 8px;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--line);
+}
+
+.player {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    font-weight: 800;
+}
+
+.position {
+    margin-right: 6px;
+    color: var(--muted);
+    font-weight: 400;
+}
+
+.status {
+    margin-left: auto;
+}
+
+.sub {
+    flex-basis: 100%;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+@media (pointer: coarse) {
+    .row {
+        min-height: var(--touch-target);
+    }
+}

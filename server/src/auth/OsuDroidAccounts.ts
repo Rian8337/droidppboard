@@ -9,6 +9,7 @@ interface UserRow extends RowDataPacket {
     password: string;
     banned: number;
     archived: number;
+    region: string | null;
 }
 
 /**
@@ -141,5 +142,38 @@ export abstract class OsuDroidAccounts {
         }
 
         return usernames;
+    }
+
+    /**
+     * Gets the countries of accounts.
+     *
+     * @param uids The uids of the accounts.
+     * @returns A map from uid to the uppercase two-letter country code. Accounts that do not exist
+     * or whose region is not a two-letter code are absent.
+     */
+    static async getCountries(uids: number[]): Promise<Map<number, string>> {
+        const unique = [...new Set(uids)];
+        const countries = new Map<number, string>();
+
+        if (unique.length === 0) {
+            return countries;
+        }
+
+        const [rows] = await officialDb.execute<UserRow[]>(
+            `SELECT id, region FROM bbl_user WHERE id IN (${unique
+                .map(() => "?")
+                .join(", ")})`,
+            unique,
+        );
+
+        for (const row of rows) {
+            const code = row.region?.trim().toUpperCase();
+
+            if (code !== undefined && /^[A-Z]{2}$/.test(code)) {
+                countries.set(row.id, code);
+            }
+        }
+
+        return countries;
     }
 }

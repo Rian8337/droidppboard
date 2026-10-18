@@ -1,4 +1,4 @@
-import { WhitelistDifficultyStatistics } from "../structures/WhitelistDifficultyStatistics";
+import type { WhitelistDifficultyStatistics } from "../structures/WhitelistDifficultyStatistics";
 
 /**
  * Represents a whitelisted beatmap.

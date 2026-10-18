@@ -1,0 +1,150 @@
+import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import styles from "./Menu.module.css";
+
+export interface MenuItem {
+    label: string;
+    icon?: ReactNode;
+    tone?: "danger";
+
+    /** Leaves the menu open after the item is chosen, for an action whose outcome shows in the menu. */
+    keepOpen?: boolean;
+    onSelect: () => void;
+}
+
+export interface MenuProps {
+    trigger: ReactNode;
+    items: MenuItem[];
+
+    /** Shown below the items, such as the error of an action. */
+    footer?: ReactNode;
+
+    /** Called each time the menu opens. */
+    onOpen?: () => void;
+
+    /**
+     * Which edge of the trigger the list lines up with: "end" opens it towards the left, "start" towards the right.
+     * Pick "start" for a trigger that can wrap to the left edge of a phone screen. Defaults to "end".
+     */
+    align?: "start" | "end";
+}
+
+/** A popup list of actions that opens on click or tap and closes on an outside press, Escape or a choice. */
+export function Menu({ trigger, items, footer, onOpen, align = "end" }: MenuProps) {
+    const [isOpen, setIsOpen] = useState(false);
+    const rootRef = useRef<HTMLDivElement>(null);
+    const triggerRef = useRef<HTMLButtonElement>(null);
+    const listRef = useRef<HTMLDivElement>(null);
+    const listId = useId();
+
+    useEffect(() => {
+        if (!isOpen) {
+            return;
+        }
+
+        function closeOnOutsidePress(event: PointerEvent) {
+            if (!rootRef.current?.contains(event.target as Node)) {
+                setIsOpen(false);
+            }
+        }
+
+        document.addEventListener("pointerdown", closeOnOutsidePress);
+
+        return () => document.removeEventListener("pointerdown", closeOnOutsidePress);
+    }, [isOpen]);
+
+    function moveFocus(step: number) {
+        const buttons = Array.from(
+            listRef.current?.querySelectorAll<HTMLElement>("[role=menuitem]") ?? [],
+        );
+
+        if (buttons.length === 0) {
+            return;
+        }
+
+        const current = buttons.indexOf(document.activeElement as HTMLElement);
+        const next =
+            current === -1
+                ? step > 0
+                    ? 0
+                    : buttons.length - 1
+                : (current + step + buttons.length) % buttons.length;
+
+        buttons[next].focus();
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+        if (!isOpen) {
+            return;
+        }
+
+        switch (event.key) {
+            case "Escape":
+                setIsOpen(false);
+                triggerRef.current?.focus();
+                break;
+            case "ArrowDown":
+                event.preventDefault();
+                moveFocus(1);
+                break;
+            case "ArrowUp":
+                event.preventDefault();
+                moveFocus(-1);
+                break;
+        }
+    }
+
+    return (
+        <div ref={rootRef} className={styles.menu} onKeyDown={handleKeyDown}>
+            <button
+                ref={triggerRef}
+                type="button"
+                className={styles.trigger}
+                aria-haspopup="menu"
+                aria-expanded={isOpen}
+                aria-controls={isOpen ? listId : undefined}
+                onClick={() => {
+                    if (!isOpen) {
+                        onOpen?.();
+                    }
+
+                    setIsOpen(!isOpen);
+                }}
+            >
+                {trigger}
+            </button>
+            {isOpen && (
+                <div
+                    ref={listRef}
+                    id={listId}
+                    role="menu"
+                    data-align={align}
+                    className={styles.list}
+                >
+                    {items.map((item) => (
+                        <button
+                            key={item.label}
+                            type="button"
+                            role="menuitem"
+                            className={
+                                item.tone === "danger"
+                                    ? `${styles.item} ${styles.danger}`
+                                    : styles.item
+                            }
+                            onClick={() => {
+                                if (!item.keepOpen) {
+                                    setIsOpen(false);
+                                }
+
+                                item.onSelect();
+                            }}
+                        >
+                            {item.icon && <span aria-hidden="true">{item.icon}</span>}
+                            {item.label}
+                        </button>
+                    ))}
+                    {footer}
+                </div>
+            )}
+        </div>
+    );
+}

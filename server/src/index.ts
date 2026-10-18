@@ -6,8 +6,11 @@ import getPPLeaderboard from "./routes/api/ppboard/get-leaderboard";
 import getUserProfile from "./routes/api/ppboard/get-user-profile";
 import getWhitelist from "./routes/api/ppboard/get-whitelist";
 import getTopPlays from "./routes/api/ppboard/get-top-plays";
-import calculateBeatmap from "./routes/api/ppboard/calculate-beatmap";
+import calculate from "./routes/api/ppboard/calculate";
+import calculateMyScore from "./routes/api/ppboard/calculate-my-score";
+import snapshots from "./routes/api/ppboard/snapshots";
 import getScoreMultiplierSample from "./routes/api/ppboard/score-multiplier-sample";
+import getVariants from "./routes/api/ppboard/get-variants";
 import login from "./routes/api/auth/login";
 import logout from "./routes/api/auth/logout";
 import me from "./routes/api/auth/me";
@@ -67,7 +70,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParserErrorHandler);
 app.use(cookieParser());
-app.use(express.static(resolve(Util.getFrontendPath(), "build")));
+app.use(express.static(resolve(Util.getFrontendPath(), "dist")));
 app.use(Util.createRateLimit(12));
 
 app.use("/api/ppboard", ppboardRouter);
@@ -83,14 +86,15 @@ app.use("/api/recalc", recalcRouter);
 // Identifies the person, as which variants are visible depends on who they are.
 ppboardRouter.use(sessionMiddleware);
 
+ppboardRouter.use("/variants", getVariants);
 ppboardRouter.use("/prototype/getleaderboard", getPPLeaderboard);
 ppboardRouter.use("/prototype/getuserprofile", getUserProfile);
 ppboardRouter.use("/getwhitelist", getWhitelist);
 ppboardRouter.use("/prototype/gettopplays", getTopPlays);
-ppboardRouter.use(
-    ["/calculatebeatmap", "/prototype/calculatebeatmap"],
-    calculateBeatmap,
-);
+// The more specific path goes first, or `/calculate` would take its requests.
+ppboardRouter.use("/calculate/my-score", calculateMyScore);
+ppboardRouter.use("/calculate", calculate);
+ppboardRouter.use("/snapshots", snapshots);
 ppboardRouter.use("/score-multiplier-sample", getScoreMultiplierSample);
 
 //#endregion
@@ -141,7 +145,7 @@ skinsRouter.use("/get", getSkin);
 //#region App launch
 
 app.get("*", (_, res) => {
-    res.sendFile(resolve(Util.getFrontendPath(), "build", "index.html"));
+    res.sendFile(resolve(Util.getFrontendPath(), "dist", "index.html"));
 });
 
 // Connect to database, then open server

@@ -1,5 +1,5 @@
 import { ModMultiplierSampleEntry, TopPrototypePPEntry } from "app-structures";
-import { Request, RequestHandler } from "express";
+import { Request, RequestHandler, Response } from "express";
 import rateLimit from "express-rate-limit";
 import { ModMap, ModUtil, OsuAPIResponse } from "@rian8337/osu-base";
 import { join } from "path";
@@ -42,14 +42,17 @@ export abstract class Util {
      *
      * @param maxRequests The amount of requests allowed.
      * @param windowMs The time to refresh rate limiting. Defaults to 10 seconds.
+     * @param keyGenerator Gets what a request is counted against. Defaults to the client's IP address.
      */
     static createRateLimit(
         maxRequests: number,
         windowMs: number = 10 * 1000,
+        keyGenerator?: (req: Request, res: Response) => string,
     ): RequestHandler {
         return rateLimit({
             windowMs: windowMs,
             max: maxRequests,
+            ...(keyGenerator ? { keyGenerator } : {}),
             standardHeaders: true,
             legacyHeaders: false,
             message: "You have been rate limited. Please try again later.",
@@ -61,15 +64,6 @@ export abstract class Util {
      */
     static getFrontendPath(): string {
         return join(process.cwd(), "../client");
-    }
-
-    /**
-     * Checks if a request is requesting prototype data.
-     *
-     * @param req The request.
-     */
-    static requestIsPrototype(req: Request<unknown>): boolean {
-        return req.baseUrl.includes("prototype") || req.body.prototype;
     }
 
     /**
@@ -154,7 +148,15 @@ export abstract class Util {
         DatabaseManager.aliceDb.collections.prototypePP
             .get(
                 {},
-                { projection: { _id: 0, username: 1, pp: 1, reworkType: 1 } },
+                {
+                    projection: {
+                        _id: 0,
+                        uid: 1,
+                        username: 1,
+                        pp: 1,
+                        reworkType: 1,
+                    },
+                },
             )
             .then((res) => {
                 this.allTopEntries.clear();
@@ -181,6 +183,7 @@ export abstract class Util {
                     for (const ppEntry of ppEntries) {
                         const topEntry: TopPrototypePPEntry = {
                             ...ppEntry,
+                            uid: player.uid,
                             username: player.username,
                         };
 

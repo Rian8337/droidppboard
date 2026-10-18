@@ -1,5 +1,5 @@
-import { PPEntry } from "./PPEntry";
-import { ScorePrototypeState } from "./ScorePrototypeState";
+import type { PPEntry } from "./PPEntry";
+import type { ScorePrototypeState } from "./ScorePrototypeState";
 
 /**
  * Represents a prototype droid performance points (dpp) entry.

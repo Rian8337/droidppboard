@@ -1,0 +1,53 @@
+.layout {
+    display: flex;
+    flex-direction: column;
+    min-height: 100svh;
+}
+
+.body {
+    position: relative;
+    display: flex;
+    flex: 1;
+    align-items: flex-start;
+}
+
+.content {
+    flex: 1;
+    min-width: 0;
+}
+
+/* The sidebar of a desktop pushes the page over and stays in view as it scrolls. */
+.sidebar {
+    position: sticky;
+    top: var(--top-bar-height);
+    display: flex;
+    flex: none;
+    align-self: flex-start;
+    height: calc(100svh - var(--top-bar-height));
+}
+
+/* On a tablet or phone it is a drawer over the page, below the top bar. */
+.body:not([data-breakpoint="desktop"]) .sidebar {
+    position: fixed;
+    top: var(--top-bar-height);
+    bottom: 0;
+    left: 0;
+    z-index: 30;
+    height: auto;
+    max-width: 100%;
+}
+
+.body[data-breakpoint="phone"] .sidebar {
+    right: 0;
+}
+
+.body[data-breakpoint="phone"] .sidebar > * {
+    width: 100%;
+}
+
+.backdrop {
+    position: fixed;
+    inset: var(--top-bar-height) 0 0;
+    z-index: 20;
+    background: rgba(0, 0, 0, 0.5);
+}

@@ -1,0 +1,12 @@
+.toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+}
+
+.search {
+    flex: 1 1 220px;
+    max-width: 360px;
+}

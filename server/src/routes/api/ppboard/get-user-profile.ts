@@ -3,7 +3,8 @@ import { DatabaseManager } from "../../../database/managers/DatabaseManager";
 import { Util } from "../../../utils/Util";
 import { asyncHandler } from "../../../utils/asyncHandler";
 import { resolveVisibleVariant } from "../../../utils/visibleVariant";
-import { IPrototypePP, PrototypeLeaderboardResponse } from "app-structures";
+import { readCountries } from "../../../utils/readCountries";
+import { PrototypeLeaderboardResponse, PrototypePlayer } from "app-structures";
 
 const router = express.Router();
 
@@ -57,10 +58,15 @@ router.get(
             return;
         }
 
-        const response: PrototypeLeaderboardResponse<IPrototypePP> = {
+        const countries = await readCountries([playerInfo.uid]);
+
+        const response: PrototypeLeaderboardResponse<PrototypePlayer> = {
             variants: resolved.variants,
             currentVariant: resolved.current,
-            data: playerInfo,
+            data: {
+                ...playerInfo,
+                country: countries.get(playerInfo.uid) ?? null,
+            },
         };
 
         res.json(response);

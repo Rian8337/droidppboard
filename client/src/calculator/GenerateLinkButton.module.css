@@ -1,0 +1,23 @@
+.link,
+.error {
+    flex-basis: 100%;
+}
+
+.link {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+    min-width: 0;
+}
+
+.url {
+    min-width: 0;
+    color: var(--accent);
+    overflow-wrap: anywhere;
+}
+
+.expiry {
+    color: var(--muted);
+    font-size: 13px;
+}

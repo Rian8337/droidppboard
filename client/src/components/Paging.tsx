@@ -1,79 +1,68 @@
-import { FormEvent } from "react";
-import { PagingSetting } from "../interfaces/PagingSetting";
-import "../styles/main.css";
-import "../styles/navigation.css";
+import { faChevronLeft, faChevronRight } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { useState, type FormEvent } from "react";
+import { Button } from "./Button";
+import styles from "./Paging.module.css";
 
-export default function Paging<T extends PagingSetting>(props: { state: T }) {
-    const checkPageValidity = (event: FormEvent<HTMLFormElement>) => {
+export interface PagingProps {
+    /** The current page, counted from 1. */
+    page: number;
+    onPageChange: (page: number) => void;
+    /** Whether a page after this one may exist. The server does not say how many pages there are. */
+    hasNext: boolean;
+}
+
+/** Previous and next buttons, the current page, and a way to jump to a page by number. */
+export function Paging({ page, onPageChange, hasNext }: PagingProps) {
+    const [target, setTarget] = useState("");
+
+    function handleSubmit(event: FormEvent) {
         event.preventDefault();
 
-        if (!props.state.enablePaging) {
-            return;
-        }
+        const requested = Number.parseInt(target, 10);
 
-        const target: HTMLInputElement = (
-            event.target as HTMLFormElement
-        )[0] as HTMLInputElement;
-        const newPage: number = parseInt(target.value);
-
-        if (!isNaN(newPage)) {
-            props.state.setInternalPage(Math.max(newPage, 1));
+        if (!Number.isNaN(requested)) {
+            onPageChange(Math.max(requested, 1));
+            setTarget("");
         }
-    };
+    }
 
     return (
-        <div className="nav-button">
-            <form onSubmit={checkPageValidity}>
+        <nav className={styles.paging} aria-label="Pages">
+            <div className={styles.steps}>
+                <Button
+                    variant="secondary"
+                    aria-label="Previous page"
+                    disabled={page <= 1}
+                    onClick={() => onPageChange(page - 1)}
+                >
+                    <FontAwesomeIcon icon={faChevronLeft} />
+                </Button>
+                <span className={styles.current}>Page {page}</span>
+                <Button
+                    variant="secondary"
+                    aria-label="Next page"
+                    disabled={!hasNext}
+                    onClick={() => onPageChange(page + 1)}
+                >
+                    <FontAwesomeIcon icon={faChevronRight} />
+                </Button>
+            </div>
+            <form className={styles.jump} onSubmit={handleSubmit}>
                 <input
-                    className="search"
-                    name="page"
-                    style={{ width: "40%" }}
-                    placeholder="Go to page..."
-                    disabled={!props.state.enablePaging}
+                    type="number"
+                    min={1}
+                    inputMode="numeric"
+                    className={styles.input}
+                    aria-label="Go to page"
+                    placeholder="Go to page"
+                    value={target}
+                    onChange={(event) => setTarget(event.target.value)}
                 />
-                <input
-                    className="submit-search"
-                    style={{ width: "20%" }}
-                    type="submit"
-                    value="Go"
-                    disabled={!props.state.enablePaging}
-                />
+                <Button type="submit" variant="secondary">
+                    Go
+                </Button>
             </form>
-            <button
-                className="page-nav"
-                disabled={
-                    !props.state.enablePaging || props.state.internalPage === 1
-                }
-                onClick={(event) => {
-                    event.preventDefault();
-
-                    if (!props.state.enablePaging) {
-                        return;
-                    }
-
-                    props.state.setInternalPage(props.state.internalPage - 1);
-                }}
-            >
-                &lt;&lt;&lt; Previous Page
-            </button>
-            <button className="page-count" disabled>
-                Page {props.state.currentPage}
-            </button>
-            <button
-                className="page-nav"
-                disabled={!props.state.enablePaging}
-                onClick={(event) => {
-                    event.preventDefault();
-
-                    if (!props.state.enablePaging) {
-                        return;
-                    }
-
-                    props.state.setInternalPage(props.state.internalPage + 1);
-                }}
-            >
-                Next Page &gt;&gt;&gt;
-            </button>
-        </div>
+        </nav>
     );
 }

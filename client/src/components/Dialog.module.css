@@ -1,0 +1,47 @@
+.dialog {
+    display: flex;
+    flex-direction: column;
+    width: min(520px, calc(100vw - 32px));
+    max-width: calc(100vw - 32px);
+    max-height: calc(100dvh - 32px);
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--panel);
+    color: var(--text);
+}
+
+.wide {
+    width: min(1000px, calc(100vw - 32px));
+}
+
+/* `display: flex` above would otherwise override the closed dialog's UA `display: none`. */
+.dialog:not([open]) {
+    display: none;
+}
+
+.dialog::backdrop {
+    background: rgba(0, 0, 0, 0.6);
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 12px 10px 16px;
+    border-bottom: 1px solid var(--line);
+}
+
+.title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 800;
+}
+
+/* The body scrolls, so the title and close button stay put and the dialog never outgrows the viewport. */
+.body {
+    padding: 16px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}

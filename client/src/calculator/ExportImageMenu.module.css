@@ -1,0 +1,14 @@
+.status,
+.error {
+    margin: 0;
+    padding: 6px 10px;
+    font-size: 12px;
+}
+
+.status {
+    color: var(--up);
+}
+
+.error {
+    color: var(--down);
+}
