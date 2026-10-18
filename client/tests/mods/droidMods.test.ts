@@ -12,6 +12,7 @@ import {
     getSelectableDroidMods,
     getSelectedAcronyms,
     groupModsByCategory,
+    hasModIcon,
     selectMod,
 } from "../../src/mods/droidMods";
 
@@ -32,10 +33,12 @@ describe("getSelectableDroidMods", () => {
         expect(mods.some((m) => m.acronym === "AT")).toBe(false);
     });
 
-    it("excludes non-user-playable mods (e.g. Replay V6)", () => {
-        const mods = getSelectableDroidMods();
+    it("offers Replay V6 in a System category after every other, though it isn't user-playable", () => {
+        const groups = groupModsByCategory(getSelectableDroidMods());
+        const last = groups[groups.length - 1];
 
-        expect(mods.some((m) => m.acronym === "RV6")).toBe(false);
+        expect(last.category).toBe("System");
+        expect(last.mods.map((m) => m.acronym)).toEqual(["RV6"]);
     });
 
     it("offers Autopilot and Relax", () => {
@@ -43,6 +46,23 @@ describe("getSelectableDroidMods", () => {
 
         expect(acronyms).toContain("AP");
         expect(acronyms).toContain("RX");
+    });
+
+    it("offers Perfect and Sudden Death in Difficulty Increase, in the game client's order", () => {
+        const groups = groupModsByCategory(getSelectableDroidMods());
+        const increase = groups.find((g) => g.category === "Difficulty Increase")!;
+
+        expect(increase.mods.map((m) => m.acronym)).toEqual([
+            "DT",
+            "FL",
+            "HR",
+            "HD",
+            "NC",
+            "PF",
+            "PR",
+            "SD",
+            "TC",
+        ]);
     });
 
     it("returns fresh instances each call, not shared references", () => {
@@ -61,6 +81,16 @@ describe("getSelectableDroidMods", () => {
         const acronyms = getSelectableDroidMods().map((m) => m.acronym);
 
         expect(acronyms.indexOf("EZ")).toBeLessThan(acronyms.indexOf("DT"));
+    });
+});
+
+describe("hasModIcon", () => {
+    it("is true for a mod with an icon in public/icons/mods", () => {
+        expect(hasModIcon("HD")).toBe(true);
+    });
+
+    it("is false for Replay V6, which the game client gives no icon either", () => {
+        expect(hasModIcon("RV6")).toBe(false);
     });
 });
 

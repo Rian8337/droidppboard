@@ -166,6 +166,17 @@ describe("ModPicker", () => {
         expect(icon).toHaveAttribute("src", "/icons/mods/HD.png");
     });
 
+    it("shows the acronym in place of an icon for a mod without one, as the game client does", () => {
+        render(<ModPicker mods={[]} onChange={vi.fn()} />);
+
+        openPicker();
+
+        const label = screen.getByRole("checkbox", { name: /replay v6/i }).parentElement!;
+
+        expect(label.querySelector("img")).toBeNull();
+        expect(within(label).getByText("RV6")).toHaveAttribute("aria-hidden", "true");
+    });
+
     it("closes the checklist on Escape", () => {
         render(<ModPicker mods={[]} onChange={vi.fn()} />);
 

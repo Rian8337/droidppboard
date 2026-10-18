@@ -1,8 +1,7 @@
 import { Mod, ModUtil, type SerializedMod } from "@rian8337/osu-base";
 
 /**
- * The osu!droid game client's own mod-menu category order (`ModType.kt`; `System` is omitted -
- * its only member, Replay V6, isn't user-playable and never reaches this list).
+ * The osu!droid game client's own mod-menu category order (`ModType.kt`).
  */
 export const MOD_CATEGORY_ORDER = [
     "Difficulty Reduction",
@@ -10,6 +9,7 @@ export const MOD_CATEGORY_ORDER = [
     "Automation",
     "Conversion",
     "Fun",
+    "System",
 ] as const;
 
 export type ModCategory = (typeof MOD_CATEGORY_ORDER)[number];
@@ -18,22 +18,33 @@ export type ModCategory = (typeof MOD_CATEGORY_ORDER)[number];
  * The full catalog of selectable acronyms, grouped by the game client's mod-menu category
  * (`ModMenu.kt`) and, within each category, ordered exactly as the game client declares them
  * (`Mods.kt`'s `allModsInstances`, filtered to this app's selectable set). An acronym not listed
- * here has no icon in `public/icons/mods` and is never offered - there's no separate "known
- * icon" list to keep in sync with this one. Update this alongside `public/icons/mods` whenever an
- * icon is added or removed.
+ * here is never offered. Every listed acronym has an icon in `public/icons/mods` except those in
+ * {@link ACRONYMS_WITHOUT_ICON}.
  *
- * Autoplay ("AT") is deliberately not listed: it is not a mod to filter scores by.
+ * Autoplay ("AT") is deliberately not listed: it is not a mod to filter scores by. Replay V6
+ * ("RV6") is listed although it isn't user-playable: it marks scores set on replay version 6 or
+ * older, which are worth filtering by.
  */
 const SELECTABLE_MODS: readonly {
     readonly category: ModCategory;
     readonly acronyms: readonly string[];
 }[] = [
     { category: "Difficulty Reduction", acronyms: ["EZ", "HT", "NF", "RE"] },
-    { category: "Difficulty Increase", acronyms: ["DT", "FL", "HR", "HD", "NC", "PR", "TC"] },
+    {
+        category: "Difficulty Increase",
+        acronyms: ["DT", "FL", "HR", "HD", "NC", "PF", "PR", "SD", "TC"],
+    },
     { category: "Automation", acronyms: ["AP", "RX"] },
     { category: "Conversion", acronyms: ["CS", "DA", "MR", "RD", "V2"] },
     { category: "Fun", acronyms: ["AD", "FR", "MU", "SY", "WD", "WU"] },
+    { category: "System", acronyms: ["RV6"] },
 ];
+
+/**
+ * The listed acronyms with no icon in `public/icons/mods`. The game client has none for these
+ * either; it draws the acronym instead (`ModIcon.kt`), and so does the mod picker.
+ */
+const ACRONYMS_WITHOUT_ICON: ReadonlySet<string> = new Set(["RV6"]);
 
 const CATEGORY_BY_ACRONYM = new Map<string, ModCategory>(
     SELECTABLE_MODS.flatMap((group) => group.acronyms.map((acronym) => [acronym, group.category])),
@@ -45,9 +56,15 @@ const CATEGORY_BY_ACRONYM = new Map<string, ModCategory>(
 const SELECTABLE_ACRONYMS_IN_ORDER = SELECTABLE_MODS.flatMap((group) => group.acronyms);
 
 /**
+ * Whether the mod with the given acronym has an icon in `public/icons/mods`.
+ */
+export function hasModIcon(acronym: string): boolean {
+    return !ACRONYMS_WITHOUT_ICON.has(acronym);
+}
+
+/**
  * Every mod selectable in the mod picker: applicable to osu!droid
- * (`Mod.isApplicableToDroid()`), meant to be manually chosen by a user (`Mod.userPlayable`),
- * and listed in {@link SELECTABLE_MODS}. Ordered by
+ * (`Mod.isApplicableToDroid()`) and listed in {@link SELECTABLE_MODS}. Ordered by
  * {@link SELECTABLE_MODS} - category blocks matching the game client's own mod menu, in its
  * declaration order within each - rather than alphabetically. Returns fresh instances every call,
  * each at that mod's default settings - callers own their own copy to mutate freely.
@@ -59,10 +76,6 @@ export function getSelectableDroidMods(): Mod[] {
         const instance = new (ModClass as new () => Mod)();
 
         if (!instance.isApplicableToDroid()) {
-            continue;
-        }
-
-        if (!instance.userPlayable) {
             continue;
         }
 

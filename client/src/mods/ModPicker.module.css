@@ -171,6 +171,23 @@
     height: auto;
 }
 
+/* Drawn as the game client draws a mod with no icon (`ModIcon.kt`): the acronym in the accent
+   colour at 60% of the icon's height, on a darkened accent box with corners 20% of its height. */
+.optionIconFallback {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 17px;
+    border-radius: 3.4px;
+    background: color-mix(in srgb, var(--accent) 10%, black);
+    color: var(--accent);
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1;
+}
+
 .optionName {
     font-size: 14px;
 }

@@ -6,7 +6,13 @@ import {
     type SerializedMod,
 } from "@rian8337/osu-base";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { deselectMod, getSelectableDroidMods, groupModsByCategory, selectMod } from "./droidMods";
+import {
+    deselectMod,
+    getSelectableDroidMods,
+    groupModsByCategory,
+    hasModIcon,
+    selectMod,
+} from "./droidMods";
 import { matchesModSearch } from "./modSearch";
 import { useFavoriteMods } from "./useFavoriteMods";
 import styles from "./ModPicker.module.css";
@@ -38,7 +44,7 @@ const MAX_PANEL_WIDTH = 320;
 const PANEL_SIDE_MARGIN = 32;
 
 /**
- * A "Select mods" dropdown listing every droid mod with a known icon (see `getSelectableDroidMods`)
+ * A "Select mods" dropdown listing every selectable droid mod (see `getSelectableDroidMods`)
  * as a checkbox row, grouped into the game's own mod-menu categories (see `groupModsByCategory`),
  * with the settings of each selected mod below it. A search box filters by acronym or name (see
  * `matchesModSearch`), and a star on each row favorites a mod into a section pinned above the
@@ -180,11 +186,17 @@ export function ModPicker({ mods, onChange, hasSettings = true }: ModPickerProps
                             handleToggle(mod);
                         }}
                     />
-                    <img
-                        className={styles.optionIcon}
-                        src={`/icons/mods/${mod.acronym}.png`}
-                        alt=""
-                    />
+                    {hasModIcon(mod.acronym) ? (
+                        <img
+                            className={styles.optionIcon}
+                            src={`/icons/mods/${mod.acronym}.png`}
+                            alt=""
+                        />
+                    ) : (
+                        <span className={styles.optionIconFallback} aria-hidden="true">
+                            {mod.acronym}
+                        </span>
+                    )}
                     <span className={styles.optionName}>{mod.name}</span>
                 </label>
                 <button
