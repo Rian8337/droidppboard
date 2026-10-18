@@ -78,3 +78,25 @@ export interface CalculationResponse {
      */
     readonly ignoredMods: string[];
 }
+
+/**
+ * A calculation that was stored to be opened later by its ID, until it expires.
+ */
+export interface CalculationSnapshot {
+    /**
+     * The 10-character URL-safe ID of the snapshot.
+     */
+    readonly id: string;
+
+    /**
+     * When the snapshot was made, as an ISO date.
+     */
+    readonly createdAt: string;
+
+    /**
+     * When the snapshot stops being served, as an ISO date.
+     */
+    readonly expiresAt: string;
+
+    readonly calculation: CalculationResponse;
+}

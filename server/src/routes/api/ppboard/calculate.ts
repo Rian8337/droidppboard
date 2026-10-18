@@ -1,6 +1,8 @@
 import express from "express";
-import { calculateScore } from "../../../calculation/calculateScore";
-import { prepareCalculation } from "../../../calculation/prepareCalculation";
+import {
+    calculatePrepared,
+    prepareCalculation,
+} from "../../../calculation/prepareCalculation";
 import { Util } from "../../../utils/Util";
 import { asyncHandler } from "../../../utils/asyncHandler";
 
@@ -26,16 +28,7 @@ router.post(
             return;
         }
 
-        const { request, variant } = prepared;
-        const result = await calculateScore({
-            scope: request.scope,
-            variant: variant?.name ?? request.variant,
-            parameters: request.parameters,
-            osuFile: prepared.osuFile,
-            beatmapId: prepared.beatmapId,
-            actingUid: prepared.actingUid,
-            calculatorVersion: variant?.calculatorVersion ?? null,
-        });
+        const result = await calculatePrepared(prepared);
 
         if ("error" in result) {
             res.status(result.status).json({ message: result.error });

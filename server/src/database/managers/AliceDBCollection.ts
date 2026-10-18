@@ -1,4 +1,5 @@
 import { Db } from "mongodb";
+import { CalculationSnapshotCollectionManager } from "./aliceDb/CalculationSnapshotCollectionManager";
 import { PlayerSkinCollectionManager } from "./aliceDb/PlayerSkinCollectionManager";
 import { PrototypePPCollectionManager } from "./aliceDb/PrototypePPCollectionManager";
 
@@ -17,6 +18,11 @@ export class AliceDBCollection {
     readonly playerSkins: PlayerSkinCollectionManager;
 
     /**
+     * The database collection for stored calculations that expire.
+     */
+    readonly calculationSnapshots: CalculationSnapshotCollectionManager;
+
+    /**
      * @param aliceDb The database that is only used by this bot (my database).
      */
     constructor(aliceDb: Db) {
@@ -25,6 +31,9 @@ export class AliceDBCollection {
         );
         this.playerSkins = new PlayerSkinCollectionManager(
             aliceDb.collection("playerskins"),
+        );
+        this.calculationSnapshots = new CalculationSnapshotCollectionManager(
+            aliceDb.collection("calculationsnapshots"),
         );
     }
 }

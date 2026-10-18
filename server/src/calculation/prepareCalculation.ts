@@ -1,10 +1,10 @@
 import { ReadStream } from "fs";
 import { Request } from "express";
-import { PPVariant } from "app-structures";
+import { CalculationResponse, PPVariant } from "app-structures";
 import { BrokerClient } from "../clients/BrokerClient";
 import { Util } from "../utils/Util";
 import { resolveVisibleVariant } from "../utils/visibleVariant";
-import { CalculationFailure } from "./calculateScore";
+import { CalculationFailure, calculateScore } from "./calculateScore";
 import { isToolVariantName } from "./calculatorVariants";
 import {
     CalculationRequest,
@@ -114,4 +114,27 @@ export async function prepareCalculation(
     }
 
     return { request, variant, actingUid, osuFile, beatmapId };
+}
+
+/**
+ * Calculates a prepared request with its variant and, if it has one, the variant it is compared
+ * with.
+ *
+ * @param prepared The prepared request.
+ * @returns The calculation, or the error to answer with.
+ */
+export function calculatePrepared(
+    prepared: PreparedCalculation,
+): Promise<CalculationResponse | CalculationFailure> {
+    const { request, variant } = prepared;
+
+    return calculateScore({
+        scope: request.scope,
+        variant: variant?.name ?? request.variant,
+        parameters: request.parameters,
+        osuFile: prepared.osuFile,
+        beatmapId: prepared.beatmapId,
+        actingUid: prepared.actingUid,
+        calculatorVersion: variant?.calculatorVersion ?? null,
+    });
 }

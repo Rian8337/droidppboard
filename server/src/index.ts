@@ -8,6 +8,7 @@ import getWhitelist from "./routes/api/ppboard/get-whitelist";
 import getTopPlays from "./routes/api/ppboard/get-top-plays";
 import calculate from "./routes/api/ppboard/calculate";
 import calculateMyScore from "./routes/api/ppboard/calculate-my-score";
+import snapshots from "./routes/api/ppboard/snapshots";
 import getScoreMultiplierSample from "./routes/api/ppboard/score-multiplier-sample";
 import getVariants from "./routes/api/ppboard/get-variants";
 import login from "./routes/api/auth/login";
@@ -93,6 +94,7 @@ ppboardRouter.use("/prototype/gettopplays", getTopPlays);
 // The more specific path goes first, or `/calculate` would take its requests.
 ppboardRouter.use("/calculate/my-score", calculateMyScore);
 ppboardRouter.use("/calculate", calculate);
+ppboardRouter.use("/snapshots", snapshots);
 ppboardRouter.use("/score-multiplier-sample", getScoreMultiplierSample);
 
 //#endregion
