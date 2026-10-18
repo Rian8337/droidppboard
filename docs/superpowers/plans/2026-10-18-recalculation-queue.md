@@ -133,8 +133,9 @@ origin/master:src/utils/managers/PrototypeRecalculationManager.ts` in `~/Project
 - **Beatmaps.** `getBeatmapByHash(hash: string): Promise<{ kind: "ok"; beatmap: OsuAPIResponse } | { kind: "skip" } | { kind: "error"; reason: string }>`.
   - It calls `http://localhost:3017/api/beatmap/getbeatmap?key=DROID_SERVER_INTERNAL_KEY&hash=…`, as `Util.getBeatmap`
     does with `id`.
-  - `200` means ok and `404` means skip. Before coding, confirm the beatmap service's not-found status in its source on
-    the server; if it differs, map that status to skip instead.
+  - `200` means ok and `404` (`{ error: "Beatmap not found" }`) means skip. Everything else is an error, confirmed in
+    `~/Projects/osu-beatmap-processor/src/controllers/BeatmapController.ts`: `503` with `Retry-After` while osu! is
+    unavailable, `429` when the key's per-minute limit is hit, `400` for a bad reference, and `500`.
 - **Top scores.** `getTopScoreHashes(uid: number, amount = 100): Promise<string[]>` reads `bbl_score_best` ordered by
   `pp DESC`.
 - **Player lookup.** `OsuDroidAccounts.findPlayer(uidOrUsername: number | string): Promise<{ id: number; username: string; archived: boolean } | null>`.
@@ -366,7 +367,9 @@ origin/master:src/utils/managers/PrototypeRecalculationManager.ts` in `~/Project
   - **Selection.** The variant picker selects the queue. Global rows show a variant tag.
 - [ ] **Step 2: Run** `pnpm --filter droidppboard-client build`. Expected: succeeds without type errors.
 - [ ] **Step 3: Write the manual checklist,** in the style of the variant management checklist. Cover:
-  - prerequisites (`DPP_SCORE_SERVICE_URL`, `DPP_SCORE_SERVICE_KEY`, the broker from Task 1 deployed);
+  - prerequisites: `DPP_SCORE_SERVICE_URL`, `DPP_SCORE_SERVICE_KEY`, and the broker from Task 1 deployed. Also, the
+    board's beatmap service key (`DROID_SERVER_INTERNAL_KEY`) must have no per-minute limit, or one high enough for a
+    full run (about 100 beatmap lookups per player times the calculators). Otherwise `429`s fail players;
   - the visitor view;
   - the limit and the cooldown;
   - duplicates;
