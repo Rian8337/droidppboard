@@ -73,4 +73,20 @@ describe("Menu", () => {
 
         expect(screen.getByRole("menuitem", { name: "Delete" })).toHaveFocus();
     });
+
+    it("stays open after choosing an item that keeps it open", async () => {
+        render(
+            <Menu
+                trigger="Actions"
+                items={[{ label: "Retry", keepOpen: true, onSelect: () => {} }]}
+                footer={<p>Something went wrong</p>}
+            />,
+        );
+
+        await userEvent.click(screen.getByRole("button", { name: "Actions" }));
+        await userEvent.click(screen.getByRole("menuitem", { name: "Retry" }));
+
+        expect(screen.getByRole("menu")).toBeInTheDocument();
+        expect(screen.getByText("Something went wrong")).toBeVisible();
+    });
 });

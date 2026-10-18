@@ -51,6 +51,7 @@
     --warn: #ff3b4a;
 
     --touch-target: 44px;
+    --top-bar-height: 52px;
 
     /* Without this, Chromium renders native scrollbar chrome (and other native form-control
        chrome) in its light-OS default regardless of the custom scrollbar styling below. */

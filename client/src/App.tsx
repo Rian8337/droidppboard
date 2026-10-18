@@ -1,4 +1,10 @@
-/** Placeholder shell, replaced by the real layout and routes in a later task. */
+import { BrowserRouter } from "react-router";
+import { AppRoutes } from "./routing/routes";
+
 export function App() {
-    return <main>PP Board</main>;
+    return (
+        <BrowserRouter>
+            <AppRoutes />
+        </BrowserRouter>
+    );
 }

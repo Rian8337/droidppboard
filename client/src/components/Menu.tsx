@@ -5,16 +5,22 @@ export interface MenuItem {
     label: string;
     icon?: ReactNode;
     tone?: "danger";
+
+    /** Leaves the menu open after the item is chosen, for an action whose outcome shows in the menu. */
+    keepOpen?: boolean;
     onSelect: () => void;
 }
 
 export interface MenuProps {
     trigger: ReactNode;
     items: MenuItem[];
+
+    /** Shown below the items, such as the error of an action. */
+    footer?: ReactNode;
 }
 
 /** A popup list of actions that opens on click or tap and closes on an outside press, Escape or a choice. */
-export function Menu({ trigger, items }: MenuProps) {
+export function Menu({ trigger, items, footer }: MenuProps) {
     const [isOpen, setIsOpen] = useState(false);
     const rootRef = useRef<HTMLDivElement>(null);
     const triggerRef = useRef<HTMLButtonElement>(null);
@@ -104,7 +110,10 @@ export function Menu({ trigger, items }: MenuProps) {
                                     : styles.item
                             }
                             onClick={() => {
-                                setIsOpen(false);
+                                if (!item.keepOpen) {
+                                    setIsOpen(false);
+                                }
+
                                 item.onSelect();
                             }}
                         >
@@ -112,6 +121,7 @@ export function Menu({ trigger, items }: MenuProps) {
                             {item.label}
                         </button>
                     ))}
+                    {footer}
                 </div>
             )}
         </div>
