@@ -1,0 +1,31 @@
+.markdown {
+    overflow-wrap: anywhere;
+}
+
+.markdown > :first-child {
+    margin-top: 0;
+}
+
+.markdown > :last-child {
+    margin-bottom: 0;
+}
+
+.markdown a {
+    color: #8c9bff;
+    text-decoration: underline;
+}
+
+.markdown img {
+    max-width: 100%;
+}
+
+.markdown pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 4px;
+    background: var(--input);
+}
+
+.markdown code {
+    font-size: 0.9em;
+}

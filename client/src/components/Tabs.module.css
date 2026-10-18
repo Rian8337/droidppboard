@@ -1,0 +1,40 @@
+.tabs {
+    display: flex;
+    gap: 4px;
+    padding: 4px 6px 0;
+    overflow-x: auto;
+    border-bottom: 1px solid var(--line);
+    background: #2f2f2f;
+}
+
+.tab {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 12px;
+    border-bottom: 2px solid transparent;
+    color: var(--text);
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.tab:hover {
+    color: var(--accent);
+}
+
+.tab:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+}
+
+.active {
+    border-bottom-color: var(--accent);
+    color: var(--accent);
+}
+
+@media (pointer: coarse) {
+    .tab {
+        min-height: var(--touch-target);
+    }
+}

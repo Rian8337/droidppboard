@@ -1,0 +1,86 @@
+.wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.cell {
+    padding: 9px 8px;
+    border-bottom: 1px solid var(--line);
+    text-align: left;
+    white-space: nowrap;
+}
+
+th.cell {
+    font-weight: 800;
+}
+
+.right {
+    text-align: right;
+}
+
+/* Sticky cells need an opaque background or the scrolled columns show through them. */
+.pinned {
+    position: sticky;
+    z-index: 1;
+    background: var(--bg);
+}
+
+.sortButton {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font-weight: inherit;
+    cursor: pointer;
+}
+
+.sortButton:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+.sortIdle {
+    color: var(--muted);
+}
+
+.sortActive {
+    color: var(--accent);
+}
+
+.clickable {
+    cursor: pointer;
+}
+
+.clickable:hover > .cell,
+.clickable:focus-visible > .cell {
+    background: var(--panel);
+}
+
+.clickable:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+}
+
+.empty {
+    padding: 24px 8px;
+    color: var(--muted);
+    text-align: center;
+}
+
+@media (pointer: coarse) {
+    .table tr {
+        height: var(--touch-target);
+    }
+
+    .sortButton {
+        min-height: var(--touch-target);
+    }
+}

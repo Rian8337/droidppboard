@@ -1,0 +1,27 @@
+.pill {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.neutral {
+    background: #444;
+    color: var(--text);
+}
+
+.running {
+    background: #2f4a6b;
+    color: #9cc8ff;
+}
+
+.success {
+    background: #2c4a2c;
+    color: #9be09b;
+}
+
+.failure {
+    background: #5a2a2a;
+    color: #ff9b9b;
+}
