@@ -1,6 +1,6 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import type { IPrototypePP, PrototypeLeaderboardResponse } from "app-structures";
+import type { PrototypeLeaderboardResponse, PrototypePlayer } from "app-structures";
 import { delay, http, HttpResponse } from "msw";
 import { Route, Routes, useLocation } from "react-router";
 import { useBreakpoint } from "../../src/hooks/useBreakpoint";
@@ -35,7 +35,7 @@ function renderTab(variant = droidRebalance, me?: RenderWithProvidersOptions["me
 }
 
 /** Answers the leaderboard with `rowsFor(page)` and records the URL of every request. */
-function answerWith(rowsFor: (page: number) => IPrototypePP[], variant = droidRebalance): URL[] {
+function answerWith(rowsFor: (page: number) => PrototypePlayer[], variant = droidRebalance): URL[] {
     const requests: URL[] = [];
 
     server.use(
@@ -43,7 +43,7 @@ function answerWith(rowsFor: (page: number) => IPrototypePP[], variant = droidRe
             const url = new URL(request.url);
             requests.push(url);
 
-            const body: PrototypeLeaderboardResponse<IPrototypePP[]> = {
+            const body: PrototypeLeaderboardResponse<PrototypePlayer[]> = {
                 variants: [droidRebalance, readingVariant],
                 currentVariant: variant,
                 data: rowsFor(Number(url.searchParams.get("page") ?? "1")),
@@ -56,7 +56,7 @@ function answerWith(rowsFor: (page: number) => IPrototypePP[], variant = droidRe
     return requests;
 }
 
-function buildPage(page: number, size: number): IPrototypePP[] {
+function buildPage(page: number, size: number): PrototypePlayer[] {
     return Array.from({ length: size }, (_, index) =>
         buildPlayer({ uid: page * 100 + index, username: `Player ${page}-${index}` }),
     );
@@ -79,6 +79,30 @@ describe("LeaderboardTab", () => {
         expect(within(alpha).getByText("+20.5")).toHaveAttribute("data-tone", "up");
         expect(within(bravo).getByText("-10.3")).toHaveAttribute("data-tone", "down");
         expect(within(charlie).getByText("0.0")).toHaveAttribute("data-tone", "neutral");
+    });
+
+    it("shows the flag of each player's country in the Player cell, and none when it is unknown", async () => {
+        renderTab();
+
+        const alpha = (await screen.findByText("Alpha")).closest("tr")!;
+        const bravo = screen.getByText("Bravo").closest("tr")!;
+        const charlie = screen.getByText("Charlie").closest("tr")!;
+
+        expect(within(alpha).getByRole("img", { name: "Indonesia" })).toBeVisible();
+        expect(within(bravo).getByRole("img", { name: "Japan" })).toBeVisible();
+        expect(within(charlie).queryByRole("img")).not.toBeInTheDocument();
+    });
+
+    it("shows the flag of each player's country on a phone", async () => {
+        vi.mocked(useBreakpoint).mockReturnValue("phone");
+
+        renderTab();
+
+        const alpha = (await screen.findByText("Alpha")).closest("li")!;
+        const charlie = screen.getByText("Charlie").closest("li")!;
+
+        expect(within(alpha).getByRole("img", { name: "Indonesia" })).toBeVisible();
+        expect(within(charlie).queryByRole("img")).not.toBeInTheDocument();
     });
 
     it("shows the columns without any sort button", async () => {
@@ -232,7 +256,7 @@ describe("LeaderboardTab", () => {
                     await delay(150);
                 }
 
-                const body: PrototypeLeaderboardResponse<IPrototypePP[]> = {
+                const body: PrototypeLeaderboardResponse<PrototypePlayer[]> = {
                     variants: [droidRebalance, readingVariant],
                     currentVariant: droidRebalance,
                     data: buildPage(page, page === 1 ? 50 : 2),

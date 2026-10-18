@@ -6,6 +6,7 @@ import { useNavigate } from "react-router";
 import { leaderboardPageSize, useLeaderboard } from "../api/leaderboard";
 import { useMe } from "../api/auth";
 import { Button } from "../components/Button";
+import { CountryFlag } from "../components/CountryFlag";
 import { DataTable, type Column } from "../components/DataTable";
 import { EmptyState } from "../components/EmptyState";
 import { ErrorMessage } from "../components/ErrorMessage";
@@ -67,7 +68,16 @@ function Leaderboard({ variant }: LeaderboardTabProps) {
 
     const columns: Column<LeaderboardEntry>[] = [
         { id: "rank", header: "Rank", render: ({ rank }) => rank },
-        { id: "player", header: "Player", render: ({ player }) => player.username },
+        {
+            id: "player",
+            header: "Player",
+            render: ({ player }) => (
+                <>
+                    <CountryFlag code={player.country} />
+                    {player.username}
+                </>
+            ),
+        },
         {
             id: "live",
             header: "Live pp",

@@ -1,8 +1,8 @@
 import { http, HttpResponse, type RequestHandler } from "msw";
 import type {
-    IPrototypePP,
     PrototypeLeaderboardResponse,
-    TopPrototypePPEntry,
+    PrototypePlayer,
+    PrototypeTopPlay,
 } from "app-structures";
 import {
     alphaProfile,
@@ -31,7 +31,7 @@ export const handlers: RequestHandler[] = [
     http.get("/api/ppboard/prototype/getleaderboard", ({ request }) => {
         const type = new URL(request.url).searchParams.get("type");
         const currentVariant = type === readingVariant.name ? readingVariant : droidRebalance;
-        const body: PrototypeLeaderboardResponse<IPrototypePP[]> = {
+        const body: PrototypeLeaderboardResponse<PrototypePlayer[]> = {
             variants: [droidRebalance, readingVariant],
             currentVariant,
             data: leaderboardPlayers,
@@ -48,7 +48,7 @@ export const handlers: RequestHandler[] = [
             return HttpResponse.json({ message: "Player not found!" }, { status: 404 });
         }
 
-        const body: PrototypeLeaderboardResponse<IPrototypePP> = {
+        const body: PrototypeLeaderboardResponse<PrototypePlayer> = {
             variants: [droidRebalance, readingVariant],
             currentVariant,
             data: alphaProfile,
@@ -59,7 +59,7 @@ export const handlers: RequestHandler[] = [
     http.get("/api/ppboard/prototype/gettopplays", ({ request }) => {
         const type = new URL(request.url).searchParams.get("type");
         const currentVariant = type === readingVariant.name ? readingVariant : droidRebalance;
-        const body: PrototypeLeaderboardResponse<TopPrototypePPEntry[]> = {
+        const body: PrototypeLeaderboardResponse<PrototypeTopPlay[]> = {
             variants: [droidRebalance, readingVariant],
             currentVariant,
             data: topPlays,

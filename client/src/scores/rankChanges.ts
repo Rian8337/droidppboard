@@ -1,6 +1,6 @@
 import type { PrototypePPEntry } from "app-structures";
 
-/** A score as the table shows it. `username` and `uid` are set for scores of several players, such as top plays. */
+/** A score as the table shows it. `username`, `uid` and `country` are set for scores of several players, such as top plays. */
 export type ScoreRow = PrototypePPEntry & {
     /** The 1-based position of the score by local pp. */
     rank: number;
@@ -8,6 +8,7 @@ export type ScoreRow = PrototypePPEntry & {
     /** How many places the score moved from its live position to its local one; positive means up. */
     rankChange: number;
     username?: string;
+    country?: string | null;
     uid?: number;
 };
 

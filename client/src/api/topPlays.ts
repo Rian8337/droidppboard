@@ -1,5 +1,5 @@
 import { keepPreviousData, useQuery, type UseQueryResult } from "@tanstack/react-query";
-import type { PrototypeLeaderboardResponse, TopPrototypePPEntry } from "app-structures";
+import type { PrototypeLeaderboardResponse, PrototypeTopPlay } from "app-structures";
 import { requestJson } from "./http";
 import { queryKeys } from "./queryKeys";
 
@@ -10,7 +10,7 @@ import { queryKeys } from "./queryKeys";
 export function useTopPlays(
     variant: string,
     modAcronyms: readonly string[],
-): UseQueryResult<TopPrototypePPEntry[]> {
+): UseQueryResult<PrototypeTopPlay[]> {
     const mods = modAcronyms.join("");
 
     return useQuery({
@@ -22,7 +22,7 @@ export function useTopPlays(
                 parameters.set("mods", mods);
             }
 
-            return requestJson<PrototypeLeaderboardResponse<TopPrototypePPEntry[]>>(
+            return requestJson<PrototypeLeaderboardResponse<PrototypeTopPlay[]>>(
                 "GET",
                 `/api/ppboard/prototype/gettopplays?${parameters}`,
             );

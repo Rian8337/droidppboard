@@ -1,4 +1,5 @@
 import { Link } from "react-router";
+import { CountryFlag } from "../components/CountryFlag";
 import { getProfilePath } from "../routing/paths";
 import { formatPp } from "../utils/formatPp";
 import { getDifference } from "./difference";
@@ -19,7 +20,10 @@ export function LeaderboardRows({ variant, entries }: LeaderboardRowsProps) {
                 <li key={player.uid}>
                     <Link to={getProfilePath(variant, player.uid)} className={styles.row}>
                         <span className={styles.rank}>{rank}</span>
-                        <span className={styles.player}>{player.username}</span>
+                        <span className={styles.player}>
+                            <CountryFlag code={player.country} />
+                            {player.username}
+                        </span>
                         <span className={styles.local}>{formatPp(player.localPPTotal)}</span>
                         <span className={styles.beneath}>
                             <span className={styles.live}>{formatPp(player.livePPTotal)}</span>

@@ -6,15 +6,15 @@ import type {
     CalculationResponse,
     IMapWhitelist,
     IPlayerSkin,
-    IPrototypePP,
     ModMultiplierSampleResponse,
     PPVariant,
+    PrototypePlayer,
     PrototypePPEntry,
+    PrototypeTopPlay,
     RecalcEntryView,
     RecalcQueueView,
     FullRunView,
     ScorePrototypeState,
-    TopPrototypePPEntry,
 } from "app-structures";
 import type { Me } from "../../src/api/auth";
 
@@ -83,8 +83,8 @@ export const managerMe: Me = buildMe({
 
 export const plainMe: Me = buildMe();
 
-/** Builds a leaderboard row: a player with 500 live pp and 520 local pp unless overridden. */
-export function buildPlayer(overrides: Partial<IPrototypePP> = {}): IPrototypePP {
+/** Builds a leaderboard row: a player with 500 live pp and 520 local pp and no known country unless overridden. */
+export function buildPlayer(overrides: Partial<PrototypePlayer> = {}): PrototypePlayer {
     return {
         lastUpdate: 1_790_000_000_000,
         pp: [],
@@ -93,15 +93,37 @@ export function buildPlayer(overrides: Partial<IPrototypePP> = {}): IPrototypePP
         uid: 1000,
         username: "Alpha",
         reworkType: "droid-rebalance",
+        country: null,
         ...overrides,
     };
 }
 
-/** The rows the mocked leaderboard answers with: one gains pp, one loses pp and one is unchanged. */
-export const leaderboardPlayers: IPrototypePP[] = [
-    buildPlayer({ uid: 1000, username: "Alpha", localPPTotal: 1520.5, livePPTotal: 1500 }),
-    buildPlayer({ uid: 1001, username: "Bravo", localPPTotal: 1480, livePPTotal: 1490.25 }),
-    buildPlayer({ uid: 1002, username: "Charlie", localPPTotal: 1400, livePPTotal: 1400 }),
+/**
+ * The rows the mocked leaderboard answers with: one gains pp, one loses pp and one is unchanged.
+ * Charlie's country is unknown.
+ */
+export const leaderboardPlayers: PrototypePlayer[] = [
+    buildPlayer({
+        uid: 1000,
+        username: "Alpha",
+        localPPTotal: 1520.5,
+        livePPTotal: 1500,
+        country: "ID",
+    }),
+    buildPlayer({
+        uid: 1001,
+        username: "Bravo",
+        localPPTotal: 1480,
+        livePPTotal: 1490.25,
+        country: "JP",
+    }),
+    buildPlayer({
+        uid: 1002,
+        username: "Charlie",
+        localPPTotal: 1400,
+        livePPTotal: 1400,
+        country: null,
+    }),
 ];
 
 /** Builds one side of a score (live, local or master) whose total pp is `total` and every other number is a fixed value. */
@@ -174,16 +196,17 @@ export const profileScores: PrototypePPEntry[] = [
 ];
 
 /** The profile the mocked server answers for player 1000. */
-export const alphaProfile: IPrototypePP = buildPlayer({
+export const alphaProfile: PrototypePlayer = buildPlayer({
     uid: 1000,
     username: "Alpha",
+    country: "ID",
     localPPTotal: 215.5,
     livePPTotal: 190,
     pp: profileScores,
 });
 
 /** The plays the mocked server answers top plays with. */
-export const topPlays: TopPrototypePPEntry[] = [
+export const topPlays: PrototypeTopPlay[] = [
     {
         ...buildScore({
             hash: "a",
@@ -191,7 +214,9 @@ export const topPlays: TopPrototypePPEntry[] = [
             live: buildScoreState(100),
             local: buildScoreState(130),
         }),
+        uid: 1000,
         username: "Alpha",
+        country: "ID",
     },
     {
         ...buildScore({
@@ -200,7 +225,9 @@ export const topPlays: TopPrototypePPEntry[] = [
             live: buildScoreState(100),
             local: buildScoreState(90),
         }),
+        uid: 1001,
         username: "Bravo",
+        country: "JP",
     },
 ];
 

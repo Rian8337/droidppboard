@@ -2,6 +2,7 @@ import { faCaretDown, faCaretUp } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { DroidHitWindow, ModPrecise, ModUtil, PreciseDroidHitWindow } from "@rian8337/osu-base";
 import type { PrototypePPEntry, ScorePrototypeState } from "app-structures";
+import { CountryFlag } from "../components/CountryFlag";
 import type { Column } from "../components/DataTable";
 import { getComparisonState, getScoreDifference } from "../leaderboard/difference";
 import { DifferenceText } from "../leaderboard/DifferenceText";
@@ -167,7 +168,12 @@ export const scoreColumns: ScoreColumn[] = [
         header: "Player",
         isSortable: true,
         isDefaultVisible: true,
-        render: (row) => <span className={styles.player}>{row.username ?? ""}</span>,
+        render: (row) => (
+            <span className={styles.player}>
+                <CountryFlag code={row.country ?? null} />
+                {row.username ?? ""}
+            </span>
+        ),
         csvValue: (row) => row.username ?? "",
     },
     {

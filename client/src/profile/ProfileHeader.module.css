@@ -20,6 +20,13 @@
     object-fit: cover;
 }
 
+.nameLine {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    font-size: 22px;
+}
+
 .name {
     margin: 0;
     min-width: 0;

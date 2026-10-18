@@ -1,6 +1,6 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import type { IPrototypePP, PrototypeLeaderboardResponse } from "app-structures";
+import type { PrototypeLeaderboardResponse, PrototypePlayer } from "app-structures";
 import { http, HttpResponse } from "msw";
 import { Route, Routes } from "react-router";
 import { useBreakpoint } from "../../src/hooks/useBreakpoint";
@@ -30,7 +30,7 @@ function renderProfile(route: string, me?: RenderWithProvidersOptions["me"]) {
 function answerWithMaster(variant = readingVariant) {
     server.use(
         http.get("/api/ppboard/prototype/getuserprofile", () => {
-            const body: PrototypeLeaderboardResponse<IPrototypePP> = {
+            const body: PrototypeLeaderboardResponse<PrototypePlayer> = {
                 variants: [droidRebalance, readingVariant],
                 currentVariant: variant,
                 data: { ...alphaProfile, masterPPTotal: 200 },
@@ -58,7 +58,7 @@ describe("ProfilePage", () => {
         localStorage.clear();
     });
 
-    it("shows the avatar and name, and no country", async () => {
+    it("shows the avatar and name", async () => {
         renderProfile("/v/droid-rebalance/players/1000");
 
         expect(await screen.findByRole("heading", { name: "Alpha" })).toBeVisible();
@@ -66,7 +66,36 @@ describe("ProfilePage", () => {
             "src",
             "https://osudroid.moe/user/avatar?id=1000",
         );
-        expect(screen.queryByText(/country/i)).not.toBeInTheDocument();
+    });
+
+    it("shows the flag of the player's country beside the name", async () => {
+        renderProfile("/v/droid-rebalance/players/1000");
+
+        const heading = await screen.findByRole("heading", { name: "Alpha" });
+        const flag = screen.getByRole("img", { name: "Indonesia" });
+
+        expect(flag).toBeVisible();
+        expect(flag.parentElement).toBe(heading.parentElement);
+    });
+
+    it("shows no flag when the player's country is unknown", async () => {
+        server.use(
+            http.get("/api/ppboard/prototype/getuserprofile", () =>
+                HttpResponse.json({
+                    variants: [droidRebalance, readingVariant],
+                    currentVariant: droidRebalance,
+                    data: { ...alphaProfile, country: null },
+                }),
+            ),
+        );
+
+        renderProfile("/v/droid-rebalance/players/1000");
+
+        await screen.findByRole("heading", { name: "Alpha" });
+
+        expect(screen.getAllByRole("img").map((image) => image.getAttribute("alt"))).toEqual([
+            "Alpha",
+        ]);
     });
 
     it("titles the browser tab after the player and the variant", async () => {

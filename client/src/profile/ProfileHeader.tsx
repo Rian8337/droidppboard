@@ -1,9 +1,10 @@
 import { faArrowLeft, faPlus } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import type { IPrototypePP } from "app-structures";
+import type { PrototypePlayer } from "app-structures";
 import type { ReactNode } from "react";
 import { Link } from "react-router";
 import { Button } from "../components/Button";
+import { CountryFlag } from "../components/CountryFlag";
 import { getDifference, variantWithoutMaster } from "../leaderboard/difference";
 import { DifferenceText } from "../leaderboard/DifferenceText";
 import { getVariantPath } from "../routing/paths";
@@ -12,7 +13,7 @@ import { getProfileStats } from "./profileStats";
 import styles from "./ProfileHeader.module.css";
 
 export interface ProfileHeaderProps {
-    profile: IPrototypePP;
+    profile: PrototypePlayer;
     variant: string;
 
     /** Whether somebody is logged in, who may queue the player. */
@@ -64,7 +65,10 @@ export function ProfileHeader({
                     width={64}
                     height={64}
                 />
-                <h2 className={styles.name}>{profile.username}</h2>
+                <div className={styles.nameLine}>
+                    <CountryFlag code={profile.country} />
+                    <h2 className={styles.name}>{profile.username}</h2>
+                </div>
                 <div className={styles.actions}>
                     <Link to={getVariantPath(variant)} className={styles.back}>
                         <FontAwesomeIcon icon={faArrowLeft} /> Back

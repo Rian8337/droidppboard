@@ -1,5 +1,5 @@
 import { useQuery, type UseQueryResult } from "@tanstack/react-query";
-import type { IPrototypePP, PrototypeLeaderboardResponse } from "app-structures";
+import type { PrototypeLeaderboardResponse, PrototypePlayer } from "app-structures";
 import { requestJson } from "./http";
 import { queryKeys } from "./queryKeys";
 
@@ -14,7 +14,7 @@ export function useLeaderboard(
     variant: string,
     page: number,
     search: string,
-): UseQueryResult<IPrototypePP[]> {
+): UseQueryResult<PrototypePlayer[]> {
     return useQuery({
         queryKey: queryKeys.leaderboard(variant, page, search),
         queryFn: () => {
@@ -24,7 +24,7 @@ export function useLeaderboard(
                 parameters.set("query", search);
             }
 
-            return requestJson<PrototypeLeaderboardResponse<IPrototypePP[]>>(
+            return requestJson<PrototypeLeaderboardResponse<PrototypePlayer[]>>(
                 "GET",
                 `/api/ppboard/prototype/getleaderboard?${parameters}`,
             );
