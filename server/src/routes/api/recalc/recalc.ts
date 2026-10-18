@@ -2,8 +2,12 @@ import { Request, Response, Router } from "express";
 import { PPVariant } from "app-structures";
 import { OsuDroidAccounts } from "../../../auth/OsuDroidAccounts";
 import { BrokerClient } from "../../../clients/BrokerClient";
+import { calculatorCount } from "../../../recalculation/calculators";
 import { recalculationQueue } from "../../../recalculation/instance";
-import { canManageFullRuns } from "../../../recalculation/permissions";
+import {
+    canManageFullRuns,
+    canRemoveAnyEntry,
+} from "../../../recalculation/permissions";
 import {
     parseFullRunStartRequest,
     parseQueueRequest,
@@ -190,7 +194,9 @@ router.post(
             return;
         }
 
-        if (!variant.available || variant.healthyInstanceCount < 1) {
+        const calculators = calculatorCount(variant);
+
+        if (!variant.available || calculators < 1) {
             res.status(409).json({ message: "This variant is unavailable" });
 
             return;
@@ -208,7 +214,7 @@ router.post(
             uid: player.id,
             username: player.username,
             variant: variant.name,
-            capacity: variant.healthyInstanceCount,
+            capacity: calculators,
             queuedByUid: uid,
             queuedByUsername,
         });
@@ -287,7 +293,7 @@ router.delete(
         const result = recalculationQueue.remove(
             id,
             uid,
-            canManageFullRuns(me),
+            canRemoveAnyEntry(me),
         );
 
         switch (result) {
@@ -346,7 +352,7 @@ router.post(
         try {
             result = await recalculationQueue.startFullRun(
                 variant.name,
-                variant.healthyInstanceCount,
+                calculatorCount(variant),
                 { uid, username },
                 request.restart,
             );

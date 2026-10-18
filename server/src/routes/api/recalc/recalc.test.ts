@@ -350,6 +350,21 @@ describe("recalculation routes", () => {
             ).toBe(409);
         });
 
+        it("answers 409 when a broker that predates the instance count omits it", async () => {
+            const { healthyInstanceCount: _omitted, ...withoutCount } = variant(
+                "droid-live",
+            );
+
+            mocks.getVariants.mockResolvedValueOnce([withoutCount]);
+
+            const response = await request("POST", "/api/recalc/queue", {
+                body: { variant: "droid-live", uid: 1000 },
+            });
+
+            expect(response.status).toBe(409);
+            expect(queue.allowance(42).active).toBe(0);
+        });
+
         it("answers 429 with Retry-After for the cooldown, and names the limit", async () => {
             mocks.findPlayer.mockImplementation((uid: number) =>
                 Promise.resolve({
@@ -449,6 +464,21 @@ describe("recalculation routes", () => {
             expect(
                 (await request("DELETE", `/api/recalc/queue/${others}`)).status,
             ).toBe(204);
+        });
+
+        it("lets a manager remove only their own entries", async () => {
+            mocks.getMe.mockResolvedValue({
+                uid: 42,
+                role: "manager",
+                grants: [],
+            });
+
+            const others = await add("droid-live", 7);
+
+            expect(
+                (await request("DELETE", `/api/recalc/queue/${others}`)).status,
+            ).toBe(403);
+            expect(queue.getEntryVariant(others)).toBeDefined();
         });
 
         it("answers 409 for an entry that is calculating", async () => {

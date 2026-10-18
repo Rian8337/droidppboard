@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { randomUUID } from "crypto";
-import { BrokerClient } from "../clients/BrokerClient";
 import { DatabaseManager } from "../database/managers/DatabaseManager";
+import { getVariantCalculatorCount } from "./calculators";
 import { readRecalcLimits } from "./limits";
 import { calculateProfile } from "./ProfileCalculator";
 import { FullRunStore, RecalculationQueue } from "./RecalculationQueue";
@@ -45,9 +45,7 @@ export const recalculationQueue = new RecalculationQueue({
     limits: readRecalcLimits(process.env),
     calculate: (uid, variant, actingUid, onProgress) =>
         calculateProfile(uid, variant, actingUid, onProgress),
-    getCapacity: async (variant, actingUid) =>
-        (await BrokerClient.getVariant(variant, actingUid))
-            ?.healthyInstanceCount ?? null,
+    getCapacity: getVariantCalculatorCount,
     fullRunStore,
 });
 
