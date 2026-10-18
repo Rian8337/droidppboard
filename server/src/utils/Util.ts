@@ -67,15 +67,6 @@ export abstract class Util {
     }
 
     /**
-     * Checks if a request is requesting prototype data.
-     *
-     * @param req The request.
-     */
-    static requestIsPrototype(req: Request<unknown>): boolean {
-        return req.baseUrl.includes("prototype") || req.body.prototype;
-    }
-
-    /**
      * Reads a file stream and returns it as a buffer.
      *
      * @param stream The stream.

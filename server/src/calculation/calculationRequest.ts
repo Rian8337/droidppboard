@@ -75,10 +75,17 @@ function parseMods(value: unknown): SerializedMod[] | null {
 }
 
 /**
- * Gets the ID from a beatmap link or ID, which is its last path segment.
+ * Gets the ID from a beatmap link or ID, which is its last path segment. A query is ignored, and so
+ * is a fragment unless it holds a path of its own, as in `beatmapsets/9#osu/5678`, where it names the beatmap.
  */
 function parseBeatmapId(input: string): number | null {
-    const segment = input.trim().replace(/\/+$/, "").split("/").at(-1)!;
+    const [withoutFragment, ...fragments] = input.trim().split("#");
+    const fragment = fragments.join("#").split("?")[0];
+    const path = (fragment.includes("/") ? fragment : withoutFragment.split("?")[0]).replace(
+        /\/+$/,
+        "",
+    );
+    const segment = path.split("/").at(-1)!;
 
     if (!/^\d+$/.test(segment)) {
         return null;

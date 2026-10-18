@@ -47,13 +47,25 @@ describe("parseCalculationRequest", () => {
         });
     });
 
+    it.each([
+        ["https://osu.ppy.sh/b/1234?m=0", 1234],
+        ["https://osu.ppy.sh/beatmaps/1234#osu/1234", 1234],
+        ["https://osu.ppy.sh/beatmapsets/9#osu/5678?x=1", 5678],
+        ["https://osu.ppy.sh/b/1234?m=0#top", 1234],
+        ["https://osu.ppy.sh/b/1234/?m=0", 1234],
+    ])("ignores the query and fragment of the link %s", (beatmap, id) => {
+        expect(
+            parseCalculationRequest({ ...base, beatmap }, undefined),
+        ).toMatchObject({ beatmapInput: { kind: "id", id } });
+    });
+
     it("rejects a file that is not a .osu file", () => {
         expect(parseCalculationRequest(base, upload("/tmp/map.txt"))).toEqual({
             error: "Invalid file uploaded",
         });
     });
 
-    it.each(["0", "-5", "abc", "12abc"])(
+    it.each(["0", "-5", "abc", "12abc", "https://osu.ppy.sh/b/abc?m=0"])(
         "rejects the beatmap %s",
         (beatmap) => {
             expect(
