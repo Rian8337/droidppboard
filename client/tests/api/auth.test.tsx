@@ -3,43 +3,107 @@ import userEvent from "@testing-library/user-event";
 import { delay, http, HttpResponse } from "msw";
 import { useLogin, useLogout, useMe } from "../../src/api/auth";
 import { useVariants } from "../../src/api/variants";
-import { droidRebalance, flowaim, managerMe } from "../mocks/fixtures";
+import { droidRebalance, flowaim, managerMe, plainMe } from "../mocks/fixtures";
 import { server } from "../mocks/server";
 import { renderWithProviders } from "../utils/renderWithProviders";
 
-/** Switches the mocked server between a logged in manager and a logged out visitor. */
-function mockSession(): { logOut: () => void; getLoggedOutAt: () => number | null } {
-    let isLoggedIn = true;
-    let loggedOutAt: number | null = null;
+type Person = "manager" | "player" | null;
+
+interface MockedSession {
+    /** When the server last changed who is logged in, which is when its answer was sent. */
+    getChangedAt: () => number | null;
+}
+
+/**
+ * Makes the mocked server answer for one person at a time, and lets login and logout switch them
+ * with a realistic latency. Once the person has changed its answers get slow, so that anything
+ * left over from before would still be on screen when the new answers arrive.
+ */
+function mockSession(initial: Person = "manager"): MockedSession {
+    let person = initial;
+    let changedAt: number | null = null;
+
+    function changePerson(next: Person): void {
+        person = next;
+        changedAt = Date.now();
+    }
 
     server.use(
         http.get("/api/auth/me", async () => {
-            await delay(isLoggedIn ? 0 : 300);
+            await delay(changedAt === null ? 0 : 300);
 
-            return isLoggedIn
-                ? HttpResponse.json(managerMe)
-                : HttpResponse.json({ message: "Not logged in" }, { status: 401 });
+            return person === null
+                ? HttpResponse.json({ message: "Not logged in" }, { status: 401 })
+                : HttpResponse.json(person === "manager" ? managerMe : plainMe);
         }),
         http.get("/api/ppboard/variants", async () => {
-            // Slow enough that anything stale would still be on screen when the answer arrives.
-            await delay(isLoggedIn ? 0 : 150);
+            await delay(changedAt === null ? 0 : 150);
 
-            return HttpResponse.json(isLoggedIn ? [droidRebalance, flowaim] : [droidRebalance]);
+            return HttpResponse.json(
+                person === "manager" ? [droidRebalance, flowaim] : [droidRebalance],
+            );
         }),
-        http.post("/api/auth/logout", () => {
-            isLoggedIn = false;
-            loggedOutAt = Date.now();
+        http.post("/api/auth/logout", async () => {
+            await delay(80);
+            changePerson(null);
 
             return new HttpResponse(null, { status: 204 });
         }),
+        http.post("/api/auth/login", async () => {
+            await delay(80);
+            changePerson("player");
+
+            return HttpResponse.json({ uid: plainMe.uid, username: plainMe.username });
+        }),
     );
 
-    return {
-        logOut: () => {
-            isLoggedIn = false;
-        },
-        getLoggedOutAt: () => loggedOutAt,
+    return { getChangedAt: () => changedAt };
+}
+
+/**
+ * Counts how often `text` is on screen from a moment after the server changed who is logged in
+ * (the grace is for the response to arrive) until `sampleCount` samples have been taken.
+ *
+ * @returns A function that waits for the samples and gives the number of sightings.
+ */
+function watchFor(text: string, { getChangedAt }: MockedSession, sampleCount = 40) {
+    let sightings = 0;
+    let samples = 0;
+    const interval = setInterval(() => {
+        const changedAt = getChangedAt();
+
+        if (changedAt === null || Date.now() - changedAt < 30) {
+            return;
+        }
+
+        samples++;
+
+        if (screen.queryByText(text)) {
+            sightings++;
+        }
+    }, 5);
+
+    return async () => {
+        try {
+            await waitFor(() => expect(samples).toBeGreaterThan(sampleCount));
+        } finally {
+            clearInterval(interval);
+        }
+
+        return sightings;
     };
+}
+
+function VariantList() {
+    const variants = useVariants();
+
+    return (
+        <ul>
+            {variants.data?.map((variant) => (
+                <li key={variant.name}>{variant.name}</li>
+            ))}
+        </ul>
+    );
 }
 
 describe("useMe", () => {
@@ -58,7 +122,7 @@ describe("useMe", () => {
     });
 
     it("returns null on a 401", async () => {
-        mockSession().logOut();
+        mockSession(null);
 
         function Probe() {
             const me = useMe();
@@ -121,24 +185,53 @@ describe("useLogin", () => {
         expect(await screen.findByText("manager")).toBeInTheDocument();
         expect(body).toEqual({ username: "manager", password: "hunter2", turnstileToken: "token" });
     });
+
+    it("drops data cached as the previous person on login", async () => {
+        const session = mockSession();
+
+        function Probe() {
+            const login = useLogin();
+
+            return (
+                <>
+                    <VariantList />
+                    <button
+                        onClick={() =>
+                            login.mutate({
+                                username: "player",
+                                password: "hunter2",
+                                turnstileToken: "token",
+                            })
+                        }
+                    >
+                        Log in
+                    </button>
+                </>
+            );
+        }
+
+        renderWithProviders(<Probe />);
+        expect(await screen.findByText("flowaim")).toBeInTheDocument();
+
+        const finishWatching = watchFor("flowaim", session);
+        await userEvent.click(screen.getByRole("button", { name: "Log in" }));
+
+        expect(await finishWatching()).toBe(0);
+        expect(screen.getByText("droid-rebalance")).toBeInTheDocument();
+    });
 });
 
 describe("useLogout", () => {
     // Review focus 4: logging out on a private variant's page must not leave its data on screen.
     it("drops private data on logout", async () => {
-        const { getLoggedOutAt } = mockSession();
+        const session = mockSession();
 
         function Probe() {
-            const variants = useVariants();
             const logout = useLogout();
 
             return (
                 <>
-                    <ul>
-                        {variants.data?.map((variant) => (
-                            <li key={variant.name}>{variant.name}</li>
-                        ))}
-                    </ul>
+                    <VariantList />
                     <button onClick={() => logout.mutate()}>Log out</button>
                 </>
             );
@@ -147,30 +240,10 @@ describe("useLogout", () => {
         renderWithProviders(<Probe />);
         expect(await screen.findByText("flowaim")).toBeInTheDocument();
 
-        // Once the server has logged the person out (with a moment's grace for the response to
-        // arrive), note whenever the private variant is on screen. The slow answers above keep any
-        // stale copy there long enough to be seen.
-        let sightings = 0;
-        let samples = 0;
-        const interval = setInterval(() => {
-            const loggedOutAt = getLoggedOutAt();
-
-            if (loggedOutAt === null || Date.now() - loggedOutAt < 30) {
-                return;
-            }
-
-            samples++;
-
-            if (screen.queryByText("flowaim")) {
-                sightings++;
-            }
-        }, 5);
-
+        const finishWatching = watchFor("flowaim", session);
         await userEvent.click(screen.getByRole("button", { name: "Log out" }));
-        await waitFor(() => expect(samples).toBeGreaterThan(40));
-        clearInterval(interval);
 
-        expect(sightings).toBe(0);
+        expect(await finishWatching()).toBe(0);
         expect(screen.getByText("droid-rebalance")).toBeInTheDocument();
     });
 
@@ -195,5 +268,31 @@ describe("useLogout", () => {
         await userEvent.click(screen.getByRole("button", { name: "Log out" }));
 
         expect(await screen.findByText("nobody")).toBeInTheDocument();
+    });
+
+    it("still succeeds when loading who is logged in again fails", async () => {
+        mockSession();
+
+        function Probe() {
+            const logout = useLogout();
+
+            return (
+                <>
+                    <p>{logout.status}</p>
+                    <button onClick={() => logout.mutate()}>Log out</button>
+                </>
+            );
+        }
+
+        renderWithProviders(<Probe />);
+        server.use(
+            http.get("/api/auth/me", () =>
+                HttpResponse.json({ message: "Broken" }, { status: 500 }),
+            ),
+        );
+
+        await userEvent.click(screen.getByRole("button", { name: "Log out" }));
+
+        expect(await screen.findByText("success")).toBeInTheDocument();
     });
 });

@@ -37,13 +37,16 @@ async function fetchMe(): Promise<Me | null> {
 }
 
 /**
- * Drops everything cached and loads who is logged in again. What was seen as one person must not
- * survive as another, so nothing is kept, not even the variants everyone can see.
+ * Drops everything cached as the previous person and loads again what is on screen. What was seen
+ * as one person must not survive as another, so nothing is kept, not even the variants everyone
+ * can see.
+ *
+ * Resetting (rather than clearing) puts every query back to having no data and tells the
+ * components that show it, so nothing stale is left on screen while the answers load. The reloading
+ * is not waited for: a login or logout has succeeded whatever the reloading finds.
  */
-async function resetSession(queryClient: QueryClient): Promise<void> {
-    await queryClient.cancelQueries();
-    queryClient.clear();
-    await queryClient.fetchQuery({ queryKey: queryKeys.me(), queryFn: fetchMe, staleTime: 0 });
+function resetSession(queryClient: QueryClient): void {
+    void queryClient.resetQueries();
 }
 
 /**
@@ -54,7 +57,8 @@ export function useMe(): UseQueryResult<Me | null> {
 }
 
 /**
- * Logs in. On success the cache is cleared and the person is loaded again.
+ * Logs in. On success what was cached as the previous person is dropped and the person is loaded
+ * again.
  */
 export function useLogin() {
     const queryClient = useQueryClient();
@@ -67,7 +71,7 @@ export function useLogin() {
 }
 
 /**
- * Logs out. On success the cache is cleared and the person is loaded again, so that no private
+ * Logs out. On success the cache is dropped and the person is loaded again, so that no private
  * data stays on screen.
  */
 export function useLogout() {
