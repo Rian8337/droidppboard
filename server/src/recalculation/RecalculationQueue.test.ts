@@ -1096,8 +1096,9 @@ describe("RecalculationQueue", () => {
 
         it("never exceeds capacity when a single entry and a full-run player share a uid", async () => {
             fullRunStore.seed("A", [21, 22, 23]);
-            await startRun("A", { capacity: 2 });
+            await startRun("A", { capacity: 1 });
             add(21, "A", { capacity: 2 });
+            await flush();
 
             expect(pending.map((p) => p.uid)).toEqual([21, 22]);
             expect(statuses()).toEqual({ 21: "waiting" });
