@@ -1,5 +1,6 @@
 import type { PPVariant } from "app-structures";
 import type { ComponentType } from "react";
+import { VariantAdminTab } from "../admin/VariantAdminTab";
 import { LeaderboardTab } from "../leaderboard/LeaderboardTab";
 import type { VariantTab } from "../routing/paths";
 import { QueueTab } from "../queue/QueueTab";
@@ -18,4 +19,5 @@ export const variantTabContent: Partial<Record<VariantTab, ComponentType<{ varia
         "top-plays": TopPlaysTab,
         queue: QueueTab,
         calculator: CalculatorTab,
+        admin: VariantAdminTab,
     };

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "../components/Button";
 import { Markdown } from "../components/Markdown";
-import { getCollapsedDescription } from "./getCollapsedDescription";
+import { getCollapsedDescription, isCollapsible } from "./getCollapsedDescription";
 import styles from "./VariantDescription.module.css";
 
 export interface VariantDescriptionProps {
@@ -16,13 +16,14 @@ export function VariantDescription({ description }: VariantDescriptionProps) {
         return null;
     }
 
-    const collapsed = getCollapsedDescription(description);
-    const isCollapsible = collapsed !== description.trim();
+    const hasMore = isCollapsible(description);
 
     return (
         <section className={styles.description} aria-label="Description">
-            <Markdown source={isCollapsible && !isExpanded ? collapsed : description} />
-            {isCollapsible && (
+            <Markdown
+                source={hasMore && !isExpanded ? getCollapsedDescription(description) : description}
+            />
+            {hasMore && (
                 <Button
                     variant="ghost"
                     size="small"

@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { getCollapsedDescription } from "../../src/variant/getCollapsedDescription";
+import { getCollapsedDescription, isCollapsible } from "../../src/variant/getCollapsedDescription";
 import { VariantDescription } from "../../src/variant/VariantDescription";
 
 const longDescription = [
@@ -43,6 +43,30 @@ describe("getCollapsedDescription", () => {
     });
 });
 
+describe("isCollapsible", () => {
+    it("is true when blocks are left out of the collapsed part", () => {
+        expect(isCollapsible("First.\n\nSecond.")).toBe(true);
+        expect(isCollapsible(longDescription)).toBe(true);
+    });
+
+    it("is false for a single block, however its lines break or are indented", () => {
+        expect(isCollapsible("One block.")).toBe(false);
+        expect(isCollapsible("One block.\r\nOver two lines.")).toBe(false);
+        expect(isCollapsible("  Indented.\n  Over two lines.")).toBe(false);
+        expect(isCollapsible("\n\nPadded.\n\n")).toBe(false);
+    });
+
+    it("is false when a heading and the block after it are all there is", () => {
+        expect(isCollapsible("# Title\n\nBody.")).toBe(false);
+        expect(isCollapsible("# Title")).toBe(false);
+    });
+
+    it("is false for an empty description", () => {
+        expect(isCollapsible("")).toBe(false);
+        expect(isCollapsible("  \n")).toBe(false);
+    });
+});
+
 describe("VariantDescription", () => {
     it("renders nothing without a description", () => {
         const { container } = render(<VariantDescription description={null} />);
@@ -70,6 +94,17 @@ describe("VariantDescription", () => {
         render(<VariantDescription description="One paragraph." />);
 
         expect(screen.getByText("One paragraph.")).toBeVisible();
+        expect(screen.queryByRole("button")).not.toBeInTheDocument();
+    });
+
+    it("has no button for a single block with CRLF line breaks or indentation", () => {
+        const { unmount } = render(<VariantDescription description={"One.\r\nTwo."} />);
+
+        expect(screen.queryByRole("button")).not.toBeInTheDocument();
+        unmount();
+
+        render(<VariantDescription description={"  Indented.\n  More."} />);
+
         expect(screen.queryByRole("button")).not.toBeInTheDocument();
     });
 

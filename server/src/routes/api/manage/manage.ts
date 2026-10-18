@@ -66,6 +66,55 @@ router.get(
     }),
 );
 
+/**
+ * The roles of people, which managers need to know whom they may remove from a variant. The broker
+ * lists users for admins only, so this asks about each person, and only for admins and managers.
+ */
+router.get(
+    "/user-roles",
+    asyncHandler(async (req, res) => {
+        const caller = await BrokerClient.getMe(res.locals.uid as number);
+
+        if (!caller) {
+            res.status(502).json({
+                message: "The variant service is unavailable",
+            });
+
+            return;
+        }
+
+        if (caller.role === null) {
+            res.status(403).json({ message: "This needs the manager role" });
+
+            return;
+        }
+
+        const uids = parseUids(req.query.uids);
+
+        if (!uids) {
+            res.status(400).json({ message: "Invalid uids" });
+
+            return;
+        }
+
+        const people = await Promise.all(
+            uids.map((uid) => BrokerClient.getMe(uid)),
+        );
+
+        if (people.some((person) => person === null)) {
+            res.status(502).json({
+                message: "The variant service is unavailable",
+            });
+
+            return;
+        }
+
+        res.json(
+            uids.map((uid, i) => ({ uid, role: people[i]?.role ?? null })),
+        );
+    }),
+);
+
 router.use(
     asyncHandler(async (req, res) => {
         if (!forwardedMethods.has(req.method)) {

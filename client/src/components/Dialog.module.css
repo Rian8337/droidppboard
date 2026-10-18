@@ -11,6 +11,10 @@
     color: var(--text);
 }
 
+.wide {
+    width: min(1000px, calc(100vw - 32px));
+}
+
 /* `display: flex` above would otherwise override the closed dialog's UA `display: none`. */
 .dialog:not([open]) {
     display: none;

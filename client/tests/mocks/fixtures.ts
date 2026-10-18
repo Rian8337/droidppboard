@@ -337,3 +337,28 @@ export function buildQueueView(overrides: Partial<RecalcQueueView> = {}): Recalc
         ...overrides,
     };
 }
+
+/** The shape `GET /api/manage/keys` answers per key. */
+export interface AdminKeyData {
+    readonly name: string;
+    readonly rateLimitPerMinute: number | null;
+    readonly allVariants: boolean;
+    readonly canActForUsers: boolean;
+    readonly grants: readonly string[];
+    readonly createdAt: string;
+    readonly revokedAt: string | null;
+}
+
+/** Builds an API key that is active and has no grants unless overridden. */
+export function buildAdminKey(overrides: Partial<AdminKeyData> = {}): AdminKeyData {
+    return {
+        name: "bot",
+        rateLimitPerMinute: null,
+        allVariants: false,
+        canActForUsers: false,
+        grants: [],
+        createdAt: "2026-09-01T10:00:00.000Z",
+        revokedAt: null,
+        ...overrides,
+    };
+}

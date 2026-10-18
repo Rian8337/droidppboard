@@ -1,0 +1,45 @@
+.controls {
+    padding: 12px 16px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--panel);
+}
+
+.title {
+    margin: 0 0 8px;
+    font-size: 16px;
+    font-weight: 800;
+}
+
+.description {
+    margin: 0 0 8px;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.progress {
+    margin: 0 0 8px;
+}
+
+.actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.confirmActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.note {
+    margin: 0;
+    color: var(--muted);
+}
+
+.error {
+    margin: 0;
+    color: var(--down);
+}

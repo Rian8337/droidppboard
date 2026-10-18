@@ -1,0 +1,22 @@
+.access {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.heading {
+    margin: 0 0 8px;
+    font-size: 16px;
+    font-weight: 800;
+}
+
+.note {
+    margin: 8px 0 0;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.error {
+    margin: 8px 0 0;
+    color: var(--down);
+}

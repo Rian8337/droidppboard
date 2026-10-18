@@ -13,5 +13,13 @@ export const queryKeys = {
     recalcQueues: () => ["recalcQueue"] as const,
     /** The queue of a variant, or of every variant the person sees for `null`. */
     recalcQueue: (variant: string | null) => ["recalcQueue", variant] as const,
+    /** The uids granted a variant. */
+    manageGrants: (variant: string) => ["manage", "grants", variant] as const,
+    /** Every API key, as the broker lists them. */
+    manageKeys: () => ["manage", "keys"] as const,
+    /** The usernames of people, for the uids joined by commas. */
+    manageUsernames: (uids: string) => ["manage", "usernames", uids] as const,
+    /** The roles of people, for the uids joined by commas. */
+    manageUserRoles: (uids: string) => ["manage", "userRoles", uids] as const,
     topPlays: (variant: string, mods: string) => ["topPlays", variant, mods] as const,
 };

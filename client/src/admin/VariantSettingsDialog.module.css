@@ -1,0 +1,83 @@
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.counter,
+.counterOver {
+    font-size: 12px;
+}
+
+.counter {
+    color: var(--muted);
+}
+
+.counterOver {
+    color: var(--down);
+}
+
+.note {
+    margin: 0;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.error {
+    margin: 0;
+    color: var(--down);
+}
+
+.actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.aliases {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 0;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+}
+
+.aliases legend {
+    padding: 0 4px;
+    font-weight: 800;
+}
+
+.aliasList {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.aliasList li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.aliasAdd {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.aliasAdd > :first-child {
+    flex: 1;
+}
