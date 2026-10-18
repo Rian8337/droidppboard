@@ -234,10 +234,20 @@ export function useSetAlias(variant: string): UseMutationResult<void, ApiError, 
     const refresh = useRefreshVariants();
 
     return useMutation({
-        mutationFn: (alias: string) =>
-            requestJson<void>("PUT", `/api/manage/aliases/${encodeURIComponent(alias)}`, {
-                variant,
-            }),
+        mutationFn: async (alias: string) => {
+            try {
+                await requestJson<void>("PUT", `/api/manage/aliases/${encodeURIComponent(alias)}`, {
+                    variant,
+                });
+            } catch (error) {
+                // The broker checks both ends of a move: the variant getting the alias and the one losing it.
+                if (error instanceof ApiError && error.status === 403) {
+                    throw new ApiError(403, "That alias belongs to a variant you don't manage.");
+                }
+
+                throw error;
+            }
+        },
         onSettled: refresh,
     });
 }
@@ -320,6 +330,8 @@ export function useCreateKey(): UseMutationResult<CreatedKey, ApiError, NewKey> 
     const queryClient = useQueryClient();
 
     return useMutation({
+        // The answer holds the raw key, so it is not kept in the cache once nothing shows it.
+        gcTime: 0,
         mutationFn: (key: NewKey) => requestJson<CreatedKey>("POST", "/api/manage/keys", key),
         onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.manageKeys() }),
     });

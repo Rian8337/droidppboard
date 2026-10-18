@@ -10,17 +10,26 @@ import {
 import { Button } from "../components/Button";
 import { Checkbox } from "../components/Checkbox";
 import { Dialog } from "../components/Dialog";
+import { ErrorMessage } from "../components/ErrorMessage";
 import { Pill } from "../components/Pill";
 import { TextField } from "../components/TextField";
 import { formatUtcTime } from "../utils/formatUtcTime";
 import styles from "./KeyEditor.module.css";
 
+/** The state of the list of variants a key can be granted. */
+export interface KeyVariantList {
+    /** The names, or `undefined` while they load or if loading failed. */
+    names: readonly string[] | undefined;
+    error: Error | null;
+    onRetry: () => void;
+}
+
 export interface KeyEditorProps {
     /** The key to edit, or `null` to create one. */
     apiKey: AdminKey | null;
 
-    /** The names of the variants a key can be granted. */
-    variantNames: readonly string[];
+    /** The variants a key can be granted, as they load. */
+    variantList: KeyVariantList;
     onClose: () => void;
 
     /** Called with the answer to creating a key, which holds the raw key. */
@@ -46,19 +55,67 @@ const rateLimitLabel = "Requests per minute (empty for unlimited)";
 const rateLimitHint = "Enter a positive whole number, or leave empty.";
 
 /** The editor of one API key, or the form that creates one. */
-export function KeyEditor({ apiKey, variantNames, onClose, onCreated }: KeyEditorProps) {
+export function KeyEditor({ apiKey, variantList, onClose, onCreated }: KeyEditorProps) {
     return apiKey === null ? (
-        <CreateKeyForm variantNames={variantNames} onClose={onClose} onCreated={onCreated} />
+        <CreateKeyForm variantList={variantList} onClose={onClose} onCreated={onCreated} />
     ) : (
-        <EditKeyPanel apiKey={apiKey} variantNames={variantNames} onClose={onClose} />
+        <EditKeyPanel apiKey={apiKey} variantList={variantList} onClose={onClose} />
+    );
+}
+
+interface VariantCheckboxesProps {
+    variantList: KeyVariantList;
+
+    /** Names to offer besides the listed ones, such as a grant of a variant that is gone. */
+    extraNames?: readonly string[];
+    isDisabled?: boolean;
+    isGranted: (variant: string) => boolean;
+    onToggle: (variant: string, isGranted: boolean) => void;
+}
+
+/** The variants as checkboxes, or a message while they load or when they could not. */
+function VariantCheckboxes({
+    variantList,
+    extraNames = [],
+    isDisabled = false,
+    isGranted,
+    onToggle,
+}: VariantCheckboxesProps) {
+    if (variantList.error) {
+        return <ErrorMessage message={variantList.error.message} onRetry={variantList.onRetry} />;
+    }
+
+    if (!variantList.names) {
+        return <p className={styles.note}>Loading variants...</p>;
+    }
+
+    const names = [
+        ...variantList.names,
+        ...extraNames.filter((name) => !variantList.names?.includes(name)),
+    ];
+
+    return (
+        <fieldset className={styles.variants}>
+            <legend>Variants</legend>
+            {names.map((variant) => (
+                <Checkbox
+                    key={variant}
+                    checked={isGranted(variant)}
+                    disabled={isDisabled}
+                    onChange={(event) => onToggle(variant, event.target.checked)}
+                >
+                    {variant}
+                </Checkbox>
+            ))}
+        </fieldset>
     );
 }
 
 function CreateKeyForm({
-    variantNames,
+    variantList,
     onClose,
     onCreated,
-}: Pick<KeyEditorProps, "variantNames" | "onClose" | "onCreated">) {
+}: Pick<KeyEditorProps, "variantList" | "onClose" | "onCreated">) {
     const [name, setName] = useState("");
     const [limit, setLimit] = useState("");
     const [allVariants, setAllVariants] = useState(false);
@@ -83,7 +140,13 @@ function CreateKeyForm({
                 canActForUsers,
                 grants: allVariants ? [] : grants,
             },
-            { onSuccess: onCreated },
+            {
+                onSuccess: (created) => {
+                    onCreated(created);
+                    // The raw key now lives with the dialog only.
+                    creating.reset();
+                },
+            },
         );
     }
 
@@ -117,24 +180,17 @@ function CreateKeyForm({
                 Can act for users
             </Checkbox>
             {!allVariants && (
-                <fieldset className={styles.variants}>
-                    <legend>Variants</legend>
-                    {variantNames.map((variant) => (
-                        <Checkbox
-                            key={variant}
-                            checked={grants.includes(variant)}
-                            onChange={(event) =>
-                                setGrants(
-                                    event.target.checked
-                                        ? [...grants, variant]
-                                        : grants.filter((granted) => granted !== variant),
-                                )
-                            }
-                        >
-                            {variant}
-                        </Checkbox>
-                    ))}
-                </fieldset>
+                <VariantCheckboxes
+                    variantList={variantList}
+                    isGranted={(variant) => grants.includes(variant)}
+                    onToggle={(variant, isGranted) =>
+                        setGrants(
+                            isGranted
+                                ? [...grants, variant]
+                                : grants.filter((granted) => granted !== variant),
+                        )
+                    }
+                />
             )}
             {creating.error && (
                 <p role="alert" className={styles.error}>
@@ -155,9 +211,9 @@ function CreateKeyForm({
 
 function EditKeyPanel({
     apiKey,
-    variantNames,
+    variantList,
     onClose,
-}: Pick<KeyEditorProps, "variantNames" | "onClose"> & { apiKey: AdminKey }) {
+}: Pick<KeyEditorProps, "variantList" | "onClose"> & { apiKey: AdminKey }) {
     const [limit, setLimit] = useState(apiKey.rateLimitPerMinute?.toString() ?? "");
     const [isConfirmingRevoke, setIsConfirmingRevoke] = useState(false);
     const updating = useUpdateKey(apiKey.name);
@@ -168,11 +224,15 @@ function EditKeyPanel({
     const isBusy = updating.isPending || granting.isPending;
     const error = updating.error ?? granting.error;
 
-    // A grant of a variant that is no longer listed still shows, so that it can be removed.
-    const grantableNames = [
-        ...variantNames,
-        ...apiKey.grants.filter((variant) => !variantNames.includes(variant)),
-    ];
+    function openRevokeDialog() {
+        revoking.reset();
+        setIsConfirmingRevoke(true);
+    }
+
+    function closeRevokeDialog() {
+        revoking.reset();
+        setIsConfirmingRevoke(false);
+    }
 
     function saveLimit(event: SubmitEvent<HTMLFormElement>) {
         event.preventDefault();
@@ -241,24 +301,15 @@ function EditKeyPanel({
                             This key can use every variant, so there are no variants to pick.
                         </p>
                     ) : (
-                        <fieldset className={styles.variants}>
-                            <legend>Variants</legend>
-                            {grantableNames.map((variant) => (
-                                <Checkbox
-                                    key={variant}
-                                    checked={apiKey.grants.includes(variant)}
-                                    disabled={isBusy}
-                                    onChange={(event) =>
-                                        granting.mutate({
-                                            variant,
-                                            isGranted: event.target.checked,
-                                        })
-                                    }
-                                >
-                                    {variant}
-                                </Checkbox>
-                            ))}
-                        </fieldset>
+                        <VariantCheckboxes
+                            variantList={variantList}
+                            extraNames={apiKey.grants}
+                            isDisabled={isBusy}
+                            isGranted={(variant) => apiKey.grants.includes(variant)}
+                            onToggle={(variant, isGranted) =>
+                                granting.mutate({ variant, isGranted })
+                            }
+                        />
                     )}
                     {error && (
                         <p role="alert" className={styles.error}>
@@ -272,7 +323,7 @@ function EditKeyPanel({
                     Close
                 </Button>
                 {!isRevoked && (
-                    <Button variant="danger" onClick={() => setIsConfirmingRevoke(true)}>
+                    <Button variant="danger" onClick={openRevokeDialog}>
                         Revoke key
                     </Button>
                 )}
@@ -280,7 +331,7 @@ function EditKeyPanel({
             <Dialog
                 title={`Revoke ${apiKey.name}?`}
                 isOpen={isConfirmingRevoke}
-                onClose={() => setIsConfirmingRevoke(false)}
+                onClose={closeRevokeDialog}
             >
                 <p className={styles.note}>
                     Anything using this key stops working, and a revoked key cannot be restored.
@@ -291,7 +342,7 @@ function EditKeyPanel({
                     </p>
                 )}
                 <div className={styles.actions}>
-                    <Button variant="ghost" onClick={() => setIsConfirmingRevoke(false)}>
+                    <Button variant="ghost" onClick={closeRevokeDialog}>
                         Cancel
                     </Button>
                     <Button

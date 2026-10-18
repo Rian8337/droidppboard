@@ -1,10 +1,9 @@
 import type { PPVariant } from "app-structures";
 import { useState, type SubmitEvent } from "react";
-import { useMe } from "../api/auth";
-import { useVariants } from "../api/variants";
 import {
     maxVariantDescriptionLength,
     maxVariantTitleLength,
+    useAdminVariants,
     useRemoveAlias,
     useSetAlias,
     useUpdateVariant,
@@ -14,7 +13,6 @@ import { Button } from "../components/Button";
 import { Checkbox } from "../components/Checkbox";
 import { Dialog } from "../components/Dialog";
 import { TextField } from "../components/TextField";
-import { canManageVariant } from "../variant/permissions";
 import { DescriptionEditor } from "./DescriptionEditor";
 import styles from "./VariantSettingsDialog.module.css";
 
@@ -144,8 +142,9 @@ function SettingsForm({
 function AliasEditor({ variant }: { variant: SettingsVariant }) {
     const [alias, setAlias] = useState("");
     const [pendingOwner, setPendingOwner] = useState<string | null>(null);
-    const { data: variants = [] } = useVariants();
-    const { data: me = null } = useMe();
+    // Admins get every variant here, and managers the ones they were granted. A manager cannot see who owns an
+    // alias of any other variant, so the broker refuses that move instead.
+    const { data: variants = [] } = useAdminVariants();
     const setting = useSetAlias(variant.name);
     const removing = useRemoveAlias();
     const name = alias.trim();
@@ -153,9 +152,6 @@ function AliasEditor({ variant }: { variant: SettingsVariant }) {
     const currentOwner = variants.find(
         (candidate) => candidate.name !== variant.name && candidate.aliases.includes(name),
     );
-
-    // Moving an alias takes it from its owner, so only people who manage the owner may; for others it is taken.
-    const isTaken = currentOwner !== undefined && !canManageVariant(me, currentOwner.name);
     const error = setting.error ?? removing.error;
 
     function addAlias() {
@@ -209,7 +205,7 @@ function AliasEditor({ variant }: { variant: SettingsVariant }) {
                         if (event.key === "Enter") {
                             event.preventDefault();
 
-                            if (isValid && !isTaken && !setting.isPending) {
+                            if (isValid && !setting.isPending) {
                                 addAlias();
                             }
                         }
@@ -217,7 +213,7 @@ function AliasEditor({ variant }: { variant: SettingsVariant }) {
                 />
                 <Button
                     variant="secondary"
-                    disabled={!isValid || isTaken || setting.isPending}
+                    disabled={!isValid || setting.isPending}
                     onClick={addAlias}
                 >
                     {pendingOwner === null ? "Add alias" : "Move alias here"}
@@ -226,13 +222,7 @@ function AliasEditor({ variant }: { variant: SettingsVariant }) {
             {name !== "" && !isValid && (
                 <p className={styles.error}>Aliases can use letters, digits, - and _.</p>
             )}
-            {isTaken && (
-                <p role="status" className={styles.note}>
-                    {name} belongs to {currentOwner.name}, which you do not manage. Ask an admin to
-                    move it.
-                </p>
-            )}
-            {pendingOwner !== null && !isTaken && (
+            {pendingOwner !== null && (
                 <p role="status" className={styles.note}>
                     {name} points to {pendingOwner} now. Move it to this variant?
                 </p>

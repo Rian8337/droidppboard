@@ -1,7 +1,9 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { http, HttpResponse } from "msw";
 import { AppRoutes } from "../../src/routing/routes";
 import { adminMe, buildAdminKey, buildAdminVariant, managerMe, plainMe } from "../mocks/fixtures";
+import { server } from "../mocks/server";
 import { renderWithProviders } from "../utils/renderWithProviders";
 import { serveManage } from "./serveManage";
 
@@ -282,6 +284,63 @@ describe("revoking a key", () => {
                 body: undefined,
             }),
         );
+    });
+});
+
+describe("the variants of a key", () => {
+    it("says the variants are loading, not an empty list", async () => {
+        serveManage({ keys, adminVariants });
+        server.use(http.get("/api/manage/variants", () => new Promise(() => {})));
+
+        renderKeys();
+        await userEvent.click(await screen.findByText("bot"));
+
+        expect(await screen.findByText("Loading variants...")).toBeVisible();
+        expect(screen.queryByRole("group", { name: "Variants" })).not.toBeInTheDocument();
+    });
+
+    it("shows why the variants are missing, with a retry", async () => {
+        serveManage({ keys, adminVariants });
+        server.use(
+            http.get("/api/manage/variants", () =>
+                HttpResponse.json({ message: "Broken" }, { status: 500 }),
+            ),
+        );
+
+        renderKeys();
+        await userEvent.click(await screen.findByRole("button", { name: "Create key" }));
+
+        expect(await screen.findByText("Broken")).toBeVisible();
+        expect(screen.getByRole("button", { name: "Try again" })).toBeVisible();
+    });
+});
+
+describe("a failed revoke", () => {
+    it("does not show its error again when the dialog is reopened", async () => {
+        serveManage({ keys, adminVariants });
+        server.use(
+            http.post("/api/manage/keys/:name/revoke", () =>
+                HttpResponse.json({ message: "Could not revoke" }, { status: 500 }),
+            ),
+        );
+
+        renderKeys();
+        await userEvent.click(await screen.findByText("bot"));
+        await userEvent.click(await screen.findByRole("button", { name: "Revoke key" }));
+
+        const dialog = await screen.findByRole("dialog", { name: "Revoke bot?" });
+
+        await userEvent.click(within(dialog).getByRole("button", { name: "Revoke" }));
+        expect(await within(dialog).findByText("Could not revoke")).toBeVisible();
+
+        await userEvent.click(within(dialog).getByRole("button", { name: "Cancel" }));
+        await userEvent.click(screen.getByRole("button", { name: "Revoke key" }));
+
+        expect(
+            within(await screen.findByRole("dialog", { name: "Revoke bot?" })).queryByText(
+                "Could not revoke",
+            ),
+        ).not.toBeInTheDocument();
     });
 });
 

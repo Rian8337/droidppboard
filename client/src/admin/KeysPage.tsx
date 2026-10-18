@@ -10,7 +10,7 @@ import { Pill } from "../components/Pill";
 import { TextField } from "../components/TextField";
 import { useBreakpoint } from "../hooks/useBreakpoint";
 import { CreatedKeyDialog } from "./CreatedKeyDialog";
-import { KeyEditor } from "./KeyEditor";
+import { KeyEditor, type KeyVariantList } from "./KeyEditor";
 import styles from "./KeysPage.module.css";
 
 /** How many keys a page of the list holds. */
@@ -79,7 +79,11 @@ export function KeysPage() {
             ? (keys.data.find((key) => key.name === selection.name) ?? null)
             : null;
     const isEditorOpen = selection.kind === "new" || selectedKey !== null;
-    const variantNames = variants.data?.map((variant) => variant.name) ?? [];
+    const variantList: KeyVariantList = {
+        names: variants.data?.map((variant) => variant.name),
+        error: variants.error,
+        onRetry: () => void variants.refetch(),
+    };
 
     function closeEditor() {
         setSelection({ kind: "none" });
@@ -132,7 +136,7 @@ export function KeysPage() {
             <KeyEditor
                 key={selection.kind === "key" ? selection.name : "new"}
                 apiKey={selectedKey}
-                variantNames={variantNames}
+                variantList={variantList}
                 onClose={closeEditor}
                 onCreated={showCreated}
             />
