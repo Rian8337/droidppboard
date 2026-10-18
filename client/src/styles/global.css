@@ -1,0 +1,124 @@
+@font-face {
+    font-family: "Torus";
+    src: url("/fonts/Torus-Thin.otf") format("opentype");
+    font-weight: 100;
+}
+
+@font-face {
+    font-family: "Torus";
+    src: url("/fonts/Torus-Light.otf") format("opentype");
+    font-weight: 300;
+}
+
+@font-face {
+    font-family: "Torus";
+    src: url("/fonts/Torus-Regular.otf") format("opentype");
+    font-weight: 400;
+}
+
+@font-face {
+    font-family: "Torus";
+    src: url("/fonts/Torus-SemiBold.otf") format("opentype");
+    font-weight: 600 700;
+}
+
+@font-face {
+    font-family: "Torus";
+    src: url("/fonts/Torus-Bold.otf") format("opentype");
+    font-weight: 800;
+}
+
+@font-face {
+    font-family: "Torus";
+    src: url("/fonts/Torus-Heavy.otf") format("opentype");
+    font-weight: 900;
+}
+
+:root {
+    --bar: #f06c9b;
+    --bg: #2b2b2b;
+    --side: #252525;
+    --panel: #313131;
+    --input: #363636;
+    --line: #3b3b3b;
+    --accent: #ff6ba0;
+    --btn: #d8336d;
+    --btn2: #5a2a3a;
+    --text: #ececec;
+    --muted: #9b9b9b;
+    --up: #6fd36a;
+    --down: #ff4d5e;
+    --warn: #ff3b4a;
+
+    --touch-target: 44px;
+
+    /* Without this, Chromium renders native scrollbar chrome (and other native form-control
+       chrome) in its light-OS default regardless of the custom scrollbar styling below. */
+    color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+/* Form controls don't inherit font-family from the body by default. */
+button,
+input,
+select,
+textarea {
+    font: inherit;
+}
+
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: Torus, sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+
+#root {
+    min-height: 100svh;
+}
+
+/* A thin, low-key scrollbar everywhere. */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+}
+
+*::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.25);
+    border-radius: 4px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.4);
+}
+
+/* Touch devices: clickable controls and rows are at least 44px tall. */
+@media (pointer: coarse) {
+    button,
+    select,
+    input:not([type="checkbox"], [type="radio"]),
+    a[role="button"],
+    [role="tab"],
+    [role="row"] {
+        min-height: var(--touch-target);
+    }
+}

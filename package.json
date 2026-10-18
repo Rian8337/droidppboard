@@ -5,7 +5,7 @@
   "scripts": {
     "format-code": "npm run format-code-app-structures & npm run format-code-server & npm run format-code-client",
     "format-code-app-structures": "npx prettier -w --loglevel=silent \"modules/app-structures/**\"",
-    "format-code-client": "npx prettier -w --loglevel=silent \"client/**\"",
+    "format-code-client": "pnpm --filter droidppboard-client format",
     "format-code-server": "npx prettier -w --loglevel=silent \"server/**\"",
     "start": "cd server && npm start",
     "test": "echo \"Error: no test specified\" && exit 1"

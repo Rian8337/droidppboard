@@ -70,7 +70,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParserErrorHandler);
 app.use(cookieParser());
-app.use(express.static(resolve(Util.getFrontendPath(), "build")));
+app.use(express.static(resolve(Util.getFrontendPath(), "dist")));
 app.use(Util.createRateLimit(12));
 
 app.use("/api/ppboard", ppboardRouter);
@@ -145,7 +145,7 @@ skinsRouter.use("/get", getSkin);
 //#region App launch
 
 app.get("*", (_, res) => {
-    res.sendFile(resolve(Util.getFrontendPath(), "build", "index.html"));
+    res.sendFile(resolve(Util.getFrontendPath(), "dist", "index.html"));
 });
 
 // Connect to database, then open server
