@@ -121,11 +121,11 @@ router.post("/", async (req, res) => {
         true,
     );
 
-    const realAcc = new Accuracy({
-        percent: accuracy,
-        nobjects: parsedBeatmap.hitObjects.objects.length,
-        nmiss: miss,
-    });
+    const realAcc = Accuracy.fromPercent(
+        accuracy,
+        parsedBeatmap.hitObjects.objects.length,
+        miss
+    );
 
     const requestBody = JSON.stringify({
         beatmap: { file: osuFile },

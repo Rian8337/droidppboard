@@ -278,7 +278,7 @@ async function createEntry(
         circleSize: beatmapDifficulty.cs,
         approachRate: beatmapDifficulty.ar,
         overallDifficulty: beatmapDifficulty.od,
-        accuracy: accuracy.value() * 100,
+        accuracy: accuracy.value * 100,
         combo: liveScore.combo,
         maxCombo: liveDifficulty.maxCombo,
         // The difficulty attributes hold only the difficulty-adjusting mods, whereas the score has all of them.
