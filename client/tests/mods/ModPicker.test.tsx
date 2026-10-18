@@ -35,7 +35,7 @@ describe("ModPicker", () => {
         render(<ModPicker mods={[]} onChange={vi.fn()} />);
 
         expect(screen.getByRole("button", { name: /select mods/i })).toBeInTheDocument();
-        expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+        expect(screen.queryByRole("group", { name: "Mods" })).not.toBeInTheDocument();
     });
 
     it("shows the selected mods' acronyms on the trigger instead of the placeholder", () => {
@@ -118,6 +118,28 @@ describe("ModPicker", () => {
         expect(screen.getByText("DT")).toBeInTheDocument();
     });
 
+    it("selecting RX deselects AP", () => {
+        const onChange = vi.fn();
+        render(<ControlledPicker onChange={onChange} />);
+
+        openPicker();
+        fireEvent.click(screen.getByRole("checkbox", { name: /autopilot/i }));
+        fireEvent.click(screen.getByRole("checkbox", { name: /relax/i }));
+
+        expect(onChange).toHaveBeenLastCalledWith([{ acronym: "RX" }]);
+        expect(screen.getByRole("checkbox", { name: /autopilot/i })).not.toBeChecked();
+    });
+
+    it("names the trigger by its selection so screen readers hear the chosen mods", () => {
+        const { rerender } = render(<ModPicker mods={[]} onChange={vi.fn()} />);
+
+        expect(screen.getByRole("button", { name: "Select mods" })).toBeInTheDocument();
+
+        rerender(<ModPicker mods={[{ acronym: "HD" }, { acronym: "DT" }]} onChange={vi.fn()} />);
+
+        expect(screen.getByRole("button", { name: /^Select mods.*HD, DT/ })).toBeInTheDocument();
+    });
+
     it("hides settings when hasSettings is false", () => {
         render(
             <ModPicker
@@ -148,11 +170,11 @@ describe("ModPicker", () => {
         render(<ModPicker mods={[]} onChange={vi.fn()} />);
 
         openPicker();
-        expect(screen.getByRole("listbox")).toBeInTheDocument();
+        expect(screen.getByRole("group", { name: "Mods" })).toBeInTheDocument();
 
         fireEvent.keyDown(document, { key: "Escape" });
 
-        expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+        expect(screen.queryByRole("group", { name: "Mods" })).not.toBeInTheDocument();
     });
 
     it("closes the checklist on an outside click", () => {
@@ -164,11 +186,11 @@ describe("ModPicker", () => {
         );
 
         openPicker();
-        expect(screen.getByRole("listbox")).toBeInTheDocument();
+        expect(screen.getByRole("group", { name: "Mods" })).toBeInTheDocument();
 
         fireEvent.mouseDown(screen.getByTestId("outside"));
 
-        expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+        expect(screen.queryByRole("group", { name: "Mods" })).not.toBeInTheDocument();
     });
 
     it("uses the full default panel height when there's ample room below the trigger", () => {
@@ -180,7 +202,7 @@ describe("ModPicker", () => {
 
         openPicker();
 
-        expect(screen.getByRole("listbox")).toHaveStyle({ maxHeight: "260px" });
+        expect(screen.getByRole("group", { name: "Mods" })).toHaveStyle({ maxHeight: "260px" });
     });
 
     it("caps the panel's height to the room actually available below the trigger", () => {
@@ -198,10 +220,10 @@ describe("ModPicker", () => {
 
         // 50px free minus the 12px viewport margin = 38px, below the 120px floor - clamped up
         // to the floor rather than shrinking further.
-        expect(screen.getByRole("listbox")).toHaveStyle({ maxHeight: "120px" });
+        expect(screen.getByRole("group", { name: "Mods" })).toHaveStyle({ maxHeight: "120px" });
     });
 
-    it("opens towards the left when the trigger is too close to the right edge", () => {
+    it("shifts the panel left when the trigger is too close to the right edge", () => {
         render(<ModPicker mods={[]} onChange={vi.fn()} />);
 
         const trigger = screen.getByRole("button", { name: /select mods/i });
@@ -213,15 +235,45 @@ describe("ModPicker", () => {
 
         fireEvent.click(trigger);
 
-        expect(screen.getByRole("listbox").parentElement).toHaveAttribute("data-align", "right");
+        // The 320px panel ends 12px short of the viewport edge: 1024 - 12 - 320 = 692.
+        expect(screen.getByRole("group", { name: "Mods" }).parentElement).toHaveStyle({
+            left: `${692 - (window.innerWidth - 100)}px`,
+        });
     });
 
-    it("opens towards the right when there is room", () => {
+    it("leaves the panel under the trigger when there is room", () => {
         render(<ModPicker mods={[]} onChange={vi.fn()} />);
 
         openPicker();
 
-        expect(screen.getByRole("listbox").parentElement).toHaveAttribute("data-align", "left");
+        expect(screen.getByRole("group", { name: "Mods" }).parentElement).toHaveStyle({
+            left: "0px",
+        });
+    });
+
+    it("never pushes the panel past the left edge on a narrow screen", () => {
+        const originalWidth = window.innerWidth;
+        window.innerWidth = 300;
+
+        try {
+            render(<ModPicker mods={[]} onChange={vi.fn()} />);
+
+            const trigger = screen.getByRole("button", { name: /select mods/i });
+
+            vi.spyOn(trigger.parentElement!, "getBoundingClientRect").mockReturnValue({
+                bottom: 0,
+                left: 250,
+            } as DOMRect);
+
+            fireEvent.click(trigger);
+
+            // The panel is 300 - 32 = 268px wide here, so its left edge lands at 300 - 12 - 268 = 20.
+            expect(screen.getByRole("group", { name: "Mods" }).parentElement).toHaveStyle({
+                left: `${20 - 250}px`,
+            });
+        } finally {
+            window.innerWidth = originalWidth;
+        }
     });
 
     it("shows a settings block for a selected mod with a numeric setting, updating its value", () => {
@@ -356,7 +408,7 @@ describe("ModPicker", () => {
         typeSearch("nonexistent mod");
 
         expect(screen.getByText("No mods match your search.")).toBeInTheDocument();
-        expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+        expect(screen.queryByRole("group", { name: "Mods" })).not.toBeInTheDocument();
     });
 
     it("clears the search when the checklist is closed and reopened", () => {

@@ -1,4 +1,4 @@
-import { Mod, ModAuto, ModUtil, type SerializedMod } from "@rian8337/osu-base";
+import { Mod, ModUtil, type SerializedMod } from "@rian8337/osu-base";
 
 /**
  * The osu!droid game client's own mod-menu category order (`ModType.kt`; `System` is omitted -
@@ -22,8 +22,7 @@ export type ModCategory = (typeof MOD_CATEGORY_ORDER)[number];
  * icon" list to keep in sync with this one. Update this alongside `public/icons/mods` whenever an
  * icon is added or removed.
  *
- * Autopilot ("AP") and Relax ("RX") are listed here under Automation (they do have icons), but
- * `getSelectableDroidMods` below filters them back out via `ModAuto.isCompatibleWith`.
+ * Autoplay ("AT") is deliberately not listed: it is not a mod to filter scores by.
  */
 const SELECTABLE_MODS: readonly {
     readonly category: ModCategory;
@@ -48,18 +47,13 @@ const SELECTABLE_ACRONYMS_IN_ORDER = SELECTABLE_MODS.flatMap((group) => group.ac
 /**
  * Every mod selectable in the mod picker: applicable to osu!droid
  * (`Mod.isApplicableToDroid()`), meant to be manually chosen by a user (`Mod.userPlayable`),
- * listed in {@link SELECTABLE_MODS}, and compatible with `ModAuto` (see below). Ordered by
+ * and listed in {@link SELECTABLE_MODS}. Ordered by
  * {@link SELECTABLE_MODS} - category blocks matching the game client's own mod menu, in its
  * declaration order within each - rather than alphabetically. Returns fresh instances every call,
  * each at that mod's default settings - callers own their own copy to mutate freely.
- *
- * Autopilot and Relax are left out: `ModAuto.isCompatibleWith` excludes them (both alter how a
- * *human* player's cursor and clicks behave), so checking compatibility with a `ModAuto` instance
- * is a precise way to exclude them without hardcoding acronyms.
  */
 export function getSelectableDroidMods(): Mod[] {
     const instancesByAcronym = new Map<string, Mod>();
-    const auto = new ModAuto();
 
     for (const ModClass of ModUtil.allMods.values()) {
         const instance = new (ModClass as new () => Mod)();
@@ -73,10 +67,6 @@ export function getSelectableDroidMods(): Mod[] {
         }
 
         if (!CATEGORY_BY_ACRONYM.has(instance.acronym)) {
-            continue;
-        }
-
-        if (!auto.isCompatibleWith(instance)) {
             continue;
         }
 

@@ -81,6 +81,85 @@ describe("TopPlaysTab", () => {
         expect(requests.map((url) => url.searchParams.get("mods"))).toEqual([null, "HD", "HDDT"]);
     });
 
+    it("shows loading instead of the previous mod set's plays while new ones load", async () => {
+        const bravoOnly = topPlays.filter((play) => play.username === "Bravo");
+        let release: () => void = () => undefined;
+        const gate = new Promise<void>((resolve) => {
+            release = resolve;
+        });
+
+        server.use(
+            http.get("/api/ppboard/prototype/gettopplays", async ({ request }) => {
+                const hasMods = new URL(request.url).searchParams.has("mods");
+
+                if (hasMods) {
+                    await gate;
+                }
+
+                return HttpResponse.json({
+                    variants: [droidRebalance, readingVariant],
+                    currentVariant: droidRebalance,
+                    data: hasMods ? bravoOnly : topPlays,
+                });
+            }),
+        );
+
+        renderWithProviders(<TopPlaysTab variant={droidRebalance} />);
+
+        await screen.findByText("Alpha Song");
+        await userEvent.click(screen.getByRole("button", { name: "Select mods" }));
+        await userEvent.click(screen.getByRole("checkbox", { name: /hidden/i }));
+
+        // The picker stays; the rows of the other mod set do not.
+        expect(screen.getByRole("button", { name: /select mods/i })).toBeVisible();
+        expect(screen.getByText("Loading...")).toBeVisible();
+        expect(screen.queryByText("Alpha Song")).not.toBeInTheDocument();
+        expect(screen.queryByRole("row")).not.toBeInTheDocument();
+
+        release();
+
+        expect(await screen.findAllByRole("row")).not.toHaveLength(0);
+        expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
+    });
+
+    it("keeps the picked mods when the plays fail to load and are retried", async () => {
+        let isFailing = false;
+
+        server.use(
+            http.get("/api/ppboard/prototype/gettopplays", ({ request }) => {
+                if (isFailing && new URL(request.url).searchParams.has("mods")) {
+                    return HttpResponse.json({ message: "Too many requests" }, { status: 429 });
+                }
+
+                const hasMods = new URL(request.url).searchParams.has("mods");
+
+                return HttpResponse.json({
+                    variants: [droidRebalance, readingVariant],
+                    currentVariant: droidRebalance,
+                    data: hasMods
+                        ? topPlays.map((play) => ({ ...play, mods: [{ acronym: "HD" }] }))
+                        : topPlays,
+                });
+            }),
+        );
+
+        renderWithProviders(<TopPlaysTab variant={droidRebalance} />);
+
+        await screen.findByText("Alpha Song");
+
+        isFailing = true;
+        await userEvent.click(screen.getByRole("button", { name: "Select mods" }));
+        await userEvent.click(screen.getByRole("checkbox", { name: /hidden/i }));
+
+        expect(await screen.findByRole("alert")).toHaveTextContent("Too many requests");
+
+        isFailing = false;
+        await userEvent.click(screen.getByRole("button", { name: "Try again" }));
+
+        expect(await screen.findByText("Alpha Song")).toBeVisible();
+        expect(screen.getByRole("button", { name: /select mods.*HD/i })).toBeVisible();
+    });
+
     it("remembers its columns as top-plays-columns", async () => {
         renderWithProviders(<TopPlaysTab variant={droidRebalance} />);
 

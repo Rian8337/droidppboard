@@ -1,5 +1,6 @@
 import {
     ModAutopilot,
+    ModRelax,
     ModDoubleTime,
     ModEasy,
     ModHalfTime,
@@ -25,7 +26,7 @@ describe("getSelectableDroidMods", () => {
         expect(acronyms).toContain("HT");
     });
 
-    it("excludes mods with no known icon (e.g. Autoplay)", () => {
+    it("excludes mods outside the selectable catalog (e.g. Autoplay)", () => {
         const mods = getSelectableDroidMods();
 
         expect(mods.some((m) => m.acronym === "AT")).toBe(false);
@@ -37,16 +38,11 @@ describe("getSelectableDroidMods", () => {
         expect(mods.some((m) => m.acronym === "RV6")).toBe(false);
     });
 
-    it("excludes mods incompatible with autoplay (Autopilot, Relax)", () => {
-        // The demo always plays a synthetic autoplay - Autopilot/Relax alter how a *human*
-        // player's cursor/clicks behave, which osu-base's own ModAuto.isCompatibleWith already
-        // treats as incompatible. Both have known icons and are otherwise user-playable, so
-        // without this exclusion they'd still show up here.
-        const mods = getSelectableDroidMods();
-        const acronyms = mods.map((m) => m.acronym);
+    it("offers Autopilot and Relax", () => {
+        const acronyms = getSelectableDroidMods().map((m) => m.acronym);
 
-        expect(acronyms).not.toContain("AP");
-        expect(acronyms).not.toContain("RX");
+        expect(acronyms).toContain("AP");
+        expect(acronyms).toContain("RX");
     });
 
     it("returns fresh instances each call, not shared references", () => {
@@ -118,6 +114,14 @@ describe("selectMod", () => {
         const next = selectMod(current, new ModDoubleTime());
 
         expect(next.map((m) => m.acronym).sort()).toEqual(["DT", "HD"]);
+    });
+});
+
+describe("selecting Automation mods", () => {
+    it("selecting Relax deselects Autopilot", () => {
+        const next = selectMod([new ModAutopilot()], new ModRelax());
+
+        expect(next.map((m) => m.acronym)).toEqual(["RX"]);
     });
 });
 

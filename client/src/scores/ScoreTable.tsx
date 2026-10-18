@@ -10,6 +10,7 @@ import { downloadScoresCsv } from "./scoreCsv";
 import { scoreColumns } from "./scoreColumns";
 import { defaultScoreSort, sortScores } from "./scoreSorting";
 import { ScoreToolbar } from "./ScoreToolbar";
+import styles from "./ScoreTable.module.css";
 import type { PrototypePPEntry } from "app-structures";
 import type { SortState } from "../components/DataTable";
 
@@ -36,8 +37,15 @@ export interface ScoreTableProps {
     /** Where the chosen columns are remembered in this browser. */
     storageKey: string;
 
-    /** Called with the mods picked in the mod filter, for a page that also asks the server for them. */
+    /**
+     * The mods picked in the mod filter. Given together with `onModsChange`, the page owns the
+     * selection (for a page that also asks the server for the mods); otherwise the table does.
+     */
+    mods?: readonly SerializedMod[];
     onModsChange?: (mods: readonly SerializedMod[]) => void;
+
+    /** Shows a loading note instead of the rows, for scores that are about to be replaced. */
+    isLoading?: boolean;
 }
 
 function areRanked(scores: PrototypePPEntry[] | ScoreRow[]): scores is ScoreRow[] {
@@ -64,10 +72,13 @@ export function ScoreTable({
     scores,
     showPlayer = false,
     storageKey,
+    mods: controlledMods,
     onModsChange,
+    isLoading = false,
 }: ScoreTableProps) {
     const [search, setSearch] = useState("");
-    const [mods, setMods] = useState<readonly SerializedMod[]>([]);
+    const [ownMods, setOwnMods] = useState<readonly SerializedMod[]>([]);
+    const mods = controlledMods ?? ownMods;
     const [sort, setSort] = useState<SortState>(defaultScoreSort);
     const [storedColumnIds, setStoredColumnIds] = useLocalStorage<unknown>(
         storageKey,
@@ -92,7 +103,7 @@ export function ScoreTable({
     const pickableColumns = scoreColumns.filter((column) => !requiredColumnIds.includes(column.id));
 
     function changeMods(newMods: readonly SerializedMod[]) {
-        setMods(newMods);
+        setOwnMods(newMods);
         onModsChange?.(newMods);
     }
 
@@ -115,15 +126,19 @@ export function ScoreTable({
                 onToggle={toggleColumn}
                 onExport={() => downloadScoresCsv(shownRows, visibleColumns, "scores.csv")}
             />
-            <DataTable
-                columns={visibleColumns}
-                rows={shownRows}
-                rowKey={getScoreKey}
-                sort={sort}
-                onSortChange={setSort}
-                pinnedColumnIds={showPlayer ? pinnedColumnIdsWithPlayer : pinnedColumnIds}
-                emptyText="No scores found."
-            />
+            {isLoading ? (
+                <p className={styles.note}>Loading...</p>
+            ) : (
+                <DataTable
+                    columns={visibleColumns}
+                    rows={shownRows}
+                    rowKey={getScoreKey}
+                    sort={sort}
+                    onSortChange={setSort}
+                    pinnedColumnIds={showPlayer ? pinnedColumnIdsWithPlayer : pinnedColumnIds}
+                    emptyText="No scores found."
+                />
+            )}
         </div>
     );
 }

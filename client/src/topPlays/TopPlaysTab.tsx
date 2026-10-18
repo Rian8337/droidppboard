@@ -23,6 +23,7 @@ function TopPlays({ variant }: TopPlaysTabProps) {
         data: plays,
         error,
         isPending,
+        isPlaceholderData,
         refetch,
     } = useTopPlays(variant.name, getSelectedAcronyms(mods));
 
@@ -39,7 +40,9 @@ function TopPlays({ variant }: TopPlaysTabProps) {
             scores={plays}
             showPlayer
             storageKey="top-plays-columns"
+            mods={mods}
             onModsChange={setMods}
+            isLoading={isPlaceholderData}
         />
     );
 }

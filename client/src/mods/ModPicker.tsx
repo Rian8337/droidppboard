@@ -30,8 +30,12 @@ const DEFAULT_PANEL_HEIGHT = 260;
 const MIN_PANEL_HEIGHT = 120;
 const VIEWPORT_MARGIN = 12;
 
-/** The panel's widest size, as in ModPicker.module.css; used to keep it inside the viewport. */
-const PANEL_WIDTH = 320;
+/**
+ * The panel's width, as in ModPicker.module.css (`min(320px, 100vw - 32px)`); used to keep it
+ * inside the viewport.
+ */
+const MAX_PANEL_WIDTH = 320;
+const PANEL_SIDE_MARGIN = 32;
 
 /**
  * A "Select mods" dropdown listing every droid mod with a known icon (see `getSelectableDroidMods`)
@@ -44,7 +48,7 @@ const PANEL_WIDTH = 320;
 export function ModPicker({ mods, onChange, hasSettings = true }: ModPickerProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [panelHeight, setPanelHeight] = useState(DEFAULT_PANEL_HEIGHT);
-    const [isAlignedRight, setIsAlignedRight] = useState(false);
+    const [panelOffset, setPanelOffset] = useState(0);
     const [search, setSearch] = useState("");
     const containerRef = useRef<HTMLDivElement>(null);
     const triggerWrapperRef = useRef<HTMLDivElement>(null);
@@ -96,7 +100,7 @@ export function ModPicker({ mods, onChange, hasSettings = true }: ModPickerProps
     }, [isOpen]);
 
     // Fits the panel to the viewport: the option list stops at the bottom edge, and the panel
-    // opens towards the left when it would run past the right edge. A layout effect (not a plain
+    // shifts left when it would run past the right edge (never past the left one). A layout effect (not a plain
     // one) so the corrected size applies before the browser paints the newly opened panel.
     useLayoutEffect(() => {
         if (!isOpen) {
@@ -116,7 +120,11 @@ export function ModPicker({ mods, onChange, hasSettings = true }: ModPickerProps
             setPanelHeight(
                 Math.max(MIN_PANEL_HEIGHT, Math.min(DEFAULT_PANEL_HEIGHT, availableHeight)),
             );
-            setIsAlignedRight(bounds.left + PANEL_WIDTH > window.innerWidth - VIEWPORT_MARGIN);
+
+            const panelWidth = Math.min(MAX_PANEL_WIDTH, window.innerWidth - PANEL_SIDE_MARGIN);
+            const rightFit = window.innerWidth - VIEWPORT_MARGIN - panelWidth - bounds.left;
+
+            setPanelOffset(rightFit < 0 ? Math.max(rightFit, VIEWPORT_MARGIN - bounds.left) : 0);
         }
 
         recomputeLayout();
@@ -295,8 +303,8 @@ export function ModPicker({ mods, onChange, hasSettings = true }: ModPickerProps
         );
     }
 
-    const triggerLabel =
-        selected.length > 0 ? selected.map((mod) => mod.acronym).join(", ") : "Select mods";
+    const selectedLabel = selected.map((mod) => mod.acronym).join(", ");
+    const triggerLabel = selected.length > 0 ? selectedLabel : "Select mods";
 
     return (
         <div className={styles.container} ref={containerRef}>
@@ -305,8 +313,12 @@ export function ModPicker({ mods, onChange, hasSettings = true }: ModPickerProps
                     type="button"
                     className={styles.trigger}
                     aria-expanded={isOpen}
-                    aria-haspopup="listbox"
-                    aria-label="Select mods"
+                    aria-haspopup="dialog"
+                    aria-label={
+                        selected.length > 0
+                            ? `Select mods, selected: ${selectedLabel}`
+                            : "Select mods"
+                    }
                     onClick={() => (isOpen ? closePanel() : setIsOpen(true))}
                 >
                     <span
@@ -325,7 +337,7 @@ export function ModPicker({ mods, onChange, hasSettings = true }: ModPickerProps
                 </button>
 
                 {isOpen ? (
-                    <div className={styles.panel} data-align={isAlignedRight ? "right" : "left"}>
+                    <div className={styles.panel} style={{ left: panelOffset }}>
                         <input
                             type="search"
                             className={styles.search}
@@ -343,7 +355,7 @@ export function ModPicker({ mods, onChange, hasSettings = true }: ModPickerProps
                             <div
                                 className={styles.optionList}
                                 style={{ maxHeight: panelHeight }}
-                                role="listbox"
+                                role="group"
                                 aria-label="Mods"
                             >
                                 {favoriteMods.length > 0 ? (

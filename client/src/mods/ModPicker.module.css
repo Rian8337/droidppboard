@@ -66,12 +66,6 @@
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
 }
 
-/* Opens towards the left when the trigger sits too close to the right edge for the panel to fit. */
-.panel[data-align="right"] {
-    right: 0;
-    left: auto;
-}
-
 .search {
     margin: 8px 8px 0;
     padding: 8px 10px;
