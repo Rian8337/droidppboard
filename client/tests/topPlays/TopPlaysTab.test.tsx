@@ -66,6 +66,21 @@ describe("TopPlaysTab", () => {
         expect(requests[0].searchParams.has("mods")).toBe(false);
     });
 
+    it("asks for the plays with the mods picked in the mod filter", async () => {
+        const requests = recordRequests();
+
+        renderWithProviders(<TopPlaysTab variant={droidRebalance} />);
+
+        await screen.findByText("Alpha Song");
+        await userEvent.click(screen.getByRole("button", { name: "Select mods" }));
+        await userEvent.click(screen.getByRole("checkbox", { name: /hidden/i }));
+        await userEvent.click(screen.getByRole("checkbox", { name: /double time/i }));
+
+        await waitFor(() => expect(requests).toHaveLength(3));
+
+        expect(requests.map((url) => url.searchParams.get("mods"))).toEqual([null, "HD", "HDDT"]);
+    });
+
     it("remembers its columns as top-plays-columns", async () => {
         renderWithProviders(<TopPlaysTab variant={droidRebalance} />);
 

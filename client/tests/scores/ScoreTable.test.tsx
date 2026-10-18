@@ -86,6 +86,41 @@ describe("ScoreTable", () => {
         expect(screen.getByText("Bravo Tune")).toBeInTheDocument();
     });
 
+    it("filters by the mods picked in the mod filter", async () => {
+        const modScores = [
+            buildScore({
+                hash: "a",
+                title: "Alpha Song",
+                mods: [{ acronym: "HD" }, { acronym: "DT", settings: { speedChange: 1.3 } }],
+            }),
+            buildScore({ hash: "b", title: "Bravo Tune", mods: [{ acronym: "HD" }] }),
+            buildScore({ hash: "c", title: "Charlie Jam", mods: [] }),
+        ];
+
+        render(<ScoreTable scores={modScores} storageKey="columns" />);
+
+        await userEvent.click(screen.getByRole("button", { name: "Select mods" }));
+        await userEvent.click(screen.getByRole("checkbox", { name: /hidden/i }));
+
+        expect(screen.getByText("Alpha Song")).toBeInTheDocument();
+        expect(screen.getByText("Bravo Tune")).toBeInTheDocument();
+        expect(screen.queryByText("Charlie Jam")).not.toBeInTheDocument();
+
+        await userEvent.click(screen.getByRole("checkbox", { name: /double time/i }));
+
+        expect(screen.getByText("Alpha Song")).toBeInTheDocument();
+        expect(screen.queryByText("Bravo Tune")).not.toBeInTheDocument();
+    });
+
+    it("offers the mod filter without mod settings", async () => {
+        render(<ScoreTable scores={scores} storageKey="columns" />);
+
+        await userEvent.click(screen.getByRole("button", { name: "Select mods" }));
+        await userEvent.click(screen.getByRole("checkbox", { name: /difficulty adjust/i }));
+
+        expect(screen.queryByTestId("mod-settings-DA")).not.toBeInTheDocument();
+    });
+
     it("hides a column unticked in Columns and remembers it across remounts", async () => {
         const { unmount } = render(<ScoreTable scores={scores} storageKey="columns" />);
 

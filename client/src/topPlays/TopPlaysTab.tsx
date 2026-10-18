@@ -1,15 +1,15 @@
+import type { SerializedMod } from "@rian8337/osu-base";
 import type { PPVariant } from "app-structures";
+import { useState } from "react";
 import { useTopPlays } from "../api/topPlays";
 import { ErrorMessage } from "../components/ErrorMessage";
+import { getSelectedAcronyms } from "../mods/droidMods";
 import { ScoreTable } from "../scores/ScoreTable";
 import styles from "./TopPlaysTab.module.css";
 
 export interface TopPlaysTabProps {
     variant: PPVariant;
 }
-
-/** The mod filter has no picker yet, so every play shows. */
-const noModAcronyms: string[] = [];
 
 /** The best plays of every player in a variant, as a score table with a Player column. */
 export function TopPlaysTab({ variant }: TopPlaysTabProps) {
@@ -18,7 +18,13 @@ export function TopPlaysTab({ variant }: TopPlaysTabProps) {
 }
 
 function TopPlays({ variant }: TopPlaysTabProps) {
-    const { data: plays, error, isPending, refetch } = useTopPlays(variant.name, noModAcronyms);
+    const [mods, setMods] = useState<readonly SerializedMod[]>([]);
+    const {
+        data: plays,
+        error,
+        isPending,
+        refetch,
+    } = useTopPlays(variant.name, getSelectedAcronyms(mods));
 
     if (error && !plays) {
         return <ErrorMessage message={error.message} onRetry={() => void refetch()} />;
@@ -28,5 +34,12 @@ function TopPlays({ variant }: TopPlaysTabProps) {
         return <p className={styles.note}>Loading...</p>;
     }
 
-    return <ScoreTable scores={plays} showPlayer storageKey="top-plays-columns" />;
+    return (
+        <ScoreTable
+            scores={plays}
+            showPlayer
+            storageKey="top-plays-columns"
+            onModsChange={setMods}
+        />
+    );
 }

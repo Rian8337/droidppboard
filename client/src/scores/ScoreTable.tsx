@@ -1,6 +1,9 @@
+import type { SerializedMod } from "@rian8337/osu-base";
 import { useMemo, useState } from "react";
 import { DataTable } from "../components/DataTable";
 import { useLocalStorage } from "../hooks/useLocalStorage";
+import { getSelectedAcronyms } from "../mods/droidMods";
+import { ModPicker } from "../mods/ModPicker";
 import { filterScores } from "./modFilter";
 import { addRankChanges, type ScoreRow } from "./rankChanges";
 import { downloadScoresCsv } from "./scoreCsv";
@@ -23,9 +26,6 @@ const defaultVisibleColumnIds = scoreColumns
     .filter((column) => column.isDefaultVisible)
     .map((column) => column.id);
 
-/** The mod filter has no picker yet, so no mod is selected. */
-const noModAcronyms: string[] = [];
-
 export interface ScoreTableProps {
     /** Scores to rank by local pp, or scores that were ranked already. */
     scores: PrototypePPEntry[] | ScoreRow[];
@@ -35,6 +35,9 @@ export interface ScoreTableProps {
 
     /** Where the chosen columns are remembered in this browser. */
     storageKey: string;
+
+    /** Called with the mods picked in the mod filter, for a page that also asks the server for them. */
+    onModsChange?: (mods: readonly SerializedMod[]) => void;
 }
 
 function areRanked(scores: PrototypePPEntry[] | ScoreRow[]): scores is ScoreRow[] {
@@ -57,8 +60,14 @@ function readColumnIds(stored: unknown): string[] {
  * Scores as a sortable table with a search, a column picker and CSV export. Full combos show green,
  * misses red, and differences green or red.
  */
-export function ScoreTable({ scores, showPlayer = false, storageKey }: ScoreTableProps) {
+export function ScoreTable({
+    scores,
+    showPlayer = false,
+    storageKey,
+    onModsChange,
+}: ScoreTableProps) {
     const [search, setSearch] = useState("");
+    const [mods, setMods] = useState<readonly SerializedMod[]>([]);
     const [sort, setSort] = useState<SortState>(defaultScoreSort);
     const [storedColumnIds, setStoredColumnIds] = useLocalStorage<unknown>(
         storageKey,
@@ -68,8 +77,12 @@ export function ScoreTable({ scores, showPlayer = false, storageKey }: ScoreTabl
 
     const rows = useMemo(() => (areRanked(scores) ? scores : addRankChanges(scores)), [scores]);
     const shownRows = useMemo(
-        () => sortScores(filterScores(rows, { search, modAcronyms: noModAcronyms }), sort),
-        [rows, search, sort],
+        () =>
+            sortScores(
+                filterScores(rows, { search, modAcronyms: getSelectedAcronyms(mods) }),
+                sort,
+            ),
+        [rows, search, mods, sort],
     );
     const visibleColumns = scoreColumns.filter((column) =>
         column.id === "player"
@@ -77,6 +90,11 @@ export function ScoreTable({ scores, showPlayer = false, storageKey }: ScoreTabl
             : requiredColumnIds.includes(column.id) || chosenColumnIds.includes(column.id),
     );
     const pickableColumns = scoreColumns.filter((column) => !requiredColumnIds.includes(column.id));
+
+    function changeMods(newMods: readonly SerializedMod[]) {
+        setMods(newMods);
+        onModsChange?.(newMods);
+    }
 
     function toggleColumn(columnId: string) {
         setStoredColumnIds(
@@ -91,6 +109,7 @@ export function ScoreTable({ scores, showPlayer = false, storageKey }: ScoreTabl
             <ScoreToolbar
                 search={search}
                 onSearchChange={setSearch}
+                modFilter={<ModPicker mods={mods} onChange={changeMods} hasSettings={false} />}
                 columns={pickableColumns}
                 visibleColumnIds={chosenColumnIds}
                 onToggle={toggleColumn}
