@@ -1,4 +1,6 @@
 import {
+    FullRunStatus,
+    FullRunView,
     RecalcAllowance,
     RecalcEntryStatus,
     RecalcEntryView,
@@ -168,6 +170,56 @@ interface QueueEntry {
     eventSeq?: number;
 }
 
+interface FullRun {
+    variant: string;
+    status: FullRunStatus;
+    startedByUid: number;
+    startedByUsername: string;
+    startedAt: number;
+    done: number;
+    total: number;
+
+    /**
+     * Orders the run among entries by the time it started.
+     */
+    startSeq: number;
+
+    /**
+     * How many times each uid has been attempted in this run.
+     */
+    attempts: Map<number, number>;
+
+    /**
+     * The uids that failed and will be attempted again, oldest first.
+     */
+    retries: number[];
+
+    /**
+     * The uids whose latest attempt failed.
+     */
+    failedUids: Set<number>;
+
+    /**
+     * Whether a claim of players is in progress.
+     */
+    claiming: boolean;
+
+    /**
+     * Whether the claim in progress has to run again.
+     */
+    claimAgain: boolean;
+}
+
+/**
+ * The attempts a full run makes at a player in total.
+ */
+const maxFullRunAttempts = 3;
+
+/**
+ * The variant that an empty variant's profiles are cloned from.
+ */
+const cloneSourceVariant = "droid-rebalance";
+
 /**
  * The seconds a player takes when a variant has no completions yet.
  */
@@ -179,16 +231,25 @@ const defaultSecondsPerPlayer = 5;
 const averagedCompletions = 20;
 
 /**
- * An in-memory queue of single-player recalculations.
+ * An in-memory queue of single-player recalculations and full runs.
  *
  * Each variant calculates at most as many players at once as it has
- * calculators (healthy instances).
+ * calculators (healthy instances), single entries and its full run together.
+ * Single entries take a free calculator before the full run does.
  */
 export class RecalculationQueue {
     private readonly entries = new Map<string, QueueEntry>();
     private readonly capacities = new Map<string, number>();
     private readonly lastAddAt = new Map<number, number>();
     private readonly completionSeconds = new Map<string, number[]>();
+    private readonly fullRuns = new Map<string, FullRun>();
+    private readonly startingFullRuns = new Set<string>();
+
+    /**
+     * The uids that full runs calculate right now, by variant. A stopped run's
+     * players stay here until they finish.
+     */
+    private readonly fullRunCalculating = new Map<string, Set<number>>();
     private seq = 0;
 
     constructor(private readonly deps: RecalculationQueueDeps) {}
@@ -294,6 +355,91 @@ export class RecalculationQueue {
     }
 
     /**
+     * Starts a full run of a variant, which recalculates every profile of the
+     * variant that is not scanned yet.
+     *
+     * @param variant The name of the variant.
+     * @param capacity The number of calculators the variant has right now,
+     * which seeds the variant's count.
+     * @param by The admin starting the run.
+     * @param restart Whether to scan every profile again.
+     */
+    async startFullRun(
+        variant: string,
+        capacity: number,
+        by: { uid: number; username: string },
+        restart: boolean,
+    ): Promise<"started" | "alreadyRunning"> {
+        if (
+            this.startingFullRuns.has(variant) ||
+            this.isFullRunActive(variant)
+        ) {
+            return "alreadyRunning";
+        }
+
+        this.startingFullRuns.add(variant);
+
+        try {
+            const store = this.deps.fullRunStore;
+
+            if ((await store.countProfiles(variant)) === 0) {
+                await store.cloneProfiles(cloneSourceVariant, variant);
+            }
+
+            if (restart) {
+                await store.resetScanDone(variant);
+            }
+
+            const [total, done] = await Promise.all([
+                store.countProfiles(variant),
+                store.countScanned(variant),
+            ]);
+
+            // Drop a stopped or finished run so the new one is listed last.
+            this.fullRuns.delete(variant);
+            this.fullRuns.set(variant, {
+                variant,
+                status: "running",
+                startedByUid: by.uid,
+                startedByUsername: by.username,
+                startedAt: this.deps.now(),
+                done,
+                total,
+                startSeq: ++this.seq,
+                attempts: new Map(),
+                retries: [],
+                failedUids: new Set(),
+                claiming: false,
+                claimAgain: false,
+            });
+            this.capacities.set(variant, capacity);
+            this.schedule();
+
+            return "started";
+        } finally {
+            this.startingFullRuns.delete(variant);
+        }
+    }
+
+    /**
+     * Stops a variant's full run. Players that are calculating finish, and no
+     * new player starts.
+     *
+     * @param variant The name of the variant.
+     */
+    stopFullRun(variant: string): "stopped" | "notRunning" {
+        const run = this.fullRuns.get(variant);
+
+        if (!run || !isFullRunActive(run)) {
+            return "notRunning";
+        }
+
+        run.status = "stopped";
+
+        return "stopped";
+    }
+
+    /**
      * Gets how many more entries a person may queue.
      *
      * @param uid The uid of the person.
@@ -384,7 +530,9 @@ export class RecalculationQueue {
                 ),
             ],
             recent: finished.map((e) => this.toView(e, null)),
-            fullRuns: [],
+            fullRuns: [...this.fullRuns.values()]
+                .filter((r) => visibleVariants.has(r.variant))
+                .map((r) => this.toFullRunView(r)),
             allowance:
                 viewerUid === undefined ? null : this.allowance(viewerUid),
         };
@@ -392,18 +540,27 @@ export class RecalculationQueue {
 
     /**
      * Refreshes the calculator count of every variant that has work, acting
-     * for the variant's most recent queuer. A count that cannot be told keeps
-     * its last known value.
+     * for the variant's most recent queuer or full-run starter. A count that
+     * cannot be told keeps its last known value.
      */
     async refreshCapacities(): Promise<void> {
         const actingUids = new Map<string, number>();
 
-        const active = [...this.entries.values()]
-            .filter(isActive)
-            .sort((a, b) => a.queueSeq - b.queueSeq);
+        const sources = [
+            ...[...this.entries.values()].filter(isActive).map((e) => ({
+                variant: e.variant,
+                uid: e.queuedByUid,
+                seq: e.queueSeq,
+            })),
+            ...[...this.fullRuns.values()].filter(isFullRunActive).map((r) => ({
+                variant: r.variant,
+                uid: r.startedByUid,
+                seq: r.startSeq,
+            })),
+        ].sort((a, b) => a.seq - b.seq);
 
-        for (const entry of active) {
-            actingUids.set(entry.variant, entry.queuedByUid);
+        for (const source of sources) {
+            actingUids.set(source.variant, source.uid);
         }
 
         await Promise.all(
@@ -428,6 +585,41 @@ export class RecalculationQueue {
         );
 
         this.schedule();
+    }
+
+    private isFullRunActive(variant: string) {
+        const run = this.fullRuns.get(variant);
+
+        return run !== undefined && isFullRunActive(run);
+    }
+
+    private toFullRunView(run: FullRun): FullRunView {
+        return {
+            variant: run.variant,
+            status: run.status,
+            startedByUid: run.startedByUid,
+            startedByUsername: run.startedByUsername,
+            startedAt: run.startedAt,
+            done: run.done,
+            total: run.total,
+            failed: run.failedUids.size,
+        };
+    }
+
+    /**
+     * Gets the uids that are calculating for a variant, from single entries
+     * and full runs.
+     */
+    private calculatingUids(variant: string) {
+        const uids = new Set(this.fullRunCalculating.get(variant));
+
+        for (const entry of this.entries.values()) {
+            if (entry.status === "calculating" && entry.variant === variant) {
+                uids.add(entry.uid);
+            }
+        }
+
+        return uids;
     }
 
     private capacityOf(variant: string) {
@@ -540,7 +732,7 @@ export class RecalculationQueue {
 
     /**
      * Starts the oldest waiting entries of each variant while it has a free
-     * calculator.
+     * calculator, then lets each full run claim the calculators that are left.
      */
     private schedule() {
         const calculating = new Map<string, number>();
@@ -552,6 +744,13 @@ export class RecalculationQueue {
                     (calculating.get(entry.variant) ?? 0) + 1,
                 );
             }
+        }
+
+        for (const [variant, uids] of this.fullRunCalculating) {
+            calculating.set(
+                variant,
+                (calculating.get(variant) ?? 0) + uids.size,
+            );
         }
 
         const waiting = [...this.entries.values()]
@@ -568,6 +767,143 @@ export class RecalculationQueue {
             calculating.set(entry.variant, running + 1);
             this.start(entry);
         }
+
+        for (const run of this.fullRuns.values()) {
+            if (!isFullRunActive(run)) {
+                continue;
+            }
+
+            run.status =
+                this.capacityOf(run.variant) > 0 ? "running" : "paused";
+
+            void this.claimForFullRun(run);
+        }
+    }
+
+    /**
+     * Starts players of a full run on the variant's free calculators. Only one
+     * claim per run goes at a time; a request that arrives meanwhile makes it
+     * go again.
+     */
+    private async claimForFullRun(run: FullRun) {
+        if (run.claiming) {
+            run.claimAgain = true;
+
+            return;
+        }
+
+        run.claiming = true;
+
+        try {
+            do {
+                run.claimAgain = false;
+                await this.claimOnce(run);
+            } while (run.claimAgain);
+        } catch (e) {
+            console.error(`Full run of ${run.variant} failed to claim:`, e);
+        } finally {
+            run.claiming = false;
+        }
+    }
+
+    private async claimOnce(run: FullRun) {
+        const { variant } = run;
+        const freeCalculators = () =>
+            this.capacityOf(variant) - this.calculatingUids(variant).size;
+        const canClaim = () =>
+            run.status === "running" && freeCalculators() > 0;
+
+        if (!canClaim()) {
+            return;
+        }
+
+        const requested = freeCalculators();
+        const fresh = await this.deps.fullRunStore.getUnscannedUids(
+            variant,
+            [...run.attempts.keys(), ...this.calculatingUids(variant)],
+            requested,
+        );
+        let started = 0;
+
+        // The queue may have changed while the store answered.
+        for (const uid of fresh) {
+            if (canClaim() && !this.calculatingUids(variant).has(uid)) {
+                this.startFullRunPlayer(run, uid);
+                ++started;
+            }
+        }
+
+        if (fresh.length >= requested) {
+            return;
+        }
+
+        // No fresh player is left, so failed ones get another attempt.
+        for (const uid of [...run.retries]) {
+            if (canClaim() && !this.calculatingUids(variant).has(uid)) {
+                run.retries.splice(run.retries.indexOf(uid), 1);
+                this.startFullRunPlayer(run, uid);
+                ++started;
+            }
+        }
+
+        if (
+            started === 0 &&
+            fresh.length === 0 &&
+            run.retries.length === 0 &&
+            this.calculatingUids(variant).size === 0 &&
+            run.status === "running"
+        ) {
+            run.status = "finished";
+        }
+    }
+
+    private startFullRunPlayer(run: FullRun, uid: number) {
+        run.attempts.set(uid, (run.attempts.get(uid) ?? 0) + 1);
+
+        const calculating =
+            this.fullRunCalculating.get(run.variant) ?? new Set();
+
+        calculating.add(uid);
+        this.fullRunCalculating.set(run.variant, calculating);
+
+        void this.runFullRunPlayer(run, uid);
+    }
+
+    private async runFullRunPlayer(run: FullRun, uid: number) {
+        let outcome: ProfileOutcome;
+
+        try {
+            outcome = await this.deps.calculate(
+                uid,
+                run.variant,
+                run.startedByUid,
+                () => {},
+            );
+        } catch (e) {
+            console.error(
+                `Full-run recalculation of uid ${uid.toString()} for ${
+                    run.variant
+                } threw:`,
+                e,
+            );
+
+            outcome = { ok: false, reason: "Unexpected error" };
+        }
+
+        this.fullRunCalculating.get(run.variant)?.delete(uid);
+
+        if (outcome.ok) {
+            ++run.done;
+            run.failedUids.delete(uid);
+        } else {
+            run.failedUids.add(uid);
+
+            if ((run.attempts.get(uid) ?? 0) < maxFullRunAttempts) {
+                run.retries.push(uid);
+            }
+        }
+
+        this.schedule();
     }
 
     private start(entry: QueueEntry) {
@@ -594,7 +930,9 @@ export class RecalculationQueue {
             );
         } catch (e) {
             console.error(
-                `Recalculation of uid ${entry.uid.toString()} for ${entry.variant} threw:`,
+                `Recalculation of uid ${entry.uid.toString()} for ${
+                    entry.variant
+                } threw:`,
                 e,
             );
 
@@ -633,4 +971,8 @@ export class RecalculationQueue {
 
 function isActive(entry: QueueEntry) {
     return entry.status === "waiting" || entry.status === "calculating";
+}
+
+function isFullRunActive(run: FullRun) {
+    return run.status === "running" || run.status === "paused";
 }

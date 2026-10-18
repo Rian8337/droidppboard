@@ -1,12 +1,16 @@
-import { Filter } from "mongodb";
+import { Filter, OptionalUnlessRequiredId } from "mongodb";
 import { IPrototypePP } from "app-structures";
 import { Util } from "../../../utils/Util";
+import { FullRunStore } from "../../../recalculation/RecalculationQueue";
 import { DatabaseCollectionManager } from "../DatabaseCollectionManager";
 
 /**
  * A manager for the `prototypepp` collection.
  */
-export class PrototypePPCollectionManager extends DatabaseCollectionManager<IPrototypePP> {
+export class PrototypePPCollectionManager
+    extends DatabaseCollectionManager<IPrototypePP>
+    implements FullRunStore
+{
     /**
      * Fields that older versions stored, which are removed when a profile is saved.
      */
@@ -174,6 +178,72 @@ export class PrototypePPCollectionManager extends DatabaseCollectionManager<IPro
                     lastUpdate: 1,
                 },
             },
+        );
+    }
+
+    countProfiles(reworkType: string): Promise<number> {
+        return this.collection.countDocuments({ reworkType });
+    }
+
+    countScanned(reworkType: string): Promise<number> {
+        return this.collection.countDocuments({ reworkType, scanDone: true });
+    }
+
+    async getUnscannedUids(
+        reworkType: string,
+        excludeUids: number[],
+        limit: number,
+    ): Promise<number[]> {
+        const profiles = await this.collection
+            .find(
+                {
+                    reworkType,
+                    scanDone: { $ne: true },
+                    uid: { $nin: excludeUids },
+                },
+                { projection: { _id: 0, uid: 1 } },
+            )
+            .sort({ localPPTotal: -1 })
+            .limit(limit)
+            .toArray();
+
+        return profiles.map((p) => p.uid);
+    }
+
+    async resetScanDone(reworkType: string): Promise<void> {
+        await this.collection.updateMany(
+            { reworkType },
+            { $set: { scanDone: false } },
+        );
+    }
+
+    async cloneProfiles(source: string, target: string): Promise<void> {
+        const profiles = await this.collection
+            .find(
+                { reworkType: source },
+                { projection: { _id: 0, uid: 1, username: 1 } },
+            )
+            .toArray();
+
+        if (profiles.length === 0) {
+            return;
+        }
+
+        const lastUpdate = Date.now();
+
+        await this.collection.insertMany(
+            profiles.map(
+                ({ uid, username }): IPrototypePP => ({
+                    uid,
+                    username,
+                    reworkType: target,
+                    pp: [],
+                    localPPTotal: 0,
+                    livePPTotal: 0,
+                    lastUpdate,
+                    scanDone: false,
+                }),
+            ) as OptionalUnlessRequiredId<IPrototypePP>[],
         );
     }
 }

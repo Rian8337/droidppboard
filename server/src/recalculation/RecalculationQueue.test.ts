@@ -18,13 +18,94 @@ interface PendingCalculation {
 
 const minute = 60_000;
 
-const fullRunStore: FullRunStore = {
-    countProfiles: () => Promise.resolve(0),
-    countScanned: () => Promise.resolve(0),
-    getUnscannedUids: () => Promise.resolve([]),
-    resetScanDone: () => Promise.resolve(),
-    cloneProfiles: () => Promise.resolve(),
-};
+/**
+ * An in-memory `FullRunStore`.
+ */
+class FakeFullRunStore implements FullRunStore {
+    readonly profiles = new Map<
+        string,
+        Map<number, { localPPTotal: number; scanned: boolean }>
+    >();
+    resetCalls: string[] = [];
+    cloneCalls: [string, string][] = [];
+
+    /**
+     * Adds unscanned profiles, the first of which has the highest local pp.
+     */
+    seed(variant: string, uids: number[], scanned = false) {
+        const variantProfiles = this.variant(variant);
+
+        uids.forEach((uid, i) => {
+            variantProfiles.set(uid, {
+                localPPTotal: (uids.length - i) * 100,
+                scanned,
+            });
+        });
+    }
+
+    markScanned(variant: string, uid: number) {
+        const profile = this.variant(variant).get(uid);
+
+        if (profile) {
+            profile.scanned = true;
+        }
+    }
+
+    scannedUids(variant: string) {
+        return [...this.variant(variant)]
+            .filter(([, p]) => p.scanned)
+            .map(([uid]) => uid);
+    }
+
+    countProfiles(reworkType: string) {
+        return Promise.resolve(this.variant(reworkType).size);
+    }
+
+    countScanned(reworkType: string) {
+        return Promise.resolve(this.scannedUids(reworkType).length);
+    }
+
+    getUnscannedUids(reworkType: string, excludeUids: number[], limit: number) {
+        return Promise.resolve(
+            [...this.variant(reworkType)]
+                .filter(([uid, p]) => !p.scanned && !excludeUids.includes(uid))
+                .sort(([, a], [, b]) => b.localPPTotal - a.localPPTotal)
+                .slice(0, limit)
+                .map(([uid]) => uid),
+        );
+    }
+
+    resetScanDone(reworkType: string) {
+        this.resetCalls.push(reworkType);
+
+        for (const profile of this.variant(reworkType).values()) {
+            profile.scanned = false;
+        }
+
+        return Promise.resolve();
+    }
+
+    cloneProfiles(source: string, target: string) {
+        this.cloneCalls.push([source, target]);
+
+        for (const uid of this.variant(source).keys()) {
+            this.variant(target).set(uid, { localPPTotal: 0, scanned: false });
+        }
+
+        return Promise.resolve();
+    }
+
+    private variant(name: string) {
+        let found = this.profiles.get(name);
+
+        if (!found) {
+            found = new Map();
+            this.profiles.set(name, found);
+        }
+
+        return found;
+    }
+}
 
 const success: ProfileOutcome = {
     ok: true,
@@ -48,6 +129,7 @@ describe("RecalculationQueue", () => {
     let capacities: Map<string, number | null>;
     let getCapacity: ReturnType<typeof vi.fn>;
     let queue: RecalculationQueue;
+    let fullRunStore: FakeFullRunStore;
     let calculateImpl:
         | ((uid: number, variant: string) => Promise<ProfileOutcome>)
         | null;
@@ -101,6 +183,48 @@ describe("RecalculationQueue", () => {
         });
     }
 
+    const admin = { uid: 9, username: "admin" };
+
+    function startRun(
+        variant: string,
+        options: { capacity?: number; restart?: boolean } = {},
+    ) {
+        return queue.startFullRun(
+            variant,
+            options.capacity ?? 1,
+            admin,
+            options.restart ?? false,
+        );
+    }
+
+    /**
+     * Finishes a pending calculation as `calculate` does: a success marks the
+     * profile scanned.
+     */
+    async function finishScanned(
+        uid: number,
+        variant: string,
+        outcome: ProfileOutcome = success,
+    ) {
+        if (outcome.ok) {
+            fullRunStore.markScanned(variant, uid);
+        }
+
+        await finish(uid, outcome);
+    }
+
+    function fullRun(variant: string) {
+        const found = view(["A", "B"]).fullRuns.find(
+            (r) => r.variant === variant,
+        );
+
+        if (!found) {
+            throw new Error(`No full run for ${variant}`);
+        }
+
+        return found;
+    }
+
     function pendingFor(uid: number) {
         const found = pending.find((p) => p.uid === uid);
 
@@ -141,6 +265,7 @@ describe("RecalculationQueue", () => {
         pending = [];
         capacities = new Map();
         calculateImpl = null;
+        fullRunStore = new FakeFullRunStore();
         getCapacity = vi.fn((variant: string) =>
             Promise.resolve(capacities.get(variant) ?? null),
         );
@@ -758,6 +883,396 @@ describe("RecalculationQueue", () => {
             await queue.refreshCapacities();
 
             expect(view(["A"], "A").estimatedWaitSeconds).toBeNull();
+        });
+    });
+
+    describe("full runs", () => {
+        /**
+         * Makes every calculation succeed except for the given uids, recording
+         * the order of calls.
+         */
+        function calculateAll(failing: number[] = []) {
+            const calls: number[] = [];
+
+            calculateImpl = (uid, variant) => {
+                calls.push(uid);
+
+                if (failing.includes(uid)) {
+                    return Promise.resolve({
+                        ok: false,
+                        reason: "Score service timed out",
+                    });
+                }
+
+                fullRunStore.markScanned(variant, uid);
+
+                return Promise.resolve(success);
+            };
+
+            return calls;
+        }
+
+        it("starts with the highest local pp first, acting for the admin", async () => {
+            fullRunStore.seed("A", [21, 22, 23]);
+
+            expect(await startRun("A")).toBe("started");
+
+            expect(pending.map((p) => [p.uid, p.variant, p.actingUid])).toEqual(
+                [[21, "A", 9]],
+            );
+            expect(fullRun("A")).toEqual({
+                variant: "A",
+                status: "running",
+                startedByUid: 9,
+                startedByUsername: "admin",
+                startedAt: time,
+                done: 0,
+                total: 3,
+                failed: 0,
+            });
+
+            await finishScanned(21, "A");
+
+            expect(pending.map((p) => p.uid)).toEqual([21, 22]);
+            expect(fullRun("A")).toMatchObject({ done: 1, total: 3 });
+        });
+
+        it("counts the profiles already scanned as done at the start", async () => {
+            fullRunStore.seed("A", [21, 22]);
+            fullRunStore.seed("A", [23, 24], true);
+
+            await startRun("A");
+
+            expect(fullRun("A")).toMatchObject({ done: 2, total: 4 });
+        });
+
+        it("runs up to the calculator count at once and finishes when all are scanned", async () => {
+            fullRunStore.seed("A", [21, 22, 23]);
+
+            await startRun("A", { capacity: 2 });
+
+            expect(pending.map((p) => p.uid)).toEqual([21, 22]);
+
+            await finishScanned(22, "A");
+            await finishScanned(21, "A");
+
+            expect(pending.map((p) => p.uid)).toEqual([21, 22, 23]);
+            expect(fullRun("A").status).toBe("running");
+
+            await finishScanned(23, "A");
+
+            expect(fullRun("A")).toMatchObject({
+                status: "finished",
+                done: 3,
+                total: 3,
+                failed: 0,
+            });
+        });
+
+        it("lets a waiting entry take the next calculator before the full run", async () => {
+            fullRunStore.seed("A", [21, 22, 23]);
+            await startRun("A");
+            add(11, "A");
+
+            expect(statuses()).toEqual({ 11: "waiting" });
+
+            await finishScanned(21, "A");
+
+            expect(statuses()).toEqual({ 11: "calculating" });
+            expect(pending.map((p) => p.uid)).toEqual([21, 11]);
+            expect(pending[1]?.actingUid).toBe(1);
+
+            await finish(11);
+
+            expect(pending.map((p) => p.uid)).toEqual([21, 11, 22]);
+        });
+
+        it("counts full-run players toward the variant's calculators", async () => {
+            fullRunStore.seed("A", [21, 22, 23]);
+            await startRun("A", { capacity: 2 });
+            add(11, "A", { capacity: 2 });
+            add(12, "A", { capacity: 2 });
+
+            expect(statuses()).toEqual({ 11: "waiting", 12: "waiting" });
+
+            await finishScanned(21, "A");
+            await finishScanned(22, "A");
+
+            expect(statuses()).toEqual({
+                11: "calculating",
+                12: "calculating",
+            });
+            expect(pending.map((p) => p.uid)).toEqual([21, 22, 11, 12]);
+        });
+
+        it("retries a failed full-run player later, up to three attempts", async () => {
+            fullRunStore.seed("A", [21, 22, 23, 24]);
+            const calls = calculateAll([22]);
+
+            await startRun("A");
+            await flush();
+
+            expect(calls).toEqual([21, 22, 23, 24, 22, 22]);
+            expect(fullRun("A")).toMatchObject({
+                status: "finished",
+                done: 3,
+                total: 4,
+                failed: 1,
+            });
+        });
+
+        it("stops counting a player as failed once a retry succeeds", async () => {
+            fullRunStore.seed("A", [21, 22]);
+
+            let attempts = 0;
+
+            calculateImpl = (uid, variant) => {
+                if (uid === 21 && ++attempts === 1) {
+                    return Promise.resolve({ ok: false, reason: "Timed out" });
+                }
+
+                fullRunStore.markScanned(variant, uid);
+
+                return Promise.resolve(success);
+            };
+
+            await startRun("A");
+            await flush();
+
+            expect(attempts).toBe(2);
+            expect(fullRun("A")).toMatchObject({
+                status: "finished",
+                done: 2,
+                failed: 0,
+            });
+        });
+
+        it("never marks a failed player scanned", async () => {
+            fullRunStore.seed("A", [21, 22]);
+            calculateAll([22]);
+
+            await startRun("A");
+            await flush();
+
+            expect(fullRunStore.scannedUids("A")).toEqual([21]);
+        });
+
+        it("fails a full-run player whose calculation throws", async () => {
+            fullRunStore.seed("A", [21]);
+            calculateImpl = () => {
+                throw new Error("boom");
+            };
+
+            await startRun("A");
+            await flush();
+
+            expect(fullRun("A")).toMatchObject({
+                status: "finished",
+                done: 0,
+                failed: 1,
+            });
+        });
+
+        it("does not start a player already calculating for the variant", async () => {
+            fullRunStore.seed("A", [21, 22]);
+            add(21, "A", { capacity: 2 });
+
+            await startRun("A", { capacity: 2 });
+
+            expect(pending.map((p) => p.uid)).toEqual([21, 22]);
+            expect(pending.filter((p) => p.uid === 21)).toHaveLength(1);
+
+            await finishScanned(22, "A");
+
+            // The run is not finished while a calculation is in flight.
+            expect(fullRun("A").status).toBe("running");
+            expect(pending.filter((p) => p.uid === 21)).toHaveLength(1);
+
+            // The single entry failed, so the player is still unscanned.
+            await finish(21, { ok: false, reason: "Timed out" });
+
+            expect(pending.filter((p) => p.uid === 21)).toHaveLength(2);
+        });
+
+        it("does not start a player that another run's in-flight calculation covers", async () => {
+            fullRunStore.seed("A", [21, 22]);
+            await startRun("A", { capacity: 1 });
+            queue.stopFullRun("A");
+
+            await startRun("A", { capacity: 2 });
+
+            expect(pending.filter((p) => p.uid === 21)).toHaveLength(1);
+            expect(pending.map((p) => p.uid)).toEqual([21, 22]);
+        });
+
+        it("pauses a full run while the variant has no calculators and resumes when it has", async () => {
+            fullRunStore.seed("A", [21, 22, 23]);
+
+            await startRun("A", { capacity: 0 });
+
+            expect(fullRun("A").status).toBe("paused");
+            expect(pending).toEqual([]);
+
+            capacities.set("A", 1);
+            await queue.refreshCapacities();
+
+            expect(getCapacity).toHaveBeenCalledWith("A", 9);
+            expect(fullRun("A").status).toBe("running");
+            expect(pending.map((p) => p.uid)).toEqual([21]);
+
+            capacities.set("A", 0);
+            await queue.refreshCapacities();
+
+            expect(fullRun("A").status).toBe("paused");
+
+            await finishScanned(21, "A");
+
+            expect(pending.map((p) => p.uid)).toEqual([21]);
+
+            capacities.set("A", 1);
+            await queue.refreshCapacities();
+
+            expect(fullRun("A").status).toBe("running");
+            expect(pending.map((p) => p.uid)).toEqual([21, 22]);
+        });
+
+        it("refreshes a variant with a full run for the most recent starter or queuer", async () => {
+            fullRunStore.seed("B", [31]);
+            fullRunStore.seed("C", [41]);
+
+            add(11, "A", { by: 1 });
+            await startRun("B");
+            add(12, "A", { by: 2 });
+            await startRun("C");
+            add(13, "C", { by: 3, capacity: 1 });
+            queue.stopFullRun("C");
+            await queue.refreshCapacities();
+
+            // C's run is stopped, so its queuer is the only one acting.
+            expect(getCapacity).toHaveBeenCalledTimes(3);
+            expect(getCapacity).toHaveBeenCalledWith("A", 2);
+            expect(getCapacity).toHaveBeenCalledWith("B", 9);
+            expect(getCapacity).toHaveBeenCalledWith("C", 3);
+        });
+
+        it("refuses to start a run that is running or paused", async () => {
+            fullRunStore.seed("A", [21]);
+
+            expect(await startRun("A")).toBe("started");
+            expect(await startRun("A", { restart: true })).toBe(
+                "alreadyRunning",
+            );
+            expect(fullRunStore.resetCalls).toEqual([]);
+
+            queue.stopFullRun("A");
+            capacities.set("A", 0);
+
+            expect(await startRun("A", { capacity: 0 })).toBe("started");
+            expect(fullRun("A").status).toBe("paused");
+            expect(await startRun("A")).toBe("alreadyRunning");
+        });
+
+        it("refuses a second start while the first is still preparing", async () => {
+            fullRunStore.seed("A", [21]);
+
+            const results = await Promise.all([startRun("A"), startRun("A")]);
+
+            expect(results).toEqual(["started", "alreadyRunning"]);
+        });
+
+        it("starts over by resetting scanned flags first", async () => {
+            fullRunStore.seed("A", [21, 22], true);
+
+            await startRun("A", { restart: true });
+
+            expect(fullRunStore.resetCalls).toEqual(["A"]);
+            expect(fullRun("A")).toMatchObject({ done: 0, total: 2 });
+            expect(pending.map((p) => p.uid)).toEqual([21]);
+        });
+
+        it("keeps scanned flags without a restart", async () => {
+            fullRunStore.seed("A", [21, 22], true);
+
+            await startRun("A");
+
+            expect(fullRunStore.resetCalls).toEqual([]);
+            expect(fullRun("A")).toMatchObject({
+                status: "finished",
+                done: 2,
+                total: 2,
+            });
+        });
+
+        it("clones droid-rebalance profiles into an empty variant", async () => {
+            fullRunStore.seed("droid-rebalance", [21, 22]);
+
+            await startRun("A");
+
+            expect(fullRunStore.cloneCalls).toEqual([["droid-rebalance", "A"]]);
+            expect(fullRun("A")).toMatchObject({ done: 0, total: 2 });
+            expect(pending.map((p) => p.uid)).toEqual([21]);
+        });
+
+        it("does not clone into a variant that has profiles", async () => {
+            fullRunStore.seed("droid-rebalance", [21, 22]);
+            fullRunStore.seed("A", [23]);
+
+            await startRun("A");
+
+            expect(fullRunStore.cloneCalls).toEqual([]);
+            expect(fullRun("A").total).toBe(1);
+        });
+
+        it("stop lets in-flight players finish and starts nothing new", async () => {
+            fullRunStore.seed("A", [21, 22, 23, 24]);
+            await startRun("A", { capacity: 2 });
+
+            expect(queue.stopFullRun("A")).toBe("stopped");
+            expect(fullRun("A").status).toBe("stopped");
+
+            await finishScanned(21, "A");
+            await finishScanned(22, "A");
+
+            expect(pending.map((p) => p.uid)).toEqual([21, 22]);
+            expect(fullRun("A")).toMatchObject({ status: "stopped", done: 2 });
+            expect(queue.stopFullRun("A")).toBe("notRunning");
+            expect(queue.stopFullRun("B")).toBe("notRunning");
+        });
+
+        it("can start again after finishing", async () => {
+            fullRunStore.seed("A", [21]);
+            calculateAll();
+
+            await startRun("A");
+            await flush();
+
+            expect(fullRun("A").status).toBe("finished");
+            expect(queue.stopFullRun("A")).toBe("notRunning");
+
+            time += 5_000;
+
+            expect(await startRun("A", { restart: true })).toBe("started");
+            await flush();
+
+            expect(fullRun("A")).toMatchObject({
+                status: "finished",
+                startedAt: time,
+                done: 1,
+            });
+        });
+
+        it("shows full runs only for visible variants", async () => {
+            fullRunStore.seed("A", [21]);
+            fullRunStore.seed("B", [31]);
+            await startRun("A");
+            await startRun("B");
+
+            expect(view(["A", "B"]).fullRuns.map((r) => r.variant)).toEqual([
+                "A",
+                "B",
+            ]);
+            expect(view(["B"]).fullRuns.map((r) => r.variant)).toEqual(["B"]);
+            expect(view([], "A").fullRuns).toEqual([]);
         });
     });
 });
