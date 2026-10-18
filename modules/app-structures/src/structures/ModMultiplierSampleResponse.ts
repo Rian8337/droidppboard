@@ -1,4 +1,4 @@
-import { ModMultiplierSampleEntry } from "./ModMultiplierSampleEntry";
+import type { ModMultiplierSampleEntry } from "./ModMultiplierSampleEntry";
 
 export interface ModMultiplierSampleResponse {
     readonly beatmapTitle: string;

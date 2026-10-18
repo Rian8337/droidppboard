@@ -1,4 +1,4 @@
-import { PPVariant } from "./PPVariant";
+import type { PPVariant } from "./PPVariant";
 
 /**
  * The status of a single recalculation entry.

@@ -1,4 +1,4 @@
-import { SerializedMod } from "@rian8337/osu-base";
+import type { SerializedMod } from "@rian8337/osu-base";
 
 /**
  * Represents a droid performance points (dpp) entry.

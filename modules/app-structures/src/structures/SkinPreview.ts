@@ -1,4 +1,4 @@
-import { SkinPreviewData } from "./SkinPreviewData";
+import type { SkinPreviewData } from "./SkinPreviewData";
 import { SkinPreviewType } from "./SkinPreviewType";
 
 /**

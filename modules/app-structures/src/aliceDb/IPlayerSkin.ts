@@ -1,4 +1,4 @@
-import { SkinPreview } from "../structures/SkinPreview";
+import type { SkinPreview } from "../structures/SkinPreview";
 
 /**
  * Represents an information about a Discord user's osu!/osu!droid skin.

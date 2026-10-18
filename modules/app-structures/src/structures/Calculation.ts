@@ -1,4 +1,4 @@
-import { SerializedMod } from "@rian8337/osu-base";
+import type { SerializedMod } from "@rian8337/osu-base";
 
 /**
  * What a calculation is made for: a variant of the board (which is compared with the live

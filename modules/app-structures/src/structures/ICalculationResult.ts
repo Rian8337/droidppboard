@@ -1,5 +1,5 @@
-import { DifficultyCalculationResult } from "./DifficultyCalculationResult";
-import { PerformanceCalculationResult } from "./PerformanceCalculationResult";
+import type { DifficultyCalculationResult } from "./DifficultyCalculationResult";
+import type { PerformanceCalculationResult } from "./PerformanceCalculationResult";
 
 export interface ICalculationResult {
     readonly beatmap: Readonly<{

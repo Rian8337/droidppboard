@@ -1,5 +1,5 @@
-import { ScorePrototypeDifficultyState } from "./ScorePrototypeDifficultyState";
-import { ScorePrototypePerformanceState } from "./ScorePrototypePerformanceState";
+import type { ScorePrototypeDifficultyState } from "./ScorePrototypeDifficultyState";
+import type { ScorePrototypePerformanceState } from "./ScorePrototypePerformanceState";
 
 /**
  * Represents the state of a score in a prototype.
