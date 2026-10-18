@@ -7,6 +7,44 @@ import { DatabaseCollectionManager } from "../DatabaseCollectionManager";
  * A manager for the `prototypepp` collection.
  */
 export class PrototypePPCollectionManager extends DatabaseCollectionManager<IPrototypePP> {
+    /**
+     * Fields that older versions stored, which are removed when a profile is saved.
+     */
+    private static readonly legacyFields: Record<string, ""> =
+        Object.fromEntries(
+            [
+                "prevStarRating",
+                "prevAimDifficulty",
+                "prevTapDifficulty",
+                "prevRhythmDifficulty",
+                "prevFlashlightDifficulty",
+                "prevReadingDifficulty",
+                "newStarRating",
+                "newAimDifficulty",
+                "newTapDifficulty",
+                "newRhythmDifficulty",
+                "newFlashlightDifficulty",
+                "newReadingDifficulty",
+                "prevAim",
+                "prevTap",
+                "prevAccuracy",
+                "prevFlashlight",
+                "prevReading",
+                "newAim",
+                "newTap",
+                "newAccuracy",
+                "newFlashlight",
+                "newReading",
+                "prevpptotal",
+                "pptotal",
+                "liveTapPenalty",
+                "rebalanceTapPenalty",
+                "sliderCheesePenalty",
+                "estimatedUnstableRate",
+                "estimatedSpeedUnstableRate",
+            ].map((field) => [field, ""]),
+        );
+
     override get defaultDocument(): IPrototypePP {
         return {
             livePPTotal: 0,
@@ -80,6 +118,39 @@ export class PrototypePPCollectionManager extends DatabaseCollectionManager<IPro
             .skip(50 * (page - 1))
             .limit(50)
             .toArray();
+    }
+
+    /**
+     * Stores a player's calculated profile in a variant, creating it if it does not exist.
+     *
+     * @param uid The uid of the player.
+     * @param reworkType The variant.
+     * @param profile The calculated profile.
+     */
+    async saveProfile(
+        uid: number,
+        reworkType: string,
+        profile: Pick<
+            IPrototypePP,
+            "pp" | "localPPTotal" | "livePPTotal" | "masterPPTotal" | "username"
+        >,
+    ): Promise<void> {
+        const { masterPPTotal, ...rest } = profile;
+
+        await this.collection.updateOne(
+            { uid, reworkType },
+            {
+                $set: {
+                    ...rest,
+                    // An undefined value would be stored as null.
+                    ...(masterPPTotal !== undefined && { masterPPTotal }),
+                    lastUpdate: Date.now(),
+                    scanDone: true,
+                },
+                $unset: PrototypePPCollectionManager.legacyFields,
+            },
+            { upsert: true },
+        );
     }
 
     /**
