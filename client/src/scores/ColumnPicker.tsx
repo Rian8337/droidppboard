@@ -1,7 +1,8 @@
 import { faTableColumns } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
+import { Button } from "../components/Button";
 import { Checkbox } from "../components/Checkbox";
-import { Menu } from "../components/Menu";
 import styles from "./ColumnPicker.module.css";
 
 export interface PickableColumn {
@@ -15,19 +16,47 @@ export interface ColumnPickerProps {
     onToggle: (columnId: string) => void;
 }
 
-/** A button that opens a list of columns to show or hide. */
+/** A button that discloses a list of columns to show or hide. Escape or a press outside closes it. */
 export function ColumnPicker({ columns, visibleColumnIds, onToggle }: ColumnPickerProps) {
-    return (
-        <Menu
-            trigger={
-                <>
-                    <FontAwesomeIcon icon={faTableColumns} />
-                    Columns
-                </>
+    const [isOpen, setIsOpen] = useState(false);
+    const rootRef = useRef<HTMLDivElement>(null);
+    const panelId = useId();
+
+    useEffect(() => {
+        if (!isOpen) {
+            return;
+        }
+
+        function closeOnOutsidePress(event: PointerEvent) {
+            if (!rootRef.current?.contains(event.target as Node)) {
+                setIsOpen(false);
             }
-            items={[]}
-            footer={
-                <div className={styles.list}>
+        }
+
+        document.addEventListener("pointerdown", closeOnOutsidePress);
+
+        return () => document.removeEventListener("pointerdown", closeOnOutsidePress);
+    }, [isOpen]);
+
+    function closeOnEscape(event: KeyboardEvent) {
+        if (isOpen && event.key === "Escape") {
+            setIsOpen(false);
+            rootRef.current?.querySelector("button")?.focus();
+        }
+    }
+
+    return (
+        <div ref={rootRef} className={styles.picker} onKeyDown={closeOnEscape}>
+            <Button
+                variant="secondary"
+                aria-expanded={isOpen}
+                aria-controls={isOpen ? panelId : undefined}
+                onClick={() => setIsOpen(!isOpen)}
+            >
+                <FontAwesomeIcon icon={faTableColumns} /> Columns
+            </Button>
+            {isOpen && (
+                <div id={panelId} role="group" aria-label="Columns" className={styles.panel}>
                     {columns.map((column) => (
                         <Checkbox
                             key={column.id}
@@ -38,7 +67,7 @@ export function ColumnPicker({ columns, visibleColumnIds, onToggle }: ColumnPick
                         </Checkbox>
                     ))}
                 </div>
-            }
-        />
+            )}
+        </div>
     );
 }

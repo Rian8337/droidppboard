@@ -65,15 +65,14 @@ function renderRank(row: ScoreRow) {
         <span className={styles.rank}>
             {rank}
             {rankChange !== 0 && (
-                <span
-                    className={styles.rankChange}
-                    data-tone={rankChange > 0 ? "up" : "down"}
-                    aria-label={`Moved ${rankChange > 0 ? "up" : "down"} ${Math.abs(rankChange)} ${
-                        Math.abs(rankChange) === 1 ? "place" : "places"
-                    }`}
-                >
+                <span className={styles.rankChange} data-tone={rankChange > 0 ? "up" : "down"}>
                     <FontAwesomeIcon icon={rankChange > 0 ? faCaretUp : faCaretDown} />
                     {Math.abs(rankChange)}
+                    <span className={styles.visuallyHidden}>
+                        {`Moved ${rankChange > 0 ? "up" : "down"} ${Math.abs(rankChange)} ${
+                            Math.abs(rankChange) === 1 ? "place" : "places"
+                        }`}
+                    </span>
                 </span>
             )}
         </span>
@@ -168,7 +167,7 @@ export const scoreColumns: ScoreColumn[] = [
         header: "Player",
         isSortable: true,
         isDefaultVisible: true,
-        render: (row) => row.username ?? "",
+        render: (row) => <span className={styles.player}>{row.username ?? ""}</span>,
         csvValue: (row) => row.username ?? "",
     },
     {
@@ -176,11 +175,7 @@ export const scoreColumns: ScoreColumn[] = [
         header: "Map",
         isSortable: true,
         isDefaultVisible: true,
-        render: (row) => (
-            <span className={styles.map} title={row.title}>
-                {row.title}
-            </span>
-        ),
+        render: (row) => <span className={styles.map}>{row.title}</span>,
         csvValue: (row) => row.title,
     },
     createNumberColumn("live", "Live", (row) => row.live.performance.total),
@@ -259,13 +254,15 @@ export const scoreColumns: ScoreColumn[] = [
         isSortable: true,
         isDefaultVisible: true,
         render: (row) => (
-            <span
-                title={`of ${row.maxCombo}`}
-                data-tone={row.combo >= row.maxCombo ? "up" : undefined}
-                className={styles.highlight}
-            >
-                {row.combo}
-            </span>
+            <>
+                <span
+                    data-tone={row.combo >= row.maxCombo ? "up" : undefined}
+                    className={styles.highlight}
+                >
+                    {row.combo}
+                </span>
+                <span className={styles.maxCombo}>/{row.maxCombo}</span>
+            </>
         ),
         csvValue: (row) => row.combo,
     },

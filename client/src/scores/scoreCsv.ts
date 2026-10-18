@@ -1,9 +1,19 @@
 import type { ScoreColumn } from "./scoreColumns";
 import type { ScoreRow } from "./rankChanges";
 
-/** Quotes a value when RFC 4180 requires it: when it holds a comma, a quote or a line break. */
+/** The byte order mark; written as a code so that no tool turns it into an invisible character. */
+const byteOrderMark = String.fromCodePoint(0xfeff);
+
+/** What a spreadsheet reads as the start of a formula. */
+const formulaStart = /^[=+\-@\t\r]/;
+
+/**
+ * Quotes a value when RFC 4180 requires it: when it holds a comma, a quote or a line break. Text a
+ * spreadsheet would run as a formula, such as a title starting with `=`, gets a `'` in front.
+ */
 function quoteCsvValue(value: string | number): string {
-    const text = String(value);
+    const text =
+        typeof value === "string" && formulaStart.test(value) ? `'${value}` : String(value);
 
     return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
 }
@@ -20,7 +30,7 @@ export function buildScoresCsv(rows: ScoreRow[], columns: ScoreColumn[]): string
 
 /** Saves the rows as a CSV file through the browser. A byte order mark keeps non-ASCII titles intact in Excel. */
 export function downloadScoresCsv(rows: ScoreRow[], columns: ScoreColumn[], fileName: string) {
-    const blob = new Blob(["﻿", buildScoresCsv(rows, columns)], {
+    const blob = new Blob([byteOrderMark, buildScoresCsv(rows, columns)], {
         type: "text/csv;charset=utf-8",
     });
     const url = URL.createObjectURL(blob);

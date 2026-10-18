@@ -28,10 +28,41 @@
     opacity: 0.85;
 }
 
+/* Long titles and names wrap instead of being cut off, so nothing is left to hover for. */
 .map {
     display: inline-block;
     max-width: 28em;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.player {
+    display: inline-block;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.maxCombo {
+    color: var(--muted);
+    font-size: 0.85em;
+}
+
+.visuallyHidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
     overflow: hidden;
-    vertical-align: bottom;
-    text-overflow: ellipsis;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+/* Rank, Player and Map are pinned, so on a phone they must leave room for the columns that scroll. */
+@media (max-width: 639px) {
+    .map {
+        max-width: 36vw;
+    }
+
+    .player {
+        max-width: 22vw;
+    }
 }

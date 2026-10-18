@@ -1,5 +1,6 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { addRankChanges } from "../../src/scores/rankChanges";
 import { ScoreTable } from "../../src/scores/ScoreTable";
 import { buildScore, buildScoreState } from "../mocks/fixtures";
 
@@ -66,6 +67,14 @@ describe("ScoreTable", () => {
 
         expect(screen.getByRole("columnheader", { name: "Player" })).toBeInTheDocument();
         expect(screen.getAllByText("Someone")).toHaveLength(2);
+
+        for (const name of ["Rank", "Player", "Map"]) {
+            expect(screen.getByRole("columnheader", { name })).toHaveAttribute("data-pinned");
+        }
+
+        expect(screen.getByRole("columnheader", { name: "Live" })).not.toHaveAttribute(
+            "data-pinned",
+        );
     });
 
     it("filters by the map search", async () => {
@@ -118,6 +127,7 @@ describe("ScoreTable", () => {
         const [alpha, bravo] = getBodyRows();
 
         expect(within(alpha).getByText("1000")).toHaveAttribute("data-tone", "up");
+        expect(within(alpha).getByText("/1000")).toBeInTheDocument();
         expect(within(bravo).getByText("800")).not.toHaveAttribute("data-tone");
         expect(within(bravo).getByText("7")).toHaveAttribute("data-tone", "down");
         expect(within(alpha).getByText("+30.00")).toHaveAttribute("data-tone", "up");
@@ -143,8 +153,14 @@ describe("ScoreTable", () => {
             />,
         );
 
-        expect(screen.getByLabelText("Moved up 1 place")).toHaveAttribute("data-tone", "up");
-        expect(screen.getByLabelText("Moved down 1 place")).toHaveAttribute("data-tone", "down");
+        expect(screen.getByText("Moved up 1 place").parentElement).toHaveAttribute(
+            "data-tone",
+            "up",
+        );
+        expect(screen.getByText("Moved down 1 place").parentElement).toHaveAttribute(
+            "data-tone",
+            "down",
+        );
     });
 
     it("exports the visible rows and columns", async () => {
@@ -166,6 +182,52 @@ describe("ScoreTable", () => {
         expect(text).not.toContain("Bravo Tune");
         expect(text.split("\r\n")[0]).toContain("Rank,Map,Live,Local,Difference");
         expect(revokeObjectUrl).toHaveBeenCalledWith("blob:csv");
+    });
+
+    it("lists the columns in a group, not a menu, and closes it on Escape", async () => {
+        render(<ScoreTable scores={scores} storageKey="columns" />);
+
+        const button = screen.getByRole("button", { name: "Columns" });
+
+        expect(button).toHaveAttribute("aria-expanded", "false");
+
+        await userEvent.click(button);
+
+        expect(button).toHaveAttribute("aria-expanded", "true");
+        expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+        expect(screen.getByRole("group", { name: "Columns" })).toBeInTheDocument();
+
+        await userEvent.keyboard("{Escape}");
+
+        expect(screen.queryByRole("group", { name: "Columns" })).not.toBeInTheDocument();
+        expect(button).toHaveFocus();
+    });
+
+    it("closes the column list on a press outside it", async () => {
+        render(<ScoreTable scores={scores} storageKey="columns" />);
+
+        await userEvent.click(screen.getByRole("button", { name: "Columns" }));
+        await userEvent.click(document.body);
+
+        expect(screen.queryByRole("group", { name: "Columns" })).not.toBeInTheDocument();
+    });
+
+    it("keeps scores of different players on the same map apart", () => {
+        const error = vi.spyOn(console, "error").mockImplementation(() => {});
+
+        render(
+            <ScoreTable
+                scores={addRankChanges([
+                    buildScore({ hash: "same" }),
+                    buildScore({ hash: "same" }),
+                ]).map((row, index) => ({ ...row, username: `Player ${index}`, uid: index }))}
+                showPlayer
+                storageKey="columns"
+            />,
+        );
+
+        expect(screen.getAllByRole("row")).toHaveLength(3);
+        expect(error).not.toHaveBeenCalled();
     });
 
     it("tells when no score is left", async () => {

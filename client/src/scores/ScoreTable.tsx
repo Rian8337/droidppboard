@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { DataTable } from "../components/DataTable";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 import { filterScores } from "./modFilter";
@@ -15,6 +15,9 @@ const requiredColumnIds = ["rank", "player", "map"];
 
 /** Columns that stay in view while the table scrolls sideways. */
 const pinnedColumnIds = ["rank", "map"];
+
+/** The same, when the Player column shows too. */
+const pinnedColumnIdsWithPlayer = ["rank", "player", "map"];
 
 const defaultVisibleColumnIds = scoreColumns
     .filter((column) => column.isDefaultVisible)
@@ -38,6 +41,11 @@ function areRanked(scores: PrototypePPEntry[] | ScoreRow[]): scores is ScoreRow[
     return scores.length > 0 && "rankChange" in scores[0];
 }
 
+/** Identifies a score among the rows: the player (when known), the map and the in-game score. */
+function getScoreKey(row: ScoreRow): string {
+    return [row.uid ?? row.username ?? "", row.hash, row.scoreID ?? ""].join(":");
+}
+
 /** Reads the stored column ids, ignoring anything that is not a list of text. */
 function readColumnIds(stored: unknown): string[] {
     return Array.isArray(stored) && stored.every((id) => typeof id === "string")
@@ -58,8 +66,11 @@ export function ScoreTable({ scores, showPlayer = false, storageKey }: ScoreTabl
     );
     const chosenColumnIds = readColumnIds(storedColumnIds);
 
-    const rows = areRanked(scores) ? scores : addRankChanges(scores);
-    const shownRows = sortScores(filterScores(rows, { search, modAcronyms: noModAcronyms }), sort);
+    const rows = useMemo(() => (areRanked(scores) ? scores : addRankChanges(scores)), [scores]);
+    const shownRows = useMemo(
+        () => sortScores(filterScores(rows, { search, modAcronyms: noModAcronyms }), sort),
+        [rows, search, sort],
+    );
     const visibleColumns = scoreColumns.filter((column) =>
         column.id === "player"
             ? showPlayer
@@ -88,10 +99,10 @@ export function ScoreTable({ scores, showPlayer = false, storageKey }: ScoreTabl
             <DataTable
                 columns={visibleColumns}
                 rows={shownRows}
-                rowKey={(row) => String(row.rank)}
+                rowKey={getScoreKey}
                 sort={sort}
                 onSortChange={setSort}
-                pinnedColumnIds={pinnedColumnIds}
+                pinnedColumnIds={showPlayer ? pinnedColumnIdsWithPlayer : pinnedColumnIds}
                 emptyText="No scores found."
             />
         </div>
