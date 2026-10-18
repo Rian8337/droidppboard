@@ -43,9 +43,15 @@ export interface FullRunStore {
     resetScanDone(reworkType: string): Promise<void>;
 
     /**
-     * Copies the profiles of a rework type into another.
+     * Adds a not-yet-scanned, empty profile to a rework type for every player
+     * that has a profile in another rework type but none in this one. Profiles
+     * the target has are left as they are. This is idempotent and safe against
+     * a profile being saved for the target at the same time.
+     *
+     * @param source The rework type to take the players from.
+     * @param target The rework type to add the profiles to.
      */
-    cloneProfiles(source: string, target: string): Promise<void>;
+    addMissingProfiles(source: string, target: string): Promise<void>;
 }
 
 /**
@@ -216,9 +222,9 @@ interface FullRun {
 const maxFullRunAttempts = 3;
 
 /**
- * The variant that an empty variant's profiles are cloned from.
+ * The variant whose players every full run adds to its variant.
  */
-const cloneSourceVariant = "droid-rebalance";
+const profileSourceVariant = "droid-rebalance";
 
 /**
  * The seconds a player takes when a variant has no completions yet.
@@ -244,6 +250,12 @@ export class RecalculationQueue {
     private readonly completionSeconds = new Map<string, number[]>();
     private readonly fullRuns = new Map<string, FullRun>();
     private readonly startingFullRuns = new Set<string>();
+
+    /**
+     * The capacity lookups that follow a full-run failure, by variant. A
+     * variant's full run claims no players while its lookup is in flight.
+     */
+    private readonly capacityRechecks = new Map<string, Promise<void>>();
 
     /**
      * The uids that full runs calculate right now, by variant. A stopped run's
@@ -394,9 +406,9 @@ export class RecalculationQueue {
         try {
             const store = this.deps.fullRunStore;
 
-            if ((await store.countProfiles(variant)) === 0) {
-                await store.cloneProfiles(cloneSourceVariant, variant);
-            }
+            // A single entry may have created some profiles already, so the
+            // run adds the players the variant is missing every time.
+            await store.addMissingProfiles(profileSourceVariant, variant);
 
             if (restart) {
                 await store.resetScanDone(variant);
@@ -809,7 +821,11 @@ export class RecalculationQueue {
             run.status =
                 this.capacityOf(run.variant) > 0 ? "running" : "paused";
 
-            void this.claimForFullRun(run);
+            // The capacity is stale after a failure; the recheck schedules
+            // again once it knows.
+            if (!this.capacityRechecks.has(run.variant)) {
+                void this.claimForFullRun(run);
+            }
         }
     }
 
@@ -844,7 +860,9 @@ export class RecalculationQueue {
         const freeCalculators = () =>
             this.capacityOf(variant) - this.calculatingCount(variant);
         const canClaim = () =>
-            run.status === "running" && freeCalculators() > 0;
+            run.status === "running" &&
+            !this.capacityRechecks.has(variant) &&
+            freeCalculators() > 0;
 
         if (!canClaim()) {
             return;
@@ -853,7 +871,9 @@ export class RecalculationQueue {
         const requested = freeCalculators();
         const fresh = await this.deps.fullRunStore.getUnscannedUids(
             variant,
-            [...run.attempts.keys(), ...this.calculatingUids(variant)],
+            // Scanned players are not returned anyway, so only the ones that
+            // would come back need leaving out.
+            [...run.failedUids, ...this.calculatingUids(variant)],
             requested,
         );
         let started = 0;
@@ -934,9 +954,46 @@ export class RecalculationQueue {
             if ((run.attempts.get(uid) ?? 0) < maxFullRunAttempts) {
                 run.retries.push(uid);
             }
+
+            this.recheckCapacity(run);
         }
 
         this.schedule();
+    }
+
+    /**
+     * Looks the variant's calculator count up right away and holds its full
+     * run's claims until the answer is in, so that a variant that went down
+     * does not burn attempts on players it never calculated. Lookups that
+     * overlap collapse into one. A count that cannot be told keeps its last
+     * known value.
+     */
+    private recheckCapacity(run: FullRun) {
+        const { variant } = run;
+
+        if (this.capacityRechecks.has(variant) || !isFullRunActive(run)) {
+            return;
+        }
+
+        const recheck = (async () => {
+            try {
+                const capacity = await this.deps.getCapacity(
+                    variant,
+                    run.startedByUid,
+                );
+
+                if (capacity !== null) {
+                    this.capacities.set(variant, capacity);
+                }
+            } catch (e) {
+                console.error(`Calculator count lookup of ${variant} threw:`, e);
+            }
+
+            this.capacityRechecks.delete(variant);
+            this.schedule();
+        })();
+
+        this.capacityRechecks.set(variant, recheck);
     }
 
     private start(entry: QueueEntry) {

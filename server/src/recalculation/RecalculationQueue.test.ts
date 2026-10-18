@@ -27,7 +27,8 @@ class FakeFullRunStore implements FullRunStore {
         Map<number, { localPPTotal: number; scanned: boolean }>
     >();
     resetCalls: string[] = [];
-    cloneCalls: [string, string][] = [];
+    addMissingCalls: [string, string][] = [];
+    unscannedCalls: { excludeUids: number[]; limit: number }[] = [];
 
     /**
      * Adds unscanned profiles, the first of which has the highest local pp.
@@ -66,6 +67,8 @@ class FakeFullRunStore implements FullRunStore {
     }
 
     getUnscannedUids(reworkType: string, excludeUids: number[], limit: number) {
+        this.unscannedCalls.push({ excludeUids: [...excludeUids], limit });
+
         return Promise.resolve(
             [...this.variant(reworkType)]
                 .filter(([uid, p]) => !p.scanned && !excludeUids.includes(uid))
@@ -85,11 +88,16 @@ class FakeFullRunStore implements FullRunStore {
         return Promise.resolve();
     }
 
-    cloneProfiles(source: string, target: string) {
-        this.cloneCalls.push([source, target]);
+    addMissingProfiles(source: string, target: string) {
+        this.addMissingCalls.push([source, target]);
 
         for (const uid of this.variant(source).keys()) {
-            this.variant(target).set(uid, { localPPTotal: 0, scanned: false });
+            if (!this.variant(target).has(uid)) {
+                this.variant(target).set(uid, {
+                    localPPTotal: 0,
+                    scanned: false,
+                });
+            }
         }
 
         return Promise.resolve();
@@ -1182,6 +1190,107 @@ describe("RecalculationQueue", () => {
             expect(pending.map((p) => p.uid)).toEqual([21, 22]);
         });
 
+        it("holds full-run claims after a failure until capacity is re-checked", async () => {
+            fullRunStore.seed("A", [21, 22, 23, 24, 25, 26]);
+            await startRun("A", { capacity: 3 });
+
+            expect(pending.map((p) => p.uid)).toEqual([21, 22, 23]);
+
+            // The variant went down; it only answers once asked, and slowly.
+            let answer: (capacity: number) => void = () => {};
+
+            getCapacity.mockImplementation(
+                () =>
+                    new Promise<number>((resolve) => {
+                        answer = resolve;
+                    }),
+            );
+
+            await finish(21, { ok: false, reason: "Score service timed out" });
+
+            // A calculator is free, but the stale count must not claim for it.
+            expect(getCapacity).toHaveBeenCalledTimes(1);
+            expect(getCapacity).toHaveBeenCalledWith("A", 9);
+            expect(pending.map((p) => p.uid)).toEqual([21, 22, 23]);
+
+            // Another failure meanwhile joins the lookup in flight.
+            await finish(22, { ok: false, reason: "Score service timed out" });
+
+            expect(getCapacity).toHaveBeenCalledTimes(1);
+            expect(pending.map((p) => p.uid)).toEqual([21, 22, 23]);
+
+            answer(0);
+            getCapacity.mockImplementation(() => Promise.resolve(0));
+            await flush();
+
+            expect(pending.map((p) => p.uid)).toEqual([21, 22, 23]);
+            expect(fullRun("A")).toMatchObject({ status: "paused", failed: 2 });
+
+            await finish(23, { ok: false, reason: "Score service timed out" });
+            await flush();
+
+            // Only the players in flight when it went down failed.
+            expect(fullRun("A")).toMatchObject({ status: "paused", failed: 3 });
+            expect(pending.map((p) => p.uid)).toEqual([21, 22, 23]);
+
+            // When it is back, the run goes on with the retries and fresh ones.
+            getCapacity.mockImplementation(() => Promise.resolve(3));
+            await queue.refreshCapacities();
+            await flush();
+
+            expect(fullRun("A").status).toBe("running");
+            expect(pending.map((p) => p.uid)).toEqual([
+                21, 22, 23, 24, 25, 26,
+            ]);
+        });
+
+        it("claims again once the re-check finds the variant still up", async () => {
+            fullRunStore.seed("A", [21, 22]);
+            await startRun("A", { capacity: 1 });
+            capacities.set("A", 1);
+
+            await finish(21, { ok: false, reason: "Timed out" });
+            await flush();
+
+            expect(getCapacity).toHaveBeenCalledWith("A", 9);
+            expect(pending.map((p) => p.uid)).toEqual([21, 22]);
+        });
+
+        it("keeps the last known count and goes on when the re-check throws", async () => {
+            fullRunStore.seed("A", [21, 22]);
+            await startRun("A", { capacity: 1 });
+            getCapacity.mockRejectedValue(new Error("down"));
+
+            await finish(21, { ok: false, reason: "Timed out" });
+            await flush();
+
+            expect(pending.map((p) => p.uid)).toEqual([21, 22]);
+        });
+
+        it("excludes only failed and in-flight players when claiming", async () => {
+            fullRunStore.seed("A", [21, 22, 23, 24]);
+            await startRun("A", { capacity: 2 });
+            fullRunStore.unscannedCalls = [];
+
+            // 21 succeeds and is scanned; 22 fails.
+            await finishScanned(21, "A");
+            await finish(22, { ok: false, reason: "Timed out" });
+            await flush();
+
+            const excluded = fullRunStore.unscannedCalls.map((c) =>
+                [...c.excludeUids].sort(),
+            );
+
+            expect(excluded.length).toBeGreaterThan(0);
+
+            for (const uids of excluded) {
+                expect(uids).not.toContain(21);
+            }
+
+            // The claim after 22 failed leaves out 22 and what is calculating.
+            expect(excluded.at(-1)).toEqual([22, 23].sort());
+        });
+
         it("refreshes a variant with a full run for the most recent starter or queuer", async () => {
             fullRunStore.seed("B", [31]);
             fullRunStore.seed("C", [41]);
@@ -1249,24 +1358,44 @@ describe("RecalculationQueue", () => {
             });
         });
 
-        it("clones droid-rebalance profiles into an empty variant", async () => {
+        it("adds droid-rebalance profiles to an empty variant", async () => {
             fullRunStore.seed("droid-rebalance", [21, 22]);
 
             await startRun("A");
 
-            expect(fullRunStore.cloneCalls).toEqual([["droid-rebalance", "A"]]);
+            expect(fullRunStore.addMissingCalls).toEqual([
+                ["droid-rebalance", "A"],
+            ]);
             expect(fullRun("A")).toMatchObject({ done: 0, total: 2 });
             expect(pending.map((p) => p.uid)).toEqual([21]);
         });
 
-        it("does not clone into a variant that has profiles", async () => {
-            fullRunStore.seed("droid-rebalance", [21, 22]);
-            fullRunStore.seed("A", [23]);
+        it("adds droid-rebalance profiles missing from a variant that already has some", async () => {
+            fullRunStore.seed("droid-rebalance", [21, 22, 23]);
+            // A single entry for 22 saved its profile first.
+            fullRunStore.seed("A", [22], true);
 
             await startRun("A");
 
-            expect(fullRunStore.cloneCalls).toEqual([]);
-            expect(fullRun("A").total).toBe(1);
+            expect(fullRunStore.addMissingCalls).toEqual([
+                ["droid-rebalance", "A"],
+            ]);
+            expect(fullRun("A")).toMatchObject({ done: 1, total: 3 });
+            // The existing profile is kept as it was, scanned.
+            expect(fullRunStore.scannedUids("A")).toEqual([22]);
+            expect(pending.map((p) => p.uid)).toEqual([21]);
+        });
+
+        it("adds missing profiles on every start", async () => {
+            fullRunStore.seed("droid-rebalance", [21]);
+
+            await startRun("A");
+            queue.stopFullRun("A");
+            fullRunStore.seed("droid-rebalance", [21, 22]);
+            await startRun("A");
+
+            expect(fullRunStore.addMissingCalls).toHaveLength(2);
+            expect(fullRun("A").total).toBe(2);
         });
 
         it("stop lets in-flight players finish and starts nothing new", async () => {

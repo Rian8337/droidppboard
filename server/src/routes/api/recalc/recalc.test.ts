@@ -57,7 +57,7 @@ let fullRunStore: {
     countScanned: ReturnType<typeof vi.fn>;
     getUnscannedUids: ReturnType<typeof vi.fn>;
     resetScanDone: ReturnType<typeof vi.fn>;
-    cloneProfiles: ReturnType<typeof vi.fn>;
+    addMissingProfiles: ReturnType<typeof vi.fn>;
 };
 
 // Stands in for the session middleware: a request is logged in as the uid in this header.
@@ -117,7 +117,7 @@ describe("recalculation routes", () => {
             countScanned: vi.fn().mockResolvedValue(0),
             getUnscannedUids: vi.fn().mockResolvedValue([]),
             resetScanDone: vi.fn().mockResolvedValue(undefined),
-            cloneProfiles: vi.fn().mockResolvedValue(undefined),
+            addMissingProfiles: vi.fn().mockResolvedValue(undefined),
         };
 
         let ids = 0;

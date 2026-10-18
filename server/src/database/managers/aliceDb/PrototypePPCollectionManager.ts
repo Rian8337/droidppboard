@@ -1,4 +1,4 @@
-import { Filter, OptionalUnlessRequiredId } from "mongodb";
+import { Filter } from "mongodb";
 import { IPrototypePP } from "app-structures";
 import { Util } from "../../../utils/Util";
 import { FullRunStore } from "../../../recalculation/RecalculationQueue";
@@ -217,7 +217,16 @@ export class PrototypePPCollectionManager
         );
     }
 
-    async cloneProfiles(source: string, target: string): Promise<void> {
+    /**
+     * Adds a not-yet-scanned, empty profile to a rework type for every player that has a
+     * profile in another rework type but none in this one. Existing profiles are left as they
+     * are, and a profile saved at the same time is not duplicated, as each profile is an
+     * upsert that sets its fields only on insert.
+     *
+     * @param source The rework type to take the players from.
+     * @param target The rework type to add the profiles to.
+     */
+    async addMissingProfiles(source: string, target: string): Promise<void> {
         const profiles = await this.collection
             .find(
                 { reworkType: source },
@@ -225,25 +234,29 @@ export class PrototypePPCollectionManager
             )
             .toArray();
 
-        if (profiles.length === 0) {
-            return;
-        }
-
         const lastUpdate = Date.now();
+        const batchSize = 1000;
 
-        await this.collection.insertMany(
-            profiles.map(
-                ({ uid, username }): IPrototypePP => ({
-                    uid,
-                    username,
-                    reworkType: target,
-                    pp: [],
-                    localPPTotal: 0,
-                    livePPTotal: 0,
-                    lastUpdate,
-                    scanDone: false,
-                }),
-            ) as OptionalUnlessRequiredId<IPrototypePP>[],
-        );
+        for (let i = 0; i < profiles.length; i += batchSize) {
+            await this.collection.bulkWrite(
+                profiles.slice(i, i + batchSize).map(({ uid, username }) => ({
+                    updateOne: {
+                        filter: { uid, reworkType: target },
+                        update: {
+                            $setOnInsert: {
+                                username,
+                                pp: [],
+                                localPPTotal: 0,
+                                livePPTotal: 0,
+                                lastUpdate,
+                                scanDone: false,
+                            },
+                        },
+                        upsert: true,
+                    },
+                })),
+                { ordered: false },
+            );
+        }
     }
 }

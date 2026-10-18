@@ -29,8 +29,8 @@ const fullRunStore: FullRunStore = {
         DatabaseManager.aliceDb.collections.prototypePP.resetScanDone(
             reworkType,
         ),
-    cloneProfiles: (source, target) =>
-        DatabaseManager.aliceDb.collections.prototypePP.cloneProfiles(
+    addMissingProfiles: (source, target) =>
+        DatabaseManager.aliceDb.collections.prototypePP.addMissingProfiles(
             source,
             target,
         ),
