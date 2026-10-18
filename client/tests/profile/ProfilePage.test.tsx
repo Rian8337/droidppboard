@@ -7,6 +7,7 @@ import { useBreakpoint } from "../../src/hooks/useBreakpoint";
 import { ProfilePage } from "../../src/profile/ProfilePage";
 import {
     alphaProfile,
+    buildQueueEntry,
     droidRebalance,
     plainMe,
     profileScores,
@@ -156,10 +157,43 @@ describe("ProfilePage", () => {
         );
     });
 
-    it("offers a disabled Add to queue to somebody logged in only", async () => {
+    it("queues the player for the variant and says so", async () => {
+        const bodies: unknown[] = [];
+
+        server.use(
+            http.post("/api/recalc/queue", async ({ request }) => {
+                bodies.push(await request.json());
+
+                return HttpResponse.json(buildQueueEntry(), { status: 201 });
+            }),
+        );
+
+        renderProfile("/v/reading/players/1000", plainMe);
+
+        await userEvent.click(await screen.findByRole("button", { name: /add to queue/i }));
+
+        expect(await screen.findByText("Added Alpha to the queue.")).toBeVisible();
+        expect(bodies).toEqual([{ variant: "reading", uid: 1000 }]);
+    });
+
+    it("shows why the player could not be queued", async () => {
+        server.use(
+            http.post("/api/recalc/queue", () =>
+                HttpResponse.json(
+                    { message: "This player is already queued for this variant" },
+                    { status: 409 },
+                ),
+            ),
+        );
+
         renderProfile("/v/droid-rebalance/players/1000", plainMe);
 
-        expect(await screen.findByRole("button", { name: /add to queue/i })).toBeDisabled();
+        await userEvent.click(await screen.findByRole("button", { name: /add to queue/i }));
+
+        expect(
+            await screen.findByText("This player is already queued for this variant"),
+        ).toBeVisible();
+        expect(screen.queryByText("Added Alpha to the queue.")).not.toBeInTheDocument();
     });
 
     it("has no Add to queue for a visitor", async () => {

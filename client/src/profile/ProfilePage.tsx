@@ -2,11 +2,12 @@ import { useParams } from "react-router";
 import { useMe } from "../api/auth";
 import { ApiError } from "../api/http";
 import { useProfile } from "../api/profile";
+import { useQueuePlayer } from "../api/recalc";
 import { ErrorMessage } from "../components/ErrorMessage";
 import { NotFoundPage } from "../pages/NotFoundPage";
 import { ScoreTable } from "../scores/ScoreTable";
 import { useCurrentVariant } from "../variant/useCurrentVariant";
-import { ProfileHeader } from "./ProfileHeader";
+import { ProfileHeader, type ProfileHeaderProps } from "./ProfileHeader";
 import styles from "./ProfilePage.module.css";
 
 interface PlayerProfileProps {
@@ -14,9 +15,24 @@ interface PlayerProfileProps {
     uid: number;
 }
 
+/** What to tell the person about their last attempt to queue the player, if there was one. */
+function getQueueFeedback(
+    queuing: ReturnType<typeof useQueuePlayer>,
+    username: string,
+): ProfileHeaderProps["queueFeedback"] {
+    if (queuing.error) {
+        return { tone: "error", text: queuing.error.message };
+    }
+
+    return queuing.isSuccess
+        ? { tone: "success", text: `Added ${username} to the queue.` }
+        : undefined;
+}
+
 function PlayerProfile({ variant, uid }: PlayerProfileProps) {
     const { data: profile, error, isPending, refetch } = useProfile(variant, uid);
     const { data: me = null } = useMe();
+    const queuing = useQueuePlayer();
 
     if (error instanceof ApiError && error.status === 404) {
         return <NotFoundPage message="Player not found" />;
@@ -32,7 +48,14 @@ function PlayerProfile({ variant, uid }: PlayerProfileProps) {
 
     return (
         <div>
-            <ProfileHeader profile={profile} variant={variant} canQueue={me !== null} />
+            <ProfileHeader
+                profile={profile}
+                variant={variant}
+                canQueue={me !== null}
+                onAddToQueue={() => queuing.mutate({ variant, player: uid })}
+                isQueuing={queuing.isPending}
+                queueFeedback={getQueueFeedback(queuing, profile.username)}
+            />
             <ScoreTable scores={profile.pp} storageKey="profile-columns" />
         </div>
     );

@@ -1,0 +1,62 @@
+import type { PPVariant, RecalcEntryView } from "app-structures";
+import type { ReactNode } from "react";
+import { Pill } from "../components/Pill";
+import { EntryStatus } from "./EntryStatus";
+import styles from "./EntryRows.module.css";
+import { formatAge, getVariantLabel } from "./queueFormatting";
+
+export interface EntryRowsProps {
+    entries: readonly RecalcEntryView[];
+
+    /** The variants to name an entry's variant from, when `showVariant` is set. */
+    variants: readonly PPVariant[];
+
+    /** Whether to tag each entry with its variant, as in the global queue. */
+    showVariant: boolean;
+
+    /** The time the entries' ages are counted to, in milliseconds since the epoch. */
+    now: number;
+
+    /** Whether the age is when the entry finished rather than when it was queued. */
+    isFinished: boolean;
+
+    /** An action for an entry, such as Remove, or nothing. */
+    renderAction?: (entry: RecalcEntryView) => ReactNode;
+}
+
+/** The queue for a phone: one stacked row per entry. */
+export function EntryRows({
+    entries,
+    variants,
+    showVariant,
+    now,
+    isFinished,
+    renderAction,
+}: EntryRowsProps) {
+    return (
+        <ul className={styles.rows}>
+            {entries.map((entry) => (
+                <li key={entry.id} className={styles.row}>
+                    <span className={styles.player}>
+                        {entry.position !== null && (
+                            <span className={styles.position}>#{entry.position}</span>
+                        )}
+                        {entry.username}
+                    </span>
+                    {showVariant && <Pill>{getVariantLabel(variants, entry.variant)}</Pill>}
+                    <span className={styles.status}>
+                        <EntryStatus entry={entry} />
+                    </span>
+                    <span className={styles.sub}>
+                        by {entry.queuedByUsername} · {isFinished ? "finished " : ""}
+                        {formatAge(
+                            isFinished ? (entry.finishedAt ?? entry.queuedAt) : entry.queuedAt,
+                            now,
+                        )}
+                    </span>
+                    {renderAction?.(entry)}
+                </li>
+            ))}
+        </ul>
+    );
+}

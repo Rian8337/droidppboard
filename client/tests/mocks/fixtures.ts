@@ -7,6 +7,9 @@ import type {
     IPrototypePP,
     PPVariant,
     PrototypePPEntry,
+    RecalcEntryView,
+    RecalcQueueView,
+    FullRunView,
     ScorePrototypeState,
     TopPrototypePPEntry,
 } from "app-structures";
@@ -286,3 +289,51 @@ export const osuCalculation: CalculationResponse = {
         strainChart: null,
     },
 };
+
+/** Builds a queue entry: a waiting one for Alpha, queued by the plain person, unless overridden. */
+export function buildQueueEntry(overrides: Partial<RecalcEntryView> = {}): RecalcEntryView {
+    return {
+        id: "entry-1",
+        uid: 1000,
+        username: "Alpha",
+        variant: "droid-rebalance",
+        queuedByUid: plainMe.uid,
+        queuedByUsername: plainMe.username,
+        queuedAt: 1_790_000_000_000,
+        status: "waiting",
+        position: 1,
+        progress: null,
+        ...overrides,
+    };
+}
+
+/** Builds a full run that is going, started by the admin, unless overridden. */
+export function buildFullRun(overrides: Partial<FullRunView> = {}): FullRunView {
+    return {
+        variant: "droid-rebalance",
+        status: "running",
+        startedByUid: adminMe.uid,
+        startedByUsername: adminMe.username,
+        startedAt: 1_790_000_000_000,
+        done: 1240,
+        total: 8912,
+        failed: 0,
+        ...overrides,
+    };
+}
+
+/** Builds what `GET /api/recalc/queue` answers: an empty queue of a variant unless overridden. */
+export function buildQueueView(overrides: Partial<RecalcQueueView> = {}): RecalcQueueView {
+    return {
+        variant: "droid-rebalance",
+        calculators: 2,
+        estimatedWaitSeconds: 120,
+        queue: [],
+        recent: [],
+        fullRuns: [],
+        allowance: null,
+        canManageFullRuns: false,
+        variants: [droidRebalance, readingVariant],
+        ...overrides,
+    };
+}

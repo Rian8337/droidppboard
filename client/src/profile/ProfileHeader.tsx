@@ -18,11 +18,14 @@ export interface ProfileHeaderProps {
     /** Whether somebody is logged in, who may queue the player. */
     canQueue: boolean;
 
-    /**
-     * Queues the player for the variant. Add to queue stays disabled until this is given, which
-     * the queue feature does.
-     */
+    /** Queues the player for the variant. Add to queue stays disabled until this is given. */
     onAddToQueue?: () => void;
+
+    /** Whether the player is being queued right now. */
+    isQueuing?: boolean;
+
+    /** What became of the last attempt to queue the player, shown beside the button. */
+    queueFeedback?: { tone: "success" | "error"; text: string };
 }
 
 interface StatBlockProps {
@@ -40,7 +43,14 @@ function StatBlock({ name, children }: StatBlockProps) {
 }
 
 /** The top of a profile: avatar and name, the actions, and the player's totals. */
-export function ProfileHeader({ profile, variant, canQueue, onAddToQueue }: ProfileHeaderProps) {
+export function ProfileHeader({
+    profile,
+    variant,
+    canQueue,
+    onAddToQueue,
+    isQueuing = false,
+    queueFeedback,
+}: ProfileHeaderProps) {
     const stats = getProfileStats(profile);
     const hasMaster = variant !== variantWithoutMaster && profile.masterPPTotal !== undefined;
 
@@ -60,11 +70,21 @@ export function ProfileHeader({ profile, variant, canQueue, onAddToQueue }: Prof
                         <FontAwesomeIcon icon={faArrowLeft} /> Back
                     </Link>
                     {canQueue && (
-                        <Button disabled={!onAddToQueue} onClick={onAddToQueue}>
+                        <Button disabled={!onAddToQueue || isQueuing} onClick={onAddToQueue}>
                             <FontAwesomeIcon icon={faPlus} /> Add to queue
                         </Button>
                     )}
                 </div>
+                {queueFeedback && (
+                    <p
+                        role={queueFeedback.tone === "error" ? "alert" : "status"}
+                        className={
+                            queueFeedback.tone === "error" ? styles.queueError : styles.queued
+                        }
+                    >
+                        {queueFeedback.text}
+                    </p>
+                )}
             </div>
             <dl className={styles.stats}>
                 <StatBlock name="Local pp">

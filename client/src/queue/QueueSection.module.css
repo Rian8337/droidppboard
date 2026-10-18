@@ -1,0 +1,52 @@
+.section {
+    margin: 8px 0 16px;
+}
+
+.header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px 16px;
+    padding: 6px 16px;
+}
+
+.title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 8px;
+}
+
+.heading {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 800;
+}
+
+.count {
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.note {
+    margin: 0;
+    padding: 8px 16px;
+    color: var(--muted);
+}
+
+.error {
+    margin: 8px 16px;
+}
+
+.muted {
+    color: var(--muted);
+}
+
+.tag {
+    margin-right: 8px;
+}
+
+.action {
+    display: inline-flex;
+}

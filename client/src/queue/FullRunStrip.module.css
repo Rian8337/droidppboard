@@ -1,0 +1,45 @@
+.strip {
+    margin: 8px 16px 12px;
+    padding: 10px 12px;
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    background: var(--panel);
+}
+
+.header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.heading {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 800;
+}
+
+.bar {
+    margin: 8px 0 4px;
+}
+
+.details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px 12px;
+    margin: 0;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.paused {
+    margin: 6px 0 0;
+    color: var(--warn);
+    font-size: 13px;
+}
+
+.error {
+    margin: 6px 0 0;
+    color: var(--down);
+}

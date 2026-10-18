@@ -37,7 +37,7 @@ describe("AppRoutes", () => {
         renderWithProviders(<AppRoutes />, { route: "/v/reading/queue" });
 
         expect(await screen.findByRole("heading", { name: "PP Board · Reading" })).toBeVisible();
-        expect(await screen.findByText("This tab is not available yet.")).toBeVisible();
+        expect(await screen.findByRole("region", { name: "Queue" })).toBeVisible();
         expect(screen.getByRole("link", { name: "Queue" })).toHaveAttribute("aria-current", "page");
     });
 

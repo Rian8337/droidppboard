@@ -6,6 +6,7 @@ import type {
 } from "app-structures";
 import {
     alphaProfile,
+    buildQueueView,
     droidCalculation,
     droidRebalance,
     leaderboardPlayers,
@@ -66,5 +67,10 @@ export const handlers: RequestHandler[] = [
 
         return HttpResponse.json(body);
     }),
+    http.get("/api/recalc/queue", ({ request }) =>
+        HttpResponse.json(
+            buildQueueView({ variant: new URL(request.url).searchParams.get("variant") }),
+        ),
+    ),
     http.post("/api/ppboard/calculate", () => HttpResponse.json(droidCalculation)),
 ];

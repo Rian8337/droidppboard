@@ -36,6 +36,22 @@
     margin-left: auto;
 }
 
+.queued,
+.queueError {
+    flex-basis: 100%;
+    margin: 0;
+    text-align: right;
+    font-size: 13px;
+}
+
+.queued {
+    color: var(--up);
+}
+
+.queueError {
+    color: var(--down);
+}
+
 .back {
     display: inline-flex;
     align-items: center;

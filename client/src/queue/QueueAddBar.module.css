@@ -1,0 +1,41 @@
+.addBar {
+    padding: 12px 16px 4px;
+}
+
+.form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+}
+
+.player {
+    flex: 1 1 200px;
+    max-width: 320px;
+}
+
+.slots {
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.login {
+    margin: 0;
+    padding: 12px 16px 4px;
+}
+
+.error {
+    margin: 8px 0 0;
+    color: var(--down);
+}
+
+.notice {
+    margin: 8px 0 0;
+    color: var(--up);
+}
+
+@media (max-width: 639px) {
+    .player {
+        max-width: none;
+    }
+}

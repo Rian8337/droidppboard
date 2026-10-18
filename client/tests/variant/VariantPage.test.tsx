@@ -3,6 +3,7 @@ import { http, HttpResponse } from "msw";
 import { Route, Routes } from "react-router";
 import { useBreakpoint } from "../../src/hooks/useBreakpoint";
 import { VariantPage } from "../../src/variant/VariantPage";
+import { variantTabContent } from "../../src/variant/variantTabContent";
 import { droidRebalance, flowaim, managerMe, readingVariant } from "../mocks/fixtures";
 import { server } from "../mocks/server";
 import { renderWithProviders, type RenderWithProvidersOptions } from "../utils/renderWithProviders";
@@ -77,9 +78,17 @@ describe("VariantPage", () => {
     });
 
     it("shows an empty state for a tab nothing has registered for", async () => {
-        renderPage("/v/droid-rebalance/queue");
+        const registered = variantTabContent.queue;
 
-        expect(await screen.findByText("This tab is not available yet.")).toBeVisible();
+        delete variantTabContent.queue;
+
+        try {
+            renderPage("/v/droid-rebalance/queue");
+
+            expect(await screen.findByText("This tab is not available yet.")).toBeVisible();
+        } finally {
+            variantTabContent.queue = registered;
+        }
     });
 
     it("orders the tabs Info first on a desktop", async () => {

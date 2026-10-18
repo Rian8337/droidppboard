@@ -1,0 +1,15 @@
+.status {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 8px;
+}
+
+.detail {
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.bar {
+    width: 80px;
+}

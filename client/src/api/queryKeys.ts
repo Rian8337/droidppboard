@@ -9,5 +9,9 @@ export const queryKeys = {
         ["leaderboard", variant, page, search] as const,
     profile: (variant: string, uid: number) => ["profile", variant, uid] as const,
     snapshot: (id: string) => ["snapshot", id] as const,
+    /** Every queue view, whatever the variant: what a change to the queue invalidates. */
+    recalcQueues: () => ["recalcQueue"] as const,
+    /** The queue of a variant, or of every variant the person sees for `null`. */
+    recalcQueue: (variant: string | null) => ["recalcQueue", variant] as const,
     topPlays: (variant: string, mods: string) => ["topPlays", variant, mods] as const,
 };
