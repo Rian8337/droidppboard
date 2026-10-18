@@ -1,0 +1,64 @@
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+}
+
+.title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 800;
+}
+
+.label {
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.fileField,
+.modsField {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.fileInput {
+    min-width: 0;
+    padding: 6px;
+    border-radius: 4px;
+    background: var(--input);
+    color: var(--text);
+    font-size: 13px;
+}
+
+.fileInput::file-selector-button {
+    margin-right: 10px;
+    padding: 6px 10px;
+    border: 0;
+    border-radius: 4px;
+    background: var(--btn2);
+    color: #ffb3cc;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.hint,
+.note {
+    margin: 0;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 12px;
+}
+
+.actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}

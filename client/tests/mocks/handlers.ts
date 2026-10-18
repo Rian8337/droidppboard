@@ -6,6 +6,7 @@ import type {
 } from "app-structures";
 import {
     alphaProfile,
+    droidCalculation,
     droidRebalance,
     leaderboardPlayers,
     plainMe,
@@ -65,4 +66,5 @@ export const handlers: RequestHandler[] = [
 
         return HttpResponse.json(body);
     }),
+    http.post("/api/ppboard/calculate", () => HttpResponse.json(droidCalculation)),
 ];

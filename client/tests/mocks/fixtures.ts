@@ -3,6 +3,7 @@
  * import msw, vitest or Testing Library.
  */
 import type {
+    CalculationResponse,
     IPrototypePP,
     PPVariant,
     PrototypePPEntry,
@@ -196,3 +197,92 @@ export const topPlays: TopPrototypePPEntry[] = [
         username: "Bravo",
     },
 ];
+
+/** What the calculator answers for beatmap 1234 on the osu!droid rebalance, compared with live. */
+export const droidCalculation: CalculationResponse = {
+    scope: "variant",
+    variant: "droid-rebalance",
+    baseline: "droid-live",
+    calculatorVersion: "0123456789abcdef",
+    calculatedAt: "2026-10-11T13:16:00.000Z",
+    beatmap: {
+        id: 1234,
+        hash: "0".repeat(32),
+        title: "Alpha Song",
+        maxCombo: 500,
+        cs: 4,
+        ar: 9.3,
+        od: 8,
+        hp: 5,
+    },
+    parameters: {
+        beatmap: { id: 1234 },
+        mods: [{ acronym: "HD" }, { acronym: "DT", settings: { speed_change: 1.25 } }],
+        combo: 480,
+        accuracy: 98.5,
+        nmiss: 2,
+    },
+    result: {
+        difficulty: {
+            starRating: 6.12345,
+            aimDifficulty: 2.5,
+            tapDifficulty: 2.2,
+            rhythmDifficulty: 1.1,
+            readingDifficulty: 0.8,
+            flashlightDifficulty: 0.4,
+            unknownDifficulty: 99,
+        },
+        performance: {
+            total: 321.4567,
+            aim: 150,
+            tap: 100,
+            accuracy: 50,
+            flashlight: 10,
+            reading: 11.4567,
+            effectiveMissCount: 2.5,
+            tapPenalty: 1.02,
+            deviation: 7.8,
+            tapDeviation: 8.1,
+            sliderCheesePenalty: 0.99,
+        },
+        strainChart: "iVBORw0KGgo=",
+    },
+    baselineResult: {
+        difficulty: { starRating: 5.5 },
+        performance: { total: 300.1234 },
+        strainChart: null,
+    },
+    ignoredMods: [],
+};
+
+/** What the calculator answers for the same beatmap on the osu!standard rebalance, compared with live. */
+export const osuCalculation: CalculationResponse = {
+    ...droidCalculation,
+    scope: "tool",
+    variant: "osu-rebalance",
+    baseline: "osu-live",
+    parameters: { beatmap: { id: 1234 }, mods: [{ acronym: "HD" }] },
+    result: {
+        difficulty: {
+            starRating: 7.1,
+            aimDifficulty: 3,
+            speedDifficulty: 2,
+            readingDifficulty: 1,
+            flashlightDifficulty: 0.5,
+        },
+        performance: {
+            total: 400,
+            aim: 200,
+            speed: 120,
+            accuracy: 60,
+            flashlight: 10,
+            reading: 10,
+        },
+        strainChart: null,
+    },
+    baselineResult: {
+        difficulty: { starRating: 7 },
+        performance: { total: 410 },
+        strainChart: null,
+    },
+};

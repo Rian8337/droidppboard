@@ -3,6 +3,7 @@ import type { ComponentType } from "react";
 import { LeaderboardTab } from "../leaderboard/LeaderboardTab";
 import type { VariantTab } from "../routing/paths";
 import { TopPlaysTab } from "../topPlays/TopPlaysTab";
+import { CalculatorTab } from "./CalculatorTab";
 import { InfoTab } from "./InfoTab";
 
 /**
@@ -14,4 +15,5 @@ export const variantTabContent: Partial<Record<VariantTab, ComponentType<{ varia
         info: InfoTab,
         leaderboard: LeaderboardTab,
         "top-plays": TopPlaysTab,
+        calculator: CalculatorTab,
     };
