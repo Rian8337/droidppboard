@@ -28,13 +28,17 @@ export interface DataTableProps<Row> {
     emptyText: string;
 }
 
-/** Writes each pinned column's left offset (the widths of the pinned columns before it) as `--pin-<n>`. */
+/**
+ * Writes each pinned column's left offset (the widths of the pinned columns before it) as `--pin-<n>`.
+ * The widths are exact and the offset rounds down, so a pinned column overlaps the one before it by
+ * under a pixel rather than leaving a gap that the scrolled columns show through.
+ */
 function measurePinnedOffsets(table: HTMLTableElement) {
-    let offset = 0;
+    let width = 0;
 
     table.querySelectorAll<HTMLElement>("thead th[data-pinned]").forEach((header, index) => {
-        table.style.setProperty(`--pin-${index}`, `${offset}px`);
-        offset += header.offsetWidth;
+        table.style.setProperty(`--pin-${index}`, `${Math.floor(width)}px`);
+        width += header.getBoundingClientRect().width;
     });
 }
 
@@ -74,7 +78,7 @@ export function DataTable<Row>({
         const observer = new ResizeObserver(() => measurePinnedOffsets(table));
         table
             .querySelectorAll("thead th[data-pinned]")
-            .forEach((header) => observer.observe(header));
+            .forEach((header) => observer.observe(header, { box: "border-box" }));
 
         return () => observer.disconnect();
     }, [pinnedKey]);

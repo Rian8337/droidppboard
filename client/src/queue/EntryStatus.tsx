@@ -8,6 +8,9 @@ import styles from "./EntryStatus.module.css";
 
 export interface EntryStatusProps {
     entry: RecalcEntryView;
+
+    /** Whether a finished entry links to the profile, which a phone's row shows elsewhere. */
+    hasProfileLink?: boolean;
 }
 
 function formatTotals({ livePPTotal, localPPTotal }: RecalcEntryView): string {
@@ -18,7 +21,7 @@ function formatTotals({ livePPTotal, localPPTotal }: RecalcEntryView): string {
 }
 
 /** What became of an entry: waiting, how far it is, or how it finished. */
-export function EntryStatus({ entry }: EntryStatusProps) {
+export function EntryStatus({ entry, hasProfileLink = true }: EntryStatusProps) {
     switch (entry.status) {
         case "waiting":
             return <Pill>Waiting</Pill>;
@@ -47,7 +50,14 @@ export function EntryStatus({ entry }: EntryStatusProps) {
                 <span className={styles.status}>
                     <Pill tone="success">Done</Pill>
                     <span className={styles.detail}>{formatTotals(entry)}</span>
-                    <Link to={getProfilePath(entry.variant, entry.uid)}>Profile</Link>
+                    {hasProfileLink && (
+                        <Link
+                            to={getProfilePath(entry.variant, entry.uid)}
+                            className={styles.profile}
+                        >
+                            Profile
+                        </Link>
+                    )}
                 </span>
             );
         case "failed":

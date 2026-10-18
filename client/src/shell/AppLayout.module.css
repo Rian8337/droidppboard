@@ -52,13 +52,15 @@
     }
 }
 
-/* On a tablet or phone it is a drawer over the page, below the top bar. */
+/* On a tablet or phone it is a drawer over the page, below the top bar. It stretches to the bottom,
+   as browsers align a fixed box too and the desktop's flex-start would shrink it to its content. */
 .body:not([data-breakpoint="desktop"]) .sidebar {
     position: fixed;
     top: var(--top-bar-height);
     bottom: 0;
     left: 0;
     z-index: 30;
+    align-self: stretch;
     height: auto;
     max-width: 100%;
 }

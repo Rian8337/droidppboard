@@ -1,6 +1,8 @@
 import type { PPVariant, RecalcEntryView } from "app-structures";
 import type { ReactNode } from "react";
+import { Link } from "react-router";
 import { Pill } from "../components/Pill";
+import { getProfilePath } from "../routing/paths";
 import { EntryStatus } from "./EntryStatus";
 import styles from "./EntryRows.module.css";
 import { formatAge, getVariantLabel } from "./queueFormatting";
@@ -47,13 +49,23 @@ export function EntryRows({
                     </span>
                     {showVariant && <Pill>{getVariantLabel(variants, entry.variant)}</Pill>}
                     <span className={styles.status}>
-                        <EntryStatus entry={entry} />
+                        <EntryStatus entry={entry} hasProfileLink={false} />
                     </span>
                     <span className={styles.sub}>
-                        by {entry.queuedByUsername} · {isFinished ? "finished " : ""}
-                        {formatAge(
-                            isFinished ? (entry.finishedAt ?? entry.queuedAt) : entry.queuedAt,
-                            now,
+                        <span>
+                            by {entry.queuedByUsername} · {isFinished ? "finished " : ""}
+                            {formatAge(
+                                isFinished ? (entry.finishedAt ?? entry.queuedAt) : entry.queuedAt,
+                                now,
+                            )}
+                        </span>
+                        {entry.status === "done" && (
+                            <Link
+                                to={getProfilePath(entry.variant, entry.uid)}
+                                className={styles.profile}
+                            >
+                                Profile
+                            </Link>
                         )}
                     </span>
                     {renderAction?.(entry)}

@@ -29,10 +29,21 @@
     margin-left: auto;
 }
 
+/* Who queued the entry and when, with the profile of a finished one at the end. */
 .sub {
+    display: flex;
     flex-basis: 100%;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 4px 12px;
     color: var(--muted);
     font-size: 12px;
+}
+
+.profile {
+    color: var(--accent);
+    font-size: 14px;
 }
 
 @media (pointer: coarse) {

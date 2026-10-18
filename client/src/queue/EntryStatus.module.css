@@ -13,3 +13,7 @@
 .bar {
     width: 80px;
 }
+
+.profile {
+    color: var(--accent);
+}
