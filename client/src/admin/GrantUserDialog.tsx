@@ -4,6 +4,7 @@ import { Button } from "../components/Button";
 import { Dialog } from "../components/Dialog";
 import { TextField } from "../components/TextField";
 import styles from "./dialogForm.module.css";
+import { formatError } from "../api/http";
 
 export interface GrantUserDialogProps {
     /** The name of the variant to grant. */
@@ -70,7 +71,7 @@ function GrantUserForm({
             </p>
             {granting.error && (
                 <p role="alert" className={styles.error}>
-                    {granting.error.message}
+                    {formatError(granting.error)}
                 </p>
             )}
             <div className={styles.actions}>

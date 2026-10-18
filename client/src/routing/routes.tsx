@@ -55,6 +55,7 @@ export function AppRoutes() {
                     <Route path="variants" element={<AllVariantsPage />} />
                     <Route path="variants/:name" element={<AdminVariantPage />} />
                 </Route>
+                <Route path="v/:variant" element={<Navigate replace to="leaderboard" />} />
                 <Route path="v/:variant/:tab" element={<VariantPage />} />
                 <Route path="*" element={<LegacyRedirect />} />
             </Route>

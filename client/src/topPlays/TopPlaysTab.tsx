@@ -6,6 +6,7 @@ import { ErrorMessage } from "../components/ErrorMessage";
 import { getSelectedAcronyms } from "../mods/droidMods";
 import { ScoreTable } from "../scores/ScoreTable";
 import styles from "./TopPlaysTab.module.css";
+import { formatError } from "../api/http";
 
 export interface TopPlaysTabProps {
     variant: PPVariant;
@@ -28,7 +29,7 @@ function TopPlays({ variant }: TopPlaysTabProps) {
     } = useTopPlays(variant.name, getSelectedAcronyms(mods));
 
     if (error && !plays) {
-        return <ErrorMessage message={error.message} onRetry={() => void refetch()} />;
+        return <ErrorMessage message={formatError(error)} onRetry={() => void refetch()} />;
     }
 
     if (isPending) {

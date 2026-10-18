@@ -19,6 +19,7 @@ import { DifferenceText } from "./DifferenceText";
 import type { LeaderboardEntry } from "./LeaderboardEntry";
 import { LeaderboardRows } from "./LeaderboardRows";
 import styles from "./LeaderboardTab.module.css";
+import { formatError } from "../api/http";
 
 /** How long typing must pause before the search is sent. */
 const searchDelayMs = 300;
@@ -100,7 +101,7 @@ function Leaderboard({ variant }: LeaderboardTabProps) {
 
     function renderBody() {
         if (error && !players) {
-            return <ErrorMessage message={error.message} onRetry={() => void refetch()} />;
+            return <ErrorMessage message={formatError(error)} onRetry={() => void refetch()} />;
         }
 
         if (isPending) {

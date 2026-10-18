@@ -2,9 +2,11 @@ import {
     formatAge,
     formatCooldown,
     formatEstimatedWait,
+    formatQueueError,
     formatSlots,
     getEntryCounts,
 } from "../../src/queue/queueFormatting";
+import { ApiError } from "../../src/api/http";
 import { buildQueueEntry } from "../mocks/fixtures";
 
 describe("formatEstimatedWait", () => {
@@ -75,5 +77,20 @@ describe("getEntryCounts", () => {
         ];
 
         expect(getEntryCounts(entries)).toEqual({ running: 1, waiting: 2 });
+    });
+});
+
+describe("formatQueueError", () => {
+    it("keeps the server's message for the cooldown, which already says how long to wait", () => {
+        expect(
+            formatQueueError(new ApiError(429, "Wait 12 seconds before adding another player", 12)),
+        ).toBe("Wait 12 seconds before adding another player");
+    });
+
+    it("formats any other error as the rest of the site does", () => {
+        expect(formatQueueError(new ApiError(403, "You cannot do that"))).toBe(
+            "You cannot do that",
+        );
+        expect(formatQueueError(new Error("Boom"))).toBe("Boom");
     });
 });

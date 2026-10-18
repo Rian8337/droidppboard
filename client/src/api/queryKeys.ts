@@ -1,6 +1,5 @@
 /**
  * Every query key in one place, so that a mutation can invalidate exactly what it changes.
- * Later tasks add their entries here.
  */
 export const queryKeys = {
     me: () => ["me"] as const,
@@ -23,6 +22,8 @@ export const queryKeys = {
     manageUsers: () => ["manage", "users"] as const,
     /** The usernames of people, for the uids joined by commas. */
     manageUsernames: (uids: string) => ["manage", "usernames", uids] as const,
+    /** Every roles lookup, whatever the uids: what a change to a role invalidates. */
+    manageAllUserRoles: () => ["manage", "userRoles"] as const,
     /** The roles of people, for the uids joined by commas. */
     manageUserRoles: (uids: string) => ["manage", "userRoles", uids] as const,
     whitelist: (page: number, query: string) => ["whitelist", page, query] as const,

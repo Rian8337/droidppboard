@@ -1,9 +1,10 @@
-import { screen } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { useBreakpoint } from "../../src/hooks/useBreakpoint";
 import { AppRoutes } from "../../src/routing/routes";
-import { droidCalculation } from "../mocks/fixtures";
+import { droidCalculation, droidRebalance, flowaim, managerMe } from "../mocks/fixtures";
 import { server } from "../mocks/server";
+import { serveManage } from "../admin/serveManage";
 import { renderWithProviders } from "../utils/renderWithProviders";
 
 vi.mock("../../src/hooks/useBreakpoint", () => ({ useBreakpoint: vi.fn() }));
@@ -33,12 +34,24 @@ describe("AppRoutes", () => {
         expect(await screen.findByText("Alpha")).toBeVisible();
     });
 
+    it("opens the leaderboard of a variant whose address names no tab", async () => {
+        renderWithProviders(<AppRoutes />, { route: "/v/reading" });
+
+        expect(await screen.findByRole("heading", { name: "PP Board · Reading" })).toBeVisible();
+        expect(await screen.findByText("Alpha")).toBeVisible();
+        expect(screen.getByRole("link", { name: "Leaderboard" })).toHaveAttribute(
+            "aria-current",
+            "page",
+        );
+    });
+
     it("shows a variant tab inside the shell", async () => {
         renderWithProviders(<AppRoutes />, { route: "/v/reading/queue" });
 
         expect(await screen.findByRole("heading", { name: "PP Board · Reading" })).toBeVisible();
         expect(await screen.findByRole("region", { name: "Queue" })).toBeVisible();
         expect(screen.getByRole("link", { name: "Queue" })).toHaveAttribute("aria-current", "page");
+        expect(screen.getByRole("navigation", { name: "Variant pages" })).toBeVisible();
     });
 
     it("opens a player's profile inside the shell", async () => {
@@ -46,6 +59,19 @@ describe("AppRoutes", () => {
 
         expect(await screen.findByRole("heading", { name: "Alpha" })).toBeVisible();
         expect(screen.getByRole("heading", { name: "PP Board · Reading" })).toBeVisible();
+    });
+
+    it("titles the browser tab after the variant tab and after the player", async () => {
+        const tab = renderWithProviders(<AppRoutes />, { route: "/v/reading/queue" });
+
+        await screen.findByRole("heading", { name: "PP Board · Reading" });
+        await waitFor(() => expect(document.title).toBe("Reading · PP Board"));
+        tab.unmount();
+
+        renderWithProviders(<AppRoutes />, { route: "/v/reading/players/1000" });
+
+        await screen.findByRole("heading", { name: "Alpha" });
+        await waitFor(() => expect(document.title).toBe("Alpha · Reading · PP Board"));
     });
 
     it("redirects an old address to its new one", async () => {
@@ -121,5 +147,42 @@ describe("AppRoutes", () => {
         renderWithProviders(<AppRoutes />, { route: "/match_history/5" });
 
         expect(await screen.findByRole("heading", { name: "Room" })).toBeVisible();
+    });
+
+    describe("an old /manage/variants link opened by a manager", () => {
+        beforeEach(() => {
+            serveManage({ grants: [managerMe.uid], usernames: { [managerMe.uid]: "manager" } });
+            server.use(
+                http.get("/api/ppboard/variants", () =>
+                    HttpResponse.json([droidRebalance, flowaim]),
+                ),
+            );
+        });
+
+        it("lands on the Admin tab of a variant that the manager manages", async () => {
+            renderWithProviders(<AppRoutes />, {
+                route: "/manage/variants/flowaim",
+                me: managerMe,
+            });
+
+            expect(
+                await screen.findByRole("heading", { name: "PP Board · Flow aim" }),
+            ).toBeVisible();
+            expect(screen.getByRole("link", { name: "Admin" })).toHaveAttribute(
+                "aria-current",
+                "page",
+            );
+        });
+
+        it("still says that the admin role is needed for any other variant", async () => {
+            renderWithProviders(<AppRoutes />, {
+                route: "/manage/variants/droid-rebalance",
+                me: managerMe,
+            });
+
+            expect(
+                await screen.findByText("You need the admin role to see this page"),
+            ).toBeVisible();
+        });
     });
 });

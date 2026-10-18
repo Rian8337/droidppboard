@@ -15,6 +15,7 @@ import {
     toolVariantNames,
 } from "../calculator/toolVariants";
 import { Select } from "../components/Select";
+import { useSessionKey } from "../hooks/useSessionKey";
 import styles from "./BeatmapCalculatorPage.module.css";
 
 /**
@@ -23,13 +24,16 @@ import styles from "./BeatmapCalculatorPage.module.css";
  */
 export function BeatmapCalculatorPage() {
     const { state } = useLocation() as { state: unknown };
+    const sessionKey = useSessionKey();
     const [variant, setVariant] = useState(getCalculatorToolVariant(state) ?? defaultToolVariant);
 
     return (
         <>
-            {/* The top bar names the page too; this is the page's own heading for screen readers. */}
-            <h1 className={styles.title}>Beatmap calculator</h1>
+            {/* The top bar names the page too; this is the page's own heading for screen readers, below the bar's h1. */}
+            <h2 className={styles.title}>Beatmap calculator</h2>
+            {/* A key per person starts the result over after a logout and login. */}
             <CalculatorView
+                key={sessionKey}
                 scope="tool"
                 variant={variant}
                 initialValues={getCalculatorValues(state)}

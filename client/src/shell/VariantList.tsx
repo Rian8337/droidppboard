@@ -7,14 +7,17 @@ import { ErrorMessage } from "../components/ErrorMessage";
 import { Tooltip } from "../components/Tooltip";
 import { defaultVariant, getVariantPath } from "../routing/paths";
 import { formatRelativeTime } from "../utils/formatRelativeTime";
+import { findVariant } from "../variant/findVariant";
+import { getVariantTitle } from "../variant/getVariantTitle";
 import { sortVariants } from "./sortVariants";
 import styles from "./VariantList.module.css";
+import { formatError } from "../api/http";
 
 export interface VariantListProps {
     /** Only the variants whose title or name contains this, ignoring case, are listed. */
     filter: string;
 
-    /** The name of the variant being viewed, if any. */
+    /** The name or alias of the variant being viewed, if any. */
     currentVariant?: string;
 
     /** Called when a variant is picked. */
@@ -39,9 +42,10 @@ export function VariantList({ filter, currentVariant, onNavigate }: VariantListP
     }
 
     if (error) {
-        return <ErrorMessage message={error.message} onRetry={() => void refetch()} />;
+        return <ErrorMessage message={formatError(error)} onRetry={() => void refetch()} />;
     }
 
+    const current = findVariant(variants, currentVariant);
     const shown = sortVariants(variants).filter((variant) => matchesFilter(variant, filter));
 
     if (shown.length === 0) {
@@ -51,7 +55,7 @@ export function VariantList({ filter, currentVariant, onNavigate }: VariantListP
     return (
         <ul className={styles.list}>
             {shown.map((variant) => {
-                const isCurrent = variant.name === currentVariant;
+                const isCurrent = variant.name === current?.name;
 
                 return (
                     <li key={variant.name} className={styles.entry}>
@@ -63,9 +67,7 @@ export function VariantList({ filter, currentVariant, onNavigate }: VariantListP
                         >
                             <span className={styles.dot} aria-hidden="true" />
                             <span className={styles.text}>
-                                <span className={styles.title}>
-                                    {variant.title ?? variant.name}
-                                </span>
+                                <span className={styles.title}>{getVariantTitle(variant)}</span>
                                 <span className={styles.subtitle}>
                                     {variant.builtAt === null
                                         ? variant.name

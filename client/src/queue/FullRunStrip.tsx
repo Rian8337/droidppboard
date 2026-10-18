@@ -5,6 +5,7 @@ import { Button } from "../components/Button";
 import { ProgressBar } from "../components/ProgressBar";
 import { formatRelativeTime } from "../utils/formatRelativeTime";
 import styles from "./FullRunStrip.module.css";
+import { formatError } from "../api/http";
 
 export interface FullRunStripProps {
     /** The variant's full run, which is running or paused. */
@@ -61,7 +62,7 @@ export function FullRunStrip({ run, canStop, now }: FullRunStripProps) {
             )}
             {stopping.error && (
                 <p role="alert" className={styles.error}>
-                    {stopping.error.message}
+                    {formatError(stopping.error)}
                 </p>
             )}
         </section>

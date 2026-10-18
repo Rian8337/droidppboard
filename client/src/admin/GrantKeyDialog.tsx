@@ -5,6 +5,7 @@ import { Dialog } from "../components/Dialog";
 import { ErrorMessage } from "../components/ErrorMessage";
 import { Select } from "../components/Select";
 import styles from "./dialogForm.module.css";
+import { formatError } from "../api/http";
 
 export interface GrantKeyDialogProps {
     /** The name of the variant to grant. */
@@ -28,7 +29,9 @@ function GrantKeyForm({ variant, onClose }: Pick<GrantKeyDialogProps, "variant" 
     const granting = useChangeKeyGrant(variant);
 
     if (keys.error) {
-        return <ErrorMessage message={keys.error.message} onRetry={() => void keys.refetch()} />;
+        return (
+            <ErrorMessage message={formatError(keys.error)} onRetry={() => void keys.refetch()} />
+        );
     }
 
     if (!keys.data) {
@@ -69,7 +72,7 @@ function GrantKeyForm({ variant, onClose }: Pick<GrantKeyDialogProps, "variant" 
             )}
             {granting.error && (
                 <p role="alert" className={styles.error}>
-                    {granting.error.message}
+                    {formatError(granting.error)}
                 </p>
             )}
             <div className={styles.actions}>

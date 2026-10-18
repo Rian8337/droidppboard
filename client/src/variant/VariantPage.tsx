@@ -1,6 +1,5 @@
 import { useParams } from "react-router";
 import { useMe } from "../api/auth";
-import { EmptyState } from "../components/EmptyState";
 import { ErrorMessage } from "../components/ErrorMessage";
 import { NotFoundPage } from "../pages/NotFoundPage";
 import type { VariantTab } from "../routing/paths";
@@ -10,18 +9,10 @@ import { VariantDescription } from "./VariantDescription";
 import { VariantTabs } from "./VariantTabs";
 import { variantTabContent } from "./variantTabContent";
 import styles from "./VariantPage.module.css";
-
-const tabIds: ReadonlySet<string> = new Set<VariantTab>([
-    "info",
-    "leaderboard",
-    "top-plays",
-    "queue",
-    "calculator",
-    "admin",
-]);
+import { formatError } from "../api/http";
 
 function isVariantTab(value: string | undefined): value is VariantTab {
-    return value !== undefined && tabIds.has(value);
+    return value !== undefined && Object.hasOwn(variantTabContent, value);
 }
 
 /** A variant's page: its description above the tabs, and the tab the address names. */
@@ -36,7 +27,7 @@ export function VariantPage() {
     }
 
     if (error) {
-        return <ErrorMessage message={error.message} onRetry={refetch} />;
+        return <ErrorMessage message={formatError(error)} onRetry={refetch} />;
     }
 
     if (!variant) {
@@ -53,11 +44,7 @@ export function VariantPage() {
         <div>
             <VariantDescription description={variant.description} />
             <VariantTabs variant={variant.name} activeTab={tab} />
-            {Content ? (
-                <Content variant={variant} />
-            ) : (
-                <EmptyState message="This tab is not available yet." />
-            )}
+            <Content variant={variant} />
         </div>
     );
 }

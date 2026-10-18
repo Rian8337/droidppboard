@@ -14,6 +14,7 @@ import { EntryRows } from "./EntryRows";
 import { EntryStatus } from "./EntryStatus";
 import { formatAge, formatEstimatedWait, getEntryCounts, getVariantLabel } from "./queueFormatting";
 import styles from "./QueueSection.module.css";
+import { formatError } from "../api/http";
 
 export interface QueueListProps {
     /** The queue to list: the variant's, or the global one when `showAll` is set. Not loaded yet if absent. */
@@ -104,7 +105,7 @@ export function QueueList({
         if (error && !view) {
             return (
                 <div className={styles.error}>
-                    <ErrorMessage message={error.message} onRetry={onRetry} />
+                    <ErrorMessage message={formatError(error)} onRetry={onRetry} />
                 </div>
             );
         }
@@ -162,7 +163,7 @@ export function QueueList({
             </div>
             {removal.error && (
                 <div className={styles.error}>
-                    <ErrorMessage message={removal.error.message} />
+                    <ErrorMessage message={formatError(removal.error)} />
                 </div>
             )}
             {renderBody()}

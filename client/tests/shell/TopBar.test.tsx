@@ -60,6 +60,28 @@ describe("TopBar", () => {
         expect(screen.getByRole("heading", { name: "PP Board · some-variant" })).toBeVisible();
     });
 
+    it("titles a variant page by the alias in the address", async () => {
+        renderTopBar("/v/rebalance/leaderboard", { me: null });
+
+        expect(await screen.findByRole("heading", { name: "PP Board · Rebalance" })).toBeVisible();
+    });
+
+    it("titles the browser tab after the variant, the page or the site", async () => {
+        const variantTab = renderTopBar("/v/droid-rebalance/leaderboard", { me: null });
+
+        await waitFor(() => expect(document.title).toBe("Rebalance · PP Board"));
+        variantTab.unmount();
+
+        const page = renderTopBar("/whitelist", { me: null });
+
+        await waitFor(() => expect(document.title).toBe("Whitelist · PP Board"));
+        page.unmount();
+
+        renderTopBar("/", { me: null });
+
+        await waitFor(() => expect(document.title).toBe("PP Board"));
+    });
+
     it("titles other pages with the page name", () => {
         renderTopBar("/whitelist", { me: null });
 

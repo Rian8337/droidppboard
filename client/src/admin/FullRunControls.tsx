@@ -4,6 +4,7 @@ import { Button } from "../components/Button";
 import { Dialog } from "../components/Dialog";
 import { ErrorMessage } from "../components/ErrorMessage";
 import styles from "./FullRunControls.module.css";
+import { formatError } from "../api/http";
 
 export interface FullRunControlsProps {
     /** The name of the variant to recalculate. */
@@ -27,7 +28,7 @@ export function FullRunControls({ variant }: FullRunControlsProps) {
 
     if (!queue.data) {
         return queue.error ? (
-            <ErrorMessage message={queue.error.message} onRetry={() => void queue.refetch()} />
+            <ErrorMessage message={formatError(queue.error)} onRetry={() => void queue.refetch()} />
         ) : (
             <p className={styles.note}>Loading...</p>
         );
@@ -75,7 +76,7 @@ export function FullRunControls({ variant }: FullRunControlsProps) {
             </div>
             {starting.error && (
                 <p role="alert" className={styles.error}>
-                    {starting.error.message}
+                    {formatError(starting.error)}
                 </p>
             )}
             <Dialog

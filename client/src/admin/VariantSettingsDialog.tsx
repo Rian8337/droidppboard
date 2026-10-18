@@ -15,6 +15,7 @@ import { Dialog } from "../components/Dialog";
 import { TextField } from "../components/TextField";
 import { DescriptionEditor } from "./DescriptionEditor";
 import styles from "./VariantSettingsDialog.module.css";
+import { formatError } from "../api/http";
 
 /** What the settings need of a variant: both the site's variants and the admin list have it. */
 export type SettingsVariant = Pick<
@@ -122,7 +123,7 @@ function SettingsForm({
             )}
             {updating.error && (
                 <p role="alert" className={styles.error}>
-                    {updating.error.message}
+                    {formatError(updating.error)}
                 </p>
             )}
             <AliasEditor variant={variant} />
@@ -229,7 +230,7 @@ function AliasEditor({ variant }: { variant: SettingsVariant }) {
             )}
             {error && (
                 <p role="alert" className={styles.error}>
-                    {error.message}
+                    {formatError(error)}
                 </p>
             )}
         </fieldset>

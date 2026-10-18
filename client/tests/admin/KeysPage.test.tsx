@@ -45,6 +45,12 @@ describe("KeysPage", () => {
         serveManage({ keys, adminVariants });
     });
 
+    it("names the admin tab row", async () => {
+        renderKeys();
+
+        expect(await screen.findByRole("navigation", { name: "Admin pages" })).toBeVisible();
+    });
+
     it("lists one row per key with its limit, scope, acting, created date and status", async () => {
         renderKeys();
 

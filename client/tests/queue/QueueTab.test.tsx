@@ -2,6 +2,9 @@ import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { RecalcQueueView } from "app-structures";
 import { http, HttpResponse } from "msw";
+import { createQueryClient } from "../../src/api/queryClient";
+import { queryKeys } from "../../src/api/queryKeys";
+import { recalcBackgroundPollIntervalMs, recalcPollIntervalMs } from "../../src/api/recalc";
 import { useBreakpoint } from "../../src/hooks/useBreakpoint";
 import { QueueTab } from "../../src/queue/QueueTab";
 import {
@@ -283,6 +286,35 @@ describe("QueueTab", () => {
             await waitFor(() => {
                 expect(screen.queryByText("otherplayer")).not.toBeInTheDocument();
             });
+        });
+
+        it("polls only the listed view every few seconds", async () => {
+            serveQueue();
+            const queryClient = createQueryClient({ retry: false });
+
+            renderWithProviders(<QueueTab variant={droidRebalance} />, {
+                route: "/v/droid-rebalance/queue",
+                queryClient,
+            });
+
+            await screen.findByText("The queue is empty.");
+
+            function getPollInterval(variant: string | null) {
+                const options = queryClient
+                    .getQueryCache()
+                    .find({ queryKey: queryKeys.recalcQueue(variant) })?.observers[0]?.options;
+
+                return typeof options?.refetchInterval === "number"
+                    ? options.refetchInterval
+                    : undefined;
+            }
+
+            expect(getPollInterval("droid-rebalance")).toBe(recalcPollIntervalMs);
+
+            await userEvent.click(screen.getByRole("checkbox", { name: "Show all variants" }));
+
+            await waitFor(() => expect(getPollInterval(null)).toBe(recalcPollIntervalMs));
+            expect(getPollInterval("droid-rebalance")).toBe(recalcBackgroundPollIntervalMs);
         });
 
         it("does not ask for the global queue until it is switched on", async () => {

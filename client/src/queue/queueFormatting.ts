@@ -1,4 +1,6 @@
 import type { PPVariant, RecalcAllowance, RecalcEntryView } from "app-structures";
+import { ApiError, formatError } from "../api/http";
+import { getVariantTitle } from "../variant/getVariantTitle";
 
 /**
  * Formats the estimated wait of a newly queued player.
@@ -78,5 +80,16 @@ export function getEntryCounts(entries: readonly RecalcEntryView[]): {
 
 /** The name to show for a variant: its title if it has one, else its name. */
 export function getVariantLabel(variants: readonly PPVariant[], name: string): string {
-    return variants.find((variant) => variant.name === name)?.title ?? name;
+    const variant = variants.find((candidate) => candidate.name === name);
+
+    return variant ? getVariantTitle(variant) : name;
+}
+
+/**
+ * The text to show for a failed attempt to queue a player. It is {@link formatError}'s, except for
+ * the cooldown (a 429): the server's message already says how long to wait, so appending the
+ * `Retry-After` wait would say it twice.
+ */
+export function formatQueueError(error: Error): string {
+    return error instanceof ApiError && error.status === 429 ? error.message : formatError(error);
 }

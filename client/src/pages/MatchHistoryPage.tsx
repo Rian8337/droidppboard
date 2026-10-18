@@ -18,6 +18,7 @@ import {
 } from "../matchHistory/types";
 import pageStyles from "./Page.module.css";
 import styles from "./MatchHistoryPage.module.css";
+import { formatError } from "../api/http";
 
 /** The class a score's cells get: a team's total is coloured by its team. */
 function getScoreClass(score: MultiplayerScore): string | undefined {
@@ -102,7 +103,7 @@ export function MatchHistoryPage() {
     if (error) {
         return (
             <div className={pageStyles.page}>
-                <ErrorMessage message={error.message} onRetry={() => void refetch()} />
+                <ErrorMessage message={formatError(error)} onRetry={() => void refetch()} />
             </div>
         );
     }

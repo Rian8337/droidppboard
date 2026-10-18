@@ -89,4 +89,26 @@ describe("Menu", () => {
         expect(screen.getByRole("menu")).toBeInTheDocument();
         expect(screen.getByText("Something went wrong")).toBeVisible();
     });
+
+    it("lines the list up with the end of the trigger by default", async () => {
+        renderMenu();
+
+        await userEvent.click(screen.getByRole("button", { name: "Actions" }));
+
+        expect(screen.getByRole("menu")).toHaveAttribute("data-align", "end");
+    });
+
+    it("lines the list up with the start of the trigger when asked to", async () => {
+        render(
+            <Menu
+                trigger="Export"
+                align="start"
+                items={[{ label: "Download", onSelect: () => {} }]}
+            />,
+        );
+
+        await userEvent.click(screen.getByRole("button", { name: "Export" }));
+
+        expect(screen.getByRole("menu")).toHaveAttribute("data-align", "start");
+    });
 });

@@ -95,6 +95,7 @@ export function ExportImageMenu({ target, fileName }: ExportImageMenuProps) {
                 </>
             }
             items={items}
+            align="start"
             onOpen={() => setStatus(null)}
             footer={
                 status && (

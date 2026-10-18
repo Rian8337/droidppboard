@@ -5,6 +5,7 @@ import { ErrorMessage } from "../components/ErrorMessage";
 import { Pill } from "../components/Pill";
 import { getAdminVariantPath } from "../routing/paths";
 import styles from "./AllVariantsPage.module.css";
+import { formatError } from "../api/http";
 
 const columns: Column<AdminVariant>[] = [
     { id: "name", header: "Name", render: (variant) => variant.name },
@@ -43,7 +44,7 @@ export function AllVariantsPage() {
     if (variants.error) {
         return (
             <ErrorMessage
-                message={variants.error.message}
+                message={formatError(variants.error)}
                 onRetry={() => void variants.refetch()}
             />
         );

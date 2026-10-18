@@ -14,6 +14,7 @@ import { ErrorMessage } from "../components/ErrorMessage";
 import { Select } from "../components/Select";
 import { TextField } from "../components/TextField";
 import styles from "./RolesPage.module.css";
+import { formatError } from "../api/http";
 
 const roleLabels: Readonly<Record<ManageRole, string>> = { admin: "Admin", manager: "Manager" };
 
@@ -118,7 +119,7 @@ export function RolesPage() {
                 <h2 className={styles.heading}>People with a role</h2>
                 {users.error ? (
                     <ErrorMessage
-                        message={users.error.message}
+                        message={formatError(users.error)}
                         onRetry={() => void users.refetch()}
                     />
                 ) : users.data ? (
@@ -160,7 +161,7 @@ export function RolesPage() {
                 </form>
                 {setting.error && (
                     <p role="alert" className={styles.error}>
-                        {setting.error.message}
+                        {formatError(setting.error)}
                     </p>
                 )}
             </section>

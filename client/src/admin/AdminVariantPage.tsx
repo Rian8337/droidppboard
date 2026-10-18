@@ -4,8 +4,10 @@ import { Link, useParams } from "react-router";
 import { useAdminVariants } from "../api/manage";
 import { ErrorMessage } from "../components/ErrorMessage";
 import { NotFoundPage } from "../pages/NotFoundPage";
+import { getVariantTitle } from "../variant/getVariantTitle";
 import { VariantAdminTab } from "./VariantAdminTab";
 import styles from "./AdminVariantPage.module.css";
+import { formatError } from "../api/http";
 
 /**
  * One variant's settings and access in the admin area, which reaches `droid-live` and the osu! variants as well.
@@ -18,7 +20,7 @@ export function AdminVariantPage() {
     if (variants.error) {
         return (
             <ErrorMessage
-                message={variants.error.message}
+                message={formatError(variants.error)}
                 onRetry={() => void variants.refetch()}
             />
         );
@@ -41,7 +43,7 @@ export function AdminVariantPage() {
                 All variants
             </Link>
             <div>
-                <h2 className={styles.title}>{variant.title ?? variant.name}</h2>
+                <h2 className={styles.title}>{getVariantTitle(variant)}</h2>
                 <p className={styles.name}>{variant.name}</p>
             </div>
             <VariantAdminTab variant={variant} hasFullRun={false} />

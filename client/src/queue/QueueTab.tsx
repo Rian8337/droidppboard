@@ -10,6 +10,7 @@ import { QueueAddBar } from "./QueueAddBar";
 import { QueueList } from "./QueueList";
 import styles from "./QueueTab.module.css";
 import { RecentList } from "./RecentList";
+import { formatError } from "../api/http";
 
 export interface QueueTabProps {
     variant: PPVariant;
@@ -29,14 +30,16 @@ function Queue({ variant }: QueueTabProps) {
     const breakpoint = useBreakpoint();
     const [showAll, setShowAll] = useState(false);
     const [phoneList, setPhoneList] = useState<PhoneList>("queue");
-    const own = useRecalcQueue(variant.name);
+    // Only the view that is listed is polled every few seconds; the variant's own still backs the
+    // allowance, the full-run strip and the recent list while everyone's is listed.
+    const own = useRecalcQueue(variant.name, { isBackground: showAll });
     const everyone = useRecalcQueue(null, { isEnabled: showAll });
     const view = own.data;
 
     if (!view) {
         return own.error ? (
             <div className={styles.state}>
-                <ErrorMessage message={own.error.message} onRetry={() => void own.refetch()} />
+                <ErrorMessage message={formatError(own.error)} onRetry={() => void own.refetch()} />
             </div>
         ) : (
             <p className={styles.note}>Loading...</p>
@@ -54,6 +57,7 @@ function Queue({ variant }: QueueTabProps) {
     ).length;
     // Ages count to the moment the data was loaded, which the polling keeps close to now.
     const now = own.dataUpdatedAt;
+    const listedNow = listed.dataUpdatedAt || now;
 
     const queueList = (
         <QueueList
@@ -64,7 +68,7 @@ function Queue({ variant }: QueueTabProps) {
             onShowAllChange={setShowAll}
             estimatedWaitSeconds={view.estimatedWaitSeconds}
             me={me}
-            now={now}
+            now={listedNow}
         />
     );
     const recentList = <RecentList view={view} now={now} />;

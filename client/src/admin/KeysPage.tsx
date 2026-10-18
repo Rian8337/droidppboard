@@ -12,6 +12,7 @@ import { useBreakpoint } from "../hooks/useBreakpoint";
 import { CreatedKeyDialog } from "./CreatedKeyDialog";
 import { KeyEditor, type KeyVariantList } from "./KeyEditor";
 import styles from "./KeysPage.module.css";
+import { formatError } from "../api/http";
 
 /** How many keys a page of the list holds. */
 export const keysPerPage = 25;
@@ -64,7 +65,9 @@ export function KeysPage() {
     const [created, setCreated] = useState<CreatedKey | null>(null);
 
     if (keys.error) {
-        return <ErrorMessage message={keys.error.message} onRetry={() => void keys.refetch()} />;
+        return (
+            <ErrorMessage message={formatError(keys.error)} onRetry={() => void keys.refetch()} />
+        );
     }
 
     if (!keys.data) {

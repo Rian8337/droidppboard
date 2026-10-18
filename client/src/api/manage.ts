@@ -389,7 +389,7 @@ export function useSetRole(): UseMutationResult<
             Promise.all([
                 queryClient.invalidateQueries({ queryKey: queryKeys.manageUsers() }),
                 // A role decides who a manager may remove, and the roles shown beside grants.
-                queryClient.invalidateQueries({ queryKey: ["manage", "userRoles"] }),
+                queryClient.invalidateQueries({ queryKey: queryKeys.manageAllUserRoles() }),
                 queryClient.invalidateQueries({ queryKey: queryKeys.me() }),
             ]),
     });

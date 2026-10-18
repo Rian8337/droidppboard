@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider, type QueryClient } from "@tanstack/react-query";
 import { render, type RenderResult } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { MemoryRouter, type InitialEntry } from "react-router";
@@ -16,15 +16,22 @@ export interface RenderWithProvidersOptions {
      * whatever the handlers currently answer.
      */
     readonly me?: Me | null;
+
+    /** The client to use, for a test that looks into the cache. Defaults to a fresh one that does not retry. */
+    readonly queryClient?: QueryClient;
 }
 
 /**
- * Renders with a fresh query client that does not retry, a router at `route`, and the mocked
+ * Renders with a query client (by default a fresh one that does not retry), a router at `route`, and the mocked
  * server answering `me` for `GET /api/auth/me`.
  */
 export function renderWithProviders(
     ui: ReactElement,
-    { route = "/", me }: RenderWithProvidersOptions = {},
+    {
+        route = "/",
+        me,
+        queryClient = createQueryClient({ retry: false }),
+    }: RenderWithProvidersOptions = {},
 ): RenderResult {
     if (me !== undefined) {
         server.use(
@@ -37,7 +44,7 @@ export function renderWithProviders(
     }
 
     return render(
-        <QueryClientProvider client={createQueryClient({ retry: false })}>
+        <QueryClientProvider client={queryClient}>
             <MemoryRouter initialEntries={[route]}>{ui}</MemoryRouter>
         </QueryClientProvider>,
     );

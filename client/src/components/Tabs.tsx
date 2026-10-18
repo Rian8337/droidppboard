@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { Link } from "react-router";
 import styles from "./Tabs.module.css";
 
@@ -12,12 +12,29 @@ export interface Tab {
 export interface TabsProps {
     tabs: Tab[];
     activeId: string;
+
+    /** Names the row for assistive technology, such as "Variant pages". */
+    "aria-label"?: string;
 }
 
-/** Route-backed tabs: each is a link, and the row scrolls sideways when it does not fit. */
-export function Tabs({ tabs, activeId }: TabsProps) {
+/**
+ * Route-backed tabs: each is a link, and the row scrolls sideways when it does not fit, to
+ * the active tab when it changes.
+ */
+export function Tabs({ tabs, activeId, "aria-label": label }: TabsProps) {
+    const rowRef = useRef<HTMLElement>(null);
+
+    useEffect(() => {
+        const active = rowRef.current?.querySelector<HTMLElement>("[aria-current=page]");
+
+        // jsdom has no scrollIntoView.
+        if (typeof active?.scrollIntoView === "function") {
+            active.scrollIntoView({ inline: "nearest", block: "nearest" });
+        }
+    }, [activeId]);
+
     return (
-        <nav className={styles.tabs}>
+        <nav ref={rowRef} className={styles.tabs} aria-label={label}>
             {tabs.map((tab) => {
                 const isActive = tab.id === activeId;
 

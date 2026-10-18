@@ -1,6 +1,7 @@
 import type { PPVariant } from "app-structures";
 import { useParams } from "react-router";
 import { useVariants } from "../api/variants";
+import { findVariant } from "./findVariant";
 
 export interface CurrentVariant {
     /** The variant the address names, or `undefined` while loading, if it failed, or if there is none. */
@@ -19,9 +20,7 @@ export function useCurrentVariant(): CurrentVariant {
     const { data: variants, isPending, error, refetch } = useVariants();
 
     return {
-        variant: variants?.find(
-            (candidate) => candidate.name === name || candidate.aliases.includes(name ?? ""),
-        ),
+        variant: findVariant(variants, name),
         isLoading: isPending,
         error,
         refetch: () => void refetch(),

@@ -1,4 +1,4 @@
-import { screen, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { IPrototypePP, PrototypeLeaderboardResponse } from "app-structures";
 import { http, HttpResponse } from "msw";
@@ -67,6 +67,14 @@ describe("ProfilePage", () => {
             "https://osudroid.moe/user/avatar?id=1000",
         );
         expect(screen.queryByText(/country/i)).not.toBeInTheDocument();
+    });
+
+    it("titles the browser tab after the player and the variant", async () => {
+        renderProfile("/v/droid-rebalance/players/1000");
+
+        await screen.findByRole("heading", { name: "Alpha" });
+
+        await waitFor(() => expect(document.title).toBe("Alpha · Rebalance · PP Board"));
     });
 
     it("puts Local pp, Live pp and Difference first, then the skills", async () => {

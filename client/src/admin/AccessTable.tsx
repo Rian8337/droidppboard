@@ -14,6 +14,7 @@ import { DataTable, type Column } from "../components/DataTable";
 import { ErrorMessage } from "../components/ErrorMessage";
 import { canRemoveGrant } from "./accessRules";
 import styles from "./AccessTable.module.css";
+import { formatError } from "../api/http";
 
 export interface AccessTableProps {
     /** The name of the variant. */
@@ -53,7 +54,10 @@ function GrantedUsers({ variant, me }: AccessTableProps) {
 
     if (grants.error) {
         return (
-            <ErrorMessage message={grants.error.message} onRetry={() => void grants.refetch()} />
+            <ErrorMessage
+                message={formatError(grants.error)}
+                onRetry={() => void grants.refetch()}
+            />
         );
     }
 
@@ -130,7 +134,7 @@ function GrantedUsers({ variant, me }: AccessTableProps) {
             )}
             {ungranting.error && (
                 <p role="alert" className={styles.error}>
-                    {ungranting.error.message}
+                    {formatError(ungranting.error)}
                 </p>
             )}
         </section>
@@ -148,7 +152,9 @@ function GrantedKeys({ variant }: { variant: string }) {
     const headingId = useId();
 
     if (keys.error) {
-        return <ErrorMessage message={keys.error.message} onRetry={() => void keys.refetch()} />;
+        return (
+            <ErrorMessage message={formatError(keys.error)} onRetry={() => void keys.refetch()} />
+        );
     }
 
     if (!keys.data) {
@@ -204,7 +210,7 @@ function GrantedKeys({ variant }: { variant: string }) {
             </p>
             {changing.error && (
                 <p role="alert" className={styles.error}>
-                    {changing.error.message}
+                    {formatError(changing.error)}
                 </p>
             )}
         </section>

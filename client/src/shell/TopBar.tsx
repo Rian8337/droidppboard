@@ -3,6 +3,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useLocation, useMatch } from "react-router";
 import { useVariants } from "../api/variants";
 import { discordUrl } from "../utils/links";
+import { findVariant } from "../variant/findVariant";
+import { getVariantTitle } from "../variant/getVariantTitle";
 import { AccountMenu } from "./AccountMenu";
 import styles from "./TopBar.module.css";
 
@@ -29,17 +31,21 @@ export function TopBar({ isSidebarOpen, onToggleSidebar }: TopBarProps) {
     const { data: variants } = useVariants();
 
     let title = "PP Board";
+    let pageTitle: string | null = null;
 
     if (variantName !== undefined) {
-        const variant = variants?.find((candidate) => candidate.name === variantName);
+        const variant = findVariant(variants, variantName);
 
-        title = `PP Board · ${variant?.title ?? variantName}`;
+        pageTitle = variant ? getVariantTitle(variant) : variantName;
+        title = `PP Board · ${pageTitle}`;
     } else {
-        title = pageNames.get(pathname.split("/")[1]) ?? title;
+        pageTitle = pageNames.get(pathname.split("/")[1]) ?? null;
+        title = pageTitle ?? title;
     }
 
     return (
         <header className={styles.topBar}>
+            <title>{pageTitle === null ? "PP Board" : `${pageTitle} · PP Board`}</title>
             <button
                 type="button"
                 className={styles.toggle}

@@ -9,8 +9,11 @@ import type { RecalcEntryView, RecalcQueueView } from "app-structures";
 import { requestJson, type ApiError } from "./http";
 import { queryKeys } from "./queryKeys";
 
-/** How often the queue is asked for again while the page is visible. */
+/** How often the queue that is being read is asked for again while the page is visible. */
 export const recalcPollIntervalMs = 3000;
+
+/** How often a queue that only backs the page's other parts (such as its allowance) is asked for again. */
+export const recalcBackgroundPollIntervalMs = 30000;
 
 /**
  * The recalculation queue of a variant, or of every variant the person can see for `null`. It is
@@ -19,10 +22,15 @@ export const recalcPollIntervalMs = 3000;
  *
  * @param variant The name of the variant, or `null` for the global queue.
  * @param isEnabled Whether to load it at all.
+ * @param isBackground Whether the view is not the one being listed, so it is asked for again only
+ * every {@link recalcBackgroundPollIntervalMs}.
  */
 export function useRecalcQueue(
     variant: string | null,
-    { isEnabled = true }: { isEnabled?: boolean } = {},
+    {
+        isEnabled = true,
+        isBackground = false,
+    }: { isEnabled?: boolean; isBackground?: boolean } = {},
 ): UseQueryResult<RecalcQueueView, ApiError> {
     return useQuery({
         queryKey: queryKeys.recalcQueue(variant),
@@ -35,7 +43,7 @@ export function useRecalcQueue(
             ),
         enabled: isEnabled,
         staleTime: 0,
-        refetchInterval: recalcPollIntervalMs,
+        refetchInterval: isBackground ? recalcBackgroundPollIntervalMs : recalcPollIntervalMs,
         refetchOnWindowFocus: true,
     });
 }

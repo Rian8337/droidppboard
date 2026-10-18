@@ -15,6 +15,7 @@ import { Pill } from "../components/Pill";
 import { TextField } from "../components/TextField";
 import { formatUtcTime } from "../utils/formatUtcTime";
 import styles from "./KeyEditor.module.css";
+import { formatError } from "../api/http";
 
 /** The state of the list of variants a key can be granted. */
 export interface KeyVariantList {
@@ -82,7 +83,9 @@ function VariantCheckboxes({
     onToggle,
 }: VariantCheckboxesProps) {
     if (variantList.error) {
-        return <ErrorMessage message={variantList.error.message} onRetry={variantList.onRetry} />;
+        return (
+            <ErrorMessage message={formatError(variantList.error)} onRetry={variantList.onRetry} />
+        );
     }
 
     if (!variantList.names) {
@@ -194,7 +197,7 @@ function CreateKeyForm({
             )}
             {creating.error && (
                 <p role="alert" className={styles.error}>
-                    {creating.error.message}
+                    {formatError(creating.error)}
                 </p>
             )}
             <div className={styles.actions}>
@@ -313,7 +316,7 @@ function EditKeyPanel({
                     )}
                     {error && (
                         <p role="alert" className={styles.error}>
-                            {error.message}
+                            {formatError(error)}
                         </p>
                     )}
                 </>
@@ -338,7 +341,7 @@ function EditKeyPanel({
                 </p>
                 {revoking.error && (
                     <p role="alert" className={styles.error}>
-                        {revoking.error.message}
+                        {formatError(revoking.error)}
                     </p>
                 )}
                 <div className={styles.actions}>

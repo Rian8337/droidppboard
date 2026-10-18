@@ -1,7 +1,8 @@
-import { screen, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { CalculationResponse } from "app-structures";
 import { http, HttpResponse } from "msw";
+import { useLogout } from "../../src/api/auth";
 import { emptyFormValues } from "../../src/calculator/calculatorForm";
 import { useBreakpoint } from "../../src/hooks/useBreakpoint";
 import { BeatmapCalculatorPage } from "../../src/pages/BeatmapCalculatorPage";
@@ -60,12 +61,13 @@ describe("BeatmapCalculatorPage", () => {
         vi.mocked(useBreakpoint).mockReturnValue("desktop");
     });
 
-    it("has a heading for the page", () => {
+    it("has a heading for the page that is not a second h1", () => {
         renderWithProviders(<BeatmapCalculatorPage />);
 
         expect(
-            screen.getByRole("heading", { level: 1, name: "Beatmap calculator" }),
+            screen.getByRole("heading", { level: 2, name: "Beatmap calculator" }),
         ).toBeInTheDocument();
+        expect(screen.queryByRole("heading", { level: 1 })).not.toBeInTheDocument();
     });
 
     it("offers exactly the four variants, with osu!droid live selected", () => {
@@ -190,6 +192,46 @@ describe("BeatmapCalculatorPage", () => {
 
         expect(forms[0].get("scope")).toBe("tool");
         expect(forms[0].get("variant")).toBe("droid-live");
+    });
+
+    it("drops a My score result when the person logs out", async () => {
+        let isLoggedIn = true;
+
+        server.use(
+            http.get("/api/auth/me", () =>
+                isLoggedIn
+                    ? HttpResponse.json(plainMe)
+                    : HttpResponse.json({ message: "Not logged in" }, { status: 401 }),
+            ),
+            http.post("/api/auth/logout", () => {
+                isLoggedIn = false;
+
+                return new HttpResponse(null, { status: 204 });
+            }),
+            http.post("/api/ppboard/calculate/my-score", () =>
+                HttpResponse.json(droidLiveCalculation),
+            ),
+        );
+
+        function LogoutHarness() {
+            const logout = useLogout();
+
+            return (
+                <>
+                    <button onClick={() => logout.mutate()}>Log out</button>
+                    <BeatmapCalculatorPage />
+                </>
+            );
+        }
+
+        renderWithProviders(<LogoutHarness />);
+        await userEvent.type(await screen.findByLabelText("Beatmap for my score"), "1234");
+        await userEvent.click(screen.getByRole("button", { name: "Calculate my score" }));
+        await screen.findByText("Total pp");
+
+        await userEvent.click(screen.getByRole("button", { name: "Log out" }));
+
+        await waitFor(() => expect(screen.queryByText("Total pp")).not.toBeInTheDocument());
     });
 
     it("offers Generate link only when logged in", async () => {

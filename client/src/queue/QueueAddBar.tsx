@@ -7,7 +7,7 @@ import { Button } from "../components/Button";
 import { TextField } from "../components/TextField";
 import { useNow } from "../hooks/useNow";
 import styles from "./QueueAddBar.module.css";
-import { formatCooldown, formatSlots } from "./queueFormatting";
+import { formatCooldown, formatQueueError, formatSlots } from "./queueFormatting";
 
 export interface QueueAddBarProps {
     /** The name of the variant to queue players for. */
@@ -89,7 +89,7 @@ export function QueueAddBar({ variant, me, allowance, loadedAt }: QueueAddBarPro
             </form>
             {queuing.error && (
                 <p role="alert" className={styles.error}>
-                    {queuing.error.message}
+                    {formatQueueError(queuing.error)}
                 </p>
             )}
             {queuedName !== null && !queuing.error && (

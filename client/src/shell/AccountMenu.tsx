@@ -4,6 +4,7 @@ import { Link, useLocation, useNavigate } from "react-router";
 import { useLogout, useMe } from "../api/auth";
 import { Menu, type MenuItem } from "../components/Menu";
 import styles from "./AccountMenu.module.css";
+import { formatError } from "../api/http";
 
 /** The logged in person's avatar and menu, or a button to log in if nobody is. */
 export function AccountMenu() {
@@ -65,7 +66,7 @@ export function AccountMenu() {
             footer={
                 logout.error && (
                     <p role="alert" className={styles.error}>
-                        {logout.error.message}
+                        {formatError(logout.error)}
                     </p>
                 )
             }

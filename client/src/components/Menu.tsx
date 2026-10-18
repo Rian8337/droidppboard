@@ -20,10 +20,16 @@ export interface MenuProps {
 
     /** Called each time the menu opens. */
     onOpen?: () => void;
+
+    /**
+     * Which edge of the trigger the list lines up with: "end" opens it towards the left, "start" towards the right.
+     * Pick "start" for a trigger that can wrap to the left edge of a phone screen. Defaults to "end".
+     */
+    align?: "start" | "end";
 }
 
 /** A popup list of actions that opens on click or tap and closes on an outside press, Escape or a choice. */
-export function Menu({ trigger, items, footer, onOpen }: MenuProps) {
+export function Menu({ trigger, items, footer, onOpen, align = "end" }: MenuProps) {
     const [isOpen, setIsOpen] = useState(false);
     const rootRef = useRef<HTMLDivElement>(null);
     const triggerRef = useRef<HTMLButtonElement>(null);
@@ -107,7 +113,13 @@ export function Menu({ trigger, items, footer, onOpen }: MenuProps) {
                 {trigger}
             </button>
             {isOpen && (
-                <div ref={listRef} id={listId} role="menu" className={styles.list}>
+                <div
+                    ref={listRef}
+                    id={listId}
+                    role="menu"
+                    data-align={align}
+                    className={styles.list}
+                >
                     {items.map((item) => (
                         <button
                             key={item.label}

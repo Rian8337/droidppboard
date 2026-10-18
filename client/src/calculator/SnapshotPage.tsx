@@ -9,10 +9,12 @@ import { ErrorMessage } from "../components/ErrorMessage";
 import { NotFoundPage } from "../pages/NotFoundPage";
 import { beatmapCalculatorPath, defaultVariant, getVariantPath } from "../routing/paths";
 import { formatUtcTime } from "../utils/formatUtcTime";
+import { getVariantTitle } from "../variant/getVariantTitle";
 import { canLoadFromResult, getFormValuesFromResult } from "./calculatorForm";
 import { ResultPanel } from "./ResultPanel";
 import { getToolVariantLabel } from "./toolVariants";
 import styles from "./SnapshotPage.module.css";
+import { formatError } from "../api/http";
 
 export interface SnapshotPageProps {
     /** `variant` for a variant's Calculator tab, `tool` for the Beatmap calculator. */
@@ -32,10 +34,9 @@ function getSnapshotTitle(
         return getToolVariantLabel(response.variant);
     }
 
-    return (
-        variants?.find((candidate) => candidate.name === response.variant)?.title ??
-        response.variant
-    );
+    const variant = variants?.find((candidate) => candidate.name === response.variant);
+
+    return variant ? getVariantTitle(variant) : response.variant;
 }
 
 /**
@@ -64,7 +65,7 @@ export function SnapshotPage({ scope }: SnapshotPageProps) {
     }
 
     if (error) {
-        return <ErrorMessage message={error.message} onRetry={() => void refetch()} />;
+        return <ErrorMessage message={formatError(error)} onRetry={() => void refetch()} />;
     }
 
     if (isPending) {

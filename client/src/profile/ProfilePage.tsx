@@ -6,12 +6,16 @@ import { useQueuePlayer } from "../api/recalc";
 import { ErrorMessage } from "../components/ErrorMessage";
 import { NotFoundPage } from "../pages/NotFoundPage";
 import { ScoreTable } from "../scores/ScoreTable";
+import { getVariantTitle } from "../variant/getVariantTitle";
 import { useCurrentVariant } from "../variant/useCurrentVariant";
 import { ProfileHeader, type ProfileHeaderProps } from "./ProfileHeader";
 import styles from "./ProfilePage.module.css";
+import { formatError } from "../api/http";
+import { formatQueueError } from "../queue/queueFormatting";
 
 interface PlayerProfileProps {
     variant: string;
+    variantTitle: string;
     uid: number;
 }
 
@@ -21,7 +25,7 @@ function getQueueFeedback(
     username: string,
 ): ProfileHeaderProps["queueFeedback"] {
     if (queuing.error) {
-        return { tone: "error", text: queuing.error.message };
+        return { tone: "error", text: formatQueueError(queuing.error) };
     }
 
     return queuing.isSuccess
@@ -29,7 +33,7 @@ function getQueueFeedback(
         : undefined;
 }
 
-function PlayerProfile({ variant, uid }: PlayerProfileProps) {
+function PlayerProfile({ variant, variantTitle, uid }: PlayerProfileProps) {
     const { data: profile, error, isPending, refetch } = useProfile(variant, uid);
     const { data: me = null } = useMe();
     const queuing = useQueuePlayer();
@@ -39,7 +43,7 @@ function PlayerProfile({ variant, uid }: PlayerProfileProps) {
     }
 
     if (error) {
-        return <ErrorMessage message={error.message} onRetry={() => void refetch()} />;
+        return <ErrorMessage message={formatError(error)} onRetry={() => void refetch()} />;
     }
 
     if (isPending) {
@@ -48,6 +52,7 @@ function PlayerProfile({ variant, uid }: PlayerProfileProps) {
 
     return (
         <div>
+            <title>{`${profile.username} · ${variantTitle} · PP Board`}</title>
             <ProfileHeader
                 profile={profile}
                 variant={variant}
@@ -72,7 +77,7 @@ export function ProfilePage() {
     }
 
     if (error) {
-        return <ErrorMessage message={error.message} onRetry={refetch} />;
+        return <ErrorMessage message={formatError(error)} onRetry={refetch} />;
     }
 
     if (!variant) {
@@ -84,5 +89,12 @@ export function ProfilePage() {
     }
 
     // A key per player and variant starts the table's search and sort over.
-    return <PlayerProfile key={`${variant.name}:${uid}`} variant={variant.name} uid={uid} />;
+    return (
+        <PlayerProfile
+            key={`${variant.name}:${uid}`}
+            variant={variant.name}
+            variantTitle={getVariantTitle(variant)}
+            uid={uid}
+        />
+    );
 }

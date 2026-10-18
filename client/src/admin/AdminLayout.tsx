@@ -1,10 +1,11 @@
 import { faKey, faLayerGroup, faUserShield } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Outlet, useLocation } from "react-router";
+import { Navigate, Outlet, useLocation, useMatch } from "react-router";
 import { useMe } from "../api/auth";
 import { EmptyState } from "../components/EmptyState";
 import { Tabs, type Tab } from "../components/Tabs";
-import { isAdmin } from "../variant/permissions";
+import { getVariantPath } from "../routing/paths";
+import { canManageVariant, isAdmin } from "../variant/permissions";
 import styles from "./AdminLayout.module.css";
 
 const tabs: readonly Tab[] = [
@@ -27,9 +28,19 @@ const tabs: readonly Tab[] = [
 export function AdminLayout() {
     const { data: me = null, isPending } = useMe();
     const { pathname } = useLocation();
+    const variantMatch = useMatch("/admin/variants/:name");
 
     if (isPending) {
         return <p className={styles.note}>Loading...</p>;
+    }
+
+    // An old /manage/variants/:name link lands here; a manager of that variant has an admin tab of their own.
+    if (
+        !isAdmin(me) &&
+        variantMatch?.params.name &&
+        canManageVariant(me, variantMatch.params.name)
+    ) {
+        return <Navigate replace to={getVariantPath(variantMatch.params.name, "admin")} />;
     }
 
     // The broker refuses these requests to others anyway (with a 403); this is what the person reads.
@@ -41,7 +52,7 @@ export function AdminLayout() {
 
     return (
         <div>
-            <Tabs tabs={[...tabs]} activeId={activeId} />
+            <Tabs tabs={[...tabs]} activeId={activeId} aria-label="Admin pages" />
             <div className={styles.page}>
                 <Outlet />
             </div>

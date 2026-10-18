@@ -64,6 +64,17 @@ describe("Sidebar", () => {
         expect(screen.getByRole("link", { name: /Rebalance/ })).not.toHaveAttribute("aria-current");
     });
 
+    it("marks the current variant when the address names it by an alias", async () => {
+        renderWithProviders(<Sidebar onNavigate={() => {}} />, {
+            route: "/v/rebalance/leaderboard",
+        });
+
+        expect(await screen.findByRole("link", { name: /Rebalance/ })).toHaveAttribute(
+            "aria-current",
+            "true",
+        );
+    });
+
     it("filters the variants by title or name, ignoring case", async () => {
         respondWithVariants(droidRebalance, flowaim, readingVariant);
         renderWithProviders(<Sidebar onNavigate={() => {}} />);

@@ -20,12 +20,6 @@ export interface MockApiOptions {
 
 const variants = [droidRebalance, readingVariant];
 
-/**
- * Cloudflare's documented site key that always passes. The e2e build is made with it (see
- * `.env.e2e`), and the script it loads is answered by {@link mockApi} so no network is needed.
- */
-export const turnstileTestSiteKey = "1x00000000000000000000AA";
-
 /** Stands in for Cloudflare's Turnstile script: solves the challenge as soon as the widget is drawn. */
 const turnstileScript = `
 window.turnstile = {
@@ -39,15 +33,20 @@ window.turnstile = {
 };
 `;
 
+/** A 1px picture, for the avatars and other images that the site loads from osudroid.moe. */
+const placeholderImage =
+    '<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"><rect width="1" height="1" fill="#555"/></svg>';
+
 function fulfillJson(route: Route, body: unknown, status = 200) {
     return route.fulfill({ status, contentType: "application/json", body: JSON.stringify(body) });
 }
 
 /**
- * Answers every request to `/api/**` of the page from the fixtures the component tests use, and the
- * Turnstile script, so a test needs neither a server nor the internet. The state a flow changes
- * lives here: logging in changes who `GET /api/auth/me` answers with, and queuing a player puts
- * them in the queue the next `GET /api/recalc/queue` answers with.
+ * Answers every request to `/api/**` of the page from the fixtures the component tests use, the
+ * Turnstile script and the images of osudroid.moe, so a test needs neither a server nor the
+ * internet. The state a flow changes lives here: logging in changes who `GET /api/auth/me`
+ * answers with, and queuing a player puts them in the queue the next `GET /api/recalc/queue`
+ * answers with.
  */
 export async function mockApi(page: Page, options: MockApiOptions = {}): Promise<void> {
     let me: Me | null = options.me ?? null;
@@ -55,6 +54,10 @@ export async function mockApi(page: Page, options: MockApiOptions = {}): Promise
 
     await page.route("https://challenges.cloudflare.com/**", (route) =>
         route.fulfill({ contentType: "application/javascript", body: turnstileScript }),
+    );
+
+    await page.route("https://osudroid.moe/**", (route) =>
+        route.fulfill({ contentType: "image/svg+xml", body: placeholderImage }),
     );
 
     await page.route("**/api/**", async (route) => {
