@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes, useLocation } from "react-router";
 import { NotFoundPage } from "../pages/NotFoundPage";
+import { ProfilePage } from "../profile/ProfilePage";
 import { AppLayout } from "../shell/AppLayout";
 import { VariantPage } from "../variant/VariantPage";
 import { mapLegacyPath } from "./legacyRedirects";
@@ -19,6 +20,7 @@ export function AppRoutes() {
         <Routes>
             <Route element={<AppLayout />}>
                 <Route index element={<Navigate replace to={getVariantPath(defaultVariant)} />} />
+                <Route path="v/:variant/players/:uid" element={<ProfilePage />} />
                 <Route path="v/:variant/:tab" element={<VariantPage />} />
                 <Route path="*" element={<LegacyRedirect />} />
             </Route>

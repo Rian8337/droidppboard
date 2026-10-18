@@ -1,5 +1,8 @@
 import type { IPrototypePP, PrototypePPEntry, ScorePrototypeState } from "app-structures";
 
+/** The variant whose players have no master pp to compare with. */
+export const variantWithoutMaster = "droid-rebalance";
+
 export type DifferenceTone = "up" | "down" | "neutral";
 
 export interface FormattedDifference {

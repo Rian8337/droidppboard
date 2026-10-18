@@ -14,7 +14,7 @@ import { TextField } from "../components/TextField";
 import { useBreakpoint } from "../hooks/useBreakpoint";
 import { getProfilePath } from "../routing/paths";
 import { formatPp } from "../utils/formatPp";
-import { getDifference } from "./difference";
+import { getDifference, variantWithoutMaster } from "./difference";
 import { DifferenceText } from "./DifferenceText";
 import type { LeaderboardEntry } from "./LeaderboardEntry";
 import { LeaderboardRows } from "./LeaderboardRows";
@@ -22,9 +22,6 @@ import styles from "./LeaderboardTab.module.css";
 
 /** How long typing must pause before the search is sent. */
 const searchDelayMs = 300;
-
-/** The variant whose players have no master pp to compare with. */
-const variantWithoutMaster = "droid-rebalance";
 
 export interface LeaderboardTabProps {
     variant: PPVariant;

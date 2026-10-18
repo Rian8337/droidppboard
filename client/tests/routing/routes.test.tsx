@@ -25,11 +25,18 @@ describe("AppRoutes", () => {
         expect(screen.getByRole("link", { name: "Queue" })).toHaveAttribute("aria-current", "page");
     });
 
+    it("opens a player's profile inside the shell", async () => {
+        renderWithProviders(<AppRoutes />, { route: "/v/reading/players/1000" });
+
+        expect(await screen.findByRole("heading", { name: "Alpha" })).toBeVisible();
+        expect(screen.getByRole("heading", { name: "PP Board · Reading" })).toBeVisible();
+    });
+
     it("redirects an old address to its new one", async () => {
         renderWithProviders(<AppRoutes />, { route: "/prototype/top-plays/reading?x=1" });
 
         expect(await screen.findByRole("heading", { name: "PP Board · Reading" })).toBeVisible();
-        expect(await screen.findByText("This tab is not available yet.")).toBeVisible();
+        expect(await screen.findByText("Bravo Tune")).toBeVisible();
         expect(screen.getByRole("link", { name: "Top plays" })).toHaveAttribute(
             "aria-current",
             "page",

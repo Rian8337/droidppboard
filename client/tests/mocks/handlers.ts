@@ -1,6 +1,17 @@
 import { http, HttpResponse, type RequestHandler } from "msw";
-import type { IPrototypePP, PrototypeLeaderboardResponse } from "app-structures";
-import { droidRebalance, leaderboardPlayers, plainMe, readingVariant } from "./fixtures";
+import type {
+    IPrototypePP,
+    PrototypeLeaderboardResponse,
+    TopPrototypePPEntry,
+} from "app-structures";
+import {
+    alphaProfile,
+    droidRebalance,
+    leaderboardPlayers,
+    plainMe,
+    readingVariant,
+    topPlays,
+} from "./fixtures";
 
 /**
  * The server's default answers: nobody is logged in and only public variants exist. Tests change
@@ -22,6 +33,34 @@ export const handlers: RequestHandler[] = [
             variants: [droidRebalance, readingVariant],
             currentVariant,
             data: leaderboardPlayers,
+        };
+
+        return HttpResponse.json(body);
+    }),
+    http.get("/api/ppboard/prototype/getuserprofile", ({ request }) => {
+        const url = new URL(request.url);
+        const currentVariant =
+            url.searchParams.get("type") === readingVariant.name ? readingVariant : droidRebalance;
+
+        if (url.searchParams.get("uid") !== String(alphaProfile.uid)) {
+            return HttpResponse.json({ message: "Player not found!" }, { status: 404 });
+        }
+
+        const body: PrototypeLeaderboardResponse<IPrototypePP> = {
+            variants: [droidRebalance, readingVariant],
+            currentVariant,
+            data: alphaProfile,
+        };
+
+        return HttpResponse.json(body);
+    }),
+    http.get("/api/ppboard/prototype/gettopplays", ({ request }) => {
+        const type = new URL(request.url).searchParams.get("type");
+        const currentVariant = type === readingVariant.name ? readingVariant : droidRebalance;
+        const body: PrototypeLeaderboardResponse<TopPrototypePPEntry[]> = {
+            variants: [droidRebalance, readingVariant],
+            currentVariant,
+            data: topPlays,
         };
 
         return HttpResponse.json(body);

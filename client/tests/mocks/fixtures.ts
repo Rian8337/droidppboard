@@ -7,6 +7,7 @@ import type {
     PPVariant,
     PrototypePPEntry,
     ScorePrototypeState,
+    TopPrototypePPEntry,
 } from "app-structures";
 import type { Me } from "../../src/api/auth";
 
@@ -147,3 +148,51 @@ export function buildScore(overrides: Partial<PrototypePPEntry> = {}): Prototype
         ...overrides,
     };
 }
+
+/** The scores of the mocked profile: a gain of 30 pp and a loss of 10 pp. */
+export const profileScores: PrototypePPEntry[] = [
+    buildScore({
+        hash: "a",
+        title: "Alpha Song",
+        live: buildScoreState(100),
+        local: buildScoreState(130),
+    }),
+    buildScore({
+        hash: "b",
+        title: "Bravo Tune",
+        accuracy: 90,
+        live: buildScoreState(100),
+        local: buildScoreState(90),
+    }),
+];
+
+/** The profile the mocked server answers for player 1000. */
+export const alphaProfile: IPrototypePP = buildPlayer({
+    uid: 1000,
+    username: "Alpha",
+    localPPTotal: 215.5,
+    livePPTotal: 190,
+    pp: profileScores,
+});
+
+/** The plays the mocked server answers top plays with. */
+export const topPlays: TopPrototypePPEntry[] = [
+    {
+        ...buildScore({
+            hash: "a",
+            title: "Alpha Song",
+            live: buildScoreState(100),
+            local: buildScoreState(130),
+        }),
+        username: "Alpha",
+    },
+    {
+        ...buildScore({
+            hash: "b",
+            title: "Bravo Tune",
+            live: buildScoreState(100),
+            local: buildScoreState(90),
+        }),
+        username: "Bravo",
+    },
+];
