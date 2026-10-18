@@ -19,3 +19,4 @@ export * from "./structures/TopPrototypePPEntry";
 export * from "./structures/WhitelistDifficultyStatistics";
 export * from "./structures/ModMultiplierSampleEntry";
 export * from "./structures/ModMultiplierSampleResponse";
+export * from "./structures/RecalcQueue";
