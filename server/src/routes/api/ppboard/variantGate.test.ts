@@ -98,7 +98,7 @@ describe("variant visibility on the ppboard routes", () => {
             const res = await fetch(baseUrl + path);
 
             expect(res.status).toBe(404);
-            expect(await res.json()).toEqual({ message: "Variant not found" });
+            expect(await res.json()).toEqual({ message: "Rework not found" });
             expect(res.headers.get("cache-control")).toBe("no-store");
             expect(Util.getTopPrototypePP).not.toHaveBeenCalled();
             expect(mocks.searchPlayers).not.toHaveBeenCalled();
@@ -110,7 +110,7 @@ describe("variant visibility on the ppboard routes", () => {
         const res = await fetch(baseUrl + "/leaderboard?type=droid-live");
 
         expect(res.status).toBe(404);
-        expect(await res.json()).toEqual({ message: "Variant not found" });
+        expect(await res.json()).toEqual({ message: "Rework not found" });
         expect(mocks.searchPlayers).not.toHaveBeenCalled();
     });
 

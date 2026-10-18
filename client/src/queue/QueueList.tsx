@@ -80,7 +80,8 @@ export function QueueList({
     }
 
     const columns: Column<RecalcEntryView>[] = [
-        { id: "position", header: "#", render: (entry) => entry.position ?? "-" },
+        // Numbered in list order: an entry that is being calculated has no waiting position.
+        { id: "position", header: "#", render: (entry) => entries.indexOf(entry) + 1 },
         {
             id: "player",
             header: "Player",
@@ -126,6 +127,7 @@ export function QueueList({
                     showVariant={showAll}
                     now={now}
                     isFinished={false}
+                    isNumbered
                     renderAction={renderRemove}
                 />
             );
@@ -158,7 +160,7 @@ export function QueueList({
                     checked={showAll}
                     onChange={(event) => onShowAllChange(event.target.checked)}
                 >
-                    Show all variants
+                    Show all reworks
                 </Checkbox>
             </div>
             {removal.error && (

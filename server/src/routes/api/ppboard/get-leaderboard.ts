@@ -31,14 +31,14 @@ router.get(
         );
 
         if (resolved === "notFound") {
-            res.status(404).json({ message: "Variant not found" });
+            res.status(404).json({ message: "Rework not found" });
 
             return;
         }
 
         if (resolved === "unavailable") {
             res.status(503).json({
-                message: "The variant list is unavailable",
+                message: "The rework list is unavailable",
             });
 
             return;

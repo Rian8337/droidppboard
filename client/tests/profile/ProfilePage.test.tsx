@@ -179,10 +179,10 @@ describe("ProfilePage", () => {
         expect(await screen.findByText("Player not found")).toBeVisible();
     });
 
-    it("shows Variant not found for an unknown variant", async () => {
+    it("shows Rework not found for an unknown variant", async () => {
         renderProfile("/v/nothing/players/1000");
 
-        expect(await screen.findByText("Variant not found")).toBeVisible();
+        expect(await screen.findByText("Rework not found")).toBeVisible();
     });
 
     it("links Back to the leaderboard of the variant", async () => {
@@ -217,7 +217,7 @@ describe("ProfilePage", () => {
         server.use(
             http.post("/api/recalc/queue", () =>
                 HttpResponse.json(
-                    { message: "This player is already queued for this variant" },
+                    { message: "This player is already queued for this rework" },
                     { status: 409 },
                 ),
             ),
@@ -228,7 +228,7 @@ describe("ProfilePage", () => {
         await userEvent.click(await screen.findByRole("button", { name: /add to queue/i }));
 
         expect(
-            await screen.findByText("This player is already queued for this variant"),
+            await screen.findByText("This player is already queued for this rework"),
         ).toBeVisible();
         expect(screen.queryByText("Added Alpha to the queue.")).not.toBeInTheDocument();
     });

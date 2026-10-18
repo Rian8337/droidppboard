@@ -42,8 +42,8 @@ export function Sidebar({ onNavigate }: SidebarProps) {
             <TextField
                 type="search"
                 className={styles.search}
-                aria-label="Search variants"
-                placeholder="Search variants"
+                aria-label="Search reworks"
+                placeholder="Search reworks"
                 icon={<FontAwesomeIcon icon={faMagnifyingGlass} />}
                 value={filter}
                 onChange={(event) => setFilter(event.target.value)}

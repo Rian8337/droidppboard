@@ -109,8 +109,8 @@ function SettingsForm({
             <DescriptionEditor value={description} onChange={setDescription} />
             <p className={styles.note}>
                 {variant.available
-                    ? "This variant is available: it has a healthy calculator."
-                    : "This variant is unavailable: it has no healthy calculator right now."}{" "}
+                    ? "This rework is available: it has a healthy calculator."
+                    : "This rework is unavailable: it has no healthy calculator right now."}{" "}
                 That follows the calculators and is not set here.
             </p>
             {canChangeVisibility && (
@@ -118,7 +118,7 @@ function SettingsForm({
                     checked={isPublic}
                     onChange={(event) => setIsPublic(event.target.checked)}
                 >
-                    Public: anyone can see this variant
+                    Public: anyone can see this rework
                 </Checkbox>
             )}
             {updating.error && (
@@ -172,7 +172,7 @@ function AliasEditor({ variant }: { variant: SettingsVariant }) {
             <legend>Aliases</legend>
             <p className={styles.note}>Aliases are saved as soon as you add or remove them.</p>
             {variant.aliases.length === 0 ? (
-                <p className={styles.note}>This variant has no aliases.</p>
+                <p className={styles.note}>This rework has no aliases.</p>
             ) : (
                 <ul className={styles.aliasList}>
                     {variant.aliases.map((existing) => (

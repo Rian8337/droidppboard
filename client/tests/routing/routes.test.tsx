@@ -51,7 +51,7 @@ describe("AppRoutes", () => {
         expect(await screen.findByRole("heading", { name: "PP Board · Reading" })).toBeVisible();
         expect(await screen.findByRole("region", { name: "Queue" })).toBeVisible();
         expect(screen.getByRole("link", { name: "Queue" })).toHaveAttribute("aria-current", "page");
-        expect(screen.getByRole("navigation", { name: "Variant pages" })).toBeVisible();
+        expect(screen.getByRole("navigation", { name: "Rework pages" })).toBeVisible();
     });
 
     it("opens a player's profile inside the shell", async () => {
@@ -102,7 +102,7 @@ describe("AppRoutes", () => {
     it("opens the Beatmap calculator and its snapshots", async () => {
         renderWithProviders(<AppRoutes />, { route: "/calculate" });
 
-        expect(await screen.findByLabelText("Variant")).toHaveValue("droid-live");
+        expect(await screen.findByLabelText("Rework")).toHaveValue("droid-live");
     });
 
     it("opens a Beatmap calculator snapshot", async () => {

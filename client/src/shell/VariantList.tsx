@@ -7,6 +7,7 @@ import { ErrorMessage } from "../components/ErrorMessage";
 import { Tooltip } from "../components/Tooltip";
 import { defaultVariant, getVariantPath } from "../routing/paths";
 import { formatRelativeTime } from "../utils/formatRelativeTime";
+import { formatUtcTime } from "../utils/formatUtcTime";
 import { findVariant } from "../variant/findVariant";
 import { getVariantTitle } from "../variant/getVariantTitle";
 import { sortVariants } from "./sortVariants";
@@ -38,7 +39,7 @@ export function VariantList({ filter, currentVariant, onNavigate }: VariantListP
     const { data: variants, error, isPending, refetch } = useVariants();
 
     if (isPending) {
-        return <p className={styles.note}>Loading variants...</p>;
+        return <p className={styles.note}>Loading reworks...</p>;
     }
 
     if (error) {
@@ -49,7 +50,7 @@ export function VariantList({ filter, currentVariant, onNavigate }: VariantListP
     const shown = sortVariants(variants).filter((variant) => matchesFilter(variant, filter));
 
     if (shown.length === 0) {
-        return <p className={styles.note}>No variants match.</p>;
+        return <p className={styles.note}>No reworks match.</p>;
     }
 
     return (
@@ -68,11 +69,12 @@ export function VariantList({ filter, currentVariant, onNavigate }: VariantListP
                             <span className={styles.dot} aria-hidden="true" />
                             <span className={styles.text}>
                                 <span className={styles.title}>{getVariantTitle(variant)}</span>
-                                <span className={styles.subtitle}>
-                                    {variant.builtAt === null
-                                        ? variant.name
-                                        : `${variant.name} | Last updated: ${formatRelativeTime(variant.builtAt)}`}
-                                </span>
+                                <span className={styles.subtitle}>{variant.name}</span>
+                                {variant.builtAt !== null && (
+                                    <span className={styles.updated}>
+                                        {`Last updated: ${formatRelativeTime(variant.builtAt)} (${formatUtcTime(variant.builtAt)})`}
+                                    </span>
+                                )}
                             </span>
                             {variant.name === defaultVariant && (
                                 <FontAwesomeIcon
@@ -84,12 +86,12 @@ export function VariantList({ filter, currentVariant, onNavigate }: VariantListP
                             )}
                         </Link>
                         {!variant.public && (
-                            <Tooltip content="Private variant">
+                            <Tooltip content="Private rework">
                                 <span
                                     className={styles.globe}
                                     tabIndex={0}
                                     role="img"
-                                    aria-label="Private variant"
+                                    aria-label="Private rework"
                                 >
                                     <FontAwesomeIcon icon={faGlobe} />
                                 </span>

@@ -73,7 +73,7 @@ describe("BeatmapCalculatorPage", () => {
     it("offers exactly the four variants, with osu!droid live selected", () => {
         renderWithProviders(<BeatmapCalculatorPage />);
 
-        const picker = screen.getByLabelText("Variant");
+        const picker = screen.getByLabelText("Rework");
 
         expect(picker).toHaveValue("droid-live");
         expect(
@@ -111,7 +111,7 @@ describe("BeatmapCalculatorPage", () => {
         const forms = serveCalculations();
 
         renderWithProviders(<BeatmapCalculatorPage />);
-        await userEvent.selectOptions(screen.getByLabelText("Variant"), "droid-rebalance");
+        await userEvent.selectOptions(screen.getByLabelText("Rework"), "droid-rebalance");
         await calculate();
 
         expect(forms[0].get("variant")).toBe("droid-rebalance");
@@ -123,7 +123,7 @@ describe("BeatmapCalculatorPage", () => {
         const forms = serveCalculations();
 
         renderWithProviders(<BeatmapCalculatorPage />);
-        await userEvent.selectOptions(screen.getByLabelText("Variant"), "osu-live");
+        await userEvent.selectOptions(screen.getByLabelText("Rework"), "osu-live");
         await calculate();
 
         expect(forms[0].get("variant")).toBe("osu-live");
@@ -135,7 +135,7 @@ describe("BeatmapCalculatorPage", () => {
     it("compares osu!standard rebalance with osu!standard live", async () => {
         serveCalculations();
         renderWithProviders(<BeatmapCalculatorPage />);
-        await userEvent.selectOptions(screen.getByLabelText("Variant"), "osu-rebalance");
+        await userEvent.selectOptions(screen.getByLabelText("Rework"), "osu-rebalance");
         await calculate();
 
         expect(screen.getByText("Difference")).toBeVisible();
@@ -150,7 +150,7 @@ describe("BeatmapCalculatorPage", () => {
             ),
         );
         renderWithProviders(<BeatmapCalculatorPage />);
-        await userEvent.selectOptions(screen.getByLabelText("Variant"), "osu-rebalance");
+        await userEvent.selectOptions(screen.getByLabelText("Rework"), "osu-rebalance");
         await calculate();
 
         expect(screen.getByText("Ignored for osu!standard")).toBeVisible();
@@ -162,15 +162,15 @@ describe("BeatmapCalculatorPage", () => {
 
         expect(await screen.findByText("Calculate my score on this beatmap")).toBeVisible();
 
-        await userEvent.selectOptions(screen.getByLabelText("Variant"), "droid-rebalance");
+        await userEvent.selectOptions(screen.getByLabelText("Rework"), "droid-rebalance");
 
         expect(screen.getByText("Calculate my score on this beatmap")).toBeVisible();
 
-        await userEvent.selectOptions(screen.getByLabelText("Variant"), "osu-live");
+        await userEvent.selectOptions(screen.getByLabelText("Rework"), "osu-live");
 
         expect(screen.queryByText("Calculate my score on this beatmap")).not.toBeInTheDocument();
 
-        await userEvent.selectOptions(screen.getByLabelText("Variant"), "osu-rebalance");
+        await userEvent.selectOptions(screen.getByLabelText("Rework"), "osu-rebalance");
 
         expect(screen.queryByText("Calculate my score on this beatmap")).not.toBeInTheDocument();
     });
@@ -260,7 +260,7 @@ describe("BeatmapCalculatorPage", () => {
             },
         });
 
-        expect(screen.getByLabelText("Variant")).toHaveValue("osu-live");
+        expect(screen.getByLabelText("Rework")).toHaveValue("osu-live");
         expect(screen.getByLabelText("Beatmap link or ID")).toHaveValue("4321");
     });
 
@@ -269,6 +269,6 @@ describe("BeatmapCalculatorPage", () => {
             route: { pathname: "/calculate", state: { calculatorVariant: "flowaim" } },
         });
 
-        expect(screen.getByLabelText("Variant")).toHaveValue("droid-live");
+        expect(screen.getByLabelText("Rework")).toHaveValue("droid-live");
     });
 });

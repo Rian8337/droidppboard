@@ -89,7 +89,7 @@ function VariantCheckboxes({
     }
 
     if (!variantList.names) {
-        return <p className={styles.note}>Loading variants...</p>;
+        return <p className={styles.note}>Loading reworks...</p>;
     }
 
     const names = [
@@ -99,7 +99,7 @@ function VariantCheckboxes({
 
     return (
         <fieldset className={styles.variants}>
-            <legend>Variants</legend>
+            <legend>Reworks</legend>
             {names.map((variant) => (
                 <Checkbox
                     key={variant}
@@ -174,7 +174,7 @@ function CreateKeyForm({
                 checked={allVariants}
                 onChange={(event) => setAllVariants(event.target.checked)}
             >
-                Can use every variant
+                Can use every rework
             </Checkbox>
             <Checkbox
                 checked={canActForUsers}
@@ -288,7 +288,7 @@ function EditKeyPanel({
                         disabled={isBusy}
                         onChange={(event) => updating.mutate({ allVariants: event.target.checked })}
                     >
-                        Can use every variant
+                        Can use every rework
                     </Checkbox>
                     <Checkbox
                         checked={apiKey.canActForUsers}
@@ -301,7 +301,7 @@ function EditKeyPanel({
                     </Checkbox>
                     {apiKey.allVariants ? (
                         <p className={styles.note}>
-                            This key can use every variant, so there are no variants to pick.
+                            This key can use every rework, so there are no reworks to pick.
                         </p>
                     ) : (
                         <VariantCheckboxes

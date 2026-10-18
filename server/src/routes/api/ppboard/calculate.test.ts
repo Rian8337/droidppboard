@@ -135,7 +135,7 @@ describe("POST /calculate", () => {
             scope: "variant",
             variant: "droid-rebalance",
             baseline: "droid-live",
-            beatmap: { id: 123, title: "Test Song" },
+            beatmap: { id: 123, title: "Someone - Test Song (Mapper) [Hard]" },
         });
         expect(calculatePerformance.mock.calls.map((c) => c[0]).sort()).toEqual(
             ["droid-live", "droid-rebalance"],
@@ -154,7 +154,7 @@ describe("POST /calculate", () => {
 
         expect(res.status).toBe(200);
         expect(await res.json()).toMatchObject({
-            beatmap: { id: null, title: "Test Song" },
+            beatmap: { id: null, title: "Someone - Test Song (Mapper) [Hard]" },
             parameters: { beatmap: { file: true } },
         });
         expect(Util.downloadBeatmap).not.toHaveBeenCalled();
@@ -164,7 +164,7 @@ describe("POST /calculate", () => {
         const res = await post({ scope: "variant", variant: "droid-live" });
 
         expect(res.status).toBe(404);
-        expect(await res.json()).toEqual({ message: "Variant not found" });
+        expect(await res.json()).toEqual({ message: "Rework not found" });
         expect(calculatePerformance).not.toHaveBeenCalled();
     });
 
@@ -172,7 +172,7 @@ describe("POST /calculate", () => {
         const res = await post({ scope: "variant", variant: "secret" });
 
         expect(res.status).toBe(404);
-        expect(await res.json()).toEqual({ message: "Variant not found" });
+        expect(await res.json()).toEqual({ message: "Rework not found" });
         expect(Util.downloadBeatmap).not.toHaveBeenCalled();
         expect(calculatePerformance).not.toHaveBeenCalled();
     });
@@ -213,7 +213,7 @@ describe("POST /calculate", () => {
         const res = await post({ scope: "tool", variant: "flowaim" });
 
         expect(res.status).toBe(404);
-        expect(await res.json()).toEqual({ message: "Variant not found" });
+        expect(await res.json()).toEqual({ message: "Rework not found" });
         expect(calculatePerformance).not.toHaveBeenCalled();
     });
 

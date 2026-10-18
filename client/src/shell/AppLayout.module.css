@@ -18,12 +18,38 @@
 
 /* The sidebar of a desktop pushes the page over and stays in view as it scrolls. */
 .sidebar {
+    --slide-duration: 200ms;
+
     position: sticky;
     top: var(--top-bar-height);
     display: flex;
     flex: none;
     align-self: flex-start;
     height: calc(100svh - var(--top-bar-height));
+    transition:
+        transform var(--slide-duration) ease,
+        margin-right var(--slide-duration) ease,
+        visibility 0s;
+}
+
+/* A closed sidebar slides out to the left, then hides. On a desktop, it gives its room back to the page. */
+.sidebar[data-open="false"] {
+    transform: translateX(-100%);
+    visibility: hidden;
+    transition:
+        transform var(--slide-duration) ease,
+        margin-right var(--slide-duration) ease,
+        visibility 0s var(--slide-duration);
+}
+
+.body[data-breakpoint="desktop"] .sidebar[data-open="false"] {
+    margin-right: -320px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sidebar {
+        --slide-duration: 0s;
+    }
 }
 
 /* On a tablet or phone it is a drawer over the page, below the top bar. */
@@ -50,4 +76,17 @@
     inset: var(--top-bar-height) 0 0;
     z-index: 20;
     background: rgba(0, 0, 0, 0.5);
+    animation: fade-in 200ms ease;
+}
+
+@keyframes fade-in {
+    from {
+        opacity: 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .backdrop {
+        animation: none;
+    }
 }

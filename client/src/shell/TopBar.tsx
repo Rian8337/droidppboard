@@ -1,5 +1,7 @@
+import { faDiscord } from "@fortawesome/free-brands-svg-icons";
 import { faBars, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import type { Ref } from "react";
 import { useLocation, useMatch } from "react-router";
 import { useVariants } from "../api/variants";
 import { discordUrl } from "../utils/links";
@@ -11,6 +13,9 @@ import styles from "./TopBar.module.css";
 export interface TopBarProps {
     isSidebarOpen: boolean;
     onToggleSidebar: () => void;
+
+    /** The sidebar toggle's element, which a click outside the sidebar must not count. */
+    toggleRef?: Ref<HTMLButtonElement>;
 }
 
 const pageNames: ReadonlyMap<string, string> = new Map([
@@ -25,7 +30,7 @@ const pageNames: ReadonlyMap<string, string> = new Map([
 ]);
 
 /** The top bar: the sidebar toggle, where the person is, Discord and the account. */
-export function TopBar({ isSidebarOpen, onToggleSidebar }: TopBarProps) {
+export function TopBar({ isSidebarOpen, onToggleSidebar, toggleRef }: TopBarProps) {
     const { pathname } = useLocation();
     const variantName = useMatch("/v/:variant/*")?.params.variant;
     const { data: variants } = useVariants();
@@ -47,6 +52,7 @@ export function TopBar({ isSidebarOpen, onToggleSidebar }: TopBarProps) {
         <header className={styles.topBar}>
             <title>{pageTitle === null ? "PP Board" : `${pageTitle} · PP Board`}</title>
             <button
+                ref={toggleRef}
                 type="button"
                 className={styles.toggle}
                 aria-label={isSidebarOpen ? "Close menu" : "Open menu"}
@@ -57,6 +63,7 @@ export function TopBar({ isSidebarOpen, onToggleSidebar }: TopBarProps) {
             </button>
             <h1 className={styles.title}>{title}</h1>
             <a className={styles.discord} href={discordUrl} target="_blank" rel="noreferrer">
+                <FontAwesomeIcon icon={faDiscord} />
                 Discord
             </a>
             <AccountMenu />

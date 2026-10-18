@@ -32,7 +32,7 @@ describe("logging out on a private variant's page", () => {
                           currentVariant: flowaim,
                           data: leaderboardPlayers,
                       })
-                    : HttpResponse.json({ message: "Variant not found" }, { status: 404 });
+                    : HttpResponse.json({ message: "Rework not found" }, { status: 404 });
             }),
         );
 
@@ -46,6 +46,6 @@ describe("logging out on a private variant's page", () => {
         await userEvent.click(screen.getByRole("menuitem", { name: "Log out" }));
 
         expect(await finishWatching()).toBe(0);
-        expect(await screen.findByText("Variant not found")).toBeVisible();
+        expect(await screen.findByText("Rework not found")).toBeVisible();
     });
 });

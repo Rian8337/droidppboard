@@ -72,7 +72,7 @@ export function SnapshotPage({ scope }: SnapshotPageProps) {
         return <p className={styles.note}>Loading...</p>;
     }
 
-    const { calculation, createdAt } = snapshot;
+    const { calculation, createdAt, expiresAt } = snapshot;
     const canLoad = canLoadFromResult(calculation);
     const title = getSnapshotTitle(calculation, variants);
 
@@ -92,6 +92,7 @@ export function SnapshotPage({ scope }: SnapshotPageProps) {
             <h2 className={styles.taken}>
                 {`Snapshot taken ${formatUtcTime(createdAt)} on ${title}`}
             </h2>
+            <p className={styles.expiry}>Expires {formatUtcTime(expiresAt)}</p>
             <div className={styles.actions}>
                 <Button variant="secondary" onClick={loadFromResult} disabled={!canLoad}>
                     Load data from result

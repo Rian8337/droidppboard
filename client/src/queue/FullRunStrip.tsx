@@ -57,7 +57,7 @@ export function FullRunStrip({ run, canStop, now }: FullRunStripProps) {
             </p>
             {run.status === "paused" && (
                 <p className={styles.paused}>
-                    Paused while this variant is unavailable. It continues when the variant is back.
+                    Paused while this rework is unavailable. It continues when the rework is back.
                 </p>
             )}
             {stopping.error && (

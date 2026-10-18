@@ -18,11 +18,14 @@ describe("AllVariantsPage", () => {
 
         renderWithProviders(<AppRoutes />, { route: "/admin/variants", me: adminMe });
 
-        expect(await screen.findByText("droid-live")).toBeVisible();
-        expect(screen.getByText("osu-live")).toBeVisible();
-        expect(screen.getByText("droid-rebalance")).toBeVisible();
+        // The sidebar lists the public variants too, so only the table is looked in.
+        const table = within(await screen.findByRole("table"));
 
-        const flowaim = screen.getByText("flowaim").closest("tr")!;
+        expect(await table.findByText("droid-live")).toBeVisible();
+        expect(table.getByText("osu-live")).toBeVisible();
+        expect(table.getByText("droid-rebalance")).toBeVisible();
+
+        const flowaim = table.getByText("flowaim").closest("tr")!;
 
         expect(within(flowaim).getByText("Private")).toBeVisible();
         expect(within(flowaim).getByText("flow")).toBeVisible();
@@ -65,6 +68,6 @@ describe("AllVariantsPage", () => {
 
         renderWithProviders(<AppRoutes />, { route: "/admin/variants/nope", me: adminMe });
 
-        expect(await screen.findByText("Variant not found")).toBeVisible();
+        expect(await screen.findByText("Rework not found")).toBeVisible();
     });
 });

@@ -1,3 +1,8 @@
+/* A wide screen would spread the few columns far apart, so the queue stops growing. */
+.tab {
+    max-width: 1100px;
+}
+
 .note {
     margin: 0;
     padding: 16px;

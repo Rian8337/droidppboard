@@ -175,7 +175,7 @@ describe("BrokerClient", () => {
             body: {
                 error: {
                     code: "BROKER_UNAVAILABLE",
-                    message: "The variant service is unavailable",
+                    message: "The rework service is unavailable",
                 },
             },
         };

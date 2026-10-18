@@ -204,7 +204,7 @@ describe("moving an alias", () => {
         await userEvent.click(await screen.findByRole("button", { name: "Add alias" }));
 
         expect(
-            await screen.findByText("That alias belongs to a variant you don't manage."),
+            await screen.findByText("That alias belongs to a rework you don't manage."),
         ).toBeVisible();
     });
 });
@@ -350,7 +350,7 @@ describe("full-run controls", () => {
         expect(await screen.findByText("Recalculate all players")).toBeVisible();
         expect(
             screen.getByText(
-                "Recalculates every player in this variant, first adding any droid-rebalance player it is missing. If you stop and start again, players already done are skipped.",
+                "Recalculates every player in this rework, first adding any droid-rebalance player it is missing. If you stop and start again, players already done are skipped.",
             ),
         ).toBeVisible();
         expect(

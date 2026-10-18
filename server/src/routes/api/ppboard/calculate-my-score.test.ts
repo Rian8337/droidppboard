@@ -244,7 +244,7 @@ describe("POST /calculate/my-score", () => {
             beatmap: {
                 id: 123,
                 hash: osuFileHash,
-                title: "Test Song",
+                title: "Someone - Test Song (Mapper) [Hard]",
                 maxCombo: 2,
             },
             parameters: {
@@ -348,7 +348,7 @@ describe("POST /calculate/my-score", () => {
             const res = await post({ scope: "tool", variant: name });
 
             expect(res.status).toBe(404);
-            expect(await res.json()).toEqual({ message: "Variant not found" });
+            expect(await res.json()).toEqual({ message: "Rework not found" });
             expect(scoreServiceFetch).not.toHaveBeenCalled();
             expect(Util.downloadBeatmap).not.toHaveBeenCalled();
         },
@@ -358,7 +358,7 @@ describe("POST /calculate/my-score", () => {
         const res = await post({ scope: "variant", variant: "droid-live" });
 
         expect(res.status).toBe(404);
-        expect(await res.json()).toEqual({ message: "Variant not found" });
+        expect(await res.json()).toEqual({ message: "Rework not found" });
         expect(scoreServiceFetch).not.toHaveBeenCalled();
     });
 
@@ -366,7 +366,7 @@ describe("POST /calculate/my-score", () => {
         const res = await post({ scope: "variant", variant: "secret" });
 
         expect(res.status).toBe(404);
-        expect(await res.json()).toEqual({ message: "Variant not found" });
+        expect(await res.json()).toEqual({ message: "Rework not found" });
         expect(scoreServiceFetch).not.toHaveBeenCalled();
     });
 
@@ -374,7 +374,7 @@ describe("POST /calculate/my-score", () => {
         const res = await post({ scope: "tool", variant: "flowaim" });
 
         expect(res.status).toBe(404);
-        expect(await res.json()).toEqual({ message: "Variant not found" });
+        expect(await res.json()).toEqual({ message: "Rework not found" });
     });
 
     it("answers 503 when the score service fails", async () => {

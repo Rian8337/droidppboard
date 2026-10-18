@@ -171,7 +171,7 @@ export function buildCalculationResponse(
         beatmap: {
             id: input.beatmapId,
             hash: getBeatmapHash(input.osuFile),
-            title: beatmap.metadata.title,
+            title: beatmap.metadata.fullTitle,
             maxCombo: beatmap.maxCombo,
             cs: difficulty.cs,
             ar: difficulty.ar,
@@ -268,7 +268,7 @@ export async function calculateScore(
         }
 
         if (response.status === 404) {
-            return { error: "Variant not found", status: 404 };
+            return { error: "Rework not found", status: 404 };
         }
 
         if (response.status >= 400 && response.status < 500) {

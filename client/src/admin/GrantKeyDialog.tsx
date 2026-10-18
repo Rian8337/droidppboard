@@ -68,7 +68,7 @@ function GrantKeyForm({ variant, onClose }: Pick<GrantKeyDialogProps, "variant" 
                 ))}
             </Select>
             {grantable.length === 0 && (
-                <p className={styles.note}>Every active key can use this variant already.</p>
+                <p className={styles.note}>Every active key can use this rework already.</p>
             )}
             {granting.error && (
                 <p role="alert" className={styles.error}>

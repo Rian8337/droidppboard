@@ -156,7 +156,7 @@ router.get(
 
             if (resolved === "unavailable") {
                 res.status(503).json({
-                    message: "The variant list is unavailable",
+                    message: "The rework list is unavailable",
                 });
 
                 return;

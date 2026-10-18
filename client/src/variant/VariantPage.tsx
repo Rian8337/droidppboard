@@ -31,7 +31,7 @@ export function VariantPage() {
     }
 
     if (!variant) {
-        return <NotFoundPage message="Variant not found" />;
+        return <NotFoundPage message="Rework not found" />;
     }
 
     if (!isVariantTab(tab) || (tab === "admin" && !canManageVariant(me, variant.name))) {

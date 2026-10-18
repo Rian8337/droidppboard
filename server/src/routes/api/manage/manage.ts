@@ -77,7 +77,7 @@ router.get(
 
         if (!caller) {
             res.status(502).json({
-                message: "The variant service is unavailable",
+                message: "The rework service is unavailable",
             });
 
             return;
@@ -103,7 +103,7 @@ router.get(
 
         if (people.some((person) => person === null)) {
             res.status(502).json({
-                message: "The variant service is unavailable",
+                message: "The rework service is unavailable",
             });
 
             return;
@@ -147,7 +147,7 @@ router.use(
                 "Could not forward a management request to the broker",
             );
             res.status(502).json({
-                message: "The variant service is unavailable",
+                message: "The rework service is unavailable",
             });
 
             return;

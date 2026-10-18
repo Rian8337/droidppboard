@@ -40,7 +40,7 @@ export function BeatmapCalculatorPage() {
                 getVariantTitle={getToolVariantLabel}
                 variantPicker={
                     <Select
-                        label="Variant"
+                        label="Rework"
                         value={variant}
                         onChange={(event) => {
                             if (isToolVariantName(event.target.value)) {

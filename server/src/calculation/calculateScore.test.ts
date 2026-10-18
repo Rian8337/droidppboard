@@ -292,7 +292,7 @@ describe("calculateScore", () => {
             beatmap: {
                 id: null,
                 hash: createHash("md5").update(osuFile).digest("hex"),
-                title: "Test Song",
+                title: "Someone - Test Song (Mapper) [Hard]",
                 maxCombo: 4,
                 od: 10,
             },
@@ -316,7 +316,7 @@ describe("calculateScore", () => {
         });
 
         expect(await calculateScore(input({}))).toEqual({
-            error: "Variant not found",
+            error: "Rework not found",
             status: 404,
         });
     });

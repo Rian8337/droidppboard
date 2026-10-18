@@ -242,7 +242,7 @@ export function useSetAlias(variant: string): UseMutationResult<void, ApiError, 
             } catch (error) {
                 // The broker checks both ends of a move: the variant getting the alias and the one losing it.
                 if (error instanceof ApiError && error.status === 403) {
-                    throw new ApiError(403, "That alias belongs to a variant you don't manage.");
+                    throw new ApiError(403, "That alias belongs to a rework you don't manage.");
                 }
 
                 throw error;

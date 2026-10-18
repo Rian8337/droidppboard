@@ -12,7 +12,7 @@ export interface FullRunControlsProps {
 }
 
 const startDescription =
-    "Recalculates every player in this variant, first adding any droid-rebalance player it is missing. If you stop and start again, players already done are skipped.";
+    "Recalculates every player in this rework, first adding any droid-rebalance player it is missing. If you stop and start again, players already done are skipped.";
 const restartDescription =
     "Clears the progress of the previous run, so every player is recalculated again.";
 

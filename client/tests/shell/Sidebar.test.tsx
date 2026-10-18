@@ -43,13 +43,14 @@ describe("Sidebar", () => {
 
         const rebalance = await screen.findByRole("link", { name: /Rebalance/ });
 
-        expect(rebalance).toHaveTextContent(/droid-rebalance \| Last updated: .+ ago/);
+        expect(rebalance).toHaveTextContent(
+            /droid-rebalance\s*Last updated: .+ ago \(2026-10-11 13:16 UTC\)/,
+        );
 
         const untitled = screen.getByRole("link", { name: /untitled/ });
 
         expect(untitled).toHaveTextContent("untitled");
         expect(untitled).not.toHaveTextContent("Last updated");
-        expect(untitled).not.toHaveTextContent("|");
     });
 
     it("marks the current variant", async () => {
@@ -80,7 +81,7 @@ describe("Sidebar", () => {
         renderWithProviders(<Sidebar onNavigate={() => {}} />);
         await screen.findByRole("link", { name: /Flow aim/ });
 
-        const search = screen.getByRole("searchbox", { name: "Search variants" });
+        const search = screen.getByRole("searchbox", { name: "Search reworks" });
 
         await userEvent.type(search, "FLOW");
 
@@ -100,7 +101,7 @@ describe("Sidebar", () => {
 
         await userEvent.type(screen.getByRole("searchbox"), "zzz");
 
-        expect(screen.getByText("No variants match.")).toBeVisible();
+        expect(screen.getByText("No reworks match.")).toBeVisible();
     });
 
     it("shows a globe with a tooltip on tap for private variants only", async () => {
@@ -108,13 +109,13 @@ describe("Sidebar", () => {
         renderWithProviders(<Sidebar onNavigate={() => {}} />);
         await screen.findByRole("link", { name: /Flow aim/ });
 
-        const globes = screen.getAllByLabelText("Private variant");
+        const globes = screen.getAllByLabelText("Private rework");
 
         expect(globes).toHaveLength(1);
 
         await userEvent.click(globes[0]);
 
-        expect(screen.getByRole("tooltip")).toHaveTextContent("Private variant");
+        expect(screen.getByRole("tooltip")).toHaveTextContent("Private rework");
     });
 
     it("pins droid-rebalance", async () => {

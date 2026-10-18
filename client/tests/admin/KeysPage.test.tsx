@@ -57,14 +57,14 @@ describe("KeysPage", () => {
         const bot = (await screen.findByText("bot")).closest("tr")!;
 
         expect(within(bot).getByText("60 per minute")).toBeVisible();
-        expect(within(bot).getByText("2 variants")).toBeVisible();
+        expect(within(bot).getByText("2 reworks")).toBeVisible();
         expect(within(bot).getByText("No")).toBeVisible();
         expect(within(bot).getByText("Active")).toBeVisible();
 
         const site = screen.getByText("site").closest("tr")!;
 
         expect(within(site).getByText("Unlimited")).toBeVisible();
-        expect(within(site).getByText("All variants")).toBeVisible();
+        expect(within(site).getByText("All reworks")).toBeVisible();
         expect(within(site).getByText("Yes")).toBeVisible();
 
         const old = screen.getByText("old").closest("tr")!;
@@ -201,7 +201,7 @@ describe("editing a key", () => {
         renderKeys();
         await userEvent.click(await screen.findByText("bot"));
         await userEvent.click(
-            await screen.findByRole("checkbox", { name: "Can use every variant" }),
+            await screen.findByRole("checkbox", { name: "Can use every rework" }),
         );
         await userEvent.click(screen.getByRole("checkbox", { name: "Can act for users" }));
 
@@ -301,7 +301,7 @@ describe("the variants of a key", () => {
         renderKeys();
         await userEvent.click(await screen.findByText("bot"));
 
-        expect(await screen.findByText("Loading variants...")).toBeVisible();
+        expect(await screen.findByText("Loading reworks...")).toBeVisible();
         expect(screen.queryByRole("group", { name: "Variants" })).not.toBeInTheDocument();
     });
 
@@ -410,7 +410,7 @@ describe("creating a key", () => {
         await userEvent.click(await screen.findByRole("button", { name: "Create key" }));
         await userEvent.type(await screen.findByRole("textbox", { name: "Name" }), "fresh");
         await userEvent.click(screen.getByRole("checkbox", { name: "flowaim" }));
-        await userEvent.click(screen.getByRole("checkbox", { name: "Can use every variant" }));
+        await userEvent.click(screen.getByRole("checkbox", { name: "Can use every rework" }));
 
         expect(screen.queryByRole("checkbox", { name: "flowaim" })).not.toBeInTheDocument();
 

@@ -38,7 +38,7 @@ describe("useStartFullRun", () => {
         server.use(
             http.post("/api/recalc/full-runs/:variant/start", () =>
                 HttpResponse.json(
-                    { message: "A full run of this variant is already running" },
+                    { message: "A full run of this rework is already running" },
                     { status: 409 },
                 ),
             ),
@@ -49,7 +49,7 @@ describe("useStartFullRun", () => {
         result.current.mutate({ variant: "droid-rebalance", restart: false });
         await waitFor(() => expect(result.current.isError).toBe(true));
 
-        expect(result.current.error?.message).toBe("A full run of this variant is already running");
+        expect(result.current.error?.message).toBe("A full run of this rework is already running");
     });
 });
 

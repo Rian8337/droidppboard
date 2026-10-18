@@ -81,7 +81,7 @@ export function ProfilePage() {
     }
 
     if (!variant) {
-        return <NotFoundPage message="Variant not found" />;
+        return <NotFoundPage message="Rework not found" />;
     }
 
     if (Number.isNaN(uid)) {

@@ -99,14 +99,14 @@ describe("requestJson", () => {
     it("uses the message of the server's error body", async () => {
         server.use(
             http.get("/api/thing", () =>
-                HttpResponse.json({ message: "Variant not found" }, { status: 404 }),
+                HttpResponse.json({ message: "Rework not found" }, { status: 404 }),
             ),
         );
 
         const error = await catchError(requestJson("GET", "/api/thing"));
 
         expect(error.status).toBe(404);
-        expect(error.message).toBe("Variant not found");
+        expect(error.message).toBe("Rework not found");
     });
 
     it("uses the message of a broker error body", async () => {

@@ -228,7 +228,7 @@ describe("management routes", () => {
 
             expect(res.status).toBe(502);
             expect(await res.json()).toEqual({
-                message: "The variant service is unavailable",
+                message: "The rework service is unavailable",
             });
             expect(error).toHaveBeenCalledTimes(1);
             expect(error).toHaveBeenCalledWith(

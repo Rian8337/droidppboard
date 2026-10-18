@@ -86,6 +86,25 @@ describe("AppLayout", () => {
         expect(screen.queryByRole("complementary")).not.toBeInTheDocument();
     });
 
+    it("closes the sidebar when the page next to it is clicked on a desktop", async () => {
+        vi.mocked(useBreakpoint).mockReturnValue("desktop");
+        renderLayout();
+
+        await userEvent.click(screen.getByText("The page"));
+
+        expect(screen.queryByRole("complementary")).not.toBeInTheDocument();
+        expect(screen.getByRole("button", { name: "Open menu" })).toBeVisible();
+    });
+
+    it("keeps the sidebar open when it is clicked inside", async () => {
+        vi.mocked(useBreakpoint).mockReturnValue("desktop");
+        renderLayout();
+
+        await userEvent.click(screen.getByRole("searchbox", { name: "Search reworks" }));
+
+        expect(screen.getByRole("complementary")).toBeVisible();
+    });
+
     it("has no backdrop on a phone", async () => {
         vi.mocked(useBreakpoint).mockReturnValue("phone");
         const { container } = renderLayout();

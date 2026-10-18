@@ -20,6 +20,9 @@ export interface EntryRowsProps {
     /** Whether the age is when the entry finished rather than when it was queued. */
     isFinished: boolean;
 
+    /** Whether each entry shows its number in the list, as in the queue. */
+    isNumbered?: boolean;
+
     /** An action for an entry, such as Remove, or nothing. */
     renderAction?: (entry: RecalcEntryView) => ReactNode;
 }
@@ -31,16 +34,15 @@ export function EntryRows({
     showVariant,
     now,
     isFinished,
+    isNumbered = false,
     renderAction,
 }: EntryRowsProps) {
     return (
         <ul className={styles.rows}>
-            {entries.map((entry) => (
+            {entries.map((entry, index) => (
                 <li key={entry.id} className={styles.row}>
                     <span className={styles.player}>
-                        {entry.position !== null && (
-                            <span className={styles.position}>#{entry.position}</span>
-                        )}
+                        {isNumbered && <span className={styles.position}>#{index + 1}</span>}
                         {entry.username}
                     </span>
                     {showVariant && <Pill>{getVariantLabel(variants, entry.variant)}</Pill>}

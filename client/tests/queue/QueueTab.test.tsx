@@ -148,7 +148,7 @@ describe("QueueTab", () => {
             expect(within(getQueueSection()).queryByText("milosz")).not.toBeInTheDocument();
         });
 
-        it("shows position, who queued and the status of each entry", async () => {
+        it("numbers the entries and shows who queued and the status of each entry", async () => {
             serveQueue({ queue: [mrekk, cryshina] });
 
             renderTab();
@@ -158,7 +158,8 @@ describe("QueueTab", () => {
 
             expect(running.getByText("Calculating")).toBeVisible();
             expect(running.getByText("20/100 scores")).toBeVisible();
-            expect(waiting.getAllByRole("cell")[0]).toHaveTextContent("1");
+            expect(running.getAllByRole("cell")[0]).toHaveTextContent("1");
+            expect(waiting.getAllByRole("cell")[0]).toHaveTextContent("2");
             expect(waiting.getByText("player")).toBeVisible();
             expect(waiting.getByText("Waiting")).toBeVisible();
         });
@@ -200,7 +201,7 @@ describe("QueueTab", () => {
             server.use(
                 http.get("/api/recalc/queue", () =>
                     HttpResponse.json(
-                        { message: "The variant service is unavailable" },
+                        { message: "The rework service is unavailable" },
                         { status: 503 },
                     ),
                 ),
@@ -208,7 +209,7 @@ describe("QueueTab", () => {
 
             renderTab();
 
-            expect(await screen.findByText("The variant service is unavailable")).toBeVisible();
+            expect(await screen.findByText("The rework service is unavailable")).toBeVisible();
 
             server.use(
                 http.get("/api/recalc/queue", () =>
@@ -234,7 +235,7 @@ describe("QueueTab", () => {
         });
     });
 
-    describe("Show all variants", () => {
+    describe("Show all reworks", () => {
         it("requests the global queue and tags each entry with its variant", async () => {
             const fake = serveQueue(
                 { queue: [cryshina] },
@@ -256,7 +257,7 @@ describe("QueueTab", () => {
             await screen.findByText("cryshina");
             expect(screen.queryByText("otherplayer")).not.toBeInTheDocument();
 
-            await userEvent.click(screen.getByRole("checkbox", { name: "Show all variants" }));
+            await userEvent.click(screen.getByRole("checkbox", { name: "Show all reworks" }));
 
             expect(await screen.findByText("otherplayer")).toBeVisible();
             expect(fake.requests.some((url) => !url.searchParams.has("variant"))).toBe(true);
@@ -278,10 +279,10 @@ describe("QueueTab", () => {
             renderTab();
 
             await userEvent.click(
-                await screen.findByRole("checkbox", { name: "Show all variants" }),
+                await screen.findByRole("checkbox", { name: "Show all reworks" }),
             );
             await screen.findByText("otherplayer");
-            await userEvent.click(screen.getByRole("checkbox", { name: "Show all variants" }));
+            await userEvent.click(screen.getByRole("checkbox", { name: "Show all reworks" }));
 
             await waitFor(() => {
                 expect(screen.queryByText("otherplayer")).not.toBeInTheDocument();
@@ -311,7 +312,7 @@ describe("QueueTab", () => {
 
             expect(getPollInterval("droid-rebalance")).toBe(recalcPollIntervalMs);
 
-            await userEvent.click(screen.getByRole("checkbox", { name: "Show all variants" }));
+            await userEvent.click(screen.getByRole("checkbox", { name: "Show all reworks" }));
 
             await waitFor(() => expect(getPollInterval(null)).toBe(recalcPollIntervalMs));
             expect(getPollInterval("droid-rebalance")).toBe(recalcBackgroundPollIntervalMs);
@@ -392,7 +393,7 @@ describe("QueueTab", () => {
             renderTab();
 
             expect(
-                await screen.findByText(/Paused while this variant is unavailable/),
+                await screen.findByText(/Paused while this rework is unavailable/),
             ).toBeVisible();
             expect(screen.getByText("Recalculating all players")).toBeVisible();
         });
@@ -443,7 +444,7 @@ describe("QueueTab", () => {
             server.use(
                 http.post("/api/recalc/full-runs/:variant/stop", () =>
                     HttpResponse.json(
-                        { message: "No full run of this variant is running" },
+                        { message: "No full run of this rework is running" },
                         { status: 409 },
                     ),
                 ),
@@ -453,7 +454,7 @@ describe("QueueTab", () => {
 
             await userEvent.click(await screen.findByRole("button", { name: "Stop" }));
 
-            expect(await screen.findByText("No full run of this variant is running")).toBeVisible();
+            expect(await screen.findByText("No full run of this rework is running")).toBeVisible();
         });
     });
 
@@ -548,6 +549,30 @@ describe("QueueTab", () => {
             await waitFor(() => {
                 expect(bodies).toEqual([{ variant: "droid-rebalance", uid: 1234 }]);
             });
+        });
+
+        it("queues the person themselves by uid with Add me", async () => {
+            serveQueue({ allowance });
+            const bodies: unknown[] = [];
+
+            server.use(
+                http.post("/api/recalc/queue", async ({ request }) => {
+                    bodies.push(await request.json());
+
+                    return HttpResponse.json(buildQueueEntry(), { status: 201 });
+                }),
+            );
+
+            renderTab(plainMe);
+
+            await userEvent.click(await screen.findByRole("button", { name: "Add me" }));
+
+            await waitFor(() => {
+                expect(bodies).toEqual([{ variant: "droid-rebalance", uid: plainMe.uid }]);
+            });
+            expect(
+                await screen.findByText(`Added ${plainMe.username} to the queue.`),
+            ).toBeVisible();
         });
 
         it("queues on Enter", async () => {
@@ -735,12 +760,12 @@ describe("QueueTab", () => {
 
             await screen.findByText("cryshina");
 
-            expect(screen.getByRole("checkbox", { name: "Show all variants" })).toBeVisible();
+            expect(screen.getByRole("checkbox", { name: "Show all reworks" })).toBeVisible();
 
             await userEvent.click(screen.getByRole("radio", { name: "Recently finished" }));
 
             expect(
-                screen.queryByRole("checkbox", { name: "Show all variants" }),
+                screen.queryByRole("checkbox", { name: "Show all reworks" }),
             ).not.toBeInTheDocument();
         });
     });

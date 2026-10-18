@@ -88,11 +88,11 @@ describe("Tabs", () => {
                 <Tabs
                     tabs={[{ id: "info", label: "Info", to: "/info" }]}
                     activeId="info"
-                    aria-label="Variant pages"
+                    aria-label="Rework pages"
                 />
             </MemoryRouter>,
         );
 
-        expect(screen.getByRole("navigation", { name: "Variant pages" })).toBeVisible();
+        expect(screen.getByRole("navigation", { name: "Rework pages" })).toBeVisible();
     });
 });

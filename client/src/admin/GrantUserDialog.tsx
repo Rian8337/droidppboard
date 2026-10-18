@@ -66,7 +66,7 @@ function GrantUserForm({
             />
             <p className={styles.note}>
                 {isAdmin
-                    ? "A person can use the variant even if it is private. Managers and admins can too."
+                    ? "A person can use the rework even if it is private. Managers and admins can too."
                     : "You can give access to people who have no role. Managers and admins are set up by an admin."}
             </p>
             {granting.error && (

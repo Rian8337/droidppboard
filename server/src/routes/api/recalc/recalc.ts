@@ -48,7 +48,7 @@ function requireUid(res: Response): number | undefined {
 }
 
 function answerBrokerUnavailable(res: Response) {
-    res.status(503).json({ message: "The variant service is unavailable" });
+    res.status(503).json({ message: "The rework service is unavailable" });
 }
 
 /**
@@ -70,7 +70,7 @@ async function resolveVariantOrAnswer(
     }
 
     if (resolved === "notFound") {
-        res.status(404).json({ message: "Variant not found" });
+        res.status(404).json({ message: "Rework not found" });
 
         return undefined;
     }
@@ -113,7 +113,7 @@ router.get(
 
         // Query parameters can be parsed into arrays or objects, which name no variant.
         if (requested !== undefined && typeof requested !== "string") {
-            res.status(404).json({ message: "Variant not found" });
+            res.status(404).json({ message: "Rework not found" });
 
             return;
         }
@@ -137,7 +137,7 @@ router.get(
         }
 
         if (visible === "notFound") {
-            res.status(404).json({ message: "Variant not found" });
+            res.status(404).json({ message: "Rework not found" });
 
             return;
         }
@@ -197,7 +197,7 @@ router.post(
         const calculators = calculatorCount(variant);
 
         if (!variant.available || calculators < 1) {
-            res.status(409).json({ message: "This variant is unavailable" });
+            res.status(409).json({ message: "This rework is unavailable" });
 
             return;
         }
@@ -227,7 +227,7 @@ router.post(
 
         if (result.reason === "duplicate") {
             res.status(409).json({
-                message: "This player is already queued for this variant",
+                message: "This player is already queued for this rework",
             });
 
             return;
@@ -369,7 +369,7 @@ router.post(
 
         if (result === "alreadyRunning") {
             res.status(409).json({
-                message: "A full run of this variant is already running",
+                message: "A full run of this rework is already running",
             });
 
             return;
@@ -393,7 +393,7 @@ router.post(
             "notRunning"
         ) {
             res.status(409).json({
-                message: "No full run of this variant is running",
+                message: "No full run of this rework is running",
             });
 
             return;

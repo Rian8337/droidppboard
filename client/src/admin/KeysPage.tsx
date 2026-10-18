@@ -22,10 +22,10 @@ type Selection = { kind: "none" } | { kind: "new" } | { kind: "key"; name: strin
 
 function formatScope(key: AdminKey): string {
     if (key.allVariants) {
-        return "All variants";
+        return "All reworks";
     }
 
-    return `${key.grants.length} ${key.grants.length === 1 ? "variant" : "variants"}`;
+    return `${key.grants.length} ${key.grants.length === 1 ? "rework" : "reworks"}`;
 }
 
 const columns: Column<AdminKey>[] = [

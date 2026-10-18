@@ -33,14 +33,14 @@ export function AdminVariantPage() {
     const variant = variants.data.find((candidate) => candidate.name === name);
 
     if (!variant) {
-        return <NotFoundPage message="Variant not found" />;
+        return <NotFoundPage message="Rework not found" />;
     }
 
     return (
         <div className={styles.page}>
             <Link to="/admin/variants" className={styles.back}>
                 <FontAwesomeIcon icon={faChevronLeft} />
-                All variants
+                All reworks
             </Link>
             <div>
                 <h2 className={styles.title}>{getVariantTitle(variant)}</h2>

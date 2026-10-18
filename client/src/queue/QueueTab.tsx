@@ -74,7 +74,7 @@ function Queue({ variant }: QueueTabProps) {
     const recentList = <RecentList view={view} now={now} />;
 
     return (
-        <div>
+        <div className={styles.tab}>
             {!isMePending && (
                 <QueueAddBar
                     variant={variant.name}

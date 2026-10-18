@@ -38,7 +38,7 @@ describe("VariantPage", () => {
     it("says when the variant is not found", async () => {
         renderPage("/v/nothing/info");
 
-        expect(await screen.findByText("Variant not found")).toBeVisible();
+        expect(await screen.findByText("Rework not found")).toBeVisible();
     });
 
     it("does not show a private variant to someone who cannot see it", async () => {
@@ -50,7 +50,7 @@ describe("VariantPage", () => {
             { route: "/v/flowaim/info" },
         );
 
-        expect(await screen.findByText("Variant not found")).toBeVisible();
+        expect(await screen.findByText("Rework not found")).toBeVisible();
         expect(screen.queryByText("An experiment with flow aim.")).not.toBeInTheDocument();
     });
 

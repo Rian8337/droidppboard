@@ -23,7 +23,7 @@ export interface QueueAddBarProps {
     loadedAt: number;
 }
 
-/** Queues a player by name or uid, and says how many more the person may queue. */
+/** Queues a player by name or uid, or the person themselves, and says how many more they may queue. */
 export function QueueAddBar({ variant, me, allowance, loadedAt }: QueueAddBarProps) {
     const location = useLocation();
     const now = useNow(1000);
@@ -46,28 +46,35 @@ export function QueueAddBar({ variant, me, allowance, loadedAt }: QueueAddBarPro
         );
     }
 
-    function queuePlayer(event: SubmitEvent<HTMLFormElement>) {
-        event.preventDefault();
-
-        if (trimmed === "" || queuing.isPending) {
+    /** Queues a player by uid or by what was typed, and names them once they are queued. */
+    function queuePlayer(target: number | string, name: string, onQueued?: () => void) {
+        if (queuing.isPending) {
             return;
         }
 
         setQueuedName(null);
         queuing.mutate(
-            { variant, player: trimmed },
+            { variant, player: target },
             {
                 onSuccess: () => {
-                    setQueuedName(trimmed);
-                    setPlayer("");
+                    setQueuedName(name);
+                    onQueued?.();
                 },
             },
         );
     }
 
+    function queueTypedPlayer(event: SubmitEvent<HTMLFormElement>) {
+        event.preventDefault();
+
+        if (trimmed !== "") {
+            queuePlayer(trimmed, trimmed, () => setPlayer(""));
+        }
+    }
+
     return (
         <div className={styles.addBar}>
-            <form className={styles.form} onSubmit={queuePlayer}>
+            <form className={styles.form} onSubmit={queueTypedPlayer}>
                 <TextField
                     className={styles.player}
                     aria-label="Player name or ID"
@@ -79,6 +86,13 @@ export function QueueAddBar({ variant, me, allowance, loadedAt }: QueueAddBarPro
                 />
                 <Button type="submit" disabled={trimmed === "" || queuing.isPending}>
                     {queuing.isPending ? "Adding..." : "Add to queue"}
+                </Button>
+                <Button
+                    variant="secondary"
+                    disabled={queuing.isPending}
+                    onClick={() => queuePlayer(me.uid, me.username)}
+                >
+                    Add me
                 </Button>
                 {allowance && (
                     <span className={styles.slots}>

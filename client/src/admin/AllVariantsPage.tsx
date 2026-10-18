@@ -60,7 +60,7 @@ export function AllVariantsPage() {
             rows={variants.data}
             rowKey={(variant) => variant.name}
             onRowClick={(variant) => void navigate(getAdminVariantPath(variant.name))}
-            emptyText="There are no variants."
+            emptyText="There are no reworks."
         />
     );
 }

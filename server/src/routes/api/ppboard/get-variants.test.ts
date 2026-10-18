@@ -10,9 +10,7 @@ let uid: number | undefined;
 let server: Server;
 let baseUrl: string;
 
-function variant(
-    overrides: Partial<PPVariant> & { name: string },
-): PPVariant {
+function variant(overrides: Partial<PPVariant> & { name: string }): PPVariant {
     return {
         title: null,
         aliases: [],
@@ -97,7 +95,7 @@ describe("GET /variants", () => {
         expect(res.status).toBe(503);
         expect(res.headers.get("cache-control")).toBe("no-store");
         expect(await res.json()).toEqual({
-            message: "The variant list is unavailable",
+            message: "The rework list is unavailable",
         });
     });
 });

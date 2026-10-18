@@ -57,5 +57,5 @@ export function VariantTabs({ variant, activeTab }: VariantTabsProps) {
         .filter((id) => id !== "admin" || canManage)
         .map((id) => ({ id, ...tabDetails[id], to: getVariantPath(variant, id) }));
 
-    return <Tabs tabs={tabs} activeId={activeTab} aria-label="Variant pages" />;
+    return <Tabs tabs={tabs} activeId={activeTab} aria-label="Rework pages" />;
 }

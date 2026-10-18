@@ -99,7 +99,7 @@ function calculation(
         beatmap: {
             id: 123,
             hash: "abc",
-            title: "Test Song",
+            title: "Someone - Test Song (Mapper) [Hard]",
             maxCombo: 2,
             cs: 4,
             ar: 9,
@@ -305,7 +305,10 @@ describe("calculation snapshots", () => {
                 scope: "variant",
                 variant: "droid-rebalance",
                 baseline: "droid-live",
-                beatmap: { id: 123, title: "Test Song" },
+                beatmap: {
+                    id: 123,
+                    title: "Someone - Test Song (Mapper) [Hard]",
+                },
             });
         });
 
@@ -457,7 +460,7 @@ describe("calculation snapshots", () => {
             const res = await post({ variant: "secret" });
 
             expect(res.status).toBe(404);
-            expect(await res.json()).toEqual({ message: "Variant not found" });
+            expect(await res.json()).toEqual({ message: "Rework not found" });
             expect(insertSnapshot).not.toHaveBeenCalled();
         });
 

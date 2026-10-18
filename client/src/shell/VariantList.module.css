@@ -77,6 +77,12 @@
     white-space: nowrap;
 }
 
+/* The age and the date may wrap rather than be cut off. */
+.updated {
+    color: var(--muted);
+    font-size: 11px;
+}
+
 .pin {
     flex: none;
     color: var(--accent);

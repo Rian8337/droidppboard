@@ -211,6 +211,7 @@ describe("SnapshotPage", () => {
         expect(
             await screen.findByText("Snapshot taken 2026-10-12 08:00 UTC on Rebalance"),
         ).toBeVisible();
+        expect(screen.getByText("Expires 2026-11-11 08:00 UTC")).toBeVisible();
 
         const panel = screen.getByRole("article", { name: "Calculation result" });
 
@@ -263,7 +264,7 @@ describe("SnapshotPage", () => {
         await userEvent.click(await screen.findByRole("button", { name: "Load data from result" }));
 
         expect(await screen.findByLabelText("Beatmap link or ID")).toHaveValue("1234");
-        expect(screen.getByLabelText("Variant")).toHaveValue("osu-rebalance");
+        expect(screen.getByLabelText("Rework")).toHaveValue("osu-rebalance");
     });
 
     it("cannot load the data of a result for an uploaded file", async () => {
@@ -333,13 +334,13 @@ describe("SnapshotPage", () => {
     it("shows other errors with a way to try again", async () => {
         server.use(
             http.get("/api/ppboard/snapshots/:id", () =>
-                HttpResponse.json({ message: "The variant list is unavailable" }, { status: 503 }),
+                HttpResponse.json({ message: "The rework list is unavailable" }, { status: 503 }),
             ),
         );
         renderSnapshotPage("/v/droid-rebalance/calculator/s/abc1234567");
 
         expect(await screen.findByRole("alert")).toHaveTextContent(
-            "The variant list is unavailable",
+            "The rework list is unavailable",
         );
         expect(screen.getByRole("button", { name: "Try again" })).toBeVisible();
     });

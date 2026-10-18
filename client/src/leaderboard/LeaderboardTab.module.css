@@ -1,3 +1,8 @@
+/* A wide screen would spread the few columns far apart, so the leaderboard stops growing. */
+.tab {
+    max-width: 960px;
+}
+
 .toolbar {
     display: flex;
     flex-wrap: wrap;

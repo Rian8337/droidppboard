@@ -124,7 +124,7 @@ function GrantedUsers({ variant, me }: AccessTableProps) {
                 columns={columns}
                 rows={rows}
                 rowKey={(row) => String(row.uid)}
-                emptyText="Nobody has been granted this variant."
+                emptyText="Nobody has been granted this rework."
             />
             {me.role === "manager" && (
                 <p className={styles.note}>
@@ -203,10 +203,10 @@ function GrantedKeys({ variant }: { variant: string }) {
                 columns={columns}
                 rows={rows}
                 rowKey={(row) => row.name}
-                emptyText="No API key has access to this variant."
+                emptyText="No API key has access to this rework."
             />
             <p className={styles.note}>
-                Inherited keys can use every variant, so there is no access to remove here.
+                Inherited keys can use every rework, so there is no access to remove here.
             </p>
             {changing.error && (
                 <p role="alert" className={styles.error}>

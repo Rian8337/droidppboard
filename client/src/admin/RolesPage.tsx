@@ -179,7 +179,7 @@ export function RolesPage() {
                 <p className={styles.note}>
                     {pending?.uid === me?.uid
                         ? "This is your own role. Without the admin role you can no longer open the admin area, and only another admin can give it back."
-                        : "They keep any variants they were granted."}
+                        : "They keep any reworks they were granted."}
                 </p>
                 <div className={styles.actions}>
                     <Button variant="ghost" onClick={() => setPending(null)}>

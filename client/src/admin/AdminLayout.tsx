@@ -18,7 +18,7 @@ const tabs: readonly Tab[] = [
     },
     {
         id: "variants",
-        label: "All variants",
+        label: "All reworks",
         icon: <FontAwesomeIcon icon={faLayerGroup} />,
         to: "/admin/variants",
     },

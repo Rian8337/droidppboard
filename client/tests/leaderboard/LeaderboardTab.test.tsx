@@ -232,14 +232,14 @@ describe("LeaderboardTab", () => {
     it("shows the error and retries", async () => {
         server.use(
             http.get("/api/ppboard/prototype/getleaderboard", () =>
-                HttpResponse.json({ message: "Variant not found" }, { status: 404 }),
+                HttpResponse.json({ message: "Rework not found" }, { status: 404 }),
             ),
         );
         const user = userEvent.setup();
 
         renderTab();
 
-        expect(await screen.findByRole("alert")).toHaveTextContent("Variant not found");
+        expect(await screen.findByRole("alert")).toHaveTextContent("Rework not found");
 
         answerWith(() => leaderboardPlayers);
         await user.click(screen.getByRole("button", { name: "Try again" }));

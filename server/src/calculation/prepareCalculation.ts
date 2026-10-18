@@ -71,17 +71,17 @@ export async function prepareCalculation(
         );
 
         if (resolved === "notFound") {
-            return { error: "Variant not found", status: 404 };
+            return { error: "Rework not found", status: 404 };
         }
 
         if (resolved === "unavailable") {
-            return { error: "The variant list is unavailable", status: 503 };
+            return { error: "The rework list is unavailable", status: 503 };
         }
 
         variant = resolved.current;
     } else {
         if (!isToolVariantName(request.variant)) {
-            return { error: "Variant not found", status: 404 };
+            return { error: "Rework not found", status: 404 };
         }
 
         variant = await BrokerClient.getVariant(request.variant, actingUid);
@@ -91,7 +91,7 @@ export async function prepareCalculation(
         options.isDroidOnly &&
         (variant?.name ?? request.variant).startsWith("osu-")
     ) {
-        return { error: "Variant not found", status: 404 };
+        return { error: "Rework not found", status: 404 };
     }
 
     let osuFile = "";

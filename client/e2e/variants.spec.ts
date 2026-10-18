@@ -16,6 +16,8 @@ test("switching variants through the sidebar or the drawer", async ({ page }, te
     }
 
     await expect(sidebar).toBeVisible();
+    // The drawer slides in, so it is measured once it stops.
+    await page.waitForFunction(() => document.getAnimations().length === 0);
 
     const viewport = page.viewportSize()!;
     const box = (await sidebar.boundingBox())!;

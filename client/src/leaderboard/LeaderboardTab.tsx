@@ -138,7 +138,7 @@ function Leaderboard({ variant }: LeaderboardTabProps) {
     }
 
     return (
-        <div>
+        <div className={styles.tab}>
             <div className={styles.toolbar}>
                 <TextField
                     type="search"
