@@ -78,6 +78,45 @@ describe("BrokerClient", () => {
         expect(headersOf(request.init).get("X-Acting-Uid")).toBe("7");
     });
 
+    it("fetches one variant, encoding the name and acting for the person", async () => {
+        const variant = { name: "a b/c", healthyInstanceCount: 2 };
+        fetchMock.mockResolvedValueOnce(jsonResponse(variant));
+
+        expect(await BrokerClient.getVariant("a b/c", 9)).toEqual(variant);
+
+        const { url, init } = lastRequest();
+        expect(url).toBe("http://broker.test/variants/a%20b%2Fc");
+        expect(headersOf(init).get("X-Acting-Uid")).toBe("9");
+
+        await BrokerClient.getVariant("droid-live");
+        expect(headersOf(lastRequest().init).has("X-Acting-Uid")).toBe(false);
+    });
+
+    it("returns null, and logs neither the key nor the URL, when a variant cannot be fetched", async () => {
+        fetchMock.mockResolvedValueOnce(jsonResponse({}, 404));
+        expect(await BrokerClient.getVariant("x", 1)).toBeNull();
+
+        fetchMock.mockRejectedValueOnce(
+            new Error("failed http://broker.test/variants/x with test-key"),
+        );
+        expect(await BrokerClient.getVariant("x", 1)).toBeNull();
+
+        // A name that cannot be encoded must not throw either.
+        expect(await BrokerClient.getVariant("\ud800", 1)).toBeNull();
+
+        vi.stubEnv("DPP_BROKER_URL", "");
+        vi.stubGlobal("fetch", () => {
+            throw new Error("bad url test-key");
+        });
+        expect(await BrokerClient.getVariant("x", 1)).toBeNull();
+
+        const logged = JSON.stringify(
+            vi.mocked(console.error).mock.calls.map((c) => c.map(String)),
+        );
+        expect(logged).not.toContain("test-key");
+        expect(logged).not.toContain("broker.test");
+    });
+
     it("forwards admin requests with method, path, and body", async () => {
         fetchMock.mockResolvedValueOnce(jsonResponse({ created: true }, 201));
 

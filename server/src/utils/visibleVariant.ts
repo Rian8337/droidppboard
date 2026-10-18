@@ -4,6 +4,26 @@ import { BrokerClient } from "../clients/BrokerClient";
 const defaultVariantName = "droid-rebalance";
 
 /**
+ * Lists the droid prototype variants that a person may view, sorted by name.
+ *
+ * @param actingUid The uid of the person to act for, or `undefined` for a visitor.
+ * @returns The variants, or `null` if they could not be fetched.
+ */
+export async function listVisibleDroidVariants(
+    actingUid?: number,
+): Promise<PPVariant[] | null> {
+    const allVariants = await BrokerClient.getVariants(actingUid);
+
+    if (allVariants === null) {
+        return null;
+    }
+
+    return allVariants
+        .filter((v) => v.mode === "droid" || v.mode === null)
+        .sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
+}
+
+/**
  * Resolves the droid prototype variant that a person may view.
  *
  * Variants the person cannot see are left out of the broker's list, so asking for one answers
@@ -21,15 +41,11 @@ export async function resolveVisibleVariant(
     { variants: PPVariant[]; current: PPVariant } | "notFound" | "unavailable"
 > {
     const requested = name ?? defaultVariantName;
-    const allVariants = await BrokerClient.getVariants(actingUid);
+    const variants = await listVisibleDroidVariants(actingUid);
 
-    if (allVariants === null) {
+    if (variants === null) {
         return "unavailable";
     }
-
-    const variants = allVariants
-        .filter((v) => v.mode === "droid" || v.mode === null)
-        .sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
 
     // Query parameters can be parsed into arrays or objects, so the type has to be checked.
     const current =

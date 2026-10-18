@@ -668,6 +668,19 @@ describe("RecalculationQueue", () => {
         });
     });
 
+    describe("getEntryVariant", () => {
+        it("tells the variant of an entry, and nothing for a missing one", () => {
+            const first = add(11, "A");
+
+            if (!first.ok) {
+                throw new Error("Expected the entry to be queued");
+            }
+
+            expect(queue.getEntryVariant(first.entry.id)).toBe("A");
+            expect(queue.getEntryVariant("missing")).toBeUndefined();
+        });
+    });
+
     describe("remove", () => {
         it("lets only the queuer or an admin remove a waiting entry", () => {
             add(11, "A");

@@ -355,6 +355,18 @@ export class RecalculationQueue {
     }
 
     /**
+     * Gets the variant an entry is queued for.
+     *
+     * @param id The ID of the entry.
+     * @returns The name of the variant, or `undefined` if there is no such entry.
+     */
+    getEntryVariant(id: string): string | undefined {
+        this.pruneFinished();
+
+        return this.entries.get(id)?.variant;
+    }
+
+    /**
      * Starts a full run of a variant, which recalculates every profile of the
      * variant that is not scanned yet.
      *
