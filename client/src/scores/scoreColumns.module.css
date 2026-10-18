@@ -1,0 +1,37 @@
+.rank {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.rankChange {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.rankChange[data-tone="up"],
+.highlight[data-tone="up"] {
+    color: var(--up);
+}
+
+.rankChange[data-tone="down"],
+.highlight[data-tone="down"] {
+    color: var(--down);
+}
+
+.delta {
+    margin-left: 6px;
+    font-size: 0.8em;
+    opacity: 0.85;
+}
+
+.map {
+    display: inline-block;
+    max-width: 28em;
+    overflow: hidden;
+    vertical-align: bottom;
+    text-overflow: ellipsis;
+}
