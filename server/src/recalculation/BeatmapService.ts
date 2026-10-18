@@ -12,6 +12,8 @@ export type BeatmapOutcome =
     | { kind: "skip" }
     | { kind: "error"; reason: string };
 
+const requestTimeoutMs = 60_000;
+
 /**
  * Gets a beatmap's information from the beatmap service.
  *
@@ -28,7 +30,9 @@ export async function getBeatmapByHash(hash: string): Promise<BeatmapOutcome> {
     url.searchParams.set("hash", hash.toLowerCase());
 
     try {
-        const response = await fetch(url.href);
+        const response = await fetch(url.href, {
+            signal: AbortSignal.timeout(requestTimeoutMs),
+        });
 
         if (response.status === 200) {
             return {
@@ -46,11 +50,17 @@ export async function getBeatmapByHash(hash: string): Promise<BeatmapOutcome> {
             reason: `Beatmap service returned ${response.status.toString()}`,
         };
     } catch (e) {
-        // Only the error's name is logged, as the message can embed the request's URL, which holds the key.
-        console.error(
-            `Beatmap service request failed: ${e instanceof Error ? e.name : "unknown error"}`,
-        );
+        const name = e instanceof Error ? e.name : "unknown error";
 
-        return { kind: "error", reason: "Beatmap service request failed" };
+        // Only the error's name is logged, as the message can embed the request's URL, which holds the key.
+        console.error(`Beatmap service request failed: ${name}`);
+
+        return {
+            kind: "error",
+            reason:
+                name === "TimeoutError" || name === "AbortError"
+                    ? "Beatmap service timed out"
+                    : "Beatmap service request failed",
+        };
     }
 }
