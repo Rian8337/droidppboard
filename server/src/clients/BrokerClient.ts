@@ -50,6 +50,28 @@ export abstract class BrokerClient {
     }
 
     /**
+     * Gets one variant as a person sees it.
+     *
+     * @param name The name or alias of the variant.
+     * @param actingUid The uid of the person to act for.
+     * @returns The variant, or `null` if it is not visible to the person or could not be fetched.
+     */
+    static async getVariant(
+        name: string,
+        actingUid?: number,
+    ): Promise<PPVariant | null> {
+        let path: string;
+
+        try {
+            path = `/variants/${encodeURIComponent(name)}`;
+        } catch {
+            return null;
+        }
+
+        return this.getJson<PPVariant>(path, actingUid);
+    }
+
+    /**
      * Gets the broker's view of a person.
      *
      * @param actingUid The uid of the person.
@@ -165,7 +187,11 @@ export abstract class BrokerClient {
 
             return (await response.json()) as T;
         } catch (e) {
-            console.error(`Broker request to ${path} failed:`, e);
+            // Only the kind of error is logged, as its message can embed the URL.
+            console.error(
+                `Broker request to ${path} failed:`,
+                e instanceof Error ? e.name : typeof e,
+            );
 
             return null;
         }

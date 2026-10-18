@@ -28,6 +28,11 @@ export interface PPVariant {
     available: boolean;
 
     /**
+     * The number of the variant's instances that are currently healthy.
+     */
+    healthyInstanceCount: number;
+
+    /**
      * The game mode the variant calculates for, if known.
      */
     mode: "droid" | "osu" | null;

@@ -12,6 +12,7 @@ import login from "./routes/api/auth/login";
 import logout from "./routes/api/auth/logout";
 import me from "./routes/api/auth/me";
 import manage from "./routes/api/manage/manage";
+import recalc from "./routes/api/recalc/recalc";
 import searchSkins from "./routes/api/skins/search-skins";
 import getSkin from "./routes/api/skins/get-skin";
 import { config } from "dotenv";
@@ -23,6 +24,7 @@ import { sessionMiddleware } from "./auth/sessionMiddleware";
 import { initSessions } from "./auth/sessions";
 import { warnIfSessionSecretUnset } from "./auth/passwordFingerprint";
 import { DatabaseManager } from "./database/managers/DatabaseManager";
+import { startCapacityRefresh } from "./recalculation/instance";
 import {
     DroidAPIRequestBuilder,
     OsuAPIRequestBuilder,
@@ -42,6 +44,7 @@ const ppboardRouter = express.Router();
 const skinsRouter = express.Router();
 const authRouter = express.Router();
 const manageRouter = express.Router();
+const recalcRouter = express.Router();
 
 // Allow local requests and the website to access the API
 const allowedOrigins = [
@@ -71,6 +74,7 @@ app.use("/api/ppboard", ppboardRouter);
 app.use("/api/skins", skinsRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/manage", manageRouter);
+app.use("/api/recalc", recalcRouter);
 
 //#endregion
 
@@ -115,6 +119,18 @@ manageRouter.use(manage);
 
 //#endregion
 
+//#region Recalculation endpoints
+
+// Queuing acts for the logged-in person and what is visible depends on who they are, so these
+// need a session and a trusted origin.
+recalcRouter.use(Util.createRateLimit(30));
+recalcRouter.use(requireAllowedOrigin(allowedOrigins));
+recalcRouter.use(sessionMiddleware);
+
+recalcRouter.use(recalc);
+
+//#endregion
+
 //#region Skins endpoints
 
 skinsRouter.use("/search", searchSkins);
@@ -133,6 +149,9 @@ DatabaseManager.init().then(async () => {
     await initSessions();
 
     Util.refreshPrototypeTopPP();
+
+    // Full runs that wait for a calculator, or recover from a failed store query, depend on this.
+    startCapacityRefresh();
 
     const appPort = parseInt(process.env.PORT || "3001");
 

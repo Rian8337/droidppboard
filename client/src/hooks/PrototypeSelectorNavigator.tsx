@@ -15,6 +15,7 @@ const defaultVariant: PPVariant = {
     aliases: [],
     description: null,
     available: true,
+    healthyInstanceCount: 1,
     mode: "droid",
     algorithm: "rebalance",
 };

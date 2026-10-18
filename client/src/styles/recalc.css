@@ -1,0 +1,173 @@
+.recalc-container {
+    margin: 0 auto;
+    max-width: 1200px;
+    padding: 0 10px;
+    font: 15px Exo-Medium;
+}
+
+.recalc-center {
+    text-align: center;
+}
+
+.recalc-layout {
+    display: grid;
+    grid-template-columns: minmax(260px, 340px) minmax(0, 1fr);
+    gap: 16px;
+    align-items: start;
+}
+
+@media (max-width: 800px) {
+    .recalc-layout {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+.recalc-main {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.recalc-panel {
+    padding: 10px 14px;
+    background-color: #2b2b2b;
+    border-radius: 6px;
+}
+
+.recalc-panel h3,
+.recalc-panel h4 {
+    margin: 8px 0;
+}
+
+.recalc-header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+
+.recalc-header h3 {
+    margin: 0;
+}
+
+.recalc-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.recalc-form label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.recalc-inline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+.recalc-input {
+    flex: 1;
+    min-width: 0;
+    background-color: #444;
+    font: 15px Exo-Medium;
+    color: white;
+    border: none;
+    border-bottom: 3px solid rgb(252, 161, 176);
+    border-radius: 6px;
+    box-sizing: border-box;
+    padding: 8px;
+}
+
+.recalc-button {
+    font: 15px Exo-Medium;
+    padding: 8px 12px;
+    color: white;
+    background-color: #333;
+    border: none;
+    cursor: pointer;
+}
+
+.recalc-button:hover:enabled {
+    background-color: #222;
+}
+
+.recalc-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.recalc-danger {
+    background-color: #7a2020;
+}
+
+.recalc-check {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.recalc-error {
+    color: rgb(250, 82, 82);
+}
+
+.recalc-hint {
+    font-size: 13px;
+    opacity: 0.8;
+}
+
+.recalc-tag {
+    display: inline-block;
+    margin-right: 6px;
+    padding: 1px 6px;
+    font-size: 12px;
+    background-color: #444;
+    border-radius: 4px;
+}
+
+.recalc-table-wrapper {
+    overflow-x: auto;
+}
+
+.recalc-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.recalc-table th,
+.recalc-table td {
+    text-align: left;
+    padding: 6px 8px;
+    border-bottom: 1px solid #444;
+    overflow-wrap: anywhere;
+}
+
+.recalc-own {
+    background-color: rgba(252, 161, 176, 0.18);
+}
+
+.recalc-bar {
+    display: block;
+    margin-top: 4px;
+    min-width: 120px;
+    height: 6px;
+    background-color: #444;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.recalc-bar-fill {
+    display: block;
+    height: 100%;
+    background-color: rgb(252, 161, 176);
+}
+
+.recalc-fullrun + .recalc-fullrun {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #444;
+}

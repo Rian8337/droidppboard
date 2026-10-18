@@ -56,6 +56,39 @@ export abstract class OsuDroidAccounts {
     }
 
     /**
+     * Finds a player that is neither banned nor restricted.
+     *
+     * @param uidOrUsername The uid of the player, or their username (surrounding whitespace is ignored).
+     * @returns The player, or `null` if there is none.
+     */
+    static async findPlayer(
+        uidOrUsername: number | string,
+    ): Promise<{ id: number; username: string; archived: boolean } | null> {
+        const [rows] = await officialDb.execute<UserRow[]>(
+            `SELECT id, username, archived FROM bbl_user WHERE ${
+                typeof uidOrUsername === "number" ? "id" : "username"
+            } = ? AND banned = 0 AND restrict_mode = 0 LIMIT 1`,
+            [
+                typeof uidOrUsername === "number"
+                    ? uidOrUsername
+                    : phpTrim(uidOrUsername),
+            ],
+        );
+
+        const row = rows[0];
+
+        if (!row) {
+            return null;
+        }
+
+        return {
+            id: row.id,
+            username: row.username,
+            archived: row.archived !== 0,
+        };
+    }
+
+    /**
      * Gets what is needed to decide whether a session of an account is still good.
      *
      * @param uid The uid of the account.
