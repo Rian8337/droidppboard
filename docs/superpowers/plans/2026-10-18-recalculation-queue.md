@@ -299,6 +299,7 @@ origin/master:src/utils/managers/PrototypeRecalculationManager.ts` in `~/Project
   `server/src/recalculation/permissions.test.ts`, `server/src/recalculation/instance.ts`
 - Modify:
   - `server/src/clients/BrokerClient.ts` (add `getVariant`) and `BrokerClient.test.ts`
+  - `server/package.json` (`zod`)
   - `server/src/index.ts` (mount `/api/recalc`: `Util.createRateLimit(30)`, `requireAllowedOrigin(allowedOrigins)`,
     `sessionMiddleware`; start the 15 s capacity refresh after `DatabaseManager.init`)
 
@@ -307,7 +308,9 @@ origin/master:src/utils/managers/PrototypeRecalculationManager.ts` in `~/Project
   `GET /variants/:name`, with the name URI-encoded.
 - **Permission.** `canManageFullRuns(me: BrokerMe | null): boolean` returns `me?.role === "admin"`. It is the only
   role check for full runs.
-- **Request parsing.** `parseQueueRequest(body: unknown): { variant: string; player: number | string } | null`.
+- **Request parsing** uses Zod (add `zod` `4.6.5`, pinned exactly, to `server/package.json`; the broker and score
+  service use Zod 4 too). `parseQueueRequest(body: unknown): { variant: string; player: number | string } | null`
+  wraps a Zod schema's `safeParse`. The full-run start body `{ restart?: boolean }` is parsed with Zod as well.
   - `variant` is a non-empty string.
   - Exactly one of `uid`, a positive integer, or `username`, a string of 2–20 characters after trimming.
 - **Wiring.** `instance.ts` exports the process-wide `recalculationQueue`, built with the real deps and
