@@ -6,6 +6,7 @@ import { CountryFlag } from "../components/CountryFlag";
 import type { Column } from "../components/DataTable";
 import { getComparisonState, getScoreDifference } from "../leaderboard/difference";
 import { DifferenceText } from "../leaderboard/DifferenceText";
+import { formatMods } from "../utils/formatMods";
 import { formatPp } from "../utils/formatPp";
 import type { ScoreRow } from "./rankChanges";
 import styles from "./scoreColumns.module.css";
@@ -13,6 +14,9 @@ import styles from "./scoreColumns.module.css";
 export type ScoreColumn = Column<ScoreRow> & {
     /** Whether the column shows until the person hides it. */
     isDefaultVisible: boolean;
+
+    /** The column's header in CSV, when the table shortens it. Defaults to the header. */
+    csvHeader?: string;
 
     /** The column's value as exported to CSV, rounded as the table shows it; also what the column sorts by. */
     csvValue: (row: ScoreRow) => string | number;
@@ -35,9 +39,7 @@ function roundToTwoDecimals(value: number): number {
 
 /** The mods of a score as acronyms in game order with nothing between them, such as "HDDT", or "NM" for none. */
 function getModsText(score: PrototypePPEntry): string {
-    const acronyms = ModUtil.modsToOrderedString(ModUtil.deserializeMods(score.mods));
-
-    return acronyms === "" ? "NM" : acronyms.replaceAll(",", "");
+    return formatMods(score.mods);
 }
 
 /**
@@ -196,7 +198,8 @@ export const scoreColumns: ScoreColumn[] = [
     },
     {
         id: "difference",
-        header: "Difference",
+        header: "Diff.",
+        csvHeader: "Difference",
         align: "right",
         isSortable: true,
         isDefaultVisible: true,
@@ -205,7 +208,8 @@ export const scoreColumns: ScoreColumn[] = [
     },
     {
         id: "relativeDifference",
-        header: "Relative difference",
+        header: "Rel. diff.",
+        csvHeader: "Relative difference",
         align: "right",
         isSortable: true,
         isDefaultVisible: true,

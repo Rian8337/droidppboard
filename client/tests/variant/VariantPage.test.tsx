@@ -76,19 +76,12 @@ describe("VariantPage", () => {
         expect(screen.getByText("Internal name")).toBeVisible();
     });
 
-    it("orders the tabs Info first on a desktop", async () => {
+    it.each(["desktop", "phone"] as const)("orders the tabs Info first on a %s", async (size) => {
+        vi.mocked(useBreakpoint).mockReturnValue(size);
         renderPage("/v/droid-rebalance/info");
         await screen.findByRole("navigation");
 
         expect(getTabLabels()).toEqual(["Info", "Leaderboard", "Top plays", "Queue", "Calculator"]);
-    });
-
-    it("orders the tabs Leaderboard first and Info last on a phone", async () => {
-        vi.mocked(useBreakpoint).mockReturnValue("phone");
-        renderPage("/v/droid-rebalance/info");
-        await screen.findByRole("navigation");
-
-        expect(getTabLabels()).toEqual(["Leaderboard", "Top plays", "Queue", "Calculator", "Info"]);
     });
 
     it("shows the Admin tab to a manager on a variant they are granted", async () => {

@@ -105,6 +105,36 @@ describe("AppLayout", () => {
         expect(screen.getByRole("complementary")).toBeVisible();
     });
 
+    it("keeps the page behind an open drawer from scrolling", async () => {
+        vi.mocked(useBreakpoint).mockReturnValue("phone");
+        renderLayout();
+
+        await userEvent.click(screen.getByRole("button", { name: "Open menu" }));
+
+        expect(document.documentElement.style.overflow).toBe("hidden");
+
+        await userEvent.click(screen.getByRole("button", { name: "Close menu" }));
+
+        expect(document.documentElement.style.overflow).toBe("");
+    });
+
+    it("lets the page scroll next to a desktop sidebar", () => {
+        vi.mocked(useBreakpoint).mockReturnValue("desktop");
+        renderLayout();
+
+        expect(document.documentElement.style.overflow).toBe("");
+    });
+
+    it("moves the focus to the toggle when a link in the drawer closes it", async () => {
+        vi.mocked(useBreakpoint).mockReturnValue("phone");
+        renderLayout();
+
+        await userEvent.click(screen.getByRole("button", { name: "Open menu" }));
+        await userEvent.click(screen.getByRole("link", { name: "Beatmap calculator" }));
+
+        expect(screen.getByRole("button", { name: "Open menu" })).toHaveFocus();
+    });
+
     it("has no backdrop on a phone", async () => {
         vi.mocked(useBreakpoint).mockReturnValue("phone");
         const { container } = renderLayout();

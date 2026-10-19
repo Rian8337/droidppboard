@@ -34,6 +34,13 @@ export const emptyFormValues: CalculatorFormValues = {
     sliderEndsDropped: "",
 };
 
+/** Whether nothing has been entered in the form, so that resetting it loses nothing. */
+export function isFormEmpty(values: CalculatorFormValues): boolean {
+    return (Object.keys(emptyFormValues) as (keyof CalculatorFormValues)[]).every((key) =>
+        key === "mods" ? values.mods.length === 0 : values[key] === emptyFormValues[key],
+    );
+}
+
 /** The form values that a result was calculated from, and whether My score made it. */
 export interface SubmittedCalculation {
     values: CalculatorFormValues;

@@ -75,6 +75,13 @@ th.cell {
     text-align: center;
 }
 
+/* A phone has little width to spare, so the cells sit closer together. */
+@media (max-width: 639px) {
+    .cell {
+        padding: 8px 6px;
+    }
+}
+
 @media (pointer: coarse) {
     .table tr {
         height: var(--touch-target);

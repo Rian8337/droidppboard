@@ -1,7 +1,8 @@
-import { useId } from "react";
+import { useId, useState } from "react";
 import type { Me } from "../api/auth";
 import {
     useAdminKeys,
+    useAdminUsers,
     useChangeKeyGrant,
     useGrants,
     useUngrantUser,
@@ -10,6 +11,7 @@ import {
     type ManageRole,
 } from "../api/manage";
 import { Button } from "../components/Button";
+import { ConfirmDialog } from "../components/ConfirmDialog";
 import { DataTable, type Column } from "../components/DataTable";
 import { ErrorMessage } from "../components/ErrorMessage";
 import { canRemoveGrant } from "./accessRules";
@@ -30,11 +32,17 @@ interface GrantedUser {
 
     /** `undefined` while the role is not known. */
     role: ManageRole | null | undefined;
+
+    /** Whether the person has access through the admin role rather than a grant. */
+    isAdmin: boolean;
 }
 
 const roleLabels = { admin: "Admin", manager: "Manager" } as const;
 
-/** Who and what can use the variant: granted people, and for admins the API keys. */
+/**
+ * Who and what can use the variant: granted people, and for admins also the admins (who can use every
+ * variant) and the API keys.
+ */
 export function AccessTable({ variant, me }: AccessTableProps) {
     return (
         <div className={styles.access}>
@@ -46,10 +54,16 @@ export function AccessTable({ variant, me }: AccessTableProps) {
 
 function GrantedUsers({ variant, me }: AccessTableProps) {
     const grants = useGrants(variant);
-    const uids = grants.data ?? [];
+    // Only admins may list the users, so only they see the admins who have no grant.
+    const users = useAdminUsers({ isEnabled: me.role === "admin" });
+    const adminUids = (users.data ?? [])
+        .filter((user) => user.role === "admin")
+        .map((user) => user.uid);
+    const uids = [...new Set([...(grants.data ?? []), ...adminUids])];
     const usernames = useUsernames(uids);
     const roles = useUserRoles(uids);
     const ungranting = useUngrantUser(variant);
+    const [userToRemove, setUserToRemove] = useState<GrantedUser | null>(null);
     const headingId = useId();
 
     if (grants.error) {
@@ -65,13 +79,20 @@ function GrantedUsers({ variant, me }: AccessTableProps) {
         return <p className={styles.note}>Loading...</p>;
     }
 
-    const rows: GrantedUser[] = grants.data.map((uid) => ({
+    const grantedUids = new Set(grants.data);
+    const rows: GrantedUser[] = uids.map((uid) => ({
         uid,
         username: usernames.data?.get(uid),
         role: roles.data?.get(uid),
+        isAdmin: !grantedUids.has(uid),
     }));
 
     function canRemove(row: GrantedUser): boolean {
+        // An admin's access comes with the role, so there is no grant to remove.
+        if (row.isAdmin) {
+            return false;
+        }
+
         // The broker lets admins remove anyone. For others the role must be known, as it decides.
         if (me.role === "admin") {
             return true;
@@ -97,8 +118,13 @@ function GrantedUsers({ variant, me }: AccessTableProps) {
         },
         { id: "role", header: "Role", render: getRoleLabel },
         {
-            id: "actions",
+            id: "access",
             header: "Access",
+            render: (row) => (row.isAdmin ? "Every rework" : "Granted"),
+        },
+        {
+            id: "actions",
+            header: "Remove",
             align: "right",
             render: (row) =>
                 canRemove(row) ? (
@@ -107,7 +133,7 @@ function GrantedUsers({ variant, me }: AccessTableProps) {
                         size="small"
                         aria-label={`Remove access for ${row.username ?? row.uid}`}
                         disabled={ungranting.isPending}
-                        onClick={() => ungranting.mutate(row.uid)}
+                        onClick={() => setUserToRemove(row)}
                     >
                         Remove
                     </Button>
@@ -124,14 +150,29 @@ function GrantedUsers({ variant, me }: AccessTableProps) {
                 columns={columns}
                 rows={rows}
                 rowKey={(row) => String(row.uid)}
-                emptyText="Nobody has been granted this rework."
+                emptyText="Nobody has been granted access to this rework."
             />
             {me.role === "manager" && (
                 <p className={styles.note}>
-                    You can remove people who have no role. Managers and admins are removed by an
-                    admin.
+                    Admins can use every rework too. You can remove people who have no role.
+                    Managers and admins are removed by an admin.
                 </p>
             )}
+            <ConfirmDialog
+                title={`Remove access for ${userToRemove?.username ?? userToRemove?.uid ?? ""}?`}
+                message="They lose their access to this rework until it is granted to them again."
+                confirmLabel="Remove"
+                isOpen={userToRemove !== null}
+                isPending={ungranting.isPending}
+                onConfirm={() => {
+                    if (userToRemove) {
+                        ungranting.mutate(userToRemove.uid, {
+                            onSettled: () => setUserToRemove(null),
+                        });
+                    }
+                }}
+                onClose={() => setUserToRemove(null)}
+            />
             {ungranting.error && (
                 <p role="alert" className={styles.error}>
                     {formatError(ungranting.error)}
@@ -149,6 +190,7 @@ interface KeyAccess {
 function GrantedKeys({ variant }: { variant: string }) {
     const keys = useAdminKeys({ isEnabled: true });
     const changing = useChangeKeyGrant(variant);
+    const [keyToRemove, setKeyToRemove] = useState<string | null>(null);
     const headingId = useId();
 
     if (keys.error) {
@@ -186,7 +228,7 @@ function GrantedKeys({ variant }: { variant: string }) {
                         size="small"
                         aria-label={`Remove access for ${row.name}`}
                         disabled={changing.isPending}
-                        onClick={() => changing.mutate({ key: row.name, isGranted: false })}
+                        onClick={() => setKeyToRemove(row.name)}
                     >
                         Remove
                     </Button>
@@ -213,6 +255,22 @@ function GrantedKeys({ variant }: { variant: string }) {
                     {formatError(changing.error)}
                 </p>
             )}
+            <ConfirmDialog
+                title={`Remove access for ${keyToRemove ?? ""}?`}
+                message="The key loses its access to this rework until it is granted again."
+                confirmLabel="Remove"
+                isOpen={keyToRemove !== null}
+                isPending={changing.isPending}
+                onConfirm={() => {
+                    if (keyToRemove !== null) {
+                        changing.mutate(
+                            { key: keyToRemove, isGranted: false },
+                            { onSettled: () => setKeyToRemove(null) },
+                        );
+                    }
+                }}
+                onClose={() => setKeyToRemove(null)}
+            />
         </section>
     );
 }

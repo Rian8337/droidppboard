@@ -32,7 +32,10 @@ interface PendingChange {
     readonly role: ManageRole | null;
 }
 
-/** The site-wide roles: who has one, and a form to give one to a person by uid or take it away. */
+/**
+ * The site-wide roles: who has one, and a form to give one to a person by uid or take it away. Nobody
+ * can change their own role, so that the last admin cannot lock everybody out.
+ */
 export function RolesPage() {
     const users = useAdminUsers();
     const holders = (users.data ?? []).filter((user): user is RoleHolder => user.role !== null);
@@ -43,28 +46,27 @@ export function RolesPage() {
     const [uid, setUid] = useState("");
     const [role, setRole] = useState<ManageRole>("manager");
     const parsedUid = /^[1-9][0-9]{0,9}$/.test(uid.trim()) ? Number.parseInt(uid, 10) : null;
+    const isOwnUid = parsedUid !== null && parsedUid === me?.uid;
 
     function getName(user: { uid: number }): string {
         return usernames.data?.get(user.uid) ?? `uid ${user.uid}`;
     }
 
-    /** Applies the change, or asks first when it removes a role or takes the person's own admin role away. */
+    /** Applies the change, or asks first when it removes a role. */
     function requestChange(change: PendingChange, onSuccess?: () => void) {
-        if (change.role === null || (change.uid === me?.uid && change.role !== "admin")) {
+        if (change.role === null) {
             setPending(change);
 
             return;
         }
 
-        if (change.uid !== me?.uid || me.role !== change.role) {
-            setting.mutate(change, { onSuccess });
-        }
+        setting.mutate(change, { onSuccess });
     }
 
     function addRole(event: SubmitEvent<HTMLFormElement>) {
         event.preventDefault();
 
-        if (parsedUid !== null && !setting.isPending) {
+        if (parsedUid !== null && !isOwnUid && !setting.isPending) {
             requestChange({ uid: parsedUid, role }, () => setUid(""));
         }
     }
@@ -79,37 +81,41 @@ export function RolesPage() {
         {
             id: "role",
             header: "Role",
-            render: (user) => (
-                <Select
-                    aria-label={`Role of ${getName(user)}`}
-                    value={user.role}
-                    disabled={setting.isPending}
-                    onChange={(event) => {
-                        if (isRole(event.target.value)) {
-                            requestChange({ uid: user.uid, role: event.target.value });
-                        }
-                    }}
-                >
-                    <option value="admin">{roleLabels.admin}</option>
-                    <option value="manager">{roleLabels.manager}</option>
-                </Select>
-            ),
+            render: (user) =>
+                user.uid === me?.uid ? (
+                    `${roleLabels[user.role]} (you)`
+                ) : (
+                    <Select
+                        aria-label={`Role of ${getName(user)}`}
+                        value={user.role}
+                        disabled={setting.isPending}
+                        onChange={(event) => {
+                            if (isRole(event.target.value)) {
+                                requestChange({ uid: user.uid, role: event.target.value });
+                            }
+                        }}
+                    >
+                        <option value="admin">{roleLabels.admin}</option>
+                        <option value="manager">{roleLabels.manager}</option>
+                    </Select>
+                ),
         },
         {
             id: "actions",
             header: "Remove",
             align: "right",
-            render: (user) => (
-                <Button
-                    variant="secondary"
-                    size="small"
-                    aria-label={`Remove role of ${getName(user)}`}
-                    disabled={setting.isPending}
-                    onClick={() => requestChange({ uid: user.uid, role: null })}
-                >
-                    Remove
-                </Button>
-            ),
+            render: (user) =>
+                user.uid === me?.uid ? null : (
+                    <Button
+                        variant="secondary"
+                        size="small"
+                        aria-label={`Remove role of ${getName(user)}`}
+                        disabled={setting.isPending}
+                        onClick={() => requestChange({ uid: user.uid, role: null })}
+                    >
+                        Remove
+                    </Button>
+                ),
         },
     ];
 
@@ -155,10 +161,14 @@ export function RolesPage() {
                         <option value="admin">{roleLabels.admin}</option>
                         <option value="manager">{roleLabels.manager}</option>
                     </Select>
-                    <Button type="submit" disabled={parsedUid === null || setting.isPending}>
+                    <Button
+                        type="submit"
+                        disabled={parsedUid === null || isOwnUid || setting.isPending}
+                    >
                         Set role
                     </Button>
                 </form>
+                {isOwnUid && <p className={styles.note}>You cannot change your own role.</p>}
                 {setting.error && (
                     <p role="alert" className={styles.error}>
                         {formatError(setting.error)}
@@ -166,21 +176,11 @@ export function RolesPage() {
                 )}
             </section>
             <Dialog
-                title={
-                    pending === null
-                        ? "Change role"
-                        : pending.role === null
-                          ? `Remove the role of ${getName(pending)}?`
-                          : "Change your own role?"
-                }
+                title={pending === null ? "Remove role" : `Remove the role of ${getName(pending)}?`}
                 isOpen={pending !== null}
                 onClose={() => setPending(null)}
             >
-                <p className={styles.note}>
-                    {pending?.uid === me?.uid
-                        ? "This is your own role. Without the admin role you can no longer open the admin area, and only another admin can give it back."
-                        : "They keep any reworks they were granted."}
-                </p>
+                <p className={styles.note}>They keep any reworks they were granted.</p>
                 <div className={styles.actions}>
                     <Button variant="ghost" onClick={() => setPending(null)}>
                         Cancel
@@ -194,7 +194,7 @@ export function RolesPage() {
                             }
                         }}
                     >
-                        {pending?.role === null ? "Remove role" : "Change role"}
+                        Remove role
                     </Button>
                 </div>
             </Dialog>

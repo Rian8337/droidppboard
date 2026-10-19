@@ -188,9 +188,13 @@ export function useAdminVariants({
 }
 
 /** Everyone who has a role or a grant. Admins only. */
-export function useAdminUsers(): UseQueryResult<AdminUser[], ApiError> {
+export function useAdminUsers({ isEnabled = true }: { isEnabled?: boolean } = {}): UseQueryResult<
+    AdminUser[],
+    ApiError
+> {
     return useQuery({
         queryKey: queryKeys.manageUsers(),
+        enabled: isEnabled,
         queryFn: () => requestJson<AdminUser[]>("GET", "/api/manage/users"),
     });
 }

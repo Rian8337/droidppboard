@@ -8,7 +8,8 @@ import { TopBar } from "./TopBar";
 /**
  * The frame every page renders in: the top bar, the sidebar and the page itself. The sidebar is
  * open next to the page on a desktop, and a closed drawer over it on a tablet or phone. It slides
- * in and out, and a click anywhere outside it closes it.
+ * in and out, and a click anywhere outside it closes it. An open drawer keeps the page behind it
+ * from scrolling.
  */
 export function AppLayout() {
     const breakpoint = useBreakpoint();
@@ -23,6 +24,33 @@ export function AppLayout() {
         setPreviousBreakpoint(breakpoint);
         setIsSidebarOpen(isDesktop);
     }
+
+    /**
+     * Closes the sidebar. Focus inside it moves to the toggle first, as a closed sidebar is hidden
+     * from assistive technology and must not hold the focus.
+     */
+    function closeSidebar() {
+        if (sidebarRef.current?.contains(document.activeElement)) {
+            toggleRef.current?.focus();
+        }
+
+        setIsSidebarOpen(false);
+    }
+
+    useEffect(() => {
+        if (!isSidebarOpen || isDesktop) {
+            return;
+        }
+
+        const { style } = document.documentElement;
+        const previousOverflow = style.overflow;
+
+        style.overflow = "hidden";
+
+        return () => {
+            style.overflow = previousOverflow;
+        };
+    }, [isSidebarOpen, isDesktop]);
 
     useEffect(() => {
         if (!isSidebarOpen) {
@@ -53,7 +81,7 @@ export function AppLayout() {
         <div className={styles.layout}>
             <TopBar
                 isSidebarOpen={isSidebarOpen}
-                onToggleSidebar={() => setIsSidebarOpen((wasOpen) => !wasOpen)}
+                onToggleSidebar={() => (isSidebarOpen ? closeSidebar() : setIsSidebarOpen(true))}
                 toggleRef={toggleRef}
             />
             <div className={styles.body} data-breakpoint={breakpoint}>
@@ -71,7 +99,7 @@ export function AppLayout() {
                     <Sidebar
                         onNavigate={() => {
                             if (!isDesktop) {
-                                setIsSidebarOpen(false);
+                                closeSidebar();
                             }
                         }}
                     />

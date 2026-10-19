@@ -432,6 +432,9 @@ describe("QueueTab", () => {
             renderTab(adminMe);
 
             await userEvent.click(await screen.findByRole("button", { name: "Stop" }));
+            await userEvent.click(
+                within(await screen.findByRole("dialog")).getByRole("button", { name: "Stop" }),
+            );
 
             await waitFor(() => {
                 expect(screen.queryByText("Recalculating all players")).not.toBeInTheDocument();
@@ -453,6 +456,9 @@ describe("QueueTab", () => {
             renderTab(adminMe);
 
             await userEvent.click(await screen.findByRole("button", { name: "Stop" }));
+            await userEvent.click(
+                within(await screen.findByRole("dialog")).getByRole("button", { name: "Stop" }),
+            );
 
             expect(await screen.findByText("No full run of this rework is running")).toBeVisible();
         });
@@ -691,6 +697,9 @@ describe("QueueTab", () => {
             renderTab(plainMe);
 
             await userEvent.click(await screen.findByRole("button", { name: "Remove cryshina" }));
+            await userEvent.click(
+                within(await screen.findByRole("dialog")).getByRole("button", { name: "Remove" }),
+            );
 
             await waitFor(() => {
                 expect(screen.queryByText("cryshina")).not.toBeInTheDocument();
@@ -713,6 +722,9 @@ describe("QueueTab", () => {
             renderTab(plainMe);
 
             await userEvent.click(await screen.findByRole("button", { name: "Remove cryshina" }));
+            await userEvent.click(
+                within(await screen.findByRole("dialog")).getByRole("button", { name: "Remove" }),
+            );
 
             expect(await screen.findByText("Only waiting entries can be removed")).toBeVisible();
         });

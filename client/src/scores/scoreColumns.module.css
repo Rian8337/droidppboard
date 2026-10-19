@@ -57,10 +57,18 @@
     white-space: nowrap;
 }
 
-/* Rank, Player and Map are pinned, so on a phone they must leave room for the columns that scroll. */
+/* Rank, Player and Map are pinned, so on a phone they must leave room for the columns that scroll:
+   the rank change goes under the rank, and the map takes less width in smaller text. */
 @media (max-width: 639px) {
+    .rank {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0;
+    }
+
     .map {
-        max-width: 36vw;
+        max-width: 30vw;
+        font-size: 13px;
     }
 
     .player {

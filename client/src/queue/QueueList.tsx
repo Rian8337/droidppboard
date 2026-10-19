@@ -1,10 +1,11 @@
 import type { RecalcEntryView, RecalcQueueView } from "app-structures";
-import { useId } from "react";
+import { useId, useState } from "react";
 import type { Me } from "../api/auth";
 import type { ApiError } from "../api/http";
 import { useRemoveQueueEntry } from "../api/recalc";
 import { Button } from "../components/Button";
 import { Checkbox } from "../components/Checkbox";
+import { ConfirmDialog } from "../components/ConfirmDialog";
 import { DataTable, type Column } from "../components/DataTable";
 import { EmptyState } from "../components/EmptyState";
 import { ErrorMessage } from "../components/ErrorMessage";
@@ -55,6 +56,7 @@ export function QueueList({
     const headingId = useId();
     const breakpoint = useBreakpoint();
     const removal = useRemoveQueueEntry();
+    const [entryToRemove, setEntryToRemove] = useState<RecalcEntryView | null>(null);
     const entries = (view?.queue ?? []).filter(
         (entry) => entry.status === "calculating" || entry.status === "waiting",
     );
@@ -72,7 +74,7 @@ export function QueueList({
                 size="small"
                 aria-label={`Remove ${entry.username}`}
                 disabled={removal.isPending && removal.variables === entry.id}
-                onClick={() => removal.mutate(entry.id)}
+                onClick={() => setEntryToRemove(entry)}
             >
                 Remove
             </Button>
@@ -169,6 +171,21 @@ export function QueueList({
                 </div>
             )}
             {renderBody()}
+            <ConfirmDialog
+                title={`Remove ${entryToRemove?.username ?? "the player"} from the queue?`}
+                message="They are not recalculated unless they are queued again."
+                confirmLabel="Remove"
+                isOpen={entryToRemove !== null}
+                isPending={removal.isPending}
+                onConfirm={() => {
+                    if (entryToRemove) {
+                        removal.mutate(entryToRemove.id, {
+                            onSettled: () => setEntryToRemove(null),
+                        });
+                    }
+                }}
+                onClose={() => setEntryToRemove(null)}
+            />
         </section>
     );
 }

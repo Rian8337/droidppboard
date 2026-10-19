@@ -37,7 +37,7 @@ describe("ScoreTable", () => {
     it("shows the default columns and leaves the rest hidden", () => {
         render(<ScoreTable scores={scores} storageKey="columns" />);
 
-        for (const name of ["Rank", "Map", "Live", "Local", "Difference", "Miss", "OD"]) {
+        for (const name of ["Rank", "Map", "Live", "Local", "Diff.", "Miss", "OD"]) {
             expect(screen.getByRole("columnheader", { name })).toBeInTheDocument();
         }
 
@@ -50,8 +50,8 @@ describe("ScoreTable", () => {
 
         expect(within(getBodyRows()[0]).getByText("Alpha Song")).toBeInTheDocument();
 
-        await userEvent.click(screen.getByRole("button", { name: /Difference/ }));
-        await userEvent.click(screen.getByRole("button", { name: /Difference/ }));
+        await userEvent.click(screen.getByRole("button", { name: /^Diff\./ }));
+        await userEvent.click(screen.getByRole("button", { name: /^Diff\./ }));
 
         expect(within(getBodyRows()[0]).getByText("Bravo Tune")).toBeInTheDocument();
     });

@@ -74,13 +74,20 @@ describe("scoreColumns", () => {
         expect(getColumn("aimPp").csvValue(row)).toBe(44);
     });
 
-    it("writes mods as an ordered acronym string, or NM for none", () => {
+    it("writes mods in order separated by commas, or NM for none", () => {
         const rows = addRankChanges([
             buildScore({ mods: [{ acronym: "DT" }, { acronym: "HD" }] }),
+            buildScore({
+                mods: [{ acronym: "CS", settings: { rateMultiplier: 1.25 } }, { acronym: "HD" }],
+            }),
             buildScore({ mods: [] }),
         ]);
 
-        expect(rows.map((row) => getColumn("mods").csvValue(row))).toEqual(["HDDT", "NM"]);
+        expect(rows.map((row) => getColumn("mods").csvValue(row))).toEqual([
+            "HD, DT",
+            "HD, CS (1.25x)",
+            "NM",
+        ]);
     });
 
     it("reads the hit windows from the OD, narrower for Precise", () => {

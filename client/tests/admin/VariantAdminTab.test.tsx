@@ -5,6 +5,7 @@ import { VariantAdminTab } from "../../src/admin/VariantAdminTab";
 import {
     adminMe,
     buildAdminKey,
+    buildAdminUser,
     buildAdminVariant,
     buildFullRun,
     flowaim,
@@ -70,6 +71,9 @@ describe("VariantAdminTab as a manager", () => {
         renderTab();
         await userEvent.click(
             await screen.findByRole("button", { name: "Remove access for Newbie" }),
+        );
+        await userEvent.click(
+            within(await screen.findByRole("dialog")).getByRole("button", { name: "Remove" }),
         );
 
         await waitFor(() =>
@@ -239,6 +243,9 @@ describe("VariantAdminTab as an admin", () => {
         await userEvent.click(
             within(granted).getByRole("button", { name: "Remove access for granted-bot" }),
         );
+        await userEvent.click(
+            within(await screen.findByRole("dialog")).getByRole("button", { name: "Remove" }),
+        );
 
         await waitFor(() =>
             expect(sent).toContainEqual({
@@ -259,6 +266,47 @@ describe("VariantAdminTab as an admin", () => {
                 await screen.findByRole("button", { name: `Remove access for ${name}` }),
             ).toBeVisible();
         }
+    });
+
+    it("lists the admins, who can use every variant without a grant", async () => {
+        serveManage({
+            grants,
+            usernames: { ...usernames, 9: "Boss" },
+            roles: { ...roles, 9: "admin" },
+            keys,
+            users: [
+                buildAdminUser({ uid: 9, role: "admin" }),
+                buildAdminUser({ uid: 6, role: "admin" }),
+            ],
+        });
+
+        renderTab(adminMe);
+
+        const boss = (await screen.findByText("Boss")).closest("tr")!;
+
+        expect(within(boss).getByText("Admin")).toBeVisible();
+        expect(within(boss).getByText("Every rework")).toBeVisible();
+        expect(within(boss).queryByRole("button")).not.toBeInTheDocument();
+
+        // An admin who also has a grant is listed once, with the grant to remove.
+        const rootie = screen.getByText("Rootie").closest("tr")!;
+
+        expect(within(rootie).getByText("Granted")).toBeVisible();
+        expect(screen.getAllByText("Rootie")).toHaveLength(1);
+    });
+
+    it("sends nothing when removing access is cancelled", async () => {
+        const sent = serveManage({ grants, usernames, roles, keys });
+
+        renderTab(adminMe);
+        await userEvent.click(
+            await screen.findByRole("button", { name: "Remove access for Newbie" }),
+        );
+        await userEvent.click(
+            within(await screen.findByRole("dialog")).getByRole("button", { name: "Cancel" }),
+        );
+
+        expect(sent.filter((request) => request.method === "DELETE")).toHaveLength(0);
     });
 
     it("grants a key that does not have the variant yet", async () => {
@@ -350,7 +398,7 @@ describe("full-run controls", () => {
         expect(await screen.findByText("Recalculate all players")).toBeVisible();
         expect(
             screen.getByText(
-                "Recalculates every player in this rework, first adding any droid-rebalance player it is missing. If you stop and start again, players already done are skipped.",
+                "Recalculates every player in this rework, first adding any droid-rebalance player it is missing. Players that were recalculated in a past run are skipped.",
             ),
         ).toBeVisible();
         expect(

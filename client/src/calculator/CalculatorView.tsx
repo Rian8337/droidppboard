@@ -5,6 +5,7 @@ import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 import { useCalculation } from "../api/calculator";
 import { formatApiError } from "../api/http";
 import { Button } from "../components/Button";
+import { ConfirmDialog } from "../components/ConfirmDialog";
 import { ErrorMessage } from "../components/ErrorMessage";
 import { useBreakpoint } from "../hooks/useBreakpoint";
 import { CalculatorForm } from "./CalculatorForm";
@@ -12,6 +13,7 @@ import {
     canLoadFromResult,
     emptyFormValues,
     getFormValuesFromResult,
+    isFormEmpty,
     type CalculatorFormValues,
     type SubmittedCalculation,
 } from "./calculatorForm";
@@ -91,6 +93,7 @@ export function CalculatorView({
     const [shown, setShown] = useState<ShownResult | null>(null);
     const [formError, setFormError] = useState<string | null>(null);
     const [isRawResponseOpen, setIsRawResponseOpen] = useState(false);
+    const [isConfirmingReset, setIsConfirmingReset] = useState(false);
     const resultRef = useRef<HTMLDivElement>(null);
     const panelRef = useRef<HTMLElement>(null);
     const scrolledNumberRef = useRef<number | null>(null);
@@ -130,7 +133,17 @@ export function CalculatorView({
         });
     }
 
+    /** Resets the form, after asking first when something has been entered. */
+    function requestReset() {
+        if (isFormEmpty(values)) {
+            reset();
+        } else {
+            setIsConfirmingReset(true);
+        }
+    }
+
     function reset() {
+        setIsConfirmingReset(false);
         setValues(emptyFormValues);
         setFileInputKey((key) => key + 1);
         setFormError(null);
@@ -155,7 +168,7 @@ export function CalculatorView({
                     values={values}
                     onChange={setValues}
                     onSubmit={calculate}
-                    onReset={reset}
+                    onReset={requestReset}
                     onLoadFromResult={loadFromResult}
                     canLoadFromResult={result !== null && canLoadFromResult(result)}
                     isCalculating={calculation.isPending}
@@ -166,6 +179,14 @@ export function CalculatorView({
                 {renderMyScore?.((response, myScoreValues) =>
                     showResult(response, { values: myScoreValues, isMyScore: true }),
                 )}
+                <ConfirmDialog
+                    title="Reset the calculator?"
+                    message="Everything entered in the form is cleared. The result stays."
+                    confirmLabel="Reset"
+                    isOpen={isConfirmingReset}
+                    onConfirm={reset}
+                    onClose={() => setIsConfirmingReset(false)}
+                />
             </div>
             <div ref={resultRef} className={styles.result}>
                 {shown ? (

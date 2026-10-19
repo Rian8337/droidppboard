@@ -1,4 +1,3 @@
-import { ModUtil } from "@rian8337/osu-base";
 import { useParams } from "react-router";
 import { useMatchHistory } from "../api/matchHistory";
 import { DataTable, type Column } from "../components/DataTable";
@@ -19,6 +18,7 @@ import {
 import pageStyles from "./Page.module.css";
 import styles from "./MatchHistoryPage.module.css";
 import { formatError } from "../api/http";
+import { formatMods } from "../utils/formatMods";
 
 /** The class a score's cells get: a team's total is coloured by its team. */
 function getScoreClass(score: MultiplayerScore): string | undefined {
@@ -42,8 +42,7 @@ const scoreColumns: Column<MultiplayerScore>[] = [
     {
         id: "mods",
         header: "Mods",
-        render: (score) =>
-            ModUtil.modsToOrderedString(ModUtil.deserializeMods(score.playMod)) || "NM",
+        render: (score) => formatMods(score.playMod),
     },
     {
         id: "score",

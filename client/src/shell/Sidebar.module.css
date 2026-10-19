@@ -6,6 +6,7 @@
     background: var(--side);
     border-right: 1px solid var(--line);
     overflow-y: auto;
+    overscroll-behavior: contain;
 }
 
 .version {

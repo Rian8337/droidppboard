@@ -9,7 +9,6 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useMe } from "../api/auth";
 import { Tabs, type Tab } from "../components/Tabs";
-import { useBreakpoint } from "../hooks/useBreakpoint";
 import { getVariantPath, type VariantTab } from "../routing/paths";
 import { canManageVariant } from "./permissions";
 
@@ -22,23 +21,13 @@ const tabDetails: Readonly<Record<VariantTab, Pick<Tab, "label" | "icon">>> = {
     admin: { label: "Admin", icon: <FontAwesomeIcon icon={faUserShield} /> },
 };
 
-const desktopOrder: readonly VariantTab[] = [
+const tabOrder: readonly VariantTab[] = [
     "info",
     "leaderboard",
     "top-plays",
     "queue",
     "calculator",
     "admin",
-];
-
-/** On a phone people open the leaderboard most, so it comes first and Info last. */
-const phoneOrder: readonly VariantTab[] = [
-    "leaderboard",
-    "top-plays",
-    "queue",
-    "calculator",
-    "admin",
-    "info",
 ];
 
 export interface VariantTabsProps {
@@ -49,11 +38,10 @@ export interface VariantTabsProps {
 
 /** The tab row of a variant. Admin is only there for those who can manage the variant. */
 export function VariantTabs({ variant, activeTab }: VariantTabsProps) {
-    const isPhone = useBreakpoint() === "phone";
     const { data: me = null } = useMe();
     const canManage = canManageVariant(me, variant);
 
-    const tabs = (isPhone ? phoneOrder : desktopOrder)
+    const tabs = tabOrder
         .filter((id) => id !== "admin" || canManage)
         .map((id) => ({ id, ...tabDetails[id], to: getVariantPath(variant, id) }));
 

@@ -213,10 +213,20 @@ describe("CalculatorView", () => {
         await calculate();
         await userEvent.type(screen.getByLabelText("Max combo"), "5");
         await userEvent.click(screen.getByRole("button", { name: "Reset" }));
+        await userEvent.click(
+            within(await screen.findByRole("dialog")).getByRole("button", { name: "Reset" }),
+        );
 
         expect(screen.getByLabelText("Beatmap link or ID")).toHaveValue("");
         expect(screen.getByLabelText("Max combo")).toHaveValue(null);
         expect(screen.getByText("Total pp")).toBeVisible();
+    });
+
+    it("resets an empty form without asking", async () => {
+        renderWithProviders(<CalculatorView scope="variant" variant="droid-rebalance" />);
+        await userEvent.click(screen.getByRole("button", { name: "Reset" }));
+
+        expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     });
 
     it("starts from the values it is given", () => {
@@ -306,6 +316,9 @@ describe("CalculatorView", () => {
         await userEvent.click(screen.getByRole("button", { name: "Calculate" }));
         await screen.findByRole("alert");
         await userEvent.click(screen.getByRole("button", { name: "Reset" }));
+        await userEvent.click(
+            within(await screen.findByRole("dialog")).getByRole("button", { name: "Reset" }),
+        );
 
         expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     });

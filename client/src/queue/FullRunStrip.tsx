@@ -1,7 +1,8 @@
 import type { FullRunView } from "app-structures";
-import { useId } from "react";
+import { useId, useState } from "react";
 import { useStopFullRun } from "../api/recalc";
 import { Button } from "../components/Button";
+import { ConfirmDialog } from "../components/ConfirmDialog";
 import { ProgressBar } from "../components/ProgressBar";
 import { formatRelativeTime } from "../utils/formatRelativeTime";
 import styles from "./FullRunStrip.module.css";
@@ -22,6 +23,7 @@ export interface FullRunStripProps {
 export function FullRunStrip({ run, canStop, now }: FullRunStripProps) {
     const headingId = useId();
     const stopping = useStopFullRun();
+    const [isConfirmingStop, setIsConfirmingStop] = useState(false);
 
     return (
         <section aria-labelledby={headingId} className={styles.strip}>
@@ -34,7 +36,7 @@ export function FullRunStrip({ run, canStop, now }: FullRunStripProps) {
                         variant="secondary"
                         size="small"
                         disabled={stopping.isPending}
-                        onClick={() => stopping.mutate(run.variant)}
+                        onClick={() => setIsConfirmingStop(true)}
                     >
                         Stop
                     </Button>
@@ -65,6 +67,17 @@ export function FullRunStrip({ run, canStop, now }: FullRunStripProps) {
                     {formatError(stopping.error)}
                 </p>
             )}
+            <ConfirmDialog
+                title="Stop recalculating all players?"
+                message="Players who are done keep their results. Starting again skips them."
+                confirmLabel="Stop"
+                isOpen={isConfirmingStop}
+                isPending={stopping.isPending}
+                onConfirm={() =>
+                    stopping.mutate(run.variant, { onSettled: () => setIsConfirmingStop(false) })
+                }
+                onClose={() => setIsConfirmingStop(false)}
+            />
         </section>
     );
 }

@@ -11,6 +11,7 @@ import {
 } from "../api/manage";
 import { Button } from "../components/Button";
 import { Checkbox } from "../components/Checkbox";
+import { ConfirmDialog } from "../components/ConfirmDialog";
 import { Dialog } from "../components/Dialog";
 import { TextField } from "../components/TextField";
 import { DescriptionEditor } from "./DescriptionEditor";
@@ -143,6 +144,7 @@ function SettingsForm({
 function AliasEditor({ variant }: { variant: SettingsVariant }) {
     const [alias, setAlias] = useState("");
     const [pendingOwner, setPendingOwner] = useState<string | null>(null);
+    const [aliasToRemove, setAliasToRemove] = useState<string | null>(null);
     // Admins get every variant here, and managers the ones they were granted. A manager cannot see who owns an
     // alias of any other variant, so the broker refuses that move instead.
     const { data: variants = [] } = useAdminVariants();
@@ -183,7 +185,7 @@ function AliasEditor({ variant }: { variant: SettingsVariant }) {
                                 size="small"
                                 aria-label={`Remove alias ${existing}`}
                                 disabled={removing.isPending}
-                                onClick={() => removing.mutate(existing)}
+                                onClick={() => setAliasToRemove(existing)}
                             >
                                 Remove
                             </Button>
@@ -233,6 +235,21 @@ function AliasEditor({ variant }: { variant: SettingsVariant }) {
                     {formatError(error)}
                 </p>
             )}
+            <ConfirmDialog
+                title={`Remove the alias ${aliasToRemove ?? ""}?`}
+                message="Links that use it stop leading to this rework."
+                confirmLabel="Remove"
+                isOpen={aliasToRemove !== null}
+                isPending={removing.isPending}
+                onConfirm={() => {
+                    if (aliasToRemove !== null) {
+                        removing.mutate(aliasToRemove, {
+                            onSettled: () => setAliasToRemove(null),
+                        });
+                    }
+                }}
+                onClose={() => setAliasToRemove(null)}
+            />
         </fieldset>
     );
 }

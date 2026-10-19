@@ -21,7 +21,7 @@ function quoteCsvValue(value: string | number): string {
 /** The rows as CSV text: the column headers, then one line per row, separated by CRLF. */
 export function buildScoresCsv(rows: ScoreRow[], columns: ScoreColumn[]): string {
     const lines = [
-        columns.map((column) => quoteCsvValue(column.header)),
+        columns.map((column) => quoteCsvValue(column.csvHeader ?? column.header)),
         ...rows.map((row) => columns.map((column) => quoteCsvValue(column.csvValue(row)))),
     ];
 

@@ -64,7 +64,7 @@ export function TopBar({ isSidebarOpen, onToggleSidebar, toggleRef }: TopBarProp
             <h1 className={styles.title}>{title}</h1>
             <a className={styles.discord} href={discordUrl} target="_blank" rel="noreferrer">
                 <FontAwesomeIcon icon={faDiscord} />
-                Discord
+                <span className={styles.discordText}>Discord</span>
             </a>
             <AccountMenu />
         </header>

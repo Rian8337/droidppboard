@@ -100,68 +100,27 @@ describe("RolesPage", () => {
         );
     });
 
-    it("asks before an admin demotes themselves, and sends nothing when cancelled", async () => {
-        const sent = serveManage({ users, usernames });
-
-        renderRoles();
-        await userEvent.selectOptions(
-            await screen.findByRole("combobox", { name: "Role of admin" }),
-            "manager",
-        );
-
-        const dialog = await screen.findByRole("dialog", { name: "Change your own role?" });
-
-        expect(within(dialog).getByText(/can no longer open the admin area/)).toBeVisible();
-        expect(sent).toHaveLength(0);
-
-        await userEvent.click(within(dialog).getByRole("button", { name: "Cancel" }));
-
-        expect(sent).toHaveLength(0);
-    });
-
-    it("demotes themselves once confirmed", async () => {
-        const sent = serveManage({ users, usernames });
-
-        renderRoles();
-        await userEvent.selectOptions(
-            await screen.findByRole("combobox", { name: "Role of admin" }),
-            "manager",
-        );
-        await userEvent.click(
-            within(await screen.findByRole("dialog", { name: "Change your own role?" })).getByRole(
-                "button",
-                { name: "Change role" },
-            ),
-        );
-
-        await waitFor(() =>
-            expect(sent).toContainEqual({
-                method: "PUT",
-                path: "/api/manage/users/1/role",
-                body: { role: "manager" },
-            }),
-        );
-    });
-
-    it("warns when an admin removes their own role", async () => {
+    it("shows their own role without a way to change or remove it", async () => {
         serveManage({ users, usernames });
 
         renderRoles();
-        await userEvent.click(await screen.findByRole("button", { name: "Remove role of admin" }));
 
-        const dialog = await screen.findByRole("dialog", { name: "Remove the role of admin?" });
+        const own = (await screen.findByText("Admin (you)")).closest("tr")!;
 
-        expect(within(dialog).getByText(/can no longer open the admin area/)).toBeVisible();
+        expect(within(own).queryByRole("combobox")).not.toBeInTheDocument();
+        expect(
+            screen.queryByRole("button", { name: "Remove role of admin" }),
+        ).not.toBeInTheDocument();
     });
 
-    it("sets a manager role for themselves through the form only after confirming", async () => {
+    it("refuses their own uid in the form", async () => {
         const sent = serveManage({ users, usernames });
 
         renderRoles();
         await userEvent.type(await screen.findByRole("textbox", { name: "User ID" }), "1");
-        await userEvent.click(screen.getByRole("button", { name: "Set role" }));
 
-        expect(await screen.findByRole("dialog", { name: "Change your own role?" })).toBeVisible();
+        expect(screen.getByText("You cannot change your own role.")).toBeVisible();
+        expect(screen.getByRole("button", { name: "Set role" })).toBeDisabled();
         expect(sent).toHaveLength(0);
     });
 });

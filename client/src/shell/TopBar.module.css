@@ -61,6 +61,24 @@
     white-space: nowrap;
 }
 
+/* A phone shows only the logo, leaving the room to the title. The name stays for screen readers. */
+@media (max-width: 639px) {
+    .discord {
+        justify-content: center;
+        min-width: var(--touch-target);
+        font-size: 18px;
+    }
+
+    .discordText {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+    }
+}
+
 @media (pointer: coarse) {
     .toggle {
         width: var(--touch-target);
