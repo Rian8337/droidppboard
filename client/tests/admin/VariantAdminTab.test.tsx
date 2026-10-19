@@ -108,6 +108,63 @@ describe("VariantAdminTab as a manager", () => {
         expect(screen.queryByRole("checkbox", { name: /Public/ })).not.toBeInTheDocument();
     });
 
+    it("closes the settings without asking when nothing changed", async () => {
+        renderTab();
+
+        await userEvent.click(await screen.findByRole("button", { name: "Edit settings" }));
+        await userEvent.click(
+            within(await screen.findByRole("dialog", { name: "Edit settings" })).getByRole(
+                "button",
+                { name: "Cancel" },
+            ),
+        );
+
+        expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    });
+
+    it("asks before discarding changed settings, and keeps them when told to", async () => {
+        renderTab();
+
+        await userEvent.click(await screen.findByRole("button", { name: "Edit settings" }));
+        await userEvent.type(await screen.findByRole("textbox", { name: "Title" }), " v2");
+        await userEvent.click(
+            within(screen.getByRole("dialog", { name: "Edit settings" })).getByRole("button", {
+                name: "Cancel",
+            }),
+        );
+        await userEvent.click(
+            within(await screen.findByRole("dialog", { name: "Discard your changes?" })).getByRole(
+                "button",
+                { name: "Keep editing" },
+            ),
+        );
+
+        expect(
+            screen.queryByRole("dialog", { name: "Discard your changes?" }),
+        ).not.toBeInTheDocument();
+        expect(screen.getByRole("textbox", { name: "Title" })).toHaveValue("Flow aim v2");
+    });
+
+    it("closes the settings once discarding is confirmed", async () => {
+        renderTab();
+
+        await userEvent.click(await screen.findByRole("button", { name: "Edit settings" }));
+        await userEvent.type(await screen.findByRole("textbox", { name: "Title" }), " v2");
+        await userEvent.click(
+            within(screen.getByRole("dialog", { name: "Edit settings" })).getByRole("button", {
+                name: "Close",
+            }),
+        );
+        await userEvent.click(
+            within(await screen.findByRole("dialog", { name: "Discard your changes?" })).getByRole(
+                "button",
+                { name: "Discard" },
+            ),
+        );
+
+        expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    });
+
     it("refuses to grant a manager or an admin, and says why without asking the broker to", async () => {
         const sent = serveManage({ grants, usernames, roles: { ...roles, 9: "manager" } });
 

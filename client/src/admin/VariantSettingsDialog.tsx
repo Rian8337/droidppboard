@@ -1,5 +1,5 @@
 import type { PPVariant } from "app-structures";
-import { useState, type SubmitEvent } from "react";
+import { useEffect, useState, type SubmitEvent } from "react";
 import {
     maxVariantDescriptionLength,
     maxVariantTitleLength,
@@ -33,22 +33,66 @@ export interface VariantSettingsDialogProps {
     onClose: () => void;
 }
 
-/** Edits a variant's title, description, aliases and, for admins, visibility. */
+/**
+ * Edits a variant's title, description, aliases and, for admins, visibility. Closing it with unsaved
+ * changes asks first. Aliases are saved as they change, so they never count as unsaved.
+ */
 export function VariantSettingsDialog({
     variant,
     canChangeVisibility,
     isOpen,
     onClose,
 }: VariantSettingsDialogProps) {
+    const [isChanged, setIsChanged] = useState(false);
+    const [isConfirmingDiscard, setIsConfirmingDiscard] = useState(false);
+
+    function close() {
+        setIsChanged(false);
+        setIsConfirmingDiscard(false);
+        onClose();
+    }
+
+    function requestClose() {
+        if (isChanged) {
+            setIsConfirmingDiscard(true);
+        } else {
+            close();
+        }
+    }
+
     return (
-        <Dialog title="Edit settings" isOpen={isOpen} onClose={onClose} isWide>
-            <SettingsForm
-                variant={variant}
-                canChangeVisibility={canChangeVisibility}
-                onClose={onClose}
+        <>
+            <Dialog title="Edit settings" isOpen={isOpen} onClose={requestClose} isWide>
+                <SettingsForm
+                    variant={variant}
+                    canChangeVisibility={canChangeVisibility}
+                    onChangedChange={setIsChanged}
+                    onCancel={requestClose}
+                    onSaved={close}
+                />
+            </Dialog>
+            <ConfirmDialog
+                title="Discard your changes?"
+                message="The changes to the title, description and visibility are not saved."
+                confirmLabel="Discard"
+                cancelLabel="Keep editing"
+                isOpen={isConfirmingDiscard}
+                onConfirm={close}
+                onClose={() => setIsConfirmingDiscard(false)}
             />
-        </Dialog>
+        </>
     );
+}
+
+interface SettingsFormProps extends Pick<
+    VariantSettingsDialogProps,
+    "variant" | "canChangeVisibility"
+> {
+    /** Called with whether the form holds changes that are not saved. */
+    onChangedChange: (isChanged: boolean) => void;
+
+    onCancel: () => void;
+    onSaved: () => void;
 }
 
 /** Aliases are path segments of the broker's admin routes, so they are plain names. */
@@ -57,8 +101,10 @@ const aliasPattern = /^[A-Za-z0-9_-]+$/;
 function SettingsForm({
     variant,
     canChangeVisibility,
-    onClose,
-}: Omit<VariantSettingsDialogProps, "isOpen">) {
+    onChangedChange,
+    onCancel,
+    onSaved,
+}: SettingsFormProps) {
     const [title, setTitle] = useState(variant.title ?? "");
     const [description, setDescription] = useState(variant.description ?? "");
     const [isPublic, setIsPublic] = useState(variant.public);
@@ -83,13 +129,17 @@ function SettingsForm({
     }
 
     const isChanged = Object.keys(changes).length > 0;
+
+    useEffect(() => {
+        onChangedChange(isChanged);
+    }, [isChanged, onChangedChange]);
     const canSave = isChanged && !isTitleTooLong && !isDescriptionTooLong && !updating.isPending;
 
     function save(event: SubmitEvent<HTMLFormElement>) {
         event.preventDefault();
 
         if (canSave) {
-            updating.mutate(changes, { onSuccess: onClose });
+            updating.mutate(changes, { onSuccess: onSaved });
         }
     }
 
@@ -129,7 +179,7 @@ function SettingsForm({
             )}
             <AliasEditor variant={variant} />
             <div className={styles.actions}>
-                <Button variant="ghost" onClick={onClose}>
+                <Button variant="ghost" onClick={onCancel}>
                     Cancel
                 </Button>
                 <Button type="submit" disabled={!canSave}>

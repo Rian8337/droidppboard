@@ -13,6 +13,9 @@ export interface ConfirmDialogProps {
     /** The label of the button that confirms, such as "Remove". */
     confirmLabel: string;
 
+    /** The label of the button that backs out. Defaults to "Cancel". */
+    cancelLabel?: string;
+
     isOpen: boolean;
 
     /** Whether the confirmed action is running, which disables the button that confirms. */
@@ -27,6 +30,7 @@ export function ConfirmDialog({
     title,
     message,
     confirmLabel,
+    cancelLabel = "Cancel",
     isOpen,
     isPending = false,
     onConfirm,
@@ -37,7 +41,7 @@ export function ConfirmDialog({
             <p className={styles.message}>{message}</p>
             <div className={styles.actions}>
                 <Button variant="ghost" onClick={onClose}>
-                    Cancel
+                    {cancelLabel}
                 </Button>
                 <Button variant="danger" disabled={isPending} onClick={onConfirm}>
                     {confirmLabel}
