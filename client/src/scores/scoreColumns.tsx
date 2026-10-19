@@ -231,7 +231,8 @@ export const scoreColumns: ScoreColumn[] = [
     createNumberColumn("starRating", "SR", (row) => row.local.difficulty.starRating),
     {
         id: "starRatingDifference",
-        header: "SR difference",
+        header: "SR diff.",
+        csvHeader: "SR difference",
         align: "right",
         isSortable: true,
         isDefaultVisible: true,
