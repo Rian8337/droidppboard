@@ -24,6 +24,56 @@
     background: rgba(0, 0, 0, 0.6);
 }
 
+/* It fades and rises in, and fades and sinks out while closing, with its backdrop. */
+.dialog[open] {
+    animation: dialog-in 160ms ease-out;
+}
+
+.dialog[open]::backdrop {
+    animation: backdrop-in 160ms ease-out;
+}
+
+.dialog[data-closing] {
+    animation: dialog-out 120ms ease-in forwards;
+}
+
+.dialog[data-closing]::backdrop {
+    animation: backdrop-out 120ms ease-in forwards;
+}
+
+@keyframes dialog-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px) scale(0.97);
+    }
+}
+
+@keyframes dialog-out {
+    to {
+        opacity: 0;
+        transform: translateY(8px) scale(0.97);
+    }
+}
+
+@keyframes backdrop-in {
+    from {
+        opacity: 0;
+    }
+}
+
+@keyframes backdrop-out {
+    to {
+        opacity: 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dialog[open],
+    .dialog[open]::backdrop {
+        animation: none;
+    }
+}
+
 .header {
     display: flex;
     align-items: center;
