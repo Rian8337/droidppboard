@@ -2,6 +2,7 @@ import { OsuAPIResponse, SerializedMod } from "@rian8337/osu-base";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { BeatmapOutcome } from "./BeatmapService";
 import { calculateProfile, ProfileCalculatorDeps } from "./ProfileCalculator";
+import { ReusableProfile, UnfinishedProfiles } from "./ReusableCalculations";
 import { OnlineScoreOutcome, OnlineScoreResponse } from "./ScoreServiceClient";
 
 function beatmap(hash: string): OsuAPIResponse {
@@ -49,7 +50,19 @@ function beatmap(hash: string): OsuAPIResponse {
     };
 }
 
+/**
+ * The ID of the score on a beatmap, as the score service and the official database answer.
+ */
+function idOf(hash: string): number {
+    return hash.charCodeAt(0);
+}
+
+function scores(...hashes: string[]) {
+    return hashes.map((hash) => ({ id: idOf(hash), hash }));
+}
+
 function response(
+    hash: string,
     total: number,
     mods: SerializedMod[] = [],
 ): OnlineScoreResponse {
@@ -66,7 +79,7 @@ function response(
     };
 
     return {
-        score: { mods },
+        score: { id: idOf(hash), mods },
         calculation: {
             difficulty: {
                 starRating: 5,
@@ -93,20 +106,27 @@ function response(
     } as unknown as OnlineScoreResponse;
 }
 
-function ok(total: number, mods?: SerializedMod[]): OnlineScoreOutcome {
-    return { kind: "ok", response: response(total, mods) };
+function ok(
+    hash: string,
+    total: number,
+    mods?: SerializedMod[],
+): OnlineScoreOutcome {
+    return { kind: "ok", response: response(hash, total, mods) };
 }
 
 function createDeps(
     overrides: Partial<ProfileCalculatorDeps> = {},
 ): ProfileCalculatorDeps & {
-    [K in keyof ProfileCalculatorDeps]: ReturnType<typeof vi.fn>;
+    [K in Exclude<
+        keyof ProfileCalculatorDeps,
+        "unfinishedProfiles"
+    >]: ReturnType<typeof vi.fn>;
 } {
     return {
         findPlayer: vi
             .fn()
             .mockResolvedValue({ id: 7, username: "Player", archived: false }),
-        getTopScoreHashes: vi.fn().mockResolvedValue(["a", "b", "c"]),
+        getTopScores: vi.fn().mockResolvedValue(scores("a", "b", "c")),
         getBeatmapByHash: vi.fn(async (hash: string) => ({
             kind: "ok" as const,
             beatmap: beatmap(hash),
@@ -115,10 +135,11 @@ function createDeps(
         getOnlineScore: vi.fn(
             async (
                 _uid: number,
-                _hash: string,
+                hash: string,
                 variant: string,
             ): Promise<OnlineScoreOutcome> =>
                 ok(
+                    hash,
                     variant === "droid-live"
                         ? 100
                         : variant === "droid-rebalance"
@@ -126,7 +147,10 @@ function createDeps(
                           : 200,
                 ),
         ),
+        getBuiltAt: vi.fn(async (variant: string) => `${variant}-build`),
+        getReusableProfiles: vi.fn().mockResolvedValue([]),
         saveProfile: vi.fn().mockResolvedValue(undefined),
+        unfinishedProfiles: new UnfinishedProfiles(),
         ...overrides,
     } as never;
 }
@@ -154,7 +178,7 @@ describe("calculateProfile", () => {
 
     it("fails with the queue's reason when a service throws", async () => {
         const deps = createDeps({
-            getTopScoreHashes: vi.fn().mockRejectedValue(new Error("boom")),
+            getTopScores: vi.fn().mockRejectedValue(new Error("boom")),
         });
 
         const outcome = await calculateProfile(7, "variant", 1, vi.fn(), deps);
@@ -165,7 +189,7 @@ describe("calculateProfile", () => {
 
     it("fails when there are no top scores", async () => {
         const deps = createDeps({
-            getTopScoreHashes: vi.fn().mockResolvedValue([]),
+            getTopScores: vi.fn().mockResolvedValue(scores()),
         });
 
         const outcome = await calculateProfile(7, "variant", 1, vi.fn(), deps);
@@ -179,7 +203,7 @@ describe("calculateProfile", () => {
 
     it("skips scores whose beatmap or score is not found and saves the rest", async () => {
         const deps = createDeps({
-            getTopScoreHashes: vi.fn().mockResolvedValue(["a", "b", "c", "d"]),
+            getTopScores: vi.fn().mockResolvedValue(scores("a", "b", "c", "d")),
             getBeatmapByHash: vi.fn(async (hash: string) =>
                 hash === "a"
                     ? { kind: "skip" as const }
@@ -193,7 +217,7 @@ describe("calculateProfile", () => {
                 ): Promise<OnlineScoreOutcome> =>
                     hash === "b" && variant === "variant"
                         ? { kind: "skip", reason: "SCORE_NOT_FOUND" }
-                        : ok(variant === "droid-live" ? 100 : 200),
+                        : ok(hash, variant === "droid-live" ? 100 : 200),
             ),
         });
 
@@ -220,7 +244,7 @@ describe("calculateProfile", () => {
 
     it("asks the score service with the score's own hash when the beatmap was updated", async () => {
         const deps = createDeps({
-            getTopScoreHashes: vi.fn().mockResolvedValue(["a"]),
+            getTopScores: vi.fn().mockResolvedValue(scores("a")),
             // The beatmap service answers with the updated beatmap, whose file_md5 differs.
             getBeatmapByHash: vi.fn(async (hash: string) => ({
                 kind: "ok" as const,
@@ -248,14 +272,15 @@ describe("calculateProfile", () => {
     it("builds entries from the beatmap and the three calculations", async () => {
         const mods: SerializedMod[] = [{ acronym: "HR" }];
         const deps = createDeps({
-            getTopScoreHashes: vi.fn().mockResolvedValue(["a"]),
+            getTopScores: vi.fn().mockResolvedValue(scores("a")),
             getOnlineScore: vi.fn(
                 async (
                     _uid: number,
-                    _hash: string,
+                    hash: string,
                     variant: string,
                 ): Promise<OnlineScoreOutcome> =>
                     ok(
+                        hash,
                         variant === "droid-live"
                             ? 100
                             : variant === "droid-rebalance"
@@ -317,7 +342,7 @@ describe("calculateProfile", () => {
             ): Promise<OnlineScoreOutcome> =>
                 hash === "c" && variant === "droid-live"
                     ? { kind: "error", reason: "Score service returned 503" }
-                    : ok(100),
+                    : ok(hash, 100),
         );
         const deps = createDeps({ getOnlineScore });
 
@@ -363,7 +388,7 @@ describe("calculateProfile", () => {
 
     it("fails instead of throwing when a dependency throws", async () => {
         const deps = createDeps({
-            getTopScoreHashes: vi.fn().mockRejectedValue(new Error("db down")),
+            getTopScores: vi.fn().mockRejectedValue(new Error("db down")),
         });
 
         const outcome = await calculateProfile(7, "variant", 1, vi.fn(), deps);
@@ -400,7 +425,7 @@ describe("calculateProfile", () => {
 
     it("calls live, local, and master for other variants", async () => {
         const deps = createDeps({
-            getTopScoreHashes: vi.fn().mockResolvedValue(["a"]),
+            getTopScores: vi.fn().mockResolvedValue(scores("a")),
         });
 
         await calculateProfile(7, "experiment", 99, vi.fn(), deps);
@@ -424,7 +449,7 @@ describe("calculateProfile", () => {
             b: [100, 50],
         };
         const deps = createDeps({
-            getTopScoreHashes: vi.fn().mockResolvedValue(["a", "b"]),
+            getTopScores: vi.fn().mockResolvedValue(scores("a", "b")),
             getOnlineScore: vi.fn(
                 async (
                     _uid: number,
@@ -432,6 +457,7 @@ describe("calculateProfile", () => {
                     variant: string,
                 ): Promise<OnlineScoreOutcome> =>
                     ok(
+                        hash,
                         variant === "droid-live"
                             ? perHash[hash][0]
                             : perHash[hash][1],
@@ -456,7 +482,7 @@ describe("calculateProfile", () => {
     it("looks up a score's beatmap and calculations at the same time", async () => {
         let releaseBeatmap!: () => void;
         const deps = createDeps({
-            getTopScoreHashes: vi.fn().mockResolvedValue(["a"]),
+            getTopScores: vi.fn().mockResolvedValue(scores("a")),
             getBeatmapByHash: vi.fn(
                 (hash: string) =>
                     new Promise<BeatmapOutcome>((resolve) => {
@@ -481,12 +507,14 @@ describe("calculateProfile", () => {
     it("starts a score only after the previous one is done", async () => {
         const pending: (() => void)[] = [];
         const deps = createDeps({
-            getTopScoreHashes: vi.fn().mockResolvedValue(["a", "b"]),
+            getTopScores: vi.fn().mockResolvedValue(scores("a", "b")),
             getOnlineScore: vi.fn(
-                (_uid: number, _hash: string, variant: string) =>
+                (_uid: number, hash: string, variant: string) =>
                     new Promise<OnlineScoreOutcome>((resolve) => {
                         pending.push(() => {
-                            resolve(ok(variant === "droid-live" ? 100 : 200));
+                            resolve(
+                                ok(hash, variant === "droid-live" ? 100 : 200),
+                            );
                         });
                     }),
             ),
@@ -520,7 +548,7 @@ describe("calculateProfile", () => {
 
     it("skips a score whose live calculation is not found even when another call errors", async () => {
         const deps = createDeps({
-            getTopScoreHashes: vi.fn().mockResolvedValue(["a", "b"]),
+            getTopScores: vi.fn().mockResolvedValue(scores("a", "b")),
             getOnlineScore: vi.fn(
                 async (
                     _uid: number,
@@ -528,7 +556,7 @@ describe("calculateProfile", () => {
                     variant: string,
                 ): Promise<OnlineScoreOutcome> => {
                     if (hash !== "a") {
-                        return ok(100);
+                        return ok(hash, 100);
                     }
 
                     return variant === "droid-live"
@@ -553,7 +581,7 @@ describe("calculateProfile", () => {
 
     it("skips a score whose beatmap is not found even when a calculation errors", async () => {
         const deps = createDeps({
-            getTopScoreHashes: vi.fn().mockResolvedValue(["a", "b"]),
+            getTopScores: vi.fn().mockResolvedValue(scores("a", "b")),
             getBeatmapByHash: vi.fn(async (hash: string) =>
                 hash === "a"
                     ? { kind: "skip" as const }
@@ -569,7 +597,7 @@ describe("calculateProfile", () => {
                               kind: "error",
                               reason: "Score service returned 503",
                           }
-                        : ok(100),
+                        : ok(hash, 100),
             ),
         });
 
@@ -580,7 +608,7 @@ describe("calculateProfile", () => {
 
     it("reports progress per processed score", async () => {
         const deps = createDeps({
-            getTopScoreHashes: vi.fn().mockResolvedValue(["a", "b", "c"]),
+            getTopScores: vi.fn().mockResolvedValue(scores("a", "b", "c")),
             getBeatmapByHash: vi.fn(async (hash: string) =>
                 hash === "b"
                     ? { kind: "skip" as const }
@@ -606,5 +634,274 @@ describe("calculateProfile", () => {
         expect(info).toHaveBeenCalledTimes(1);
         expect(info.mock.calls[0][0]).toContain("uid=7");
         expect(info.mock.calls[0][0]).toContain("variant=variant");
+    });
+
+    describe("reuse", () => {
+        /**
+         * Calculates a profile with the default services and gives what was saved, as a stored profile.
+         */
+        async function storeProfile(
+            variant: string,
+            hashes = ["a", "b"],
+        ): Promise<ReusableProfile> {
+            const deps = createDeps({
+                getTopScores: vi.fn().mockResolvedValue(scores(...hashes)),
+            });
+
+            await calculateProfile(7, variant, 1, vi.fn(), deps);
+
+            const { pp, calculatorBuilds } = deps.saveProfile.mock.calls[0][2];
+
+            return { reworkType: variant, pp, calculatorBuilds };
+        }
+
+        function calledVariants(deps: ReturnType<typeof createDeps>) {
+            return deps.getOnlineScore.mock.calls.map(([, hash, variant]) => [
+                hash,
+                variant,
+            ]);
+        }
+
+        it("saves the score IDs and the builds", async () => {
+            const deps = createDeps({
+                getTopScores: vi.fn().mockResolvedValue(scores("a")),
+            });
+
+            await calculateProfile(7, "experiment", 1, vi.fn(), deps);
+
+            const profile = deps.saveProfile.mock.calls[0][2];
+
+            expect(profile.pp[0].scoreId).toBe(idOf("a"));
+            expect(profile.calculatorBuilds).toEqual({
+                "droid-live": "droid-live-build",
+                experiment: "experiment-build",
+                "droid-rebalance": "droid-rebalance-build",
+            });
+        });
+
+        it("calculates only the variants whose stored calculations are not current", async () => {
+            const stored = await storeProfile("experiment");
+            const deps = createDeps({
+                getTopScores: vi.fn().mockResolvedValue(scores("a", "b")),
+                getReusableProfiles: vi.fn().mockResolvedValue([stored]),
+                getBuiltAt: vi.fn(async (variant: string) =>
+                    variant === "experiment"
+                        ? "experiment-rebuild"
+                        : `${variant}-build`,
+                ),
+            });
+
+            const outcome = await calculateProfile(
+                7,
+                "experiment",
+                1,
+                vi.fn(),
+                deps,
+            );
+
+            expect(outcome.ok).toBe(true);
+            expect(calledVariants(deps)).toEqual([
+                ["a", "experiment"],
+                ["b", "experiment"],
+            ]);
+            expect(deps.saveProfile.mock.calls[0][2].pp[0]).toMatchObject({
+                live: stored.pp[0].live,
+                master: stored.pp[0].master,
+            });
+        });
+
+        it("reuses calculations from the player's profiles in other variants", async () => {
+            const master = await storeProfile("droid-rebalance");
+            const deps = createDeps({
+                getTopScores: vi.fn().mockResolvedValue(scores("a", "b")),
+                getReusableProfiles: vi.fn().mockResolvedValue([master]),
+            });
+
+            await calculateProfile(7, "experiment", 1, vi.fn(), deps);
+
+            // The master profile holds both live and master as its local.
+            expect(calledVariants(deps)).toEqual([
+                ["a", "experiment"],
+                ["b", "experiment"],
+            ]);
+
+            const entry = deps.saveProfile.mock.calls[0][2].pp[0];
+
+            expect(entry.master).toEqual(master.pp[0].local);
+            expect(entry.live).toEqual(master.pp[0].live);
+        });
+
+        it("builds an entry from the stored one when every calculation is current", async () => {
+            const stored = await storeProfile("experiment", ["a"]);
+            const deps = createDeps({
+                getTopScores: vi.fn().mockResolvedValue(scores("a")),
+                getReusableProfiles: vi.fn().mockResolvedValue([stored]),
+            });
+
+            const outcome = await calculateProfile(
+                7,
+                "experiment",
+                1,
+                vi.fn(),
+                deps,
+            );
+
+            expect(outcome.ok).toBe(true);
+            expect(deps.getOnlineScore).not.toHaveBeenCalled();
+            // The beatmap is still looked up, as it may have been updated or removed since.
+            expect(deps.getBeatmapByHash).toHaveBeenCalledWith("a");
+            expect(deps.saveProfile.mock.calls[0][2].pp).toEqual(stored.pp);
+        });
+
+        it("calculates a score again when the player's best score on the beatmap changed", async () => {
+            const stored = await storeProfile("experiment", ["a"]);
+            const deps = createDeps({
+                getTopScores: vi
+                    .fn()
+                    .mockResolvedValue([{ id: 999, hash: "a" }]),
+                getReusableProfiles: vi.fn().mockResolvedValue([stored]),
+                getOnlineScore: vi.fn(
+                    async (): Promise<OnlineScoreOutcome> => ({
+                        kind: "ok",
+                        response: {
+                            ...response("a", 100),
+                            score: { id: 999, mods: [] },
+                        },
+                    }),
+                ),
+            });
+
+            await calculateProfile(7, "experiment", 1, vi.fn(), deps);
+
+            expect(deps.getOnlineScore).toHaveBeenCalledTimes(3);
+            expect(deps.saveProfile.mock.calls[0][2].pp[0].scoreId).toBe(999);
+        });
+
+        it("does not reuse calculations of a variant whose build cannot be told", async () => {
+            const stored = await storeProfile("experiment", ["a"]);
+            const deps = createDeps({
+                getTopScores: vi.fn().mockResolvedValue(scores("a")),
+                getReusableProfiles: vi.fn().mockResolvedValue([stored]),
+                getBuiltAt: vi.fn(async (variant: string) => {
+                    if (variant === "droid-live") {
+                        throw new Error("broker down");
+                    }
+
+                    return variant === "experiment" ? null : `${variant}-build`;
+                }),
+            });
+
+            const outcome = await calculateProfile(
+                7,
+                "experiment",
+                1,
+                vi.fn(),
+                deps,
+            );
+
+            expect(outcome.ok).toBe(true);
+            expect(calledVariants(deps)).toEqual([
+                ["a", "droid-live"],
+                ["a", "experiment"],
+            ]);
+            expect(deps.saveProfile.mock.calls[0][2].calculatorBuilds).toEqual({
+                "droid-rebalance": "droid-rebalance-build",
+            });
+        });
+
+        it("does not record a build that changed during the calculation", async () => {
+            let experimentBuild = "experiment-build";
+            const deps = createDeps({
+                getTopScores: vi.fn().mockResolvedValue(scores("a")),
+                getBuiltAt: vi.fn(async (variant: string) =>
+                    variant === "experiment"
+                        ? experimentBuild
+                        : `${variant}-build`,
+                ),
+                getOnlineScore: vi.fn(
+                    async (
+                        _uid: number,
+                        hash: string,
+                    ): Promise<OnlineScoreOutcome> => {
+                        experimentBuild = "experiment-rebuild";
+
+                        return ok(hash, 100);
+                    },
+                ),
+            });
+
+            await calculateProfile(7, "experiment", 1, vi.fn(), deps);
+
+            expect(
+                deps.saveProfile.mock.calls[0][2].calculatorBuilds,
+            ).not.toHaveProperty("experiment");
+        });
+
+        it("does not calculate again the scores that a failed attempt finished", async () => {
+            let failing = true;
+            const deps = createDeps({
+                getOnlineScore: vi.fn(
+                    async (
+                        _uid: number,
+                        hash: string,
+                    ): Promise<OnlineScoreOutcome> =>
+                        failing && hash === "c"
+                            ? {
+                                  kind: "error",
+                                  reason: "Score service returned 503",
+                              }
+                            : ok(hash, 100),
+                ),
+            });
+
+            const failed = await calculateProfile(
+                7,
+                "experiment",
+                1,
+                vi.fn(),
+                deps,
+            );
+
+            expect(failed.ok).toBe(false);
+
+            failing = false;
+            deps.getOnlineScore.mockClear();
+
+            const retried = await calculateProfile(
+                7,
+                "experiment",
+                1,
+                vi.fn(),
+                deps,
+            );
+
+            expect(retried.ok).toBe(true);
+            expect(new Set(calledVariants(deps).map(([hash]) => hash))).toEqual(
+                new Set(["c"]),
+            );
+            expect(deps.saveProfile.mock.calls[0][2].pp).toHaveLength(3);
+            expect(
+                deps.unfinishedProfiles.get(7, "experiment"),
+            ).toBeUndefined();
+        });
+
+        it("fails when the score service calculated another score than the one listed", async () => {
+            const deps = createDeps({
+                getTopScores: vi.fn().mockResolvedValue([{ id: 1, hash: "a" }]),
+            });
+
+            const outcome = await calculateProfile(
+                7,
+                "experiment",
+                1,
+                vi.fn(),
+                deps,
+            );
+
+            expect(outcome).toEqual({
+                ok: false,
+                reason: "Score changed during calculation",
+            });
+        });
     });
 });

@@ -1,6 +1,7 @@
 import { Filter } from "mongodb";
 import { IPrototypePP } from "app-structures";
 import { Util } from "../../../utils/Util";
+import { ReusableProfile } from "../../../recalculation/ReusableCalculations";
 import { FullRunStore } from "../../../recalculation/RecalculationQueue";
 import { DatabaseCollectionManager } from "../DatabaseCollectionManager";
 
@@ -137,7 +138,12 @@ export class PrototypePPCollectionManager
         reworkType: string,
         profile: Pick<
             IPrototypePP,
-            "pp" | "localPPTotal" | "livePPTotal" | "masterPPTotal" | "username"
+            | "pp"
+            | "localPPTotal"
+            | "livePPTotal"
+            | "masterPPTotal"
+            | "username"
+            | "calculatorBuilds"
         >,
     ): Promise<void> {
         const { masterPPTotal, ...rest } = profile;
@@ -156,6 +162,63 @@ export class PrototypePPCollectionManager
             },
             { upsert: true },
         );
+    }
+
+    /**
+     * Gets a player's profiles, in every variant, that recorded one of the given builds.
+     *
+     * @param uid The uid of the player.
+     * @param builds The build of each variant.
+     */
+    async getReusableProfiles(
+        uid: number,
+        builds: Readonly<Record<string, string>>,
+    ): Promise<ReusableProfile[]> {
+        const recorded = Object.entries(builds).map(([variant, build]) => ({
+            [`calculatorBuilds.${variant}`]: build,
+        }));
+
+        if (recorded.length === 0) {
+            return [];
+        }
+
+        return this.collection
+            .find(
+                { uid, $or: recorded },
+                {
+                    projection: {
+                        _id: 0,
+                        reworkType: 1,
+                        pp: 1,
+                        calculatorBuilds: 1,
+                    },
+                },
+            )
+            .toArray();
+    }
+
+    /**
+     * Creates the indexes that recalculation and the leaderboard query by. An index that cannot be created, such as
+     * one that exists under another name, is logged and left alone.
+     */
+    async ensureIndexes(): Promise<void> {
+        const indexes = [
+            // Loading a player's profiles in one or every variant.
+            { uid: 1, reworkType: 1 },
+            // Full runs claiming the unscanned players with the most pp.
+            { reworkType: 1, scanDone: 1, localPPTotal: -1 },
+        ] as const;
+
+        for (const index of indexes) {
+            try {
+                await this.collection.createIndex(index);
+            } catch (e) {
+                console.error(
+                    `Could not create the prototype pp index ${JSON.stringify(index)}:`,
+                    e instanceof Error ? e.message : e,
+                );
+            }
+        }
     }
 
     /**

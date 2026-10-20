@@ -49,4 +49,11 @@ export interface IPrototypePP {
      * The variant the profile is in.
      */
     reworkType: string;
+
+    /**
+     * The build (`builtAt`) of each variant whose calculations the entries hold, for the variants whose build stayed
+     * the same throughout the profile's calculation. Calculations of a variant are only reused while its build is the
+     * one recorded here.
+     */
+    calculatorBuilds?: Record<string, string>;
 }
