@@ -148,33 +148,26 @@ async function calculate(
     const includeMaster = variant !== masterVariant;
     const entries: PrototypePPEntry[] = [];
 
+    const variants = includeMaster
+        ? [liveVariant, variant, masterVariant]
+        : [liveVariant, variant];
+
+    // Scores go one at a time, as the variant's calculator serves one score of a player at once.
     for (let i = 0; i < hashes.length; ++i) {
-        const hash = hashes[i];
+        const entry = await createEntry(
+            uid,
+            hashes[i],
+            variants,
+            actingUid,
+            deps,
+        );
 
-        const beatmapOutcome = await deps.getBeatmapByHash(hash);
-
-        if (beatmapOutcome.kind === "error") {
-            return { ok: false, reason: beatmapOutcome.reason };
+        if (entry !== null && "reason" in entry) {
+            return { ok: false, reason: entry.reason };
         }
 
-        if (beatmapOutcome.kind === "ok") {
-            const entry = await createEntry(
-                uid,
-                MapInfo.from(beatmapOutcome.beatmap),
-                hash,
-                variant,
-                includeMaster,
-                actingUid,
-                deps,
-            );
-
-            if (entry !== null && "reason" in entry) {
-                return { ok: false, reason: entry.reason };
-            }
-
-            if (entry !== null) {
-                entries.push(entry);
-            }
+        if (entry !== null) {
+            entries.push(entry);
         }
 
         onProgress(i + 1, hashes.length);
@@ -213,35 +206,43 @@ async function calculate(
 }
 
 /**
- * Calculates a score for the live, local, and (if asked) master variants.
+ * Looks a score's beatmap up and calculates the score for each variant, all at the same time.
+ *
+ * The outcomes are judged in order, beatmap first, so that a skip or error that comes before another decides the
+ * result, as when the lookups went one after another.
  *
  * The score service finds the score by the hash it was set on, which differs from the beatmap's current hash when the
  * beatmap was updated since.
  *
- * @returns The entry, `null` if the score does not exist for one of the variants, or the reason for why a service
- * failed.
+ * @param variants The live, local, and (if asked) master variants, in that order.
+ * @returns The entry, `null` if the beatmap or the score does not exist for one of the variants, or the reason for
+ * why a service failed.
  */
 async function createEntry(
     uid: number,
-    beatmap: MapInfo,
     scoreHash: string,
-    variant: string,
-    includeMaster: boolean,
+    variants: string[],
     actingUid: number,
     deps: ProfileCalculatorDeps,
 ): Promise<PrototypePPEntry | { reason: string } | null> {
+    const [beatmapOutcome, ...scoreOutcomes] = await Promise.all([
+        deps.getBeatmapByHash(scoreHash),
+        ...variants.map((name) =>
+            deps.getOnlineScore(uid, scoreHash, name, actingUid),
+        ),
+    ]);
+
+    if (beatmapOutcome.kind === "error") {
+        return { reason: beatmapOutcome.reason };
+    }
+
+    if (beatmapOutcome.kind === "skip") {
+        return null;
+    }
+
     const calculations: OnlineScoreResponse[] = [];
 
-    for (const name of includeMaster
-        ? [liveVariant, variant, masterVariant]
-        : [liveVariant, variant]) {
-        const outcome = await deps.getOnlineScore(
-            uid,
-            scoreHash,
-            name,
-            actingUid,
-        );
-
+    for (const outcome of scoreOutcomes) {
         if (outcome.kind === "error") {
             return { reason: outcome.reason };
         }
@@ -253,6 +254,7 @@ async function createEntry(
         calculations.push(outcome.response);
     }
 
+    const beatmap = MapInfo.from(beatmapOutcome.beatmap);
     const [live, local, master] = calculations;
     const { score: liveScore, difficulty: liveDifficulty } = live.calculation;
 

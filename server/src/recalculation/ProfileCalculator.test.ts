@@ -1,5 +1,6 @@
 import { OsuAPIResponse, SerializedMod } from "@rian8337/osu-base";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { BeatmapOutcome } from "./BeatmapService";
 import { calculateProfile, ProfileCalculatorDeps } from "./ProfileCalculator";
 import { OnlineScoreOutcome, OnlineScoreResponse } from "./ScoreServiceClient";
 
@@ -450,6 +451,131 @@ describe("calculateProfile", () => {
             livePPTotal: 300 + 100 * 0.95,
             localPPTotal: 50 + 10 * 0.95,
         });
+    });
+
+    it("looks up a score's beatmap and calculations at the same time", async () => {
+        let releaseBeatmap!: () => void;
+        const deps = createDeps({
+            getTopScoreHashes: vi.fn().mockResolvedValue(["a"]),
+            getBeatmapByHash: vi.fn(
+                (hash: string) =>
+                    new Promise<BeatmapOutcome>((resolve) => {
+                        releaseBeatmap = () => {
+                            resolve({ kind: "ok", beatmap: beatmap(hash) });
+                        };
+                    }),
+            ),
+        });
+
+        const outcome = calculateProfile(7, "experiment", 1, vi.fn(), deps);
+
+        await vi.waitFor(() => {
+            expect(deps.getOnlineScore).toHaveBeenCalledTimes(3);
+        });
+
+        releaseBeatmap();
+
+        expect((await outcome).ok).toBe(true);
+    });
+
+    it("starts a score only after the previous one is done", async () => {
+        const pending: (() => void)[] = [];
+        const deps = createDeps({
+            getTopScoreHashes: vi.fn().mockResolvedValue(["a", "b"]),
+            getOnlineScore: vi.fn(
+                (_uid: number, _hash: string, variant: string) =>
+                    new Promise<OnlineScoreOutcome>((resolve) => {
+                        pending.push(() => {
+                            resolve(ok(variant === "droid-live" ? 100 : 200));
+                        });
+                    }),
+            ),
+        });
+
+        const outcome = calculateProfile(7, "experiment", 1, vi.fn(), deps);
+
+        await vi.waitFor(() => {
+            expect(pending).toHaveLength(3);
+        });
+
+        // The variant's calculator serves one score of a player at a time.
+        expect(
+            deps.getOnlineScore.mock.calls.every(([, hash]) => hash === "a"),
+        ).toBe(true);
+
+        pending.splice(0).forEach((release) => {
+            release();
+        });
+
+        await vi.waitFor(() => {
+            expect(pending).toHaveLength(3);
+        });
+
+        pending.splice(0).forEach((release) => {
+            release();
+        });
+
+        expect((await outcome).ok).toBe(true);
+    });
+
+    it("skips a score whose live calculation is not found even when another call errors", async () => {
+        const deps = createDeps({
+            getTopScoreHashes: vi.fn().mockResolvedValue(["a", "b"]),
+            getOnlineScore: vi.fn(
+                async (
+                    _uid: number,
+                    hash: string,
+                    variant: string,
+                ): Promise<OnlineScoreOutcome> => {
+                    if (hash !== "a") {
+                        return ok(100);
+                    }
+
+                    return variant === "droid-live"
+                        ? { kind: "skip", reason: "SCORE_NOT_FOUND" }
+                        : {
+                              kind: "error",
+                              reason: "Score service returned 503",
+                          };
+                },
+            ),
+        });
+
+        const outcome = await calculateProfile(7, "variant", 1, vi.fn(), deps);
+
+        expect(outcome.ok).toBe(true);
+        expect(
+            deps.saveProfile.mock.calls[0][2].pp.map(
+                (e: { hash: string }) => e.hash,
+            ),
+        ).toEqual(["b"]);
+    });
+
+    it("skips a score whose beatmap is not found even when a calculation errors", async () => {
+        const deps = createDeps({
+            getTopScoreHashes: vi.fn().mockResolvedValue(["a", "b"]),
+            getBeatmapByHash: vi.fn(async (hash: string) =>
+                hash === "a"
+                    ? { kind: "skip" as const }
+                    : { kind: "ok" as const, beatmap: beatmap(hash) },
+            ),
+            getOnlineScore: vi.fn(
+                async (
+                    _uid: number,
+                    hash: string,
+                ): Promise<OnlineScoreOutcome> =>
+                    hash === "a"
+                        ? {
+                              kind: "error",
+                              reason: "Score service returned 503",
+                          }
+                        : ok(100),
+            ),
+        });
+
+        const outcome = await calculateProfile(7, "variant", 1, vi.fn(), deps);
+
+        expect(outcome.ok).toBe(true);
     });
 
     it("reports progress per processed score", async () => {
