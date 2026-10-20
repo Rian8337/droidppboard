@@ -1,4 +1,4 @@
-import { faArrowLeft, faPlus } from "@fortawesome/free-solid-svg-icons";
+import { faArrowLeft, faPlus, faTriangleExclamation } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import type { PrototypePlayer } from "app-structures";
 import type { ReactNode } from "react";
@@ -15,6 +15,9 @@ import styles from "./ProfileHeader.module.css";
 export interface ProfileHeaderProps {
     profile: PrototypePlayer;
     variant: string;
+
+    /** Whether the player was calculated before the variant was last updated. */
+    isOutdated?: boolean;
 
     /** Whether somebody is logged in, who may queue the player. */
     canQueue: boolean;
@@ -47,6 +50,7 @@ function StatBlock({ name, children }: StatBlockProps) {
 export function ProfileHeader({
     profile,
     variant,
+    isOutdated = false,
     canQueue,
     onAddToQueue,
     isQueuing = false,
@@ -90,6 +94,18 @@ export function ProfileHeader({
                     </p>
                 )}
             </div>
+            {isOutdated && (
+                <div role="note" className={styles.outdated}>
+                    <p className={styles.outdatedTitle}>
+                        <FontAwesomeIcon icon={faTriangleExclamation} /> Outdated data
+                    </p>
+                    <p className={styles.outdatedText}>
+                        {canQueue
+                            ? "This player was calculated before the rework was last updated. Add them to the queue to recalculate."
+                            : "This player was calculated before the rework was last updated. Log in to add them to the queue."}
+                    </p>
+                </div>
+            )}
             <dl className={styles.stats}>
                 <StatBlock name="Local pp">
                     <b>{formatPp(profile.localPPTotal)}</b>

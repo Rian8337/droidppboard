@@ -4,6 +4,7 @@ import { ApiError } from "../api/http";
 import { useProfile } from "../api/profile";
 import { useQueuePlayer } from "../api/recalc";
 import { ErrorMessage } from "../components/ErrorMessage";
+import { isOutdated } from "../leaderboard/isOutdated";
 import { NotFoundPage } from "../pages/NotFoundPage";
 import { ScoreTable } from "../scores/ScoreTable";
 import { getVariantTitle } from "../variant/getVariantTitle";
@@ -16,6 +17,8 @@ import { formatQueueError } from "../queue/queueFormatting";
 interface PlayerProfileProps {
     variant: string;
     variantTitle: string;
+    /** When the variant's calculator was built, which tells whether the profile is outdated. */
+    variantBuiltAt: string | null;
     uid: number;
 }
 
@@ -33,7 +36,7 @@ function getQueueFeedback(
         : undefined;
 }
 
-function PlayerProfile({ variant, variantTitle, uid }: PlayerProfileProps) {
+function PlayerProfile({ variant, variantTitle, variantBuiltAt, uid }: PlayerProfileProps) {
     const { data: profile, error, isPending, refetch } = useProfile(variant, uid);
     const { data: me = null } = useMe();
     const queuing = useQueuePlayer();
@@ -56,6 +59,7 @@ function PlayerProfile({ variant, variantTitle, uid }: PlayerProfileProps) {
             <ProfileHeader
                 profile={profile}
                 variant={variant}
+                isOutdated={isOutdated(profile, { builtAt: variantBuiltAt })}
                 canQueue={me !== null}
                 onAddToQueue={() => queuing.mutate({ variant, player: uid })}
                 isQueuing={queuing.isPending}
@@ -94,6 +98,7 @@ export function ProfilePage() {
             key={`${variant.name}:${uid}`}
             variant={variant.name}
             variantTitle={getVariantTitle(variant)}
+            variantBuiltAt={variant.builtAt}
             uid={uid}
         />
     );

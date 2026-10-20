@@ -116,6 +116,7 @@ export class PrototypePPCollectionManager
                     localPPTotal: 1,
                     masterPPTotal: 1,
                     username: 1,
+                    lastUpdate: 1,
                 },
             })
             .sort({ localPPTotal: -1 })

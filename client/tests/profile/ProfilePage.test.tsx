@@ -233,6 +233,51 @@ describe("ProfilePage", () => {
         expect(screen.queryByText("Added Alpha to the queue.")).not.toBeInTheDocument();
     });
 
+    it("warns that the data is outdated when the player was calculated before the variant was built", async () => {
+        server.use(
+            http.get("/api/ppboard/prototype/getuserprofile", () =>
+                HttpResponse.json({
+                    variants: [droidRebalance, readingVariant],
+                    currentVariant: droidRebalance,
+                    data: { ...alphaProfile, lastUpdate: Date.parse("2026-10-11T13:15:00.000Z") },
+                }),
+            ),
+        );
+
+        renderProfile("/v/droid-rebalance/players/1000", plainMe);
+
+        const note = await screen.findByRole("note");
+
+        expect(note).toHaveTextContent("Outdated data");
+        expect(note).toHaveTextContent("Add them to the queue to recalculate.");
+    });
+
+    it("asks a visitor to log in to recalculate an outdated player", async () => {
+        server.use(
+            http.get("/api/ppboard/prototype/getuserprofile", () =>
+                HttpResponse.json({
+                    variants: [droidRebalance, readingVariant],
+                    currentVariant: droidRebalance,
+                    data: { ...alphaProfile, lastUpdate: 0 },
+                }),
+            ),
+        );
+
+        renderProfile("/v/droid-rebalance/players/1000", null);
+
+        expect(await screen.findByRole("note")).toHaveTextContent(
+            "Log in to add them to the queue.",
+        );
+    });
+
+    it("shows no outdated warning for a player calculated after the variant was built", async () => {
+        renderProfile("/v/droid-rebalance/players/1000");
+
+        await screen.findByRole("heading", { name: "Alpha" });
+
+        expect(screen.queryByRole("note")).not.toBeInTheDocument();
+    });
+
     it("has no Add to queue for a visitor", async () => {
         renderProfile("/v/droid-rebalance/players/1000", null);
 

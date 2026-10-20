@@ -17,8 +17,10 @@ import { getProfilePath } from "../routing/paths";
 import { formatPp } from "../utils/formatPp";
 import { getDifference, variantWithoutMaster } from "./difference";
 import { DifferenceText } from "./DifferenceText";
+import { isOutdated } from "./isOutdated";
 import type { LeaderboardEntry } from "./LeaderboardEntry";
 import { LeaderboardRows } from "./LeaderboardRows";
+import { OutdatedPill } from "./OutdatedPill";
 import styles from "./LeaderboardTab.module.css";
 import { formatError } from "../api/http";
 
@@ -75,6 +77,7 @@ function Leaderboard({ variant }: LeaderboardTabProps) {
                 <>
                     <CountryFlag code={player.country} />
                     {player.username}
+                    {isOutdated(player, variant) && <OutdatedPill />}
                 </>
             ),
         },
@@ -122,7 +125,7 @@ function Leaderboard({ variant }: LeaderboardTabProps) {
             return entries.length === 0 ? (
                 <EmptyState message="No players found." />
             ) : (
-                <LeaderboardRows variant={variant.name} entries={entries} />
+                <LeaderboardRows variant={variant} entries={entries} />
             );
         }
 

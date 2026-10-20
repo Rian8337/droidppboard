@@ -105,6 +105,47 @@ describe("LeaderboardTab", () => {
         expect(within(charlie).queryByRole("img")).not.toBeInTheDocument();
     });
 
+    it("marks the players calculated before the variant was built as outdated", async () => {
+        answerWith(() => [
+            buildPlayer({
+                uid: 1,
+                username: "Stale",
+                lastUpdate: Date.parse("2026-10-11T13:15:00.000Z"),
+            }),
+            buildPlayer({ uid: 2, username: "Fresh" }),
+        ]);
+
+        renderTab();
+
+        const stale = (await screen.findByText("Stale")).closest("tr")!;
+        const fresh = screen.getByText("Fresh").closest("tr")!;
+
+        expect(within(stale).getByText("Outdated")).toBeVisible();
+        expect(within(fresh).queryByText("Outdated")).not.toBeInTheDocument();
+    });
+
+    it("marks outdated players on a phone", async () => {
+        vi.mocked(useBreakpoint).mockReturnValue("phone");
+        answerWith(() => [buildPlayer({ uid: 1, username: "Stale", lastUpdate: 0 })]);
+
+        renderTab();
+
+        const stale = (await screen.findByText("Stale")).closest("li")!;
+
+        expect(within(stale).getByText("Outdated")).toBeVisible();
+    });
+
+    it("marks nobody as outdated when the variant's build time is unknown", async () => {
+        const variant = { ...droidRebalance, builtAt: null };
+        answerWith(() => [buildPlayer({ uid: 1, username: "Stale", lastUpdate: 0 })], variant);
+
+        renderTab(variant);
+
+        await screen.findByText("Stale");
+
+        expect(screen.queryByText("Outdated")).not.toBeInTheDocument();
+    });
+
     it("shows the columns without any sort button", async () => {
         renderTab();
 

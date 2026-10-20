@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import styles from "./Pill.module.css";
 
 export interface PillProps {
-    tone?: "neutral" | "running" | "success" | "failure";
+    tone?: "neutral" | "running" | "success" | "warning" | "failure";
     children: ReactNode;
 }
 

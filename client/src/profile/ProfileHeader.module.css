@@ -77,6 +77,27 @@
     outline-offset: 2px;
 }
 
+.outdated {
+    padding: 12px 14px;
+    border-left: 3px solid #ffd27a;
+    border-radius: 6px;
+    background: #3d3220;
+}
+
+.outdatedTitle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    color: #ffd27a;
+    font-weight: 800;
+}
+
+.outdatedText {
+    margin: 4px 0 0;
+    font-size: 13px;
+}
+
 .stats {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));

@@ -83,10 +83,11 @@ export const managerMe: Me = buildMe({
 
 export const plainMe: Me = buildMe();
 
-/** Builds a leaderboard row: a player with 500 live pp and 520 local pp and no known country unless overridden. */
+/** Builds a leaderboard row: an up-to-date player with 500 live pp and 520 local pp and no known country unless overridden. */
 export function buildPlayer(overrides: Partial<PrototypePlayer> = {}): PrototypePlayer {
     return {
-        lastUpdate: 1_790_000_000_000,
+        // After every fixture variant was built, so the player is not outdated.
+        lastUpdate: Date.parse("2026-10-12T00:00:00.000Z"),
         pp: [],
         localPPTotal: 520,
         livePPTotal: 500,
