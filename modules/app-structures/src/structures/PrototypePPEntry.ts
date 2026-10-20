@@ -6,6 +6,11 @@ import type { ScorePrototypeState } from "./ScorePrototypeState";
  */
 export interface PrototypePPEntry extends Omit<PPEntry, "pp"> {
     /**
+     * The ID of the score in the official database. Entries saved before it was stored lack it.
+     */
+    readonly scoreId?: number;
+
+    /**
      * The maximum combo of the beatmap.
      */
     readonly maxCombo: number;

@@ -76,5 +76,6 @@ export abstract class DatabaseManager {
         };
 
         await this.aliceDb.collections.calculationSnapshots.ensureIndexes();
+        await this.aliceDb.collections.prototypePP.ensureIndexes();
     }
 }

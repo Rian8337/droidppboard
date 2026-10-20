@@ -24,6 +24,11 @@ export interface ResolvedScore {
 export interface OnlineScoreResponse {
     readonly score: {
         /**
+         * The ID of the score that was calculated.
+         */
+        readonly id: number;
+
+        /**
          * All of the score's mods. The calculation's difficulty attributes hold only the
          * difficulty-adjusting ones.
          */
