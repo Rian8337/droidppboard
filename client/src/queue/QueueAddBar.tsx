@@ -1,6 +1,6 @@
 import type { RecalcAllowance } from "app-structures";
 import { useState, type SubmitEvent } from "react";
-import { Link, useLocation } from "react-router";
+import { Link, useLocation, useSearchParams } from "react-router";
 import type { Me } from "../api/auth";
 import { useQueuePlayer } from "../api/recalc";
 import { Button } from "../components/Button";
@@ -26,8 +26,10 @@ export interface QueueAddBarProps {
 /** Queues a player by name or uid, or the person themselves, and says how many more they may queue. */
 export function QueueAddBar({ variant, me, allowance, loadedAt }: QueueAddBarProps) {
     const location = useLocation();
+    const [searchParams] = useSearchParams();
     const now = useNow(1000);
-    const [player, setPlayer] = useState("");
+    // A player's missing profile links here with them filled in, so that queuing them is one click.
+    const [player, setPlayer] = useState(() => searchParams.get("player") ?? "");
     const [queuedName, setQueuedName] = useState<string | null>(null);
     const queuing = useQueuePlayer();
     const trimmed = player.trim();

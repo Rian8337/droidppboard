@@ -52,11 +52,8 @@ function serveQueue(view: Partial<RecalcQueueView> = {}, globalView?: Partial<Re
     return fake;
 }
 
-function renderTab(me?: RenderWithProvidersOptions["me"]) {
-    return renderWithProviders(<QueueTab variant={droidRebalance} />, {
-        route: "/v/droid-rebalance/queue",
-        me,
-    });
+function renderTab(me?: RenderWithProvidersOptions["me"], route = "/v/droid-rebalance/queue") {
+    return renderWithProviders(<QueueTab variant={droidRebalance} />, { route, me });
 }
 
 const mrekk = buildQueueEntry({
@@ -530,6 +527,17 @@ describe("QueueTab", () => {
             expect(within(getQueueSection()).getByText("Beta")).toBeVisible();
             expect(screen.getByText("Added Beta to the queue.")).toBeVisible();
             expect(screen.getByRole("textbox", { name: "Player name or ID" })).toHaveValue("");
+        });
+
+        it("fills in the player that the address names", async () => {
+            serveQueue({ allowance });
+
+            renderTab(plainMe, "/v/droid-rebalance/queue?player=1234");
+
+            expect(await screen.findByRole("textbox", { name: "Player name or ID" })).toHaveValue(
+                "1234",
+            );
+            expect(screen.getByRole("button", { name: "Add to queue" })).toBeEnabled();
         });
 
         it("sends digits as a uid", async () => {

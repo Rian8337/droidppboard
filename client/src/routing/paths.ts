@@ -12,6 +12,13 @@ export function getVariantPath(variant: string, tab: VariantTab = "leaderboard")
     return `/v/${encodeURIComponent(variant)}/${tab}`;
 }
 
+/** The queue tab of a variant, with `player` filled in to be queued when given. */
+export function getQueuePath(variant: string, player?: number): string {
+    const path = getVariantPath(variant, "queue");
+
+    return player === undefined ? path : `${path}?player=${player}`;
+}
+
 export function getProfilePath(variant: string, uid: number): string {
     return `/v/${encodeURIComponent(variant)}/players/${uid}`;
 }

@@ -1,11 +1,14 @@
-import { useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import { useMe } from "../api/auth";
 import { ApiError } from "../api/http";
 import { useProfile } from "../api/profile";
 import { useQueuePlayer } from "../api/recalc";
+import { Button } from "../components/Button";
+import { EmptyState } from "../components/EmptyState";
 import { ErrorMessage } from "../components/ErrorMessage";
 import { isOutdated } from "../leaderboard/isOutdated";
 import { NotFoundPage } from "../pages/NotFoundPage";
+import { getQueuePath } from "../routing/paths";
 import { ScoreTable } from "../scores/ScoreTable";
 import { getVariantTitle } from "../variant/getVariantTitle";
 import { useCurrentVariant } from "../variant/useCurrentVariant";
@@ -40,9 +43,26 @@ function PlayerProfile({ variant, variantTitle, variantBuiltAt, uid }: PlayerPro
     const { data: profile, error, isPending, refetch } = useProfile(variant, uid);
     const { data: me = null } = useMe();
     const queuing = useQueuePlayer();
+    const navigate = useNavigate();
 
     if (error instanceof ApiError && error.status === 404) {
-        return <NotFoundPage message="Player not found" />;
+        // A player without a profile here has usually just not been calculated yet, which the queue fixes.
+        // The uid may also belong to no account at all, which only the queue can tell.
+        const message =
+            me?.uid === uid
+                ? `You have not been calculated in ${variantTitle} yet. Add yourself to the queue to get a profile.`
+                : `This player has not been calculated in ${variantTitle} yet. Add them to the queue to get their profile.`;
+
+        return (
+            <EmptyState
+                message={message}
+                action={
+                    <Button onClick={() => void navigate(getQueuePath(variant, uid))}>
+                        Go to the queue
+                    </Button>
+                }
+            />
+        );
     }
 
     if (error) {

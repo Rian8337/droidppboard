@@ -2,7 +2,7 @@ import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { PrototypePlayer } from "app-structures";
 import { http, HttpResponse } from "msw";
-import { Route, Routes } from "react-router";
+import { Route, Routes, useLocation } from "react-router";
 import { useBreakpoint } from "../../src/hooks/useBreakpoint";
 import { ProfilePage } from "../../src/profile/ProfilePage";
 import { alphaProfile, buildQueueEntry, plainMe, profileScores } from "../mocks/fixtures";
@@ -18,6 +18,13 @@ function renderProfile(route: string, me?: RenderWithProvidersOptions["me"]) {
         </Routes>,
         { route, me },
     );
+}
+
+/** Stands in for the queue tab and shows the address it was reached at. */
+function QueueProbe() {
+    const location = useLocation();
+
+    return <p>Queue at {location.pathname + location.search}</p>;
 }
 
 function answerWithMaster() {
@@ -158,10 +165,39 @@ describe("ProfilePage", () => {
         expect(screen.getByText("+15.5")).toHaveAttribute("data-tone", "up");
     });
 
-    it("shows Player not found for an unknown player", async () => {
+    it("sends the person to the queue when their own profile is not found", async () => {
+        const user = userEvent.setup();
+
+        renderWithProviders(
+            <Routes>
+                <Route path="/v/:variant/players/:uid" element={<ProfilePage />} />
+                <Route path="/v/:variant/queue" element={<QueueProbe />} />
+            </Routes>,
+            { route: `/v/droid-rebalance/players/${plainMe.uid}`, me: plainMe },
+        );
+
+        expect(await screen.findByText(/You have not been calculated/)).toBeVisible();
+        expect(screen.queryByText("Player not found")).not.toBeInTheDocument();
+
+        await user.click(screen.getByRole("button", { name: "Go to the queue" }));
+
+        expect(
+            await screen.findByText(`Queue at /v/droid-rebalance/queue?player=${plainMe.uid}`),
+        ).toBeVisible();
+    });
+
+    it("sends the person to the queue when another player's profile is not found", async () => {
+        renderProfile("/v/droid-rebalance/players/9", plainMe);
+
+        expect(await screen.findByText(/This player has not been calculated/)).toBeVisible();
+        expect(screen.getByRole("button", { name: "Go to the queue" })).toBeVisible();
+    });
+
+    it("sends a visitor to the queue when a player's profile is not found", async () => {
         renderProfile("/v/droid-rebalance/players/9");
 
-        expect(await screen.findByText("Player not found")).toBeVisible();
+        expect(await screen.findByText(/This player has not been calculated/)).toBeVisible();
+        expect(screen.getByRole("button", { name: "Go to the queue" })).toBeVisible();
     });
 
     it("shows Rework not found for an unknown variant", async () => {
