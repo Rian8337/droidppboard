@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { delay, http, HttpResponse } from "msw";
 import { useBreakpoint } from "../../src/hooks/useBreakpoint";
 import { AppRoutes } from "../../src/routing/routes";
-import { droidRebalance, flowaim, leaderboardPlayers } from "../mocks/fixtures";
+import { leaderboardPlayers } from "../mocks/fixtures";
 import { server } from "../mocks/server";
 import { mockSession, watchFor } from "../utils/mockSession";
 import { renderWithProviders } from "../utils/renderWithProviders";
@@ -27,11 +27,7 @@ describe("logging out on a private variant's page", () => {
                 await delay(isLoggedIn ? 0 : 150);
 
                 return isLoggedIn
-                    ? HttpResponse.json({
-                          variants: [droidRebalance, flowaim],
-                          currentVariant: flowaim,
-                          data: leaderboardPlayers,
-                      })
+                    ? HttpResponse.json(leaderboardPlayers)
                     : HttpResponse.json({ message: "Rework not found" }, { status: 404 });
             }),
         );

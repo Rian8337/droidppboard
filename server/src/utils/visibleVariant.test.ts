@@ -2,6 +2,7 @@ import { PPVariant } from "app-structures";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { BrokerClient } from "../clients/BrokerClient";
 import {
+    findListedVariant,
     listVisibleDroidVariants,
     resolveVisibleVariant,
 } from "./visibleVariant";
@@ -26,62 +27,46 @@ function stubVariants(variants: PPVariant[] | null) {
     return vi.spyOn(BrokerClient, "getVariants").mockResolvedValue(variants);
 }
 
+function stubVariant(answer: PPVariant | "notFound" | null) {
+    return vi.spyOn(BrokerClient, "getVariant").mockResolvedValue(answer);
+}
+
 describe("resolveVisibleVariant", () => {
     afterEach(() => {
         vi.restoreAllMocks();
     });
 
     it("defaults to droid-rebalance", async () => {
-        stubVariants([
-            variant({ name: "droid-live" }),
+        const getVariant = stubVariant(variant({ name: "droid-rebalance" }));
+
+        expect(await resolveVisibleVariant(undefined)).toEqual(
             variant({ name: "droid-rebalance" }),
-        ]);
-
-        const result = await resolveVisibleVariant(undefined);
-
-        expect(result).not.toBe("notFound");
-        expect(result).not.toBe("unavailable");
-        expect((result as { current: PPVariant }).current.name).toBe(
-            "droid-rebalance",
         );
+        expect(getVariant).toHaveBeenCalledWith("droid-rebalance", undefined);
     });
 
-    it("resolves aliases to the canonical name", async () => {
-        stubVariants([
+    it("asks the broker for that variant alone, acting for the person", async () => {
+        const getVariants = vi.spyOn(BrokerClient, "getVariants");
+        const getVariant = stubVariant(
             variant({ name: "droid-rebalance", aliases: ["rebalance"] }),
-        ]);
-
-        const result = await resolveVisibleVariant("rebalance");
-
-        expect((result as { current: PPVariant }).current.name).toBe(
-            "droid-rebalance",
         );
+
+        const result = await resolveVisibleVariant("rebalance", 1234);
+
+        expect((result as PPVariant).name).toBe("droid-rebalance");
+        expect(getVariant).toHaveBeenCalledWith("rebalance", 1234);
+        expect(getVariants).not.toHaveBeenCalled();
     });
 
-    it("answers private variants as not found for visitors", async () => {
-        // The broker leaves private variants out of a visitor's list.
-        const getVariants = stubVariants([
-            variant({ name: "droid-rebalance" }),
-        ]);
+    it("answers notFound for a variant the broker does not show the person", async () => {
+        // The broker answers a private variant the same as one that does not exist.
+        stubVariant("notFound");
 
         expect(await resolveVisibleVariant("secret")).toBe("notFound");
-        expect(getVariants).toHaveBeenCalledWith(undefined);
     });
 
-    it("lists variants visible to the acting person", async () => {
-        const getVariants = stubVariants([
-            variant({ name: "droid-rebalance" }),
-            variant({ name: "secret" }),
-        ]);
-
-        const result = await resolveVisibleVariant("secret", 1234);
-
-        expect((result as { current: PPVariant }).current.name).toBe("secret");
-        expect(getVariants).toHaveBeenCalledWith(1234);
-    });
-
-    it("reports an unavailable list", async () => {
-        stubVariants(null);
+    it("reports an unavailable broker", async () => {
+        stubVariant(null);
 
         expect(await resolveVisibleVariant("droid-rebalance")).toBe(
             "unavailable",
@@ -89,38 +74,49 @@ describe("resolveVisibleVariant", () => {
     });
 
     it("offers only droid variants", async () => {
-        stubVariants([
-            variant({ name: "osu-live", mode: "osu" }),
+        stubVariant(variant({ name: "unknown-mode", mode: null }));
+        expect(await resolveVisibleVariant("unknown-mode")).toEqual(
             variant({ name: "unknown-mode", mode: null }),
-            variant({ name: "b-droid" }),
-            variant({ name: "a-droid" }),
-        ]);
+        );
 
-        const result = await resolveVisibleVariant("b-droid");
-
-        expect(
-            (result as { variants: PPVariant[] }).variants.map((v) => v.name),
-        ).toEqual(["a-droid", "b-droid", "unknown-mode"]);
+        stubVariant(variant({ name: "osu-live", mode: "osu" }));
         expect(await resolveVisibleVariant("osu-live")).toBe("notFound");
     });
 
-    it("answers notFound for droid-live", async () => {
-        stubVariants([
-            variant({ name: "droid-live" }),
-            variant({ name: "droid-rebalance" }),
-        ]);
+    it("answers notFound for droid-live, even by an alias", async () => {
+        stubVariant(variant({ name: "droid-live", aliases: ["live"] }));
 
         expect(await resolveVisibleVariant("droid-live")).toBe("notFound");
+        expect(await resolveVisibleVariant("live")).toBe("notFound");
     });
 
     it("treats a name that is not a string as not found", async () => {
-        stubVariants([variant({ name: "droid-rebalance" })]);
+        const getVariant = stubVariant(variant({ name: "droid-rebalance" }));
 
         expect(
             await resolveVisibleVariant([
                 "droid-rebalance",
             ] as unknown as string),
         ).toBe("notFound");
+        expect(getVariant).not.toHaveBeenCalled();
+    });
+});
+
+describe("findListedVariant", () => {
+    const variants = [
+        variant({ name: "droid-rebalance", aliases: ["rebalance"] }),
+        variant({ name: "flowaim" }),
+    ];
+
+    it("finds a variant by its name or an alias", () => {
+        expect(findListedVariant(variants, "flowaim")?.name).toBe("flowaim");
+        expect(findListedVariant(variants, "rebalance")?.name).toBe(
+            "droid-rebalance",
+        );
+    });
+
+    it("answers undefined for a variant that is not listed", () => {
+        expect(findListedVariant(variants, "secret")).toBeUndefined();
     });
 });
 

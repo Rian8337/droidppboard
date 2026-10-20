@@ -20,11 +20,7 @@ function recordRequests(): URL[] {
         http.get("/api/ppboard/prototype/gettopplays", ({ request }) => {
             requests.push(new URL(request.url));
 
-            return HttpResponse.json({
-                variants: [droidRebalance, readingVariant],
-                currentVariant: droidRebalance,
-                data: topPlays,
-            });
+            return HttpResponse.json(topPlays);
         }),
     );
 
@@ -67,11 +63,7 @@ describe("TopPlaysTab", () => {
     it("shows no flag for a player whose country is unknown", async () => {
         server.use(
             http.get("/api/ppboard/prototype/gettopplays", () =>
-                HttpResponse.json({
-                    variants: [droidRebalance, readingVariant],
-                    currentVariant: droidRebalance,
-                    data: topPlays.map((play) => ({ ...play, country: null })),
-                }),
+                HttpResponse.json(topPlays.map((play) => ({ ...play, country: null }))),
             ),
         );
 
@@ -124,11 +116,7 @@ describe("TopPlaysTab", () => {
                     await gate;
                 }
 
-                return HttpResponse.json({
-                    variants: [droidRebalance, readingVariant],
-                    currentVariant: droidRebalance,
-                    data: hasMods ? bravoOnly : topPlays,
-                });
+                return HttpResponse.json(hasMods ? bravoOnly : topPlays);
             }),
         );
 
@@ -161,13 +149,11 @@ describe("TopPlaysTab", () => {
 
                 const hasMods = new URL(request.url).searchParams.has("mods");
 
-                return HttpResponse.json({
-                    variants: [droidRebalance, readingVariant],
-                    currentVariant: droidRebalance,
-                    data: hasMods
+                return HttpResponse.json(
+                    hasMods
                         ? topPlays.map((play) => ({ ...play, mods: [{ acronym: "HD" }] }))
                         : topPlays,
-                });
+                );
             }),
         );
 

@@ -4,15 +4,17 @@ import { getVariantPath } from "../routing/paths";
 import { discordUrl } from "../utils/links";
 import { formatUtcTime } from "../utils/formatUtcTime";
 import styles from "./InfoTab.module.css";
+import { VariantDescription } from "./VariantDescription";
 
 export interface InfoTabProps {
     variant: PPVariant;
 }
 
-/** A variant's details, then help that reads the same for every variant. */
+/** A variant's description and details, then help that reads the same for every variant. */
 export function InfoTab({ variant }: InfoTabProps) {
     return (
         <div className={styles.info}>
+            <VariantDescription description={variant.description} />
             <dl className={styles.details}>
                 <dt>Internal name</dt>
                 <dd>{variant.name}</dd>

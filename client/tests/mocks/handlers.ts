@@ -1,9 +1,5 @@
 import { http, HttpResponse, type RequestHandler } from "msw";
-import type {
-    PrototypeLeaderboardResponse,
-    PrototypePlayer,
-    PrototypeTopPlay,
-} from "app-structures";
+import type { PrototypePlayer, PrototypeTopPlay } from "app-structures";
 import {
     alphaProfile,
     buildQueueView,
@@ -28,42 +24,24 @@ export const handlers: RequestHandler[] = [
     ),
     http.post("/api/auth/logout", () => new HttpResponse(null, { status: 204 })),
     http.get("/api/ppboard/variants", () => HttpResponse.json([droidRebalance, readingVariant])),
-    http.get("/api/ppboard/prototype/getleaderboard", ({ request }) => {
-        const type = new URL(request.url).searchParams.get("type");
-        const currentVariant = type === readingVariant.name ? readingVariant : droidRebalance;
-        const body: PrototypeLeaderboardResponse<PrototypePlayer[]> = {
-            variants: [droidRebalance, readingVariant],
-            currentVariant,
-            data: leaderboardPlayers,
-        };
+    http.get("/api/ppboard/prototype/getleaderboard", () => {
+        const body: PrototypePlayer[] = leaderboardPlayers;
 
         return HttpResponse.json(body);
     }),
     http.get("/api/ppboard/prototype/getuserprofile", ({ request }) => {
         const url = new URL(request.url);
-        const currentVariant =
-            url.searchParams.get("type") === readingVariant.name ? readingVariant : droidRebalance;
 
         if (url.searchParams.get("uid") !== String(alphaProfile.uid)) {
             return HttpResponse.json({ message: "Player not found!" }, { status: 404 });
         }
 
-        const body: PrototypeLeaderboardResponse<PrototypePlayer> = {
-            variants: [droidRebalance, readingVariant],
-            currentVariant,
-            data: alphaProfile,
-        };
+        const body: PrototypePlayer = alphaProfile;
 
         return HttpResponse.json(body);
     }),
-    http.get("/api/ppboard/prototype/gettopplays", ({ request }) => {
-        const type = new URL(request.url).searchParams.get("type");
-        const currentVariant = type === readingVariant.name ? readingVariant : droidRebalance;
-        const body: PrototypeLeaderboardResponse<PrototypeTopPlay[]> = {
-            variants: [droidRebalance, readingVariant],
-            currentVariant,
-            data: topPlays,
-        };
+    http.get("/api/ppboard/prototype/gettopplays", () => {
+        const body: PrototypeTopPlay[] = topPlays;
 
         return HttpResponse.json(body);
     }),

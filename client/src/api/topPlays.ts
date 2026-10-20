@@ -1,5 +1,5 @@
 import { keepPreviousData, useQuery, type UseQueryResult } from "@tanstack/react-query";
-import type { PrototypeLeaderboardResponse, PrototypeTopPlay } from "app-structures";
+import type { PrototypeTopPlay } from "app-structures";
 import { requestJson } from "./http";
 import { queryKeys } from "./queryKeys";
 
@@ -22,12 +22,11 @@ export function useTopPlays(
                 parameters.set("mods", mods);
             }
 
-            return requestJson<PrototypeLeaderboardResponse<PrototypeTopPlay[]>>(
+            return requestJson<PrototypeTopPlay[]>(
                 "GET",
                 `/api/ppboard/prototype/gettopplays?${parameters}`,
             );
         },
-        select: (response) => response.data,
         // Picking a mod keeps the table (and its open mod picker) on screen until the new plays arrive.
         placeholderData: keepPreviousData,
     });

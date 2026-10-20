@@ -1,5 +1,5 @@
 import { useQuery, type UseQueryResult } from "@tanstack/react-query";
-import type { PrototypeLeaderboardResponse, PrototypePlayer } from "app-structures";
+import type { PrototypePlayer } from "app-structures";
 import { requestJson } from "./http";
 import { queryKeys } from "./queryKeys";
 
@@ -24,11 +24,10 @@ export function useLeaderboard(
                 parameters.set("query", search);
             }
 
-            return requestJson<PrototypeLeaderboardResponse<PrototypePlayer[]>>(
+            return requestJson<PrototypePlayer[]>(
                 "GET",
                 `/api/ppboard/prototype/getleaderboard?${parameters}`,
             );
         },
-        select: (response) => response.data,
     });
 }

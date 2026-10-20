@@ -1,18 +1,11 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import type { PrototypeLeaderboardResponse, PrototypePlayer } from "app-structures";
+import type { PrototypePlayer } from "app-structures";
 import { http, HttpResponse } from "msw";
 import { Route, Routes } from "react-router";
 import { useBreakpoint } from "../../src/hooks/useBreakpoint";
 import { ProfilePage } from "../../src/profile/ProfilePage";
-import {
-    alphaProfile,
-    buildQueueEntry,
-    droidRebalance,
-    plainMe,
-    profileScores,
-    readingVariant,
-} from "../mocks/fixtures";
+import { alphaProfile, buildQueueEntry, plainMe, profileScores } from "../mocks/fixtures";
 import { server } from "../mocks/server";
 import { renderWithProviders, type RenderWithProvidersOptions } from "../utils/renderWithProviders";
 
@@ -27,14 +20,10 @@ function renderProfile(route: string, me?: RenderWithProvidersOptions["me"]) {
     );
 }
 
-function answerWithMaster(variant = readingVariant) {
+function answerWithMaster() {
     server.use(
         http.get("/api/ppboard/prototype/getuserprofile", () => {
-            const body: PrototypeLeaderboardResponse<PrototypePlayer> = {
-                variants: [droidRebalance, readingVariant],
-                currentVariant: variant,
-                data: { ...alphaProfile, masterPPTotal: 200 },
-            };
+            const body: PrototypePlayer = { ...alphaProfile, masterPPTotal: 200 };
 
             return HttpResponse.json(body);
         }),
@@ -81,11 +70,7 @@ describe("ProfilePage", () => {
     it("shows no flag when the player's country is unknown", async () => {
         server.use(
             http.get("/api/ppboard/prototype/getuserprofile", () =>
-                HttpResponse.json({
-                    variants: [droidRebalance, readingVariant],
-                    currentVariant: droidRebalance,
-                    data: { ...alphaProfile, country: null },
-                }),
+                HttpResponse.json({ ...alphaProfile, country: null }),
             ),
         );
 
@@ -153,7 +138,7 @@ describe("ProfilePage", () => {
     });
 
     it("hides Master pp on droid-rebalance even if the server sent it", async () => {
-        answerWithMaster(droidRebalance);
+        answerWithMaster();
 
         renderProfile("/v/droid-rebalance/players/1000");
 
@@ -237,9 +222,8 @@ describe("ProfilePage", () => {
         server.use(
             http.get("/api/ppboard/prototype/getuserprofile", () =>
                 HttpResponse.json({
-                    variants: [droidRebalance, readingVariant],
-                    currentVariant: droidRebalance,
-                    data: { ...alphaProfile, lastUpdate: Date.parse("2026-10-11T13:15:00.000Z") },
+                    ...alphaProfile,
+                    lastUpdate: Date.parse("2026-10-11T13:15:00.000Z"),
                 }),
             ),
         );
@@ -255,11 +239,7 @@ describe("ProfilePage", () => {
     it("asks a visitor to log in to recalculate an outdated player", async () => {
         server.use(
             http.get("/api/ppboard/prototype/getuserprofile", () =>
-                HttpResponse.json({
-                    variants: [droidRebalance, readingVariant],
-                    currentVariant: droidRebalance,
-                    data: { ...alphaProfile, lastUpdate: 0 },
-                }),
+                HttpResponse.json({ ...alphaProfile, lastUpdate: 0 }),
             ),
         );
 
@@ -304,11 +284,7 @@ describe("ProfilePage", () => {
     it("says when the player has no scores", async () => {
         server.use(
             http.get("/api/ppboard/prototype/getuserprofile", () =>
-                HttpResponse.json({
-                    variants: [droidRebalance],
-                    currentVariant: droidRebalance,
-                    data: { ...alphaProfile, pp: [], localPPTotal: 0, livePPTotal: 0 },
-                }),
+                HttpResponse.json({ ...alphaProfile, pp: [], localPPTotal: 0, livePPTotal: 0 }),
             ),
         );
 

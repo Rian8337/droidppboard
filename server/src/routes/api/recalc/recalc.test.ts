@@ -7,6 +7,7 @@ import { RecalculationQueue } from "../../../recalculation/RecalculationQueue";
 
 const mocks = vi.hoisted(() => ({
     getVariants: vi.fn(),
+    getVariant: vi.fn(),
     getMe: vi.fn(),
     findPlayer: vi.fn(),
     getUsernames: vi.fn(),
@@ -20,7 +21,11 @@ vi.mock("../../../auth/OsuDroidAccounts", () => ({
     },
 }));
 vi.mock("../../../clients/BrokerClient", () => ({
-    BrokerClient: { getVariants: mocks.getVariants, getMe: mocks.getMe },
+    BrokerClient: {
+        getVariants: mocks.getVariants,
+        getVariant: mocks.getVariant,
+        getMe: mocks.getMe,
+    },
 }));
 vi.mock("../../../recalculation/instance", () => ({
     get recalculationQueue() {
@@ -141,6 +146,13 @@ describe("recalculation routes", () => {
         mocks.queue = queue;
 
         mocks.getVariants.mockResolvedValue(visibleVariants);
+        mocks.getVariant.mockImplementation((name: string) =>
+            Promise.resolve(
+                visibleVariants.find(
+                    (v) => v.name === name || v.aliases.includes(name),
+                ) ?? "notFound",
+            ),
+        );
         mocks.getMe.mockResolvedValue({ uid: 42, role: null, grants: [] });
         mocks.findPlayer.mockResolvedValue({
             id: 1000,
@@ -156,6 +168,7 @@ describe("recalculation routes", () => {
         await new Promise((resolve) => server.close(resolve));
         vi.restoreAllMocks();
         mocks.getVariants.mockReset();
+        mocks.getVariant.mockReset();
         mocks.getMe.mockReset();
         mocks.findPlayer.mockReset();
         mocks.getUsernames.mockReset();
@@ -308,10 +321,7 @@ describe("recalculation routes", () => {
             expect(missingVariant.status).toBe(404);
 
             // droid-live is the baseline, so it is never queued even when the broker lists it.
-            mocks.getVariants.mockResolvedValueOnce([
-                ...visibleVariants,
-                variant("droid-live"),
-            ]);
+            mocks.getVariant.mockResolvedValueOnce(variant("droid-live"));
 
             const liveVariant = await request("POST", "/api/recalc/queue", {
                 body: { variant: "droid-live", uid: 1000 },
@@ -344,9 +354,9 @@ describe("recalculation routes", () => {
         });
 
         it("answers 409 for an unavailable variant and for a duplicate", async () => {
-            mocks.getVariants.mockResolvedValueOnce([
+            mocks.getVariant.mockResolvedValueOnce(
                 variant("flowaim", { healthyInstanceCount: 0 }),
-            ]);
+            );
 
             const unavailable = await request("POST", "/api/recalc/queue", {
                 body: { variant: "flowaim", uid: 1000 },
@@ -366,11 +376,10 @@ describe("recalculation routes", () => {
         });
 
         it("answers 409 when a broker that predates the instance count omits it", async () => {
-            const { healthyInstanceCount: _omitted, ...withoutCount } = variant(
-                "flowaim",
-            );
+            const { healthyInstanceCount: _omitted, ...withoutCount } =
+                variant("flowaim");
 
-            mocks.getVariants.mockResolvedValueOnce([withoutCount]);
+            mocks.getVariant.mockResolvedValueOnce(withoutCount);
 
             const response = await request("POST", "/api/recalc/queue", {
                 body: { variant: "flowaim", uid: 1000 },
@@ -602,20 +611,12 @@ describe("recalculation routes", () => {
             expect(stopNone.status).toBe(409);
 
             expect(
-                (
-                    await request(
-                        "POST",
-                        "/api/recalc/full-runs/flowaim/start",
-                    )
-                ).status,
+                (await request("POST", "/api/recalc/full-runs/flowaim/start"))
+                    .status,
             ).toBe(204);
             expect(
-                (
-                    await request(
-                        "POST",
-                        "/api/recalc/full-runs/flowaim/start",
-                    )
-                ).status,
+                (await request("POST", "/api/recalc/full-runs/flowaim/start"))
+                    .status,
             ).toBe(409);
             expect(
                 (await request("POST", "/api/recalc/full-runs/flowaim/stop"))

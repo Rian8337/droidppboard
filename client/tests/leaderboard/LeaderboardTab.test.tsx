@@ -1,6 +1,6 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import type { PrototypeLeaderboardResponse, PrototypePlayer } from "app-structures";
+import type { PrototypePlayer } from "app-structures";
 import { delay, http, HttpResponse } from "msw";
 import { Route, Routes, useLocation } from "react-router";
 import { useBreakpoint } from "../../src/hooks/useBreakpoint";
@@ -35,7 +35,7 @@ function renderTab(variant = droidRebalance, me?: RenderWithProvidersOptions["me
 }
 
 /** Answers the leaderboard with `rowsFor(page)` and records the URL of every request. */
-function answerWith(rowsFor: (page: number) => PrototypePlayer[], variant = droidRebalance): URL[] {
+function answerWith(rowsFor: (page: number) => PrototypePlayer[]): URL[] {
     const requests: URL[] = [];
 
     server.use(
@@ -43,11 +43,7 @@ function answerWith(rowsFor: (page: number) => PrototypePlayer[], variant = droi
             const url = new URL(request.url);
             requests.push(url);
 
-            const body: PrototypeLeaderboardResponse<PrototypePlayer[]> = {
-                variants: [droidRebalance, readingVariant],
-                currentVariant: variant,
-                data: rowsFor(Number(url.searchParams.get("page") ?? "1")),
-            };
+            const body: PrototypePlayer[] = rowsFor(Number(url.searchParams.get("page") ?? "1"));
 
             return HttpResponse.json(body);
         }),
@@ -137,7 +133,7 @@ describe("LeaderboardTab", () => {
 
     it("marks nobody as outdated when the variant's build time is unknown", async () => {
         const variant = { ...droidRebalance, builtAt: null };
-        answerWith(() => [buildPlayer({ uid: 1, username: "Stale", lastUpdate: 0 })], variant);
+        answerWith(() => [buildPlayer({ uid: 1, username: "Stale", lastUpdate: 0 })]);
 
         renderTab(variant);
 
@@ -183,7 +179,7 @@ describe("LeaderboardTab", () => {
             ...player,
             masterPPTotal: 1234.5,
         }));
-        answerWith(() => withMaster, readingVariant);
+        answerWith(() => withMaster);
 
         const { unmount } = renderTab(readingVariant);
 
@@ -191,7 +187,7 @@ describe("LeaderboardTab", () => {
         expect(screen.getAllByText("1234.50")).toHaveLength(3);
 
         unmount();
-        answerWith(() => withMaster, droidRebalance);
+        answerWith(() => withMaster);
         renderTab(droidRebalance);
 
         await screen.findByText("Alpha");
@@ -297,11 +293,7 @@ describe("LeaderboardTab", () => {
                     await delay(150);
                 }
 
-                const body: PrototypeLeaderboardResponse<PrototypePlayer[]> = {
-                    variants: [droidRebalance, readingVariant],
-                    currentVariant: droidRebalance,
-                    data: buildPage(page, page === 1 ? 50 : 2),
-                };
+                const body: PrototypePlayer[] = buildPage(page, page === 1 ? 50 : 2);
 
                 return HttpResponse.json(body);
             }),
@@ -322,24 +314,21 @@ describe("LeaderboardTab", () => {
     });
 
     it("shows a dash for a missing Master pp and falls back to live pp for its difference", async () => {
-        answerWith(
-            () => [
-                buildPlayer({
-                    uid: 1,
-                    username: "WithMaster",
-                    localPPTotal: 1000,
-                    livePPTotal: 900,
-                    masterPPTotal: 950,
-                }),
-                buildPlayer({
-                    uid: 2,
-                    username: "WithoutMaster",
-                    localPPTotal: 1000,
-                    livePPTotal: 900,
-                }),
-            ],
-            readingVariant,
-        );
+        answerWith(() => [
+            buildPlayer({
+                uid: 1,
+                username: "WithMaster",
+                localPPTotal: 1000,
+                livePPTotal: 900,
+                masterPPTotal: 950,
+            }),
+            buildPlayer({
+                uid: 2,
+                username: "WithoutMaster",
+                localPPTotal: 1000,
+                livePPTotal: 900,
+            }),
+        ]);
 
         renderTab(readingVariant);
 

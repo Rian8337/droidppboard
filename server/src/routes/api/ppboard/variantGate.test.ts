@@ -70,11 +70,10 @@ describe("variant visibility on the ppboard routes", () => {
         const { BrokerClient } = await import("../../../clients/BrokerClient");
         const { Util } = await import("../../../utils/Util");
 
-        // The broker leaves private variants out of a visitor's list.
-        vi.spyOn(BrokerClient, "getVariants").mockResolvedValue([
-            variant("droid-live"),
-            variant("droid-rebalance"),
-        ]);
+        // The broker answers a private variant as not found to a visitor.
+        vi.spyOn(BrokerClient, "getVariant").mockImplementation((name) =>
+            Promise.resolve(name === "secret" ? "notFound" : variant(name)),
+        );
         vi.spyOn(Util, "getTopPrototypePP").mockReturnValue([]);
 
         await start();

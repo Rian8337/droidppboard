@@ -14,6 +14,18 @@ describe("InfoTab", () => {
         expect(screen.getByText("Available")).toBeVisible();
     });
 
+    it("shows the description before the details", () => {
+        renderWithProviders(<InfoTab variant={droidRebalance} />);
+
+        const description = screen.getByRole("region", { name: "Description" });
+
+        expect(description).toHaveTextContent("The rebalanced osu!droid performance point system.");
+        expect(
+            description.compareDocumentPosition(screen.getByText("Internal name")) &
+                Node.DOCUMENT_POSITION_FOLLOWING,
+        ).toBeTruthy();
+    });
+
     it("omits what the variant does not have", () => {
         renderWithProviders(
             <InfoTab

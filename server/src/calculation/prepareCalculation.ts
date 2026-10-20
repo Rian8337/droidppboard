@@ -78,13 +78,19 @@ export async function prepareCalculation(
             return { error: "The rework list is unavailable", status: 503 };
         }
 
-        variant = resolved.current;
+        variant = resolved;
     } else {
         if (!isToolVariantName(request.variant)) {
             return { error: "Rework not found", status: 404 };
         }
 
-        variant = await BrokerClient.getVariant(request.variant, actingUid);
+        const toolVariant = await BrokerClient.getVariant(
+            request.variant,
+            actingUid,
+        );
+
+        // A tool variant is calculated even when the broker cannot describe it.
+        variant = toolVariant === "notFound" ? null : toolVariant;
     }
 
     if (

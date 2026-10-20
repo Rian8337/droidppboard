@@ -14,6 +14,7 @@ import {
 } from "../../../recalculation/requests";
 import { asyncHandler } from "../../../utils/asyncHandler";
 import {
+    findListedVariant,
     listVisibleDroidVariants,
     resolveVisibleVariant,
 } from "../../../utils/visibleVariant";
@@ -75,7 +76,7 @@ async function resolveVariantOrAnswer(
         return undefined;
     }
 
-    return resolved.current;
+    return resolved;
 }
 
 /**
@@ -118,15 +119,22 @@ router.get(
             return;
         }
 
-        // The global view has no variant to resolve, so it must not go through the default one.
+        // The view lists every visible variant anyway, so the requested one is found among them.
+        // The global view has no variant to find, so it must not fall back to the default one.
         const [visible, me] = await Promise.all([
-            requested === undefined
-                ? listVisibleDroidVariants(uid).then((variants) =>
-                      variants === null
-                          ? ("unavailable" as const)
-                          : { variants, current: null },
-                  )
-                : resolveVisibleVariant(requested, uid),
+            listVisibleDroidVariants(uid).then((variants) => {
+                if (variants === null) {
+                    return "unavailable" as const;
+                }
+
+                if (requested === undefined) {
+                    return { variants, current: null };
+                }
+
+                const current = findListedVariant(variants, requested);
+
+                return current ? { variants, current } : ("notFound" as const);
+            }),
             uid === undefined ? null : BrokerClient.getMe(uid),
         ]);
 

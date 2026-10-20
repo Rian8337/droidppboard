@@ -1,5 +1,5 @@
 import { useQuery, type UseQueryResult } from "@tanstack/react-query";
-import type { PrototypeLeaderboardResponse, PrototypePlayer } from "app-structures";
+import type { PrototypePlayer } from "app-structures";
 import { requestJson } from "./http";
 import { queryKeys } from "./queryKeys";
 
@@ -13,11 +13,10 @@ export function useProfile(variant: string, uid: number): UseQueryResult<Prototy
         queryFn: () => {
             const parameters = new URLSearchParams({ uid: String(uid), type: variant });
 
-            return requestJson<PrototypeLeaderboardResponse<PrototypePlayer>>(
+            return requestJson<PrototypePlayer>(
                 "GET",
                 `/api/ppboard/prototype/getuserprofile?${parameters}`,
             );
         },
-        select: (response) => response.data,
     });
 }

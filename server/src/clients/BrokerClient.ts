@@ -57,21 +57,29 @@ export abstract class BrokerClient {
      *
      * @param name The name or alias of the variant.
      * @param actingUid The uid of the person to act for.
-     * @returns The variant, or `null` if it is not visible to the person or could not be fetched.
+     * @returns The variant; `"notFound"` if it does not exist or is not visible to the person, which
+     * the broker answers alike; or `null` if it could not be fetched.
      */
     static async getVariant(
         name: string,
         actingUid?: number,
-    ): Promise<PPVariant | null> {
+    ): Promise<PPVariant | "notFound" | null> {
         let path: string;
 
         try {
             path = `/variants/${encodeURIComponent(name)}`;
         } catch {
-            return null;
+            // A name that cannot be encoded cannot name a variant either.
+            return "notFound";
         }
 
-        return this.getJson<PPVariant>(path, actingUid);
+        const response = await this.fetchJson<PPVariant>(path, actingUid);
+
+        if (response?.status === 404) {
+            return "notFound";
+        }
+
+        return response?.body ?? null;
     }
 
     /**
@@ -217,6 +225,21 @@ export abstract class BrokerClient {
         path: string,
         actingUid?: number,
     ): Promise<T | null> {
+        const response = await this.fetchJson<T>(path, actingUid);
+
+        return response?.body ?? null;
+    }
+
+    /**
+     * Gets a broker endpoint, reading the body only of a successful response.
+     *
+     * @returns The status, with the body if it was 200 or `null` otherwise, or `null` if the
+     * request failed.
+     */
+    private static async fetchJson<T>(
+        path: string,
+        actingUid?: number,
+    ): Promise<{ status: number; body: T | null } | null> {
         try {
             const response = await fetch(this.url(path), {
                 headers: this.headers(actingUid, false),
@@ -224,10 +247,10 @@ export abstract class BrokerClient {
             });
 
             if (response.status !== 200) {
-                return null;
+                return { status: response.status, body: null };
             }
 
-            return (await response.json()) as T;
+            return { status: 200, body: (await response.json()) as T };
         } catch (e) {
             // Only the kind of error is logged, as its message can embed the URL.
             console.error(

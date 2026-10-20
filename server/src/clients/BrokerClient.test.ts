@@ -92,17 +92,22 @@ describe("BrokerClient", () => {
         expect(headersOf(lastRequest().init).has("X-Acting-Uid")).toBe(false);
     });
 
-    it("returns null, and logs neither the key nor the URL, when a variant cannot be fetched", async () => {
+    it("answers notFound for a variant the broker does not show the person", async () => {
         fetchMock.mockResolvedValueOnce(jsonResponse({}, 404));
+        expect(await BrokerClient.getVariant("x", 1)).toBe("notFound");
+
+        // A name that cannot be encoded cannot name a variant either.
+        expect(await BrokerClient.getVariant("\ud800", 1)).toBe("notFound");
+    });
+
+    it("returns null, and logs neither the key nor the URL, when a variant cannot be fetched", async () => {
+        fetchMock.mockResolvedValueOnce(jsonResponse({}, 500));
         expect(await BrokerClient.getVariant("x", 1)).toBeNull();
 
         fetchMock.mockRejectedValueOnce(
             new Error("failed http://broker.test/variants/x with test-key"),
         );
         expect(await BrokerClient.getVariant("x", 1)).toBeNull();
-
-        // A name that cannot be encoded must not throw either.
-        expect(await BrokerClient.getVariant("\ud800", 1)).toBeNull();
 
         vi.stubEnv("DPP_BROKER_URL", "");
         vi.stubGlobal("fetch", () => {

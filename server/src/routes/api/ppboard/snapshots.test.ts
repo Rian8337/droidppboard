@@ -213,9 +213,8 @@ describe("calculation snapshots", () => {
         ({ BrokerClient } = await import("../../../clients/BrokerClient"));
         ({ Util } = await import("../../../utils/Util"));
 
-        const { DatabaseManager } = await import(
-            "../../../database/managers/DatabaseManager"
-        );
+        const { DatabaseManager } =
+            await import("../../../database/managers/DatabaseManager");
 
         DatabaseManager.aliceDb = {
             collections: {
@@ -225,18 +224,14 @@ describe("calculation snapshots", () => {
 
         const snapshots = (await import("./snapshots")).default;
 
-        // The broker leaves private variants out of a list for someone who cannot see them.
-        vi.spyOn(BrokerClient, "getVariants").mockImplementation((actingUid) =>
-            Promise.resolve([
-                variant("droid-live"),
-                variant("droid-rebalance"),
-                variant("osu-live"),
-                variant("osu-rebalance"),
-                ...(actingUid === 5 ? [variant("secret")] : []),
-            ]),
-        );
-        vi.spyOn(BrokerClient, "getVariant").mockImplementation((name) =>
-            Promise.resolve(variant(name)),
+        // The broker answers a private variant as not found to someone who cannot see it.
+        vi.spyOn(BrokerClient, "getVariant").mockImplementation(
+            (name, actingUid) =>
+                Promise.resolve(
+                    name === "secret" && actingUid !== 5
+                        ? "notFound"
+                        : variant(name),
+                ),
         );
         vi.spyOn(BrokerClient, "calculatePerformance").mockResolvedValue({
             status: 200,
@@ -684,8 +679,8 @@ describe("calculation snapshots", () => {
             expect(await res.json()).toEqual({ message: "Snapshot not found" });
         });
 
-        it("answers 503 when the variants cannot be listed", async () => {
-            vi.mocked(BrokerClient.getVariants).mockResolvedValue(null);
+        it("answers 503 when the variant cannot be fetched", async () => {
+            vi.mocked(BrokerClient.getVariant).mockResolvedValue(null);
             findSnapshot.mockResolvedValue(
                 snapshot("abcdefghij", "droid-rebalance"),
             );

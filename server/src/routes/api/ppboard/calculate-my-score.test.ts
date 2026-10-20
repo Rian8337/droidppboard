@@ -150,16 +150,15 @@ describe("POST /calculate/my-score", () => {
 
         const calculateMyScore = (await import("./calculate-my-score")).default;
 
-        vi.spyOn(BrokerClient, "getVariants").mockResolvedValue([
-            variant("droid-live"),
-            variant("droid-rebalance", { calculatorVersion: "9.9.9" }),
-        ]);
+        // The broker answers a private variant as not found to someone who cannot see it.
         vi.spyOn(BrokerClient, "getVariant").mockImplementation((name) =>
             Promise.resolve(
-                variant(name, {
-                    calculatorVersion:
-                        name === "droid-rebalance" ? "9.9.9" : null,
-                }),
+                name === "secret"
+                    ? "notFound"
+                    : variant(name, {
+                          calculatorVersion:
+                              name === "droid-rebalance" ? "9.9.9" : null,
+                      }),
             ),
         );
         calculatePerformance = vi.spyOn(BrokerClient, "calculatePerformance");

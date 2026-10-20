@@ -5,7 +5,6 @@ import { NotFoundPage } from "../pages/NotFoundPage";
 import type { VariantTab } from "../routing/paths";
 import { canManageVariant } from "./permissions";
 import { useCurrentVariant } from "./useCurrentVariant";
-import { VariantDescription } from "./VariantDescription";
 import { VariantTabs } from "./VariantTabs";
 import { variantTabContent } from "./variantTabContent";
 import styles from "./VariantPage.module.css";
@@ -15,7 +14,7 @@ function isVariantTab(value: string | undefined): value is VariantTab {
     return value !== undefined && Object.hasOwn(variantTabContent, value);
 }
 
-/** A variant's page: its description above the tabs, and the tab the address names. */
+/** A variant's page: its tabs, and the tab the address names. */
 export function VariantPage() {
     const { tab } = useParams();
     const { variant, isLoading, error, refetch } = useCurrentVariant();
@@ -42,7 +41,6 @@ export function VariantPage() {
 
     return (
         <div>
-            <VariantDescription description={variant.description} />
             <VariantTabs variant={variant.name} activeTab={tab} />
             <Content variant={variant} />
         </div>

@@ -47,7 +47,7 @@ function countCollapsedBlocks(blocks: string[]): number {
 /**
  * The part of a description shown while it is collapsed: its first block, plus the block after
  * it when the first is a heading (a heading alone says too little). The Admin description editor
- * previews with this too, so what it shows is what the variant page will.
+ * previews with this too, so what it shows is what the Info tab will.
  */
 export function getCollapsedDescription(source: string): string {
     const blocks = splitBlocks(source);

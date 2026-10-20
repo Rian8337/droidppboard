@@ -66,7 +66,7 @@ describe("VariantPage", () => {
         expect(await screen.findByText("Page not found")).toBeVisible();
     });
 
-    it("shows the description above the tabs and the Info tab's content", async () => {
+    it("shows the Info tab's content with the description", async () => {
         renderPage("/v/droid-rebalance/info");
 
         expect(
@@ -74,6 +74,15 @@ describe("VariantPage", () => {
         ).toBeVisible();
         expect(screen.getByRole("link", { name: "Info" })).toHaveAttribute("aria-current", "page");
         expect(screen.getByText("Internal name")).toBeVisible();
+    });
+
+    it("leaves the description out of the other tabs", async () => {
+        renderPage("/v/droid-rebalance/queue");
+        await screen.findByRole("navigation");
+
+        expect(
+            screen.queryByText("The rebalanced osu!droid performance point system."),
+        ).not.toBeInTheDocument();
     });
 
     it.each(["desktop", "phone"] as const)("orders the tabs Info first on a %s", async (size) => {

@@ -64,9 +64,6 @@ export async function mockApi(page: Page, options: MockApiOptions = {}): Promise
         const request = route.request();
         const url = new URL(request.url());
         const endpoint = `${request.method()} ${url.pathname}`;
-        const variantName = url.searchParams.get("type") ?? url.searchParams.get("variant");
-        const currentVariant =
-            variantName === readingVariant.name ? readingVariant : droidRebalance;
 
         switch (endpoint) {
             case "GET /api/auth/me":
@@ -84,13 +81,13 @@ export async function mockApi(page: Page, options: MockApiOptions = {}): Promise
             case "GET /api/ppboard/variants":
                 return fulfillJson(route, variants);
             case "GET /api/ppboard/prototype/getleaderboard":
-                return fulfillJson(route, { variants, currentVariant, data: leaderboardPlayers });
+                return fulfillJson(route, leaderboardPlayers);
             case "GET /api/ppboard/prototype/getuserprofile":
                 return url.searchParams.get("uid") === String(alphaProfile.uid)
-                    ? fulfillJson(route, { variants, currentVariant, data: alphaProfile })
+                    ? fulfillJson(route, alphaProfile)
                     : fulfillJson(route, { message: "Player not found!" }, 404);
             case "GET /api/ppboard/prototype/gettopplays":
-                return fulfillJson(route, { variants, currentVariant, data: topPlays });
+                return fulfillJson(route, topPlays);
             case "GET /api/recalc/queue":
                 return fulfillJson(
                     route,

@@ -4,7 +4,6 @@ export * from "./elainaDb/IMapWhitelist";
 export * from "./structures/Calculation";
 export * from "./structures/PPEntry";
 export * from "./structures/PPVariant";
-export * from "./structures/PrototypeLeaderboardResponse";
 export * from "./structures/PrototypePlayer";
 export * from "./structures/PrototypePPEntry";
 export * from "./structures/PrototypeTopPlay";

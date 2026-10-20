@@ -54,7 +54,7 @@ describe("player countries on the ppboard routes", () => {
         const { BrokerClient } = await import("../../../clients/BrokerClient");
         const { Util } = await import("../../../utils/Util");
 
-        vi.spyOn(BrokerClient, "getVariants").mockResolvedValue([variant]);
+        vi.spyOn(BrokerClient, "getVariant").mockResolvedValue(variant);
         vi.spyOn(Util, "getTopPrototypePP").mockReturnValue([]);
         vi.spyOn(console, "error").mockImplementation(() => undefined);
 
@@ -92,7 +92,7 @@ describe("player countries on the ppboard routes", () => {
             const body = await res.json();
 
             expect(res.status).toBe(200);
-            expect(body.data).toEqual([
+            expect(body).toEqual([
                 { uid: 10, username: "Alpha", country: "ID" },
                 { uid: 11, username: "Bravo", country: null },
             ]);
@@ -107,7 +107,7 @@ describe("player countries on the ppboard routes", () => {
             const body = await res.json();
 
             expect(res.status).toBe(200);
-            expect(body.data).toEqual([
+            expect(body).toEqual([
                 { uid: 10, username: "Alpha", country: null },
                 { uid: 11, username: "Bravo", country: null },
             ]);
@@ -127,7 +127,7 @@ describe("player countries on the ppboard routes", () => {
             const body = await res.json();
 
             expect(res.status).toBe(200);
-            expect(body.data).toEqual({
+            expect(body).toEqual({
                 uid: 10,
                 username: "Alpha",
                 country: "JP",
@@ -143,7 +143,7 @@ describe("player countries on the ppboard routes", () => {
             const body = await res.json();
 
             expect(res.status).toBe(200);
-            expect(body.data.country).toBeNull();
+            expect(body.country).toBeNull();
             expect(console.error).toHaveBeenCalled();
         });
 
@@ -176,9 +176,7 @@ describe("player countries on the ppboard routes", () => {
 
             expect(res.status).toBe(200);
             expect(
-                body.data.map(
-                    (play: { country: string | null }) => play.country,
-                ),
+                body.map((play: { country: string | null }) => play.country),
             ).toEqual(["ID", null, "ID"]);
             expect(mocks.getCountries).toHaveBeenCalledTimes(1);
             expect(mocks.getCountries).toHaveBeenCalledWith([10, 11]);
@@ -192,9 +190,7 @@ describe("player countries on the ppboard routes", () => {
 
             expect(res.status).toBe(200);
             expect(
-                body.data.map(
-                    (play: { country: string | null }) => play.country,
-                ),
+                body.map((play: { country: string | null }) => play.country),
             ).toEqual([null, null, null]);
             expect(console.error).toHaveBeenCalled();
         });

@@ -75,17 +75,15 @@ describe("POST /calculate", () => {
 
         const calculate = (await import("./calculate")).default;
 
-        // The broker leaves private variants out of a visitor's list.
-        vi.spyOn(BrokerClient, "getVariants").mockResolvedValue([
-            variant("droid-live"),
-            variant("droid-rebalance"),
-        ]);
+        // The broker answers a private variant as not found to a visitor.
         vi.spyOn(BrokerClient, "getVariant").mockImplementation((name) =>
             Promise.resolve(
-                variant(name, {
-                    calculatorVersion:
-                        name === "osu-rebalance" ? "9.9.9" : null,
-                }),
+                name === "secret"
+                    ? "notFound"
+                    : variant(name, {
+                          calculatorVersion:
+                              name === "osu-rebalance" ? "9.9.9" : null,
+                      }),
             ),
         );
         calculatePerformance = vi
@@ -179,14 +177,14 @@ describe("POST /calculate", () => {
 
     it("calculates a private variant for a person who can see it", async () => {
         uid = 77;
-        vi.mocked(BrokerClient.getVariants).mockResolvedValue([
-            variant("droid-live"),
+        vi.mocked(BrokerClient.getVariant).mockResolvedValue(
             variant("secret", { public: false }),
-        ]);
+        );
 
         const res = await post({ scope: "variant", variant: "secret" });
 
         expect(res.status).toBe(200);
+        expect(BrokerClient.getVariant).toHaveBeenCalledWith("secret", 77);
         expect(calculatePerformance).toHaveBeenCalledWith(
             "secret",
             expect.anything(),
@@ -256,8 +254,8 @@ describe("POST /calculate", () => {
         expect(res.status).toBe(503);
     });
 
-    it("answers 503 when the variants cannot be fetched", async () => {
-        vi.mocked(BrokerClient.getVariants).mockResolvedValue(null);
+    it("answers 503 when the variant cannot be fetched", async () => {
+        vi.mocked(BrokerClient.getVariant).mockResolvedValue(null);
 
         const res = await post({
             scope: "variant",

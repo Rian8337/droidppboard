@@ -31,5 +31,7 @@ export async function getVariantCalculatorCount(
 ): Promise<number | null> {
     const variant = await BrokerClient.getVariant(name, actingUid);
 
-    return variant === null ? null : calculatorCount(variant);
+    return variant === null || variant === "notFound"
+        ? null
+        : calculatorCount(variant);
 }
