@@ -42,6 +42,7 @@ function variant(name: string, overrides: Partial<PPVariant> = {}): PPVariant {
         mode: name.startsWith("osu-") ? "osu" : "droid",
         algorithm: name.endsWith("live") ? "live" : "rebalance",
         public: true,
+        pinned: false,
         builtAt: null,
         calculatorVersion: null,
         ...overrides,

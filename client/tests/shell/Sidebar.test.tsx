@@ -129,6 +129,15 @@ describe("Sidebar", () => {
         ).not.toBeInTheDocument();
     });
 
+    it("pins variants an admin pinned", async () => {
+        respondWithVariants(droidRebalance, { ...readingVariant, pinned: true });
+        renderWithProviders(<Sidebar onNavigate={() => {}} />);
+
+        const reading = await screen.findByRole("link", { name: /Reading/ });
+
+        expect(within(reading).getByLabelText("Pinned")).toBeInTheDocument();
+    });
+
     it("links to the tools, donating, and credits the project", () => {
         renderWithProviders(<Sidebar onNavigate={() => {}} />);
 

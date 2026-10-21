@@ -36,6 +36,7 @@ const variant: PPVariant = {
     mode: "droid",
     algorithm: "rebalance",
     public: true,
+    pinned: false,
     builtAt: null,
     calculatorVersion: null,
 };

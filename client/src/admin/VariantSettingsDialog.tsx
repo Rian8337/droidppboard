@@ -14,6 +14,7 @@ import { Checkbox } from "../components/Checkbox";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { Dialog } from "../components/Dialog";
 import { TextField } from "../components/TextField";
+import { defaultVariant } from "../routing/paths";
 import { DescriptionEditor } from "./DescriptionEditor";
 import styles from "./VariantSettingsDialog.module.css";
 import { formatError } from "../api/http";
@@ -21,25 +22,25 @@ import { formatError } from "../api/http";
 /** What the settings need of a variant: both the site's variants and the admin list have it. */
 export type SettingsVariant = Pick<
     PPVariant,
-    "name" | "title" | "description" | "public" | "available"
+    "name" | "title" | "description" | "public" | "pinned" | "available"
 > & { readonly aliases: readonly string[] };
 
 export interface VariantSettingsDialogProps {
     variant: SettingsVariant;
 
-    /** Whether the person may change who can see the variant, which only admins may. */
-    canChangeVisibility: boolean;
+    /** Whether the person may change who can see the variant and whether it is pinned, which only admins may. */
+    canChangeAdminSettings: boolean;
     isOpen: boolean;
     onClose: () => void;
 }
 
 /**
- * Edits a variant's title, description, aliases and, for admins, visibility. Closing it with unsaved
+ * Edits a variant's title, description, aliases and, for admins, visibility and pin. Closing it with unsaved
  * changes asks first. Aliases are saved as they change, so they never count as unsaved.
  */
 export function VariantSettingsDialog({
     variant,
-    canChangeVisibility,
+    canChangeAdminSettings,
     isOpen,
     onClose,
 }: VariantSettingsDialogProps) {
@@ -65,7 +66,7 @@ export function VariantSettingsDialog({
             <Dialog title="Edit settings" isOpen={isOpen} onClose={requestClose} isWide>
                 <SettingsForm
                     variant={variant}
-                    canChangeVisibility={canChangeVisibility}
+                    canChangeAdminSettings={canChangeAdminSettings}
                     onChangedChange={setIsChanged}
                     onCancel={requestClose}
                     onSaved={close}
@@ -73,7 +74,7 @@ export function VariantSettingsDialog({
             </Dialog>
             <ConfirmDialog
                 title="Discard your changes?"
-                message="The changes to the title, description and visibility are not saved."
+                message="The changes to the title, description, visibility and pin are not saved."
                 confirmLabel="Discard"
                 cancelLabel="Keep editing"
                 isOpen={isConfirmingDiscard}
@@ -86,7 +87,7 @@ export function VariantSettingsDialog({
 
 interface SettingsFormProps extends Pick<
     VariantSettingsDialogProps,
-    "variant" | "canChangeVisibility"
+    "variant" | "canChangeAdminSettings"
 > {
     /** Called with whether the form holds changes that are not saved. */
     onChangedChange: (isChanged: boolean) => void;
@@ -100,7 +101,7 @@ const aliasPattern = /^[A-Za-z0-9_-]+$/;
 
 function SettingsForm({
     variant,
-    canChangeVisibility,
+    canChangeAdminSettings,
     onChangedChange,
     onCancel,
     onSaved,
@@ -108,6 +109,7 @@ function SettingsForm({
     const [title, setTitle] = useState(variant.title ?? "");
     const [description, setDescription] = useState(variant.description ?? "");
     const [isPublic, setIsPublic] = useState(variant.public);
+    const [isPinned, setIsPinned] = useState(variant.pinned);
     const updating = useUpdateVariant(variant.name);
 
     const isTitleTooLong = title.length > maxVariantTitleLength;
@@ -124,8 +126,12 @@ function SettingsForm({
         changes.description = description.trim() === "" ? null : description;
     }
 
-    if (canChangeVisibility && isPublic !== variant.public) {
+    if (canChangeAdminSettings && isPublic !== variant.public) {
         changes.public = isPublic;
+    }
+
+    if (canChangeAdminSettings && isPinned !== variant.pinned) {
+        changes.pinned = isPinned;
     }
 
     const isChanged = Object.keys(changes).length > 0;
@@ -164,12 +170,21 @@ function SettingsForm({
                     : "This rework is unavailable: it has no healthy calculator right now."}{" "}
                 That follows the calculators and is not set here.
             </p>
-            {canChangeVisibility && (
+            {canChangeAdminSettings && (
                 <Checkbox
                     checked={isPublic}
                     onChange={(event) => setIsPublic(event.target.checked)}
                 >
                     Public: anyone can see this rework
+                </Checkbox>
+            )}
+            {/* The default variant always leads the sidebar, so pinning it would change nothing. */}
+            {canChangeAdminSettings && variant.name !== defaultVariant && (
+                <Checkbox
+                    checked={isPinned}
+                    onChange={(event) => setIsPinned(event.target.checked)}
+                >
+                    Pinned: list this rework at the top of the sidebar
                 </Checkbox>
             )}
             {updating.error && (
