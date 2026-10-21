@@ -63,9 +63,9 @@ describe("ScoreMultiplierPage", () => {
     it("does not offer the mod settings", async () => {
         renderWithProviders(<ScoreMultiplierPage />);
         await userEvent.click(screen.getByRole("button", { name: "Select mods" }));
-        await userEvent.click(screen.getByRole("checkbox", { name: /difficulty adjust/i }));
+        await userEvent.click(screen.getByRole("checkbox", { name: /custom speed/i }));
 
-        expect(screen.queryByLabelText(/circle size/i)).not.toBeInTheDocument();
+        expect(screen.queryByLabelText(/track rate multiplier/i)).not.toBeInTheDocument();
     });
 
     it("lists the scores with both multipliers and sorts them by a clicked header", async () => {

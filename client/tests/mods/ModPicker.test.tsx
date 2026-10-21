@@ -118,16 +118,27 @@ describe("ModPicker", () => {
         expect(screen.getByText("DT")).toBeInTheDocument();
     });
 
-    it("selecting RX deselects AP", () => {
+    it("selecting HR deselects EZ", () => {
         const onChange = vi.fn();
         render(<ControlledPicker onChange={onChange} />);
 
         openPicker();
-        fireEvent.click(screen.getByRole("checkbox", { name: /autopilot/i }));
-        fireEvent.click(screen.getByRole("checkbox", { name: /relax/i }));
+        fireEvent.click(screen.getByRole("checkbox", { name: /easy/i }));
+        fireEvent.click(screen.getByRole("checkbox", { name: /hard rock/i }));
 
-        expect(onChange).toHaveBeenLastCalledWith([{ acronym: "RX" }]);
-        expect(screen.getByRole("checkbox", { name: /autopilot/i })).not.toBeChecked();
+        expect(onChange).toHaveBeenLastCalledWith([{ acronym: "HR" }]);
+        expect(screen.getByRole("checkbox", { name: /easy/i })).not.toBeChecked();
+    });
+
+    it("does not offer unranked mods", () => {
+        render(<ModPicker mods={[]} onChange={vi.fn()} />);
+
+        openPicker();
+
+        expect(screen.queryByRole("checkbox", { name: /relax/i })).not.toBeInTheDocument();
+        expect(
+            screen.queryByRole("checkbox", { name: /difficulty adjust/i }),
+        ).not.toBeInTheDocument();
     });
 
     it("names the trigger by its selection so screen readers hear the chosen mods", () => {

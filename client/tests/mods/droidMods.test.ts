@@ -41,11 +41,20 @@ describe("getSelectableDroidMods", () => {
         expect(last.mods.map((m) => m.acronym)).toEqual(["RV6"]);
     });
 
-    it("offers Autopilot and Relax", () => {
+    it("offers only ranked mods, apart from Replay V6", () => {
+        const unranked = getSelectableDroidMods()
+            .filter((m) => m.isApplicableToDroid() && !m.droidRanked)
+            .map((m) => m.acronym);
+
+        expect(unranked).toEqual(["RV6"]);
+    });
+
+    it("leaves out unranked mods such as Autopilot, Relax and Difficulty Adjust", () => {
         const acronyms = getSelectableDroidMods().map((m) => m.acronym);
 
-        expect(acronyms).toContain("AP");
-        expect(acronyms).toContain("RX");
+        expect(acronyms).not.toContain("AP");
+        expect(acronyms).not.toContain("RX");
+        expect(acronyms).not.toContain("DA");
     });
 
     it("offers Perfect and Sudden Death in Difficulty Increase, in the game client's order", () => {
@@ -61,7 +70,6 @@ describe("getSelectableDroidMods", () => {
             "PF",
             "PR",
             "SD",
-            "TC",
         ]);
     });
 

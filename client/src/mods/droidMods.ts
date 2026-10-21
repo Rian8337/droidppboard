@@ -21,9 +21,9 @@ export type ModCategory = (typeof MOD_CATEGORY_ORDER)[number];
  * here is never offered. Every listed acronym has an icon in `public/icons/mods` except those in
  * {@link ACRONYMS_WITHOUT_ICON}.
  *
- * Autoplay ("AT") is deliberately not listed: it is not a mod to filter scores by. Replay V6
- * ("RV6") is listed although it isn't user-playable: it marks scores set on replay version 6 or
- * older, which are worth filtering by.
+ * Autoplay ("AT") is deliberately not listed: it is not a mod to filter scores by. Unranked mods
+ * stay listed so that the order keeps matching the game client's, but {@link getSelectableDroidMods}
+ * leaves them out.
  */
 const SELECTABLE_MODS: readonly {
     readonly category: ModCategory;
@@ -46,6 +46,12 @@ const SELECTABLE_MODS: readonly {
  */
 const ACRONYMS_WITHOUT_ICON: ReadonlySet<string> = new Set(["RV6"]);
 
+/**
+ * The unranked acronyms that are offered anyway. Replay V6 isn't user-playable, but it marks
+ * online scores set on replay version 6 or older, which are worth filtering by.
+ */
+const UNRANKED_ACRONYMS_OFFERED: ReadonlySet<string> = new Set(["RV6"]);
+
 const CATEGORY_BY_ACRONYM = new Map<string, ModCategory>(
     SELECTABLE_MODS.flatMap((group) => group.acronyms.map((acronym) => [acronym, group.category])),
 );
@@ -64,7 +70,8 @@ export function hasModIcon(acronym: string): boolean {
 
 /**
  * Every mod selectable in the mod picker: applicable to osu!droid
- * (`Mod.isApplicableToDroid()`) and listed in {@link SELECTABLE_MODS}. Ordered by
+ * (`Mod.isApplicableToDroid()`), ranked there at its default settings (`Mod.droidRanked`) unless it
+ * is in {@link UNRANKED_ACRONYMS_OFFERED}, and listed in {@link SELECTABLE_MODS}. Ordered by
  * {@link SELECTABLE_MODS} - category blocks matching the game client's own mod menu, in its
  * declaration order within each - rather than alphabetically. Returns fresh instances every call,
  * each at that mod's default settings - callers own their own copy to mutate freely.
@@ -76,6 +83,10 @@ export function getSelectableDroidMods(): Mod[] {
         const instance = new (ModClass as new () => Mod)();
 
         if (!instance.isApplicableToDroid()) {
+            continue;
+        }
+
+        if (!instance.droidRanked && !UNRANKED_ACRONYMS_OFFERED.has(instance.acronym)) {
             continue;
         }
 

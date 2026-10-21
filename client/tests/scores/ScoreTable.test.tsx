@@ -116,9 +116,9 @@ describe("ScoreTable", () => {
         render(<ScoreTable scores={scores} storageKey="columns" />);
 
         await userEvent.click(screen.getByRole("button", { name: "Select mods" }));
-        await userEvent.click(screen.getByRole("checkbox", { name: /difficulty adjust/i }));
+        await userEvent.click(screen.getByRole("checkbox", { name: /custom speed/i }));
 
-        expect(screen.queryByTestId("mod-settings-DA")).not.toBeInTheDocument();
+        expect(screen.queryByTestId("mod-settings-CS")).not.toBeInTheDocument();
     });
 
     it("hides a column unticked in Columns and remembers it across remounts", async () => {
