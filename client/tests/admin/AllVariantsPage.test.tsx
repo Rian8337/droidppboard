@@ -9,7 +9,7 @@ const adminVariants = [
     buildAdminVariant({ name: "droid-live", title: "Live" }),
     buildAdminVariant({ name: "droid-rebalance", title: "Rebalance" }),
     buildAdminVariant({ name: "osu-live", title: "osu! live" }),
-    buildAdminVariant({ name: "flowaim", public: false, aliases: ["flow"] }),
+    buildAdminVariant({ name: "flowaim", public: false, pinned: true, aliases: ["flow"] }),
 ];
 
 describe("AllVariantsPage", () => {
@@ -29,6 +29,10 @@ describe("AllVariantsPage", () => {
 
         expect(within(flowaim).getByText("Private")).toBeVisible();
         expect(within(flowaim).getByText("flow")).toBeVisible();
+        expect(within(flowaim).getByText("Pinned")).toBeVisible();
+        expect(
+            within(table.getByText("osu-live").closest("tr")!).queryByText("Pinned"),
+        ).not.toBeInTheDocument();
     });
 
     it("opens a variant's settings and access", async () => {

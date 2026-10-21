@@ -44,6 +44,7 @@ function variant(name: string, overrides: Partial<PPVariant> = {}): PPVariant {
         mode: "droid",
         algorithm: null,
         public: true,
+        pinned: false,
         builtAt: null,
         calculatorVersion: null,
         ...overrides,

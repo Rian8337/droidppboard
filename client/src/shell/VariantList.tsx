@@ -34,7 +34,7 @@ function matchesFilter(variant: PPVariant, filter: string): boolean {
     );
 }
 
-/** The sidebar's flat list of variants, `droid-rebalance` pinned first. */
+/** The sidebar's flat list of variants, `droid-rebalance` first and then the pinned ones. */
 export function VariantList({ filter, currentVariant, onNavigate }: VariantListProps) {
     const { data: variants, error, isPending, refetch } = useVariants();
 
@@ -76,7 +76,7 @@ export function VariantList({ filter, currentVariant, onNavigate }: VariantListP
                                     </span>
                                 )}
                             </span>
-                            {variant.name === defaultVariant && (
+                            {(variant.name === defaultVariant || variant.pinned) && (
                                 <FontAwesomeIcon
                                     icon={faThumbtack}
                                     className={styles.pin}

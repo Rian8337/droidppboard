@@ -8,6 +8,7 @@ import {
     buildAdminUser,
     buildAdminVariant,
     buildFullRun,
+    droidRebalance,
     flowaim,
     managerMe,
 } from "../mocks/fixtures";
@@ -99,13 +100,14 @@ describe("VariantAdminTab as a manager", () => {
         expect(screen.getByRole("button", { name: "Grant access to user" })).toBeVisible();
     });
 
-    it("does not offer to change the visibility in the settings", async () => {
+    it("does not offer to change the visibility or pin in the settings", async () => {
         renderTab();
 
         await userEvent.click(await screen.findByRole("button", { name: "Edit settings" }));
 
         expect(await screen.findByRole("textbox", { name: "Title" })).toBeVisible();
         expect(screen.queryByRole("checkbox", { name: /Public/ })).not.toBeInTheDocument();
+        expect(screen.queryByRole("checkbox", { name: /Pinned/ })).not.toBeInTheDocument();
     });
 
     it("closes the settings without asking when nothing changed", async () => {
@@ -402,15 +404,29 @@ describe("VariantAdminTab as an admin", () => {
         await userEvent.clear(title);
         await userEvent.type(title, "Flow");
         await userEvent.click(screen.getByRole("checkbox", { name: /Public/ }));
+        await userEvent.click(screen.getByRole("checkbox", { name: /Pinned/ }));
         await userEvent.click(screen.getByRole("button", { name: "Save" }));
 
         await waitFor(() =>
             expect(sent).toContainEqual({
                 method: "PATCH",
                 path: "/api/manage/variants/flowaim",
-                body: { title: "Flow", public: true },
+                body: { title: "Flow", public: true, pinned: true },
             }),
         );
+    });
+
+    it("does not offer to pin droid-rebalance, which always leads the sidebar", async () => {
+        serveManage({ grants, usernames, roles, keys });
+
+        renderWithProviders(<VariantAdminTab variant={droidRebalance} />, {
+            route: "/v/droid-rebalance/admin",
+            me: adminMe,
+        });
+        await userEvent.click(await screen.findByRole("button", { name: "Edit settings" }));
+
+        expect(await screen.findByRole("checkbox", { name: /Public/ })).toBeVisible();
+        expect(screen.queryByRole("checkbox", { name: /Pinned/ })).not.toBeInTheDocument();
     });
 
     it("stops the title counter at 100", async () => {

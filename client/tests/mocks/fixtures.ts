@@ -30,6 +30,7 @@ export function buildVariant(overrides: Partial<PPVariant> = {}): PPVariant {
         mode: "droid",
         algorithm: "rebalance",
         public: true,
+        pinned: false,
         builtAt: "2026-10-11T13:16:00.000Z",
         calculatorVersion: "1.0.0",
         ...overrides,
@@ -402,6 +403,7 @@ export interface AdminVariantData {
     readonly description: string | null;
     readonly available: boolean;
     readonly public: boolean;
+    readonly pinned: boolean;
     readonly instanceCount: number;
 }
 
@@ -414,6 +416,7 @@ export function buildAdminVariant(overrides: Partial<AdminVariantData> = {}): Ad
         description: null,
         available: true,
         public: true,
+        pinned: false,
         instanceCount: 1,
         ...overrides,
     };

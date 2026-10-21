@@ -31,6 +31,11 @@ const columns: Column<AdminVariant>[] = [
                 <Pill tone="failure">Unavailable</Pill>
             ),
     },
+    {
+        id: "pinned",
+        header: "Pinned",
+        render: (variant) => (variant.pinned ? <Pill>Pinned</Pill> : "-"),
+    },
 ];
 
 /**

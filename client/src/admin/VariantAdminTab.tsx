@@ -54,7 +54,7 @@ export function VariantAdminTab({ variant, hasFullRun = true }: VariantAdminTabP
             <AccessTable variant={variant.name} me={me} />
             <VariantSettingsDialog
                 variant={variant}
-                canChangeVisibility={isAdminViewing}
+                canChangeAdminSettings={isAdminViewing}
                 isOpen={openDialog === "settings"}
                 onClose={closeDialog}
             />

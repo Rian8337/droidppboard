@@ -40,6 +40,7 @@ export interface AdminVariant {
     readonly description: string | null;
     readonly available: boolean;
     readonly public: boolean;
+    readonly pinned: boolean;
     readonly instanceCount: number;
 }
 
@@ -206,6 +207,9 @@ export interface VariantChanges {
 
     /** Admins only. */
     public?: boolean;
+
+    /** Admins only. */
+    pinned?: boolean;
 }
 
 /** Makes the site's variant list and the grants load again. */
@@ -220,7 +224,7 @@ function useRefreshVariants(): () => Promise<void> {
     };
 }
 
-/** Changes a variant's title, description or visibility. */
+/** Changes a variant's title, description, visibility or pin. */
 export function useUpdateVariant(
     variant: string,
 ): UseMutationResult<unknown, ApiError, VariantChanges> {

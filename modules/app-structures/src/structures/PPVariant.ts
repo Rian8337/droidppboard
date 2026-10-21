@@ -48,6 +48,11 @@ export interface PPVariant {
     public: boolean;
 
     /**
+     * Whether an admin pinned the variant, which lists it ahead of the unpinned ones.
+     */
+    pinned: boolean;
+
+    /**
      * When the variant's calculator was built, as an ISO 8601 timestamp, if known.
      */
     builtAt: string | null;
