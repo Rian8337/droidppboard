@@ -9,11 +9,12 @@ function getColumn(id: string) {
 
 describe("scoreColumns", () => {
     it("lists the columns in the specified order", () => {
-        expect(scoreColumns.slice(0, 18).map((column) => column.id)).toEqual([
+        expect(scoreColumns.slice(0, 19).map((column) => column.id)).toEqual([
             "rank",
             "player",
             "map",
             "live",
+            "master",
             "local",
             "difference",
             "relativeDifference",
@@ -72,6 +73,16 @@ describe("scoreColumns", () => {
 
         expect(getColumn("difference").csvValue(row)).toBe(5);
         expect(getColumn("aimPp").csvValue(row)).toBe(44);
+    });
+
+    it("writes the master pp, or nothing for a score without a master state", () => {
+        const [withMaster, withoutMaster] = addRankChanges([
+            buildScore({ local: buildScoreState(110), master: buildScoreState(105.456) }),
+            buildScore({ local: buildScoreState(100) }),
+        ]);
+
+        expect(getColumn("master").csvValue(withMaster)).toBe(105.46);
+        expect(getColumn("master").csvValue(withoutMaster)).toBe("");
     });
 
     it("writes mods in order separated by commas, or NM for none", () => {

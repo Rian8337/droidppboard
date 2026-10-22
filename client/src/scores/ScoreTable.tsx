@@ -15,7 +15,7 @@ import type { PrototypePPEntry } from "app-structures";
 import type { SortState } from "../components/DataTable";
 
 /** Columns that stay in the table whatever the person picks. */
-const requiredColumnIds = ["rank", "player", "map"];
+const requiredColumnIds = ["rank", "player", "map", "master"];
 
 /** Columns that stay in view while the table scrolls sideways. */
 const pinnedColumnIds = ["rank", "map"];
@@ -33,6 +33,9 @@ export interface ScoreTableProps {
 
     /** Adds the Player column, for scores of several players. */
     showPlayer?: boolean;
+
+    /** Adds the Master column, for scores that are compared with master rather than live. */
+    showMaster?: boolean;
 
     /** Where the chosen columns are remembered in this browser. */
     storageKey: string;
@@ -71,6 +74,7 @@ function readColumnIds(stored: unknown): string[] {
 export function ScoreTable({
     scores,
     showPlayer = false,
+    showMaster = false,
     storageKey,
     mods: controlledMods,
     onModsChange,
@@ -95,11 +99,16 @@ export function ScoreTable({
             ),
         [rows, search, mods, sort],
     );
-    const visibleColumns = scoreColumns.filter((column) =>
-        column.id === "player"
-            ? showPlayer
-            : requiredColumnIds.includes(column.id) || chosenColumnIds.includes(column.id),
-    );
+    const visibleColumns = scoreColumns.filter((column) => {
+        switch (column.id) {
+            case "player":
+                return showPlayer;
+            case "master":
+                return showMaster;
+            default:
+                return requiredColumnIds.includes(column.id) || chosenColumnIds.includes(column.id);
+        }
+    });
     const pickableColumns = scoreColumns.filter((column) => !requiredColumnIds.includes(column.id));
 
     function changeMods(newMods: readonly SerializedMod[]) {

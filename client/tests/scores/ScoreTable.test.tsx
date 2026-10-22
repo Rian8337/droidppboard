@@ -43,6 +43,25 @@ describe("ScoreTable", () => {
 
         expect(screen.queryByRole("columnheader", { name: "Aim pp" })).not.toBeInTheDocument();
         expect(screen.queryByRole("columnheader", { name: "Player" })).not.toBeInTheDocument();
+        expect(screen.queryByRole("columnheader", { name: "Master" })).not.toBeInTheDocument();
+    });
+
+    it("adds a Master column when asked, which the column picker does not offer", async () => {
+        render(
+            <ScoreTable
+                scores={scores.map((score) => ({ ...score, master: buildScoreState(120) }))}
+                showMaster
+                storageKey="columns"
+            />,
+        );
+
+        expect(screen.getByRole("columnheader", { name: "Master" })).toBeInTheDocument();
+        expect(screen.getAllByText("120.00")).toHaveLength(2);
+
+        await userEvent.click(screen.getByRole("button", { name: "Columns" }));
+
+        expect(screen.queryByRole("checkbox", { name: "Master" })).not.toBeInTheDocument();
+        expect(screen.getByRole("checkbox", { name: "Live" })).toBeInTheDocument();
     });
 
     it("sorts by local pp, highest first, until another column is chosen", async () => {

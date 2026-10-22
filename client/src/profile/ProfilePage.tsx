@@ -6,6 +6,7 @@ import { useQueuePlayer } from "../api/recalc";
 import { Button } from "../components/Button";
 import { EmptyState } from "../components/EmptyState";
 import { ErrorMessage } from "../components/ErrorMessage";
+import { variantWithoutMaster } from "../leaderboard/difference";
 import { isOutdated } from "../leaderboard/isOutdated";
 import { NotFoundPage } from "../pages/NotFoundPage";
 import { getQueuePath } from "../routing/paths";
@@ -85,7 +86,11 @@ function PlayerProfile({ variant, variantTitle, variantBuiltAt, uid }: PlayerPro
                 isQueuing={queuing.isPending}
                 queueFeedback={getQueueFeedback(queuing, profile.username)}
             />
-            <ScoreTable scores={profile.pp} storageKey="profile-columns" />
+            <ScoreTable
+                scores={profile.pp}
+                showMaster={variant !== variantWithoutMaster}
+                storageKey="profile-columns"
+            />
         </div>
     );
 }

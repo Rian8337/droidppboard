@@ -154,7 +154,8 @@ function createHitWindowColumn(
 
 /**
  * Every column of the score table, in order. The Player column is for scores of several players;
- * a table of one player's scores leaves it out.
+ * a table of one player's scores leaves it out. The Master column is for scores of a variant that
+ * is compared with master; a table of master's own scores leaves it out.
  */
 export const scoreColumns: ScoreColumn[] = [
     {
@@ -187,6 +188,15 @@ export const scoreColumns: ScoreColumn[] = [
         csvValue: (row) => row.title,
     },
     createNumberColumn("live", "Live", (row) => row.live.performance.total),
+    {
+        id: "master",
+        header: "Master",
+        align: "right",
+        isSortable: true,
+        isDefaultVisible: true,
+        render: (row) => (row.master ? row.master.performance.total.toFixed(2) : "-"),
+        csvValue: (row) => (row.master ? roundToTwoDecimals(row.master.performance.total) : ""),
+    },
     {
         id: "local",
         header: "Local",

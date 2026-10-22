@@ -152,6 +152,7 @@ describe("ProfilePage", () => {
         await screen.findByRole("heading", { name: "Alpha" });
 
         expect(getStatNames()).not.toContain("Master pp");
+        expect(screen.queryByRole("columnheader", { name: "Master" })).not.toBeInTheDocument();
     });
 
     it("shows Master pp elsewhere and compares against it", async () => {
@@ -162,6 +163,7 @@ describe("ProfilePage", () => {
         await screen.findByRole("heading", { name: "Alpha" });
 
         expect(getStatNames()).toContain("Master pp");
+        expect(screen.getByRole("columnheader", { name: "Master" })).toBeInTheDocument();
         expect(screen.getByText("+15.5")).toHaveAttribute("data-tone", "up");
     });
 
