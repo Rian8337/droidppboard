@@ -86,21 +86,47 @@ describe("AppLayout", () => {
         expect(screen.queryByRole("complementary")).not.toBeInTheDocument();
     });
 
-    it("closes the sidebar when the page next to it is clicked on a desktop", async () => {
+    it("keeps the sidebar open when the page next to it is clicked on a desktop", async () => {
         vi.mocked(useBreakpoint).mockReturnValue("desktop");
         renderLayout();
 
         await userEvent.click(screen.getByText("The page"));
 
-        expect(screen.queryByRole("complementary")).not.toBeInTheDocument();
-        expect(screen.getByRole("button", { name: "Open menu" })).toBeVisible();
+        expect(screen.getByRole("complementary")).toBeVisible();
+        expect(screen.getByRole("button", { name: "Close menu" })).toBeVisible();
     });
 
-    it("keeps the sidebar open when it is clicked inside", async () => {
+    it("keeps the drawer open when it is clicked inside", async () => {
+        vi.mocked(useBreakpoint).mockReturnValue("tablet");
+        renderLayout();
+
+        await userEvent.click(screen.getByRole("button", { name: "Open menu" }));
+        await userEvent.click(screen.getByRole("searchbox", { name: "Search reworks" }));
+
+        expect(screen.getByRole("complementary")).toBeVisible();
+    });
+
+    it.each(["tablet", "phone"] as const)(
+        "closes the drawer on Escape and moves the focus to the toggle on a %s",
+        async (size) => {
+            vi.mocked(useBreakpoint).mockReturnValue(size);
+            renderLayout();
+
+            await userEvent.click(screen.getByRole("button", { name: "Open menu" }));
+            await userEvent.click(screen.getByRole("searchbox", { name: "Search reworks" }));
+            await userEvent.keyboard("{Escape}");
+
+            expect(screen.queryByRole("complementary")).not.toBeInTheDocument();
+            expect(screen.getByRole("button", { name: "Open menu" })).toHaveFocus();
+        },
+    );
+
+    it("keeps the sidebar open on Escape on a desktop", async () => {
         vi.mocked(useBreakpoint).mockReturnValue("desktop");
         renderLayout();
 
         await userEvent.click(screen.getByRole("searchbox", { name: "Search reworks" }));
+        await userEvent.keyboard("{Escape}");
 
         expect(screen.getByRole("complementary")).toBeVisible();
     });
@@ -116,6 +142,31 @@ describe("AppLayout", () => {
         await userEvent.click(screen.getByRole("button", { name: "Close menu" }));
 
         expect(document.documentElement.style.overflow).toBe("");
+    });
+
+    it.each(["tablet", "phone"] as const)(
+        "makes the page behind an open drawer inert on a %s",
+        async (size) => {
+            vi.mocked(useBreakpoint).mockReturnValue(size);
+            renderLayout();
+
+            expect(screen.getByRole("main")).not.toHaveAttribute("inert");
+
+            await userEvent.click(screen.getByRole("button", { name: "Open menu" }));
+
+            expect(screen.getByRole("main")).toHaveAttribute("inert");
+
+            await userEvent.click(screen.getByRole("button", { name: "Close menu" }));
+
+            expect(screen.getByRole("main")).not.toHaveAttribute("inert");
+        },
+    );
+
+    it("keeps the page next to a desktop sidebar reachable", () => {
+        vi.mocked(useBreakpoint).mockReturnValue("desktop");
+        renderLayout();
+
+        expect(screen.getByRole("main")).not.toHaveAttribute("inert");
     });
 
     it("lets the page scroll next to a desktop sidebar", () => {

@@ -8,8 +8,9 @@ import { TopBar } from "./TopBar";
 /**
  * The frame every page renders in: the top bar, the sidebar and the page itself. The sidebar is
  * open next to the page on a desktop, and a closed drawer over it on a tablet or phone. It slides
- * in and out, and a click anywhere outside it closes it. An open drawer keeps the page behind it
- * from scrolling.
+ * in and out. An open drawer closes on Escape or a click anywhere outside it, and keeps the page
+ * behind it from scrolling. A desktop's sidebar only closes through its toggle, as it sits beside the page
+ * rather than over it.
  */
 export function AppLayout() {
     const breakpoint = useBreakpoint();
@@ -53,7 +54,7 @@ export function AppLayout() {
     }, [isSidebarOpen, isDesktop]);
 
     useEffect(() => {
-        if (!isSidebarOpen) {
+        if (!isSidebarOpen || isDesktop) {
             return;
         }
 
@@ -75,7 +76,24 @@ export function AppLayout() {
         document.addEventListener("click", closeOnOutsideClick);
 
         return () => document.removeEventListener("click", closeOnOutsideClick);
-    }, [isSidebarOpen]);
+    }, [isSidebarOpen, isDesktop]);
+
+    useEffect(() => {
+        if (!isSidebarOpen || isDesktop) {
+            return;
+        }
+
+        // An open drawer is a modal layer over the page, which Escape closes like any other.
+        function closeOnEscape(event: KeyboardEvent) {
+            if (event.key === "Escape") {
+                closeSidebar();
+            }
+        }
+
+        document.addEventListener("keydown", closeOnEscape);
+
+        return () => document.removeEventListener("keydown", closeOnEscape);
+    }, [isSidebarOpen, isDesktop]);
 
     return (
         <div className={styles.layout}>
@@ -104,7 +122,8 @@ export function AppLayout() {
                         }}
                     />
                 </div>
-                <main className={styles.content}>
+                {/* The page behind an open drawer is out of reach, so keyboards and screen readers skip it too. */}
+                <main className={styles.content} inert={isSidebarOpen && !isDesktop}>
                     <Outlet />
                 </main>
             </div>
