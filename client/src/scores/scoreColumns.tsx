@@ -184,7 +184,19 @@ export const scoreColumns: ScoreColumn[] = [
         header: "Map",
         isSortable: true,
         isDefaultVisible: true,
-        render: (row) => <span className={styles.map}>{row.title}</span>,
+        render: (row) =>
+            row.beatmapId === undefined ? (
+                <span className={styles.map}>{row.title}</span>
+            ) : (
+                <a
+                    className={`${styles.map} ${styles.mapLink}`}
+                    href={`https://osu.ppy.sh/b/${row.beatmapId.toString()}`}
+                    target="_blank"
+                    rel="noreferrer"
+                >
+                    {row.title}
+                </a>
+            ),
         csvValue: (row) => row.title,
     },
     createNumberColumn("live", "Live", (row) => row.live.performance.total),

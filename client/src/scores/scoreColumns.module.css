@@ -37,6 +37,17 @@
     overflow-wrap: anywhere;
 }
 
+/* The title keeps the table's text color, so that a page of links does not drown out the numbers. */
+.mapLink {
+    color: inherit;
+    text-decoration: none;
+}
+
+.mapLink:hover,
+.mapLink:focus-visible {
+    text-decoration: underline;
+}
+
 .player {
     display: inline-block;
     white-space: normal;

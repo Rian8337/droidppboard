@@ -1,3 +1,4 @@
+import { render, screen } from "@testing-library/react";
 import { DroidHitWindow, PreciseDroidHitWindow } from "@rian8337/osu-base";
 import { addRankChanges } from "../../src/scores/rankChanges";
 import { getHitWindows, scoreColumns } from "../../src/scores/scoreColumns";
@@ -110,5 +111,27 @@ describe("scoreColumns", () => {
         expect(normal.great).toBe(new DroidHitWindow(8).greatWindow);
         expect(precise.great).toBe(new PreciseDroidHitWindow(8).greatWindow);
         expect(precise.great).toBeLessThan(normal.great);
+    });
+
+    it("links the map to its beatmap page on osu!", () => {
+        const [row] = addRankChanges([
+            buildScore({ beatmapId: 123, title: "Artist - Song [Insane]" }),
+        ]);
+
+        render(getColumn("map").render(row));
+
+        expect(screen.getByRole("link", { name: "Artist - Song [Insane]" })).toHaveAttribute(
+            "href",
+            "https://osu.ppy.sh/b/123",
+        );
+    });
+
+    it("shows the map without a link when the beatmap's ID is unknown", () => {
+        const [row] = addRankChanges([buildScore({ title: "Artist - Song [Insane]" })]);
+
+        render(getColumn("map").render(row));
+
+        expect(screen.getByText("Artist - Song [Insane]")).toBeInTheDocument();
+        expect(screen.queryByRole("link")).not.toBeInTheDocument();
     });
 });

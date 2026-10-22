@@ -298,6 +298,7 @@ describe("calculateProfile", () => {
         expect(entry).toMatchObject({
             uid: 7,
             hash: "a",
+            beatmapId: 1,
             title: "Artist - Title a (Creator) [Insane]",
             // HR raises CS by 30% and AR and OD by 40%, capped at 10.
             circleSize: expect.closeTo(5.2),

@@ -11,6 +11,11 @@ export interface PrototypePPEntry extends Omit<PPEntry, "pp"> {
     readonly scoreId?: number;
 
     /**
+     * The ID of the beatmap on osu!. Entries saved before it was stored lack it.
+     */
+    readonly beatmapId?: number;
+
+    /**
      * The maximum combo of the beatmap.
      */
     readonly maxCombo: number;

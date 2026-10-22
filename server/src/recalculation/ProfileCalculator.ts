@@ -433,6 +433,7 @@ async function createEntry(
         uid: uid,
         scoreId: score.id,
         hash: beatmap.hash,
+        beatmapId: beatmap.beatmapId,
         title: beatmap.fullTitle,
         circleSize: beatmapDifficulty.cs,
         approachRate: beatmapDifficulty.ar,
