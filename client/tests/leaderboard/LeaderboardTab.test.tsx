@@ -232,6 +232,54 @@ describe("LeaderboardTab", () => {
         expect(within(alpha).getByText("+20.5")).toHaveAttribute("data-tone", "up");
     });
 
+    it("shows labelled live pp, and no master pp, beneath a phone row on droid-rebalance", async () => {
+        vi.mocked(useBreakpoint).mockReturnValue("phone");
+        answerWith(() =>
+            leaderboardPlayers.map((player) => ({ ...player, masterPPTotal: 1234.5 })),
+        );
+
+        renderTab();
+
+        const alpha = (await screen.findByText("Alpha")).closest("a")!;
+
+        expect(within(alpha).getByText("live")).toBeVisible();
+        expect(within(alpha).queryByText("master")).not.toBeInTheDocument();
+        expect(within(alpha).queryByText("1234.50")).not.toBeInTheDocument();
+    });
+
+    it("shows live and master pp beneath a phone row in other variants, when the player has master pp", async () => {
+        vi.mocked(useBreakpoint).mockReturnValue("phone");
+        answerWith(() => [
+            buildPlayer({
+                uid: 1,
+                username: "WithMaster",
+                localPPTotal: 1000,
+                livePPTotal: 900,
+                masterPPTotal: 950,
+            }),
+            buildPlayer({
+                uid: 2,
+                username: "WithoutMaster",
+                localPPTotal: 1000,
+                livePPTotal: 900,
+            }),
+        ]);
+
+        renderTab(readingVariant);
+
+        const withMaster = (await screen.findByText("WithMaster")).closest("a")!;
+        const withoutMaster = screen.getByText("WithoutMaster").closest("a")!;
+
+        expect(within(withMaster).getByText("live")).toBeVisible();
+        expect(within(withMaster).getByText("900.00")).toBeVisible();
+        expect(within(withMaster).getByText("master")).toBeVisible();
+        expect(within(withMaster).getByText("950.00")).toBeVisible();
+        expect(within(withMaster).getByText("+50.0")).toBeVisible();
+        expect(within(withoutMaster).getByText("900.00")).toBeVisible();
+        expect(within(withoutMaster).queryByText("master")).not.toBeInTheDocument();
+        expect(within(withoutMaster).getByText("+100.0")).toBeVisible();
+    });
+
     it("opens the player's profile when a row is clicked", async () => {
         const user = userEvent.setup();
 
