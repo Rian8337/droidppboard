@@ -5,11 +5,12 @@ import { Link } from "react-router";
 import { useVariants } from "../api/variants";
 import { ErrorMessage } from "../components/ErrorMessage";
 import { Tooltip } from "../components/Tooltip";
-import { defaultVariant, getVariantPath } from "../routing/paths";
+import { getVariantPath } from "../routing/paths";
 import { formatRelativeTime } from "../utils/formatRelativeTime";
 import { formatUtcTime } from "../utils/formatUtcTime";
 import { findVariant } from "../variant/findVariant";
 import { getVariantTitle } from "../variant/getVariantTitle";
+import { isVariantPinned } from "../variant/isVariantPinned";
 import { sortVariants } from "./sortVariants";
 import styles from "./VariantList.module.css";
 import { formatError } from "../api/http";
@@ -76,7 +77,7 @@ export function VariantList({ filter, currentVariant, onNavigate }: VariantListP
                                     </span>
                                 )}
                             </span>
-                            {(variant.name === defaultVariant || variant.pinned) && (
+                            {isVariantPinned(variant) && (
                                 <FontAwesomeIcon
                                     icon={faThumbtack}
                                     className={styles.pin}

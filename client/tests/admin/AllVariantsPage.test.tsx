@@ -35,6 +35,17 @@ describe("AllVariantsPage", () => {
         ).not.toBeInTheDocument();
     });
 
+    it("shows droid-rebalance as pinned, as the sidebar does, even though its flag is unset", async () => {
+        serveManage({ adminVariants });
+
+        renderWithProviders(<AppRoutes />, { route: "/admin/variants", me: adminMe });
+
+        const table = within(await screen.findByRole("table"));
+        const rebalance = (await table.findByText("droid-rebalance")).closest("tr")!;
+
+        expect(within(rebalance).getByText("Pinned")).toBeVisible();
+    });
+
     it("opens a variant's settings and access", async () => {
         serveManage({
             adminVariants,

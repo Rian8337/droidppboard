@@ -4,6 +4,7 @@ import { DataTable, type Column } from "../components/DataTable";
 import { ErrorMessage } from "../components/ErrorMessage";
 import { Pill } from "../components/Pill";
 import { getAdminVariantPath } from "../routing/paths";
+import { isVariantPinned } from "../variant/isVariantPinned";
 import styles from "./AllVariantsPage.module.css";
 import { formatError } from "../api/http";
 
@@ -34,7 +35,7 @@ const columns: Column<AdminVariant>[] = [
     {
         id: "pinned",
         header: "Pinned",
-        render: (variant) => (variant.pinned ? <Pill>Pinned</Pill> : "-"),
+        render: (variant) => (isVariantPinned(variant) ? <Pill>Pinned</Pill> : "-"),
     },
 ];
 
