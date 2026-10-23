@@ -14,6 +14,7 @@ import { Button } from "../components/Button";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { DataTable, type Column } from "../components/DataTable";
 import { ErrorMessage } from "../components/ErrorMessage";
+import { isAdmin, isAdminRole, isOwner } from "../variant/permissions";
 import { canRemoveGrant } from "./accessRules";
 import styles from "./AccessTable.module.css";
 import { formatError } from "../api/http";
@@ -33,31 +34,31 @@ interface GrantedUser {
     /** `undefined` while the role is not known. */
     role: ManageRole | null | undefined;
 
-    /** Whether the person has access through the admin role rather than a grant. */
+    /** Whether the person has access through the admin or owner role rather than a grant. */
     isAdmin: boolean;
 }
 
-const roleLabels = { admin: "Admin", manager: "Manager" } as const;
+const roleLabels = { owner: "Owner", admin: "Admin", manager: "Manager" } as const;
 
 /**
- * Who and what can use the variant: granted people, and for admins also the admins (who can use every
- * variant) and the API keys.
+ * Who and what can use the variant: granted people, for admins and owners also the admins and owners (who can use
+ * every variant), and for owners the API keys.
  */
 export function AccessTable({ variant, me }: AccessTableProps) {
     return (
         <div className={styles.access}>
             <GrantedUsers variant={variant} me={me} />
-            {me.role === "admin" && <GrantedKeys variant={variant} />}
+            {isOwner(me) && <GrantedKeys variant={variant} />}
         </div>
     );
 }
 
 function GrantedUsers({ variant, me }: AccessTableProps) {
     const grants = useGrants(variant);
-    // Only admins may list the users, so only they see the admins who have no grant.
-    const users = useAdminUsers({ isEnabled: me.role === "admin" });
+    // Only admins and owners may list the users, so only they see the admins and owners who have no grant.
+    const users = useAdminUsers({ isEnabled: isAdmin(me) });
     const adminUids = (users.data ?? [])
-        .filter((user) => user.role === "admin")
+        .filter((user) => isAdminRole(user.role))
         .map((user) => user.uid);
     const uids = [...new Set([...(grants.data ?? []), ...adminUids])];
     const usernames = useUsernames(uids);
@@ -88,13 +89,13 @@ function GrantedUsers({ variant, me }: AccessTableProps) {
     }));
 
     function canRemove(row: GrantedUser): boolean {
-        // An admin's access comes with the role, so there is no grant to remove.
+        // An admin's or owner's access comes with the role, so there is no grant to remove.
         if (row.isAdmin) {
             return false;
         }
 
-        // The broker lets admins remove anyone. For others the role must be known, as it decides.
-        if (me.role === "admin") {
+        // The broker lets admins and owners remove anyone. For others the role must be known, as it decides.
+        if (isAdmin(me)) {
             return true;
         }
 

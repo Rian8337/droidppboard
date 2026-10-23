@@ -1,15 +1,22 @@
 import { faKey, faLayerGroup, faUserShield } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Navigate, Outlet, useLocation, useMatch } from "react-router";
-import { useMe } from "../api/auth";
+import { useMe, type Me } from "../api/auth";
 import { EmptyState } from "../components/EmptyState";
 import { Tabs, type Tab } from "../components/Tabs";
 import { getVariantPath } from "../routing/paths";
-import { canManageVariant, isAdmin } from "../variant/permissions";
+import { canManageVariant, isAdmin, isOwner } from "../variant/permissions";
 import styles from "./AdminLayout.module.css";
 
-const tabs: readonly Tab[] = [
-    { id: "keys", label: "API keys", icon: <FontAwesomeIcon icon={faKey} />, to: "/admin/keys" },
+const keysTab: Tab = {
+    id: "keys",
+    label: "API keys",
+    icon: <FontAwesomeIcon icon={faKey} />,
+    to: "/admin/keys",
+};
+
+// API keys are left out: a key that may act for users could get around every role, so only owners manage them.
+const adminTabs: readonly Tab[] = [
     {
         id: "roles",
         label: "Roles",
@@ -24,7 +31,22 @@ const tabs: readonly Tab[] = [
     },
 ];
 
-/** The frame of the admin area: its tabs above the page. Everybody who is not an admin sees a message instead. */
+/** The admin pages the person may see, in order. */
+function getTabs(me: Me | null): readonly Tab[] {
+    return isOwner(me) ? [keysTab, ...adminTabs] : adminTabs;
+}
+
+/** Where `/admin` leads: the first admin page the person may see. */
+export function AdminIndex() {
+    const { data: me = null } = useMe();
+
+    return <Navigate replace to={getTabs(me)[0].to} />;
+}
+
+/**
+ * The frame of the admin area: its tabs above the page. Everybody who is not an admin or owner sees a message
+ * instead, and so does an admin on the owner-only API keys page.
+ */
 export function AdminLayout() {
     const { data: me = null, isPending } = useMe();
     const { pathname } = useLocation();
@@ -48,13 +70,19 @@ export function AdminLayout() {
         return <EmptyState message="You need the admin role to see this page" />;
     }
 
+    const tabs = getTabs(me);
     const activeId = tabs.find((tab) => pathname.startsWith(tab.to))?.id ?? tabs[0].id;
+    const isKeysPage = pathname.startsWith(keysTab.to);
 
     return (
         <div>
             <Tabs tabs={[...tabs]} activeId={activeId} aria-label="Admin pages" />
             <div className={styles.page}>
-                <Outlet />
+                {isKeysPage && !isOwner(me) ? (
+                    <EmptyState message="You need the owner role to see this page" />
+                ) : (
+                    <Outlet />
+                )}
             </div>
         </div>
     );

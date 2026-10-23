@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useMe } from "../api/auth";
 import { Button } from "../components/Button";
-import { canManageVariant, isAdmin } from "../variant/permissions";
+import { canManageVariant, isAdmin, isOwner } from "../variant/permissions";
 import { AccessTable } from "./AccessTable";
 import { FullRunControls } from "./FullRunControls";
 import { GrantKeyDialog } from "./GrantKeyDialog";
@@ -22,8 +22,8 @@ export interface VariantAdminTabProps {
 type OpenDialog = "settings" | "user" | "key" | null;
 
 /**
- * The Admin tab of a variant, for people who manage it: its settings, who may use it, and for admins its API keys
- * and the full run.
+ * The Admin tab of a variant, for people who manage it: its settings, who may use it, for admins and owners the full
+ * run, and for owners its API keys.
  */
 export function VariantAdminTab({ variant, hasFullRun = true }: VariantAdminTabProps) {
     const { data: me = null } = useMe();
@@ -35,6 +35,7 @@ export function VariantAdminTab({ variant, hasFullRun = true }: VariantAdminTabP
     }
 
     const isAdminViewing = isAdmin(me);
+    const isOwnerViewing = isOwner(me);
     const closeDialog = () => setOpenDialog(null);
 
     return (
@@ -44,7 +45,7 @@ export function VariantAdminTab({ variant, hasFullRun = true }: VariantAdminTabP
                 <Button variant="secondary" onClick={() => setOpenDialog("user")}>
                     Grant access to user
                 </Button>
-                {isAdminViewing && (
+                {isOwnerViewing && (
                     <Button variant="secondary" onClick={() => setOpenDialog("key")}>
                         Grant access to key
                     </Button>
@@ -64,7 +65,7 @@ export function VariantAdminTab({ variant, hasFullRun = true }: VariantAdminTabP
                 isOpen={openDialog === "user"}
                 onClose={closeDialog}
             />
-            {isAdminViewing && (
+            {isOwnerViewing && (
                 <GrantKeyDialog
                     variant={variant.name}
                     isOpen={openDialog === "key"}

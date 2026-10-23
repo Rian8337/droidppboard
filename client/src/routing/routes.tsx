@@ -1,5 +1,5 @@
 import { Navigate, Route, Routes, useLocation } from "react-router";
-import { AdminLayout } from "../admin/AdminLayout";
+import { AdminIndex, AdminLayout } from "../admin/AdminLayout";
 import { AdminVariantPage } from "../admin/AdminVariantPage";
 import { AllVariantsPage } from "../admin/AllVariantsPage";
 import { KeysPage } from "../admin/KeysPage";
@@ -49,7 +49,7 @@ export function AppRoutes() {
                 <Route path="skin/:discordid/:name" element={<SkinPreviewPage />} />
                 <Route path="match_history/:matchid" element={<MatchHistoryPage />} />
                 <Route path="admin" element={<AdminLayout />}>
-                    <Route index element={<Navigate replace to="keys" />} />
+                    <Route index element={<AdminIndex />} />
                     <Route path="keys" element={<KeysPage />} />
                     <Route path="roles" element={<RolesPage />} />
                     <Route path="variants" element={<AllVariantsPage />} />

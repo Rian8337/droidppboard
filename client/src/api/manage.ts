@@ -6,6 +6,7 @@ import {
     type UseQueryResult,
 } from "@tanstack/react-query";
 import { canGrantTo } from "../admin/accessRules";
+import { isAdmin } from "../variant/permissions";
 import { ApiError, requestJson } from "./http";
 import { useMe } from "./auth";
 import { queryKeys } from "./queryKeys";
@@ -16,8 +17,11 @@ export const maxVariantTitleLength = 100;
 /** The longest description the broker accepts. */
 export const maxVariantDescriptionLength = 4000;
 
-/** The site-wide roles. A person without one has `null`. */
-export type ManageRole = "admin" | "manager";
+/** The site-wide roles, highest first. A person without one has `null`. */
+export type ManageRole = "owner" | "admin" | "manager";
+
+/** The roles that can be set on the site. The owner role is only given out on the broker's server. */
+export type SettableRole = Exclude<ManageRole, "owner">;
 
 /** An API key as `GET /api/manage/keys` lists it. */
 export interface AdminKey {
@@ -164,7 +168,7 @@ export function useUserRoles(
     });
 }
 
-/** Every API key. Admins only. */
+/** Every API key. Owners only, as a key that may act for users could get around every role. */
 export function useAdminKeys({
     isEnabled,
 }: {
@@ -281,7 +285,7 @@ export function useGrantUser(variant: string): UseMutationResult<void, ApiError,
 
     return useMutation({
         mutationFn: async (uid: number) => {
-            if (me?.role !== "admin") {
+            if (!isAdmin(me)) {
                 const [target] = await fetchUserRoles([uid]);
 
                 if (!me || !canGrantTo(me, target?.role ?? null)) {
@@ -317,7 +321,7 @@ export function useUngrantUser(variant: string): UseMutationResult<void, ApiErro
     });
 }
 
-/** Grants or removes an API key's grant of a variant. Admins only. */
+/** Grants or removes an API key's grant of a variant. Owners only. */
 export function useChangeKeyGrant(
     variant: string,
 ): UseMutationResult<void, ApiError, { key: string; isGranted: boolean }> {
@@ -382,16 +386,19 @@ export function useRevokeKey(key: string): UseMutationResult<unknown, ApiError, 
     });
 }
 
-/** Sets a person's site-wide role, or removes it with `null`. Admins only. */
+/**
+ * Sets a person's site-wide role, or removes it with `null`. Admins and owners only, and only an owner may grant or
+ * change the admin role (see `canChangeRole`).
+ */
 export function useSetRole(): UseMutationResult<
     void,
     ApiError,
-    { uid: number; role: ManageRole | null }
+    { uid: number; role: SettableRole | null }
 > {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({ uid, role }: { uid: number; role: ManageRole | null }) =>
+        mutationFn: ({ uid, role }: { uid: number; role: SettableRole | null }) =>
             requestJson<void>("PUT", `/api/manage/users/${uid}/role`, { role }),
         onSettled: () =>
             Promise.all([

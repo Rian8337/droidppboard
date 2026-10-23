@@ -4,7 +4,7 @@ import { http, HttpResponse } from "msw";
 import { Route, Routes, useLocation } from "react-router";
 import { useBreakpoint } from "../../src/hooks/useBreakpoint";
 import { TopBar } from "../../src/shell/TopBar";
-import { adminMe, managerMe } from "../mocks/fixtures";
+import { adminMe, managerMe, ownerMe } from "../mocks/fixtures";
 import { server } from "../mocks/server";
 import { renderWithProviders } from "../utils/renderWithProviders";
 
@@ -135,7 +135,15 @@ describe("TopBar", () => {
             await userEvent.click(await screen.findByRole("button", { name: /admin/ }));
             await userEvent.click(screen.getByRole("menuitem", { name: "Admin" }));
 
-            expect(screen.getByText("/admin/keys from null")).toBeVisible();
+            expect(screen.getByText("/admin from null")).toBeVisible();
+        });
+
+        it("offers Admin to an owner", async () => {
+            renderTopBar("/", { me: ownerMe });
+
+            await userEvent.click(await screen.findByRole("button", { name: /owner/ }));
+
+            expect(screen.getByRole("menuitem", { name: "Admin" })).toBeVisible();
         });
 
         it("does not offer Admin to a manager", async () => {

@@ -6,10 +6,10 @@ import { BrokerMe } from "../clients/BrokerClient";
  *
  * @param me The broker's view of the person, or `null` if they are not logged in or it could
  * not be fetched.
- * @returns Whether the person is an admin.
+ * @returns Whether the person is an admin or an owner.
  */
 export function canManageFullRuns(me: BrokerMe | null): boolean {
-    return me?.role === "admin";
+    return isAdmin(me);
 }
 
 /**
@@ -19,8 +19,19 @@ export function canManageFullRuns(me: BrokerMe | null): boolean {
  *
  * @param me The broker's view of the person, or `null` if they are not logged in or it could
  * not be fetched.
- * @returns Whether the person is an admin.
+ * @returns Whether the person is an admin or an owner.
  */
 export function canRemoveAnyEntry(me: BrokerMe | null): boolean {
-    return me?.role === "admin";
+    return isAdmin(me);
+}
+
+/**
+ * Checks whether a person has the admin role or one above it. The broker treats an owner as an
+ * admin everywhere except where it needs the owner role itself.
+ *
+ * @param me The broker's view of the person, or `null`.
+ * @returns Whether the person is an admin or an owner.
+ */
+function isAdmin(me: BrokerMe | null): boolean {
+    return me?.role === "admin" || me?.role === "owner";
 }

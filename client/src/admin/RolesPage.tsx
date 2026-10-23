@@ -1,11 +1,12 @@
 import { useState, type SubmitEvent } from "react";
-import { useMe } from "../api/auth";
+import { useMe, type Me } from "../api/auth";
 import {
     useAdminUsers,
     useSetRole,
     useUsernames,
     type AdminUser,
     type ManageRole,
+    type SettableRole,
 } from "../api/manage";
 import { Button } from "../components/Button";
 import { DataTable, type Column } from "../components/DataTable";
@@ -15,10 +16,15 @@ import { Select } from "../components/Select";
 import { TextField } from "../components/TextField";
 import styles from "./RolesPage.module.css";
 import { formatError } from "../api/http";
+import { canChangeRole, getSettableRoles } from "./accessRules";
 
-const roleLabels: Readonly<Record<ManageRole, string>> = { admin: "Admin", manager: "Manager" };
+const roleLabels: Readonly<Record<ManageRole, string>> = {
+    owner: "Owner",
+    admin: "Admin",
+    manager: "Manager",
+};
 
-function isRole(value: string): value is ManageRole {
+function isSettableRole(value: string): value is SettableRole {
     return value === "admin" || value === "manager";
 }
 
@@ -29,12 +35,33 @@ interface RoleHolder extends AdminUser {
 /** A change that waits for the person to confirm it. */
 interface PendingChange {
     readonly uid: number;
-    readonly role: ManageRole | null;
+    readonly role: SettableRole | null;
 }
 
 /**
- * The site-wide roles: who has one, and a form to give one to a person by uid or take it away. Nobody
- * can change their own role, so that the last admin cannot lock everybody out.
+ * Why the person may not change the role of the person with `uid` (`null` if they may). The broker refuses these
+ * anyway; this is what the person reads instead of its refusal.
+ */
+function getLockReason(me: Me | null, uid: number, holders: readonly RoleHolder[]): string | null {
+    if (uid === me?.uid) {
+        return "You cannot change your own role.";
+    }
+
+    const targetRole = holders.find((holder) => holder.uid === uid)?.role ?? null;
+
+    if (me === null || canChangeRole(me, targetRole)) {
+        return null;
+    }
+
+    return targetRole === "owner"
+        ? "Owners can only be changed on the broker's server."
+        : "Only an owner can change an admin's role.";
+}
+
+/**
+ * The site-wide roles: who has one, and a form to give one to a person by uid or take it away. The roles rank
+ * owner > admin > manager, and a person may only change the roles below their own, so an admin may only give and
+ * take the manager role. Nobody can change an owner here, as owners are set on the broker's server.
  */
 export function RolesPage() {
     const users = useAdminUsers();
@@ -44,9 +71,10 @@ export function RolesPage() {
     const { data: me = null } = useMe();
     const [pending, setPending] = useState<PendingChange | null>(null);
     const [uid, setUid] = useState("");
-    const [role, setRole] = useState<ManageRole>("manager");
+    const [role, setRole] = useState<SettableRole>("manager");
+    const settableRoles = me ? getSettableRoles(me) : [];
     const parsedUid = /^[1-9][0-9]{0,9}$/.test(uid.trim()) ? Number.parseInt(uid, 10) : null;
-    const isOwnUid = parsedUid !== null && parsedUid === me?.uid;
+    const lockReason = parsedUid === null ? null : getLockReason(me, parsedUid, holders);
 
     function getName(user: { uid: number }): string {
         return usernames.data?.get(user.uid) ?? `uid ${user.uid}`;
@@ -66,9 +94,14 @@ export function RolesPage() {
     function addRole(event: SubmitEvent<HTMLFormElement>) {
         event.preventDefault();
 
-        if (parsedUid !== null && !isOwnUid && !setting.isPending) {
+        if (parsedUid !== null && lockReason === null && !setting.isPending) {
             requestChange({ uid: parsedUid, role }, () => setUid(""));
         }
+    }
+
+    /** Whether the person may change the holder's role, rather than only see it. */
+    function canChange(user: RoleHolder): boolean {
+        return me !== null && user.uid !== me.uid && canChangeRole(me, user.role);
     }
 
     const columns: Column<RoleHolder>[] = [
@@ -81,31 +114,42 @@ export function RolesPage() {
         {
             id: "role",
             header: "Role",
-            render: (user) =>
-                user.uid === me?.uid ? (
-                    `${roleLabels[user.role]} (you)`
-                ) : (
+            render: (user) => {
+                if (user.uid === me?.uid) {
+                    return `${roleLabels[user.role]} (you)`;
+                }
+
+                // With a single role to give, the only change left is removing it.
+                if (!canChange(user) || settableRoles.length < 2) {
+                    return roleLabels[user.role];
+                }
+
+                return (
                     <Select
                         aria-label={`Role of ${getName(user)}`}
                         value={user.role}
                         disabled={setting.isPending}
                         onChange={(event) => {
-                            if (isRole(event.target.value)) {
+                            if (isSettableRole(event.target.value)) {
                                 requestChange({ uid: user.uid, role: event.target.value });
                             }
                         }}
                     >
-                        <option value="admin">{roleLabels.admin}</option>
-                        <option value="manager">{roleLabels.manager}</option>
+                        {settableRoles.map((settableRole) => (
+                            <option key={settableRole} value={settableRole}>
+                                {roleLabels[settableRole]}
+                            </option>
+                        ))}
                     </Select>
-                ),
+                );
+            },
         },
         {
             id: "actions",
             header: "Remove",
             align: "right",
             render: (user) =>
-                user.uid === me?.uid ? null : (
+                !canChange(user) ? null : (
                     <Button
                         variant="secondary"
                         size="small"
@@ -153,22 +197,25 @@ export function RolesPage() {
                         label="Role"
                         value={role}
                         onChange={(event) => {
-                            if (isRole(event.target.value)) {
+                            if (isSettableRole(event.target.value)) {
                                 setRole(event.target.value);
                             }
                         }}
                     >
-                        <option value="admin">{roleLabels.admin}</option>
-                        <option value="manager">{roleLabels.manager}</option>
+                        {settableRoles.map((settableRole) => (
+                            <option key={settableRole} value={settableRole}>
+                                {roleLabels[settableRole]}
+                            </option>
+                        ))}
                     </Select>
                     <Button
                         type="submit"
-                        disabled={parsedUid === null || isOwnUid || setting.isPending}
+                        disabled={parsedUid === null || lockReason !== null || setting.isPending}
                     >
                         Set role
                     </Button>
                 </form>
-                {isOwnUid && <p className={styles.note}>You cannot change your own role.</p>}
+                {lockReason !== null && <p className={styles.note}>{lockReason}</p>}
                 {setting.error && (
                     <p role="alert" className={styles.error}>
                         {formatError(setting.error)}

@@ -12,7 +12,7 @@ import { queryKeys } from "./queryKeys";
 export interface Me {
     readonly uid: number;
     readonly username: string;
-    readonly role: "admin" | "manager" | null;
+    readonly role: "owner" | "admin" | "manager" | null;
 
     /** The names of the variants a manager may manage. */
     readonly grants: readonly string[];

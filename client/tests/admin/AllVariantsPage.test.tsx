@@ -1,7 +1,7 @@
 import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { AppRoutes } from "../../src/routing/routes";
-import { adminMe, buildAdminKey, buildAdminVariant } from "../mocks/fixtures";
+import { adminMe, buildAdminKey, buildAdminVariant, ownerMe } from "../mocks/fixtures";
 import { renderWithProviders } from "../utils/renderWithProviders";
 import { serveManage } from "./serveManage";
 
@@ -43,7 +43,7 @@ describe("AllVariantsPage", () => {
             keys: [buildAdminKey({ name: "bot", grants: ["osu-live"] })],
         });
 
-        renderWithProviders(<AppRoutes />, { route: "/admin/variants", me: adminMe });
+        renderWithProviders(<AppRoutes />, { route: "/admin/variants", me: ownerMe });
         await userEvent.click(await screen.findByText("osu-live"));
 
         expect(await screen.findByRole("heading", { name: "osu! live" })).toBeVisible();

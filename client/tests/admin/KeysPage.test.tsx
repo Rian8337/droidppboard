@@ -2,7 +2,14 @@ import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { AppRoutes } from "../../src/routing/routes";
-import { adminMe, buildAdminKey, buildAdminVariant, managerMe, plainMe } from "../mocks/fixtures";
+import {
+    adminMe,
+    buildAdminKey,
+    buildAdminVariant,
+    managerMe,
+    ownerMe,
+    plainMe,
+} from "../mocks/fixtures";
 import { server } from "../mocks/server";
 import { renderWithProviders } from "../utils/renderWithProviders";
 import { serveManage } from "./serveManage";
@@ -19,7 +26,7 @@ const keys = [
     buildAdminKey({ name: "old", revokedAt: "2026-09-20T10:00:00.000Z" }),
 ];
 
-function renderKeys(me = adminMe) {
+function renderKeys(me = ownerMe) {
     return renderWithProviders(<AppRoutes />, { route: "/admin/keys", me });
 }
 
@@ -37,6 +44,42 @@ describe("the admin area for people who are not admins", () => {
         renderKeys(plainMe);
 
         expect(await screen.findByText("You need the admin role to see this page")).toBeVisible();
+    });
+});
+
+describe("the API keys for an admin", () => {
+    it("tells an admin that the owner role is needed, and leaves the tab out", async () => {
+        const requests: string[] = [];
+
+        serveManage({ keys });
+        server.events.on("request:start", ({ request }) => {
+            requests.push(new URL(request.url).pathname);
+        });
+
+        renderKeys(adminMe);
+
+        expect(await screen.findByText("You need the owner role to see this page")).toBeVisible();
+        expect(screen.queryByRole("link", { name: "API keys" })).not.toBeInTheDocument();
+        expect(screen.getByRole("link", { name: "Roles" })).toBeVisible();
+        expect(requests).not.toContain("/api/manage/keys");
+
+        server.events.removeAllListeners();
+    });
+
+    it("leads an admin from /admin to the roles", async () => {
+        serveManage({ users: [] });
+
+        renderWithProviders(<AppRoutes />, { route: "/admin", me: adminMe });
+
+        expect(await screen.findByRole("heading", { name: "People with a role" })).toBeVisible();
+    });
+
+    it("leads an owner from /admin to the API keys", async () => {
+        serveManage({ keys, adminVariants });
+
+        renderWithProviders(<AppRoutes />, { route: "/admin", me: ownerMe });
+
+        expect(await screen.findByText("bot")).toBeVisible();
     });
 });
 

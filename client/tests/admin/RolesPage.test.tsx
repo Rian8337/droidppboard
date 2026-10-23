@@ -1,19 +1,20 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { AppRoutes } from "../../src/routing/routes";
-import { adminMe, buildAdminUser } from "../mocks/fixtures";
+import { adminMe, buildAdminUser, ownerMe } from "../mocks/fixtures";
 import { renderWithProviders } from "../utils/renderWithProviders";
 import { serveManage } from "./serveManage";
 
 const users = [
+    buildAdminUser({ uid: 3, role: "owner" }),
     buildAdminUser({ uid: 1, role: "admin" }),
     buildAdminUser({ uid: 2, role: "manager", grants: ["flowaim"] }),
     buildAdminUser({ uid: 7, role: null, grants: ["flowaim", "reading"] }),
 ];
-const usernames = { 1: "admin", 2: "manager", 7: "Newbie" };
+const usernames = { 1: "admin", 2: "manager", 3: "owner", 7: "Newbie" };
 
-function renderRoles() {
-    return renderWithProviders(<AppRoutes />, { route: "/admin/roles", me: adminMe });
+function renderRoles(me = ownerMe) {
+    return renderWithProviders(<AppRoutes />, { route: "/admin/roles", me });
 }
 
 describe("RolesPage", () => {
@@ -105,11 +106,11 @@ describe("RolesPage", () => {
 
         renderRoles();
 
-        const own = (await screen.findByText("Admin (you)")).closest("tr")!;
+        const own = (await screen.findByText("Owner (you)")).closest("tr")!;
 
         expect(within(own).queryByRole("combobox")).not.toBeInTheDocument();
         expect(
-            screen.queryByRole("button", { name: "Remove role of admin" }),
+            screen.queryByRole("button", { name: "Remove role of owner" }),
         ).not.toBeInTheDocument();
     });
 
@@ -117,10 +118,103 @@ describe("RolesPage", () => {
         const sent = serveManage({ users, usernames });
 
         renderRoles();
-        await userEvent.type(await screen.findByRole("textbox", { name: "User ID" }), "1");
+        await userEvent.type(await screen.findByRole("textbox", { name: "User ID" }), "3");
 
         expect(screen.getByText("You cannot change your own role.")).toBeVisible();
         expect(screen.getByRole("button", { name: "Set role" })).toBeDisabled();
         expect(sent).toHaveLength(0);
+    });
+
+    it("lets an owner change and remove an admin's role", async () => {
+        serveManage({ users, usernames });
+
+        renderRoles();
+
+        expect(await screen.findByRole("combobox", { name: "Role of admin" })).toHaveValue("admin");
+        expect(screen.getByRole("button", { name: "Remove role of admin" })).toBeVisible();
+    });
+
+    it("shows another owner without a way to change them", async () => {
+        serveManage({
+            users: [...users, buildAdminUser({ uid: 4, role: "owner" })],
+            usernames: { ...usernames, 4: "cofounder" },
+        });
+
+        renderRoles();
+
+        const other = (await screen.findByText("cofounder")).closest("tr")!;
+
+        expect(within(other).getByText("Owner")).toBeVisible();
+        expect(within(other).queryByRole("combobox")).not.toBeInTheDocument();
+        expect(within(other).queryByRole("button")).not.toBeInTheDocument();
+
+        await userEvent.type(screen.getByRole("textbox", { name: "User ID" }), "4");
+
+        expect(
+            screen.getByText("Owners can only be changed on the broker's server."),
+        ).toBeVisible();
+        expect(screen.getByRole("button", { name: "Set role" })).toBeDisabled();
+    });
+});
+
+describe("RolesPage for an admin", () => {
+    it("offers only the manager role in the form", async () => {
+        const sent = serveManage({ users, usernames });
+
+        renderRoles(adminMe);
+
+        const select = await screen.findByRole("combobox", { name: "Role" });
+
+        expect(
+            within(select)
+                .getAllByRole("option")
+                .map((option) => option.textContent),
+        ).toEqual(["Manager"]);
+
+        await userEvent.type(screen.getByRole("textbox", { name: "User ID" }), "42");
+        await userEvent.click(screen.getByRole("button", { name: "Set role" }));
+
+        await waitFor(() =>
+            expect(sent).toContainEqual({
+                method: "PUT",
+                path: "/api/manage/users/42/role",
+                body: { role: "manager" },
+            }),
+        );
+    });
+
+    it("lets them remove a manager's role, but not change it to another", async () => {
+        serveManage({ users, usernames });
+
+        renderRoles(adminMe);
+
+        const manager = (await screen.findByText("manager", { selector: "td" })).closest("tr")!;
+
+        expect(within(manager).getByText("Manager")).toBeVisible();
+        expect(within(manager).queryByRole("combobox")).not.toBeInTheDocument();
+        expect(
+            within(manager).getByRole("button", { name: "Remove role of manager" }),
+        ).toBeVisible();
+    });
+
+    it("shows the owners and other admins without a way to change them", async () => {
+        serveManage({
+            users: [...users, buildAdminUser({ uid: 5, role: "admin" })],
+            usernames: { ...usernames, 5: "colleague" },
+        });
+
+        renderRoles(adminMe);
+
+        for (const name of ["owner", "colleague"]) {
+            const row = (await screen.findByText(name, { selector: "td" })).closest("tr")!;
+
+            expect(within(row).queryByRole("combobox")).not.toBeInTheDocument();
+            expect(within(row).queryByRole("button")).not.toBeInTheDocument();
+        }
+
+        await userEvent.type(screen.getByRole("textbox", { name: "User ID" }), "5");
+
+        expect(screen.getByText("Only an owner can change an admin's role.")).toBeVisible();
+        expect(screen.getByRole("button", { name: "Set role" })).toBeDisabled();
     });
 });

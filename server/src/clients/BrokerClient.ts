@@ -5,7 +5,12 @@ import { PPVariant } from "app-structures";
  */
 export interface BrokerMe {
     uid: number;
-    role: "admin" | "manager" | null;
+
+    /**
+     * The person's site-wide role. An owner ranks above an admin and can do everything an admin
+     * can.
+     */
+    role: "owner" | "admin" | "manager" | null;
     grants: string[];
 }
 

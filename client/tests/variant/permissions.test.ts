@@ -1,9 +1,10 @@
-import { canManageVariant, isAdmin } from "../../src/variant/permissions";
-import { adminMe, buildMe, managerMe, plainMe } from "../mocks/fixtures";
+import { canManageVariant, isAdmin, isOwner } from "../../src/variant/permissions";
+import { adminMe, buildMe, managerMe, ownerMe, plainMe } from "../mocks/fixtures";
 
 describe("isAdmin", () => {
-    it("is true for an admin", () => {
+    it("is true for an admin and an owner", () => {
         expect(isAdmin(adminMe)).toBe(true);
+        expect(isAdmin(ownerMe)).toBe(true);
     });
 
     it("is false for a manager, a plain user, and nobody", () => {
@@ -13,10 +14,21 @@ describe("isAdmin", () => {
     });
 });
 
+describe("isOwner", () => {
+    it("is true only for an owner", () => {
+        expect(isOwner(ownerMe)).toBe(true);
+        expect(isOwner(adminMe)).toBe(false);
+        expect(isOwner(managerMe)).toBe(false);
+        expect(isOwner(plainMe)).toBe(false);
+        expect(isOwner(null)).toBe(false);
+    });
+});
+
 describe("canManageVariant", () => {
-    it("lets an admin manage any variant", () => {
+    it("lets an admin or an owner manage any variant", () => {
         expect(canManageVariant(adminMe, "flowaim")).toBe(true);
         expect(canManageVariant(adminMe, "droid-rebalance")).toBe(true);
+        expect(canManageVariant(ownerMe, "flowaim")).toBe(true);
     });
 
     it("lets a manager manage only the variants granted to them", () => {

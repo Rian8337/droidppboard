@@ -8,7 +8,7 @@ import {
 import { server } from "../mocks/server";
 import type { FullRunView } from "app-structures";
 
-export type RoleChoice = "admin" | "manager" | null;
+export type RoleChoice = "owner" | "admin" | "manager" | null;
 
 export interface ServeManageOptions {
     /** The uids granted the variant. */

@@ -2,7 +2,10 @@ import { describe, expect, it } from "vitest";
 import { canManageFullRuns, canRemoveAnyEntry } from "./permissions";
 
 describe("canManageFullRuns", () => {
-    it("allows only admins", () => {
+    it("allows only admins and owners", () => {
+        expect(canManageFullRuns({ uid: 1, role: "owner", grants: [] })).toBe(
+            true,
+        );
         expect(canManageFullRuns({ uid: 1, role: "admin", grants: [] })).toBe(
             true,
         );
@@ -17,7 +20,10 @@ describe("canManageFullRuns", () => {
 });
 
 describe("canRemoveAnyEntry", () => {
-    it("allows only admins", () => {
+    it("allows only admins and owners", () => {
+        expect(canRemoveAnyEntry({ uid: 1, role: "owner", grants: [] })).toBe(
+            true,
+        );
         expect(canRemoveAnyEntry({ uid: 1, role: "admin", grants: [] })).toBe(
             true,
         );

@@ -4,6 +4,7 @@ import { http, HttpResponse } from "msw";
 import { VariantAdminTab } from "../../src/admin/VariantAdminTab";
 import {
     adminMe,
+    ownerMe,
     buildAdminKey,
     buildAdminUser,
     buildAdminVariant,
@@ -288,7 +289,7 @@ describe("VariantAdminTab as an admin", () => {
     it("shows keys granted the variant with Remove, and keys for every variant as inherited", async () => {
         const sent = serveManage({ grants, usernames, roles, keys });
 
-        renderTab(adminMe);
+        renderTab(ownerMe);
 
         const granted = (await screen.findByText("granted-bot")).closest("tr")!;
         const inherited = screen.getByText("everything-bot").closest("tr")!;
@@ -368,10 +369,40 @@ describe("VariantAdminTab as an admin", () => {
         expect(sent.filter((request) => request.method === "DELETE")).toHaveLength(0);
     });
 
+    it("shows an admin neither the keys nor a way to grant one, as only owners manage keys", async () => {
+        serveManage({ grants, usernames, roles, keys });
+
+        renderTab(adminMe);
+
+        expect(await screen.findByText("Newbie")).toBeVisible();
+        expect(screen.queryByText("granted-bot")).not.toBeInTheDocument();
+        expect(
+            screen.queryByRole("button", { name: "Grant access to key" }),
+        ).not.toBeInTheDocument();
+    });
+
+    it("lists the owners with the admins, who can use every variant without a grant", async () => {
+        serveManage({
+            grants,
+            usernames: { ...usernames, 10: "Founder" },
+            roles: { ...roles, 10: "owner" },
+            keys,
+            users: [buildAdminUser({ uid: 10, role: "owner" })],
+        });
+
+        renderTab(ownerMe);
+
+        const founder = (await screen.findByText("Founder")).closest("tr")!;
+
+        expect(within(founder).getByText("Owner")).toBeVisible();
+        expect(within(founder).getByText("Every rework")).toBeVisible();
+        expect(within(founder).queryByRole("button")).not.toBeInTheDocument();
+    });
+
     it("grants a key that does not have the variant yet", async () => {
         const sent = serveManage({ grants, usernames, roles, keys });
 
-        renderTab(adminMe);
+        renderTab(ownerMe);
         await userEvent.click(await screen.findByRole("button", { name: "Grant access to key" }));
 
         const select = await screen.findByRole("combobox", { name: "Key" });

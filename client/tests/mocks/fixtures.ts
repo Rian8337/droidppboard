@@ -73,6 +73,8 @@ export const readingVariant: PPVariant = buildVariant({
     calculatorVersion: "1.1.0",
 });
 
+export const ownerMe: Me = buildMe({ uid: 3, username: "owner", role: "owner" });
+
 export const adminMe: Me = buildMe({ uid: 1, username: "admin", role: "admin" });
 
 export const managerMe: Me = buildMe({
@@ -425,7 +427,7 @@ export function buildAdminVariant(overrides: Partial<AdminVariantData> = {}): Ad
 /** The shape `GET /api/manage/users` answers per person who has a role or a grant. */
 export interface AdminUserData {
     readonly uid: number;
-    readonly role: "admin" | "manager" | null;
+    readonly role: "owner" | "admin" | "manager" | null;
     readonly grants: readonly string[];
 }
 

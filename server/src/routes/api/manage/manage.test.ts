@@ -349,7 +349,10 @@ describe("management routes", () => {
     });
     describe("user roles", () => {
         function stubRoles(
-            roles: Record<number, "admin" | "manager" | null | undefined>,
+            roles: Record<
+                number,
+                "owner" | "admin" | "manager" | null | undefined
+            >,
         ) {
             mocks.getMe.mockImplementation(async (uid: number) => {
                 const role = roles[uid];
@@ -366,11 +369,17 @@ describe("management routes", () => {
         });
 
         it("answers the role of each person to an admin", async () => {
-            stubRoles({ 42: "admin", 7: "manager", 8: null, 9: "admin" });
+            stubRoles({
+                42: "admin",
+                7: "manager",
+                8: null,
+                9: "admin",
+                10: "owner",
+            });
 
             const res = await request(
                 "GET",
-                "/api/manage/user-roles?uids=7,8,9",
+                "/api/manage/user-roles?uids=7,8,9,10",
             );
 
             expect(res.status).toBe(200);
@@ -379,6 +388,7 @@ describe("management routes", () => {
                 { uid: 7, role: "manager" },
                 { uid: 8, role: null },
                 { uid: 9, role: "admin" },
+                { uid: 10, role: "owner" },
             ]);
             expect(mocks.getMe).toHaveBeenCalledWith(42);
             expect(mocks.getMe).toHaveBeenCalledWith(7);
