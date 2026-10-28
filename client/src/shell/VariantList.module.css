@@ -88,7 +88,7 @@
     color: var(--accent);
 }
 
-.globe {
+.lock {
     display: grid;
     flex: none;
     place-items: center;
@@ -98,7 +98,7 @@
     font-size: 16px;
 }
 
-.globe:focus-visible {
+.lock:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: -2px;
 }
@@ -108,7 +108,7 @@
         min-height: var(--touch-target);
     }
 
-    .globe {
+    .lock {
         width: var(--touch-target);
     }
 }

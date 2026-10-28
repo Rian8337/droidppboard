@@ -4,13 +4,19 @@ import styles from "./Tooltip.module.css";
 export interface TooltipProps {
     content: string;
     children: ReactNode;
+
+    /**
+     * Where the bubble sits under the control. `end` lines its right edge up with the control's, for a control at the
+     * right edge of a scrolling container, which would clip a centered bubble.
+     */
+    align?: "center" | "end";
 }
 
 /**
  * A short hint for the wrapped control. It shows on mouse hover, keyboard focus and on a tap (touch has no hover),
  * and hides on leave, blur, Escape or a press elsewhere.
  */
-export function Tooltip({ content, children }: TooltipProps) {
+export function Tooltip({ content, children, align = "center" }: TooltipProps) {
     const [isVisible, setIsVisible] = useState(false);
     const rootRef = useRef<HTMLSpanElement>(null);
     const tooltipId = useId();
@@ -63,7 +69,7 @@ export function Tooltip({ content, children }: TooltipProps) {
         >
             {children}
             {isVisible && (
-                <span id={tooltipId} role="tooltip" className={styles.bubble}>
+                <span id={tooltipId} role="tooltip" className={styles.bubble} data-align={align}>
                     {content}
                 </span>
             )}

@@ -1,4 +1,4 @@
-import { faGlobe, faThumbtack } from "@fortawesome/free-solid-svg-icons";
+import { faLock, faThumbtack } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import type { PPVariant } from "app-structures";
 import { Link } from "react-router";
@@ -87,14 +87,14 @@ export function VariantList({ filter, currentVariant, onNavigate }: VariantListP
                             )}
                         </Link>
                         {!variant.public && (
-                            <Tooltip content="Private rework">
+                            <Tooltip content="Private rework" align="end">
                                 <span
-                                    className={styles.globe}
+                                    className={styles.lock}
                                     tabIndex={0}
                                     role="img"
                                     aria-label="Private rework"
                                 >
-                                    <FontAwesomeIcon icon={faGlobe} />
+                                    <FontAwesomeIcon icon={faLock} />
                                 </span>
                             </Tooltip>
                         )}

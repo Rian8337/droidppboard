@@ -23,3 +23,9 @@
     pointer-events: none;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
 }
+
+.bubble[data-align="end"] {
+    right: 0;
+    left: auto;
+    transform: none;
+}

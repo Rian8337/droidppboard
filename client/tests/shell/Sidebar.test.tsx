@@ -104,16 +104,16 @@ describe("Sidebar", () => {
         expect(screen.getByText("No reworks match.")).toBeVisible();
     });
 
-    it("shows a globe with a tooltip on tap for private variants only", async () => {
+    it("shows a lock with a tooltip on tap for private variants only", async () => {
         respondWithVariants(droidRebalance, flowaim);
         renderWithProviders(<Sidebar onNavigate={() => {}} />);
         await screen.findByRole("link", { name: /Flow aim/ });
 
-        const globes = screen.getAllByLabelText("Private rework");
+        const locks = screen.getAllByLabelText("Private rework");
 
-        expect(globes).toHaveLength(1);
+        expect(locks).toHaveLength(1);
 
-        await userEvent.click(globes[0]);
+        await userEvent.click(locks[0]);
 
         expect(screen.getByRole("tooltip")).toHaveTextContent("Private rework");
     });
